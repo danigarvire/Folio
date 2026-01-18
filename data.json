@@ -1,0 +1,182 @@
+{
+  "basePath": "projects",
+  "verboseLogs": false,
+  "settings": {
+    "booksRoot": "/projects",
+    "data": {
+      "books": {
+        "ff3fbbcd-3893-4310-a546-cfbb2e116954": {
+          "id": "ff3fbbcd-3893-4310-a546-cfbb2e116954",
+          "title": "My First Book",
+          "rootPath": "Novelist/Books/My First Book",
+          "volumes": [
+            {
+              "title": "Volume 1",
+              "path": "Novelist/Books/My First Book/Volume 1",
+              "chapters": [
+                {
+                  "title": "Chapter 1",
+                  "path": "Novelist/Books/My First Book/Volume 1/Chapter 1.md"
+                }
+              ]
+            }
+          ]
+        },
+        "mkdyof7zcteeawm93vf": {
+          "id": "mkdyof7zcteeawm93vf",
+          "title": "My First Book",
+          "rootPath": "/Projects/My First Book",
+          "volumes": [
+            {
+              "title": "Volume 1",
+              "path": "/Projects/My First Book/Volume 1",
+              "chapters": [
+                {
+                  "title": "Chapter 1",
+                  "path": "/Projects/My First Book/Volume 1/Chapter 1.md"
+                },
+                {
+                  "title": "Chapter 2",
+                  "path": "/Projects/My First Book/Volume 1/Chapter 2.md"
+                }
+              ]
+            }
+          ]
+        },
+        "mkdyrmoxzz2m5184znm": {
+          "id": "mkdyrmoxzz2m5184znm",
+          "title": "Test book 1",
+          "root": "/Projects/Test book 1",
+          "volumes": [
+            {
+              "title": "test volume 1",
+              "path": "/Projects/Test book 1/test volume 1",
+              "chapters": [
+                {
+                  "title": "test chapter 1",
+                  "path": "/Projects/Test book 1/test volume 1/test chapter 1.md"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "activeBookId": "ff3fbbcd-3893-4310-a546-cfbb2e116954",
+      "schemaVersion": 1,
+      "project": {
+        "id": "2b6d3b93-f7cc-4240-827f-a4c5c6fb7a55",
+        "name": "Untitled Project",
+        "createdAt": "2026-01-14T10:27:50.996Z",
+        "updatedAt": "2026-01-14T10:27:50.996Z",
+        "books": [],
+        "activeBookId": null
+      },
+      "book": {
+        "id": "mkdyc6cvhotyecno9ds",
+        "title": "My First Book"
+      }
+    },
+    "settings": {
+      "booksRoot": "/Projects"
+    },
+    "autoCreateRoot": true
+  },
+  "activeBook": "Test-Book-2",
+  "currentBook": "Test book 2",
+  "books": {
+    "Test book 1": {
+      "volumesOrder": [
+        "test volume 1"
+      ],
+      "chaptersOrder": {
+        "test volume 1": [
+          "test chapter 1"
+        ]
+      }
+    },
+    "Test book 2": {
+      "volumesOrder": [
+        "Test volume 2"
+      ],
+      "chaptersOrder": {
+        "Test volume 2": [
+          "Test chapter 2"
+        ]
+      }
+    }
+  },
+  "data": {
+    "books": {
+      "ff3fbbcd-3893-4310-a546-cfbb2e116954": {
+        "id": "ff3fbbcd-3893-4310-a546-cfbb2e116954",
+        "title": "My First Book",
+        "rootPath": "Novelist/Books/My First Book",
+        "volumes": [
+          {
+            "title": "Volume 1",
+            "path": "Novelist/Books/My First Book/Volume 1",
+            "chapters": [
+              {
+                "title": "Chapter 1",
+                "path": "Novelist/Books/My First Book/Volume 1/Chapter 1.md"
+              }
+            ]
+          }
+        ]
+      },
+      "mkdyof7zcteeawm93vf": {
+        "id": "mkdyof7zcteeawm93vf",
+        "title": "My First Book",
+        "rootPath": "/Projects/My First Book",
+        "volumes": [
+          {
+            "title": "Volume 1",
+            "path": "/Projects/My First Book/Volume 1",
+            "chapters": [
+              {
+                "title": "Chapter 1",
+                "path": "/Projects/My First Book/Volume 1/Chapter 1.md"
+              },
+              {
+                "title": "Chapter 2",
+                "path": "/Projects/My First Book/Volume 1/Chapter 2.md"
+              }
+            ]
+          }
+        ]
+      },
+      "mkdyrmoxzz2m5184znm": {
+        "id": "mkdyrmoxzz2m5184znm",
+        "title": "Test book 1",
+        "root": "/Projects/Test book 1",
+        "volumes": [
+          {
+            "title": "test volume 1",
+            "path": "/Projects/Test book 1/test volume 1",
+            "chapters": [
+              {
+                "title": "test chapter 1",
+                "path": "/Projects/Test book 1/test volume 1/test chapter 1.md"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "activeBookId": "ff3fbbcd-3893-4310-a546-cfbb2e116954",
+    "schemaVersion": 1,
+    "project": {
+      "id": "2b6d3b93-f7cc-4240-827f-a4c5c6fb7a55",
+      "name": "Untitled Project",
+      "createdAt": "2026-01-14T10:27:50.996Z",
+      "updatedAt": "2026-01-14T10:27:50.996Z",
+      "books": [],
+      "activeBookId": null
+    },
+    "book": {
+      "id": "mkdyc6cvhotyecno9ds",
+      "title": "My First Book"
+    }
+  },
+  "lastActiveBookPath": "projects/Sicily"
+}
