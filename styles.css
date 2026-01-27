@@ -1447,3 +1447,119 @@ body.theme-light .novelist-tree-children::before {
   line-height: 1.2;
   white-space: nowrap;
 }
+
+/* ===============================================================
+   DRAG AND DROP STYLES (Book-Smith pattern)
+=============================================================== */
+
+/* Dragging state */
+.novelist-dragging {
+  opacity: 0.5;
+  position: relative;
+  z-index: 1000;
+  transform: translateZ(0);
+  transition: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  will-change: transform;
+}
+
+/* General dragover state */
+.novelist-dragover {
+  background-color: var(--interactive-accent-hover);
+  transition: background-color 0.1s ease;
+}
+
+/* Drop zone indicators */
+.novelist-dragover-before {
+  position: relative;
+  transition: all 0.1s ease;
+}
+
+.novelist-dragover-before::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--interactive-accent);
+  box-shadow: 0 0 3px var(--interactive-accent);
+}
+
+.novelist-dragover-after {
+  position: relative;
+  transition: all 0.1s ease;
+}
+
+.novelist-dragover-after::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--interactive-accent);
+  box-shadow: 0 0 3px var(--interactive-accent);
+}
+
+.novelist-dragover-inside {
+  background-color: var(--interactive-accent-hover);
+  opacity: 0.5;
+  transition: all 0.1s ease;
+}
+
+/* Tree items should have grab cursor when draggable */
+.novelist-tree-file,
+.novelist-tree-folder {
+  cursor: grab;
+}
+
+.novelist-tree-file:active,
+.novelist-tree-folder:active {
+  cursor: grabbing;
+}
+
+/* Exclude from stats visual indicator */
+.novelist-tree-label.exclude-from-stats {
+  color: var(--text-muted);
+  opacity: 0.8;
+}
+
+.novelist-tree-label.exclude-from-stats::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-color: var(--text-muted);
+  opacity: 0.6;
+  mask-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-minus-circle"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/></svg>');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+/* Completed/done indicator */
+.novelist-tree-label.is-done::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  background-color: var(--color-green);
+  opacity: 0.6;
+  mask-image: url('data:image/svg+xml;charset=utf-8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/></svg>');
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+/* Ensure label has room for status indicators */
+.novelist-tree-label {
+  position: relative;
+  padding-right: 20px;
+}

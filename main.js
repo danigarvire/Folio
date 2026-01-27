@@ -920,6 +920,34 @@ module.exports = class NovelistPlugin extends Plugin {
         const newContent = `---\ncompleted: true\n---\n\n${content}`;
         await this.app.vault.modify(af, newContent);
       }
+      
+      // Also update book-config.json tree structure
+      try {
+        const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
+        if (book) {
+          const cfg = (await this.loadBookConfig(book)) || {};
+          if (cfg.structure && cfg.structure.tree) {
+            const relativePath = file.path.replace(book.path + '/', '');
+            const updateNode = (nodes) => {
+              for (const node of nodes) {
+                if (node.path === relativePath) {
+                  node.completed = true;
+                  node.last_modified = new Date().toISOString();
+                  return true;
+                }
+                if (node.children && updateNode(node.children)) return true;
+              }
+              return false;
+            };
+            if (updateNode(cfg.structure.tree)) {
+              await this.saveBookConfig(book, cfg);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to update book-config.json for completed status', e);
+      }
+      
       await this.refresh();
     } catch (e) {
       console.error(e);
@@ -953,6 +981,34 @@ module.exports = class NovelistPlugin extends Plugin {
         const newContent = `---\nexclude_from_stats: true\n---\n\n${content}`;
         await this.app.vault.modify(af, newContent);
       }
+      
+      // Also update book-config.json tree structure
+      try {
+        const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
+        if (book) {
+          const cfg = (await this.loadBookConfig(book)) || {};
+          if (cfg.structure && cfg.structure.tree) {
+            const relativePath = file.path.replace(book.path + '/', '');
+            const updateNode = (nodes) => {
+              for (const node of nodes) {
+                if (node.path === relativePath) {
+                  node.exclude = true;
+                  node.last_modified = new Date().toISOString();
+                  return true;
+                }
+                if (node.children && updateNode(node.children)) return true;
+              }
+              return false;
+            };
+            if (updateNode(cfg.structure.tree)) {
+              await this.saveBookConfig(book, cfg);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to update book-config.json for exclude status', e);
+      }
+      
       await this.refresh();
     } catch (e) {
       console.error(e);
@@ -1527,6 +1583,212 @@ module.exports = class NovelistPlugin extends Plugin {
       console.warn('syncChapterStatsBaseline failed', e);
     }
   }
+
+  /* ===============================================================
+   * TREE MANAGEMENT HELPERS (Book-Smith pattern)
+   * =============================================================== */
+
+  // Generate unique node ID
+  generateNodeId() {
+    return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // Build tree from filesystem (sync tree structure with actual files/folders)
+  async buildTreeFromFilesystem(bookFolder) {
+    try {
+      const cfg = (await this.loadBookConfig({ path: bookFolder.path })) || {};
+      const existingTree = cfg?.structure?.tree || [];
+      const existingMap = new Map();
+      
+      // Map existing nodes by path for quick lookup
+      const mapNodes = (nodes) => {
+        for (const node of nodes) {
+          existingMap.set(node.path, node);
+          if (node.children) mapNodes(node.children);
+        }
+      };
+      mapNodes(existingTree);
+
+      const buildNode = (item, order) => {
+        const relativePath = item.path.replace(bookFolder.path + '/', '');
+        const existing = existingMap.get(relativePath);
+        
+        if (item instanceof TFile) {
+          return {
+            id: existing?.id || this.generateNodeId(),
+            title: existing?.title || item.basename,
+            type: item.extension === 'canvas' ? 'canvas' : 'file',
+            path: relativePath,
+            order: existing?.order ?? order,
+            exclude: existing?.exclude || false,
+            completed: existing?.completed || false,
+            created_at: existing?.created_at || new Date().toISOString(),
+            last_modified: new Date().toISOString()
+          };
+        } else if (item instanceof TFolder) {
+          const folderChildren = (item.children || [])
+            .filter(child => !(child instanceof TFolder && child.name === 'misc'));
+          
+          // Sort by existing order if available, otherwise alphabetically
+          const childNodes = folderChildren.map(child => buildNode(child, 0));
+          childNodes.sort((a, b) => {
+            // If both have order, use it; otherwise alphabetically
+            if (a.order && b.order) return a.order - b.order;
+            return a.title.localeCompare(b.title);
+          });
+          // Reassign sequential order numbers
+          childNodes.forEach((node, idx) => node.order = idx + 1);
+          
+          const children = childNodes;
+          
+          return {
+            id: existing?.id || this.generateNodeId(),
+            title: existing?.title || item.name,
+            type: 'group',
+            path: relativePath,
+            order: existing?.order ?? order,
+            is_expanded: existing?.is_expanded ?? false,
+            created_at: existing?.created_at || new Date().toISOString(),
+            last_modified: new Date().toISOString(),
+            children
+          };
+        }
+      };
+
+      const tree = [];
+      const fsChildren = (bookFolder.children || [])
+        .filter(child => !(child instanceof TFolder && child.name === 'misc'));
+      
+      // Build nodes first
+      const nodes = fsChildren.map(child => buildNode(child, 0));
+      
+      // Sort by existing order if available, otherwise alphabetically
+      nodes.sort((a, b) => {
+        if (a.order && b.order) return a.order - b.order;
+        return a.title.localeCompare(b.title);
+      });
+      
+      // Reassign sequential order numbers
+      nodes.forEach((node, idx) => {
+        node.order = idx + 1;
+        tree.push(node);
+      });
+
+      console.log('Built tree from filesystem:', tree);
+      return tree;
+    } catch (e) {
+      console.warn('buildTreeFromFilesystem failed', e);
+      return [];
+    }
+  }
+
+  // Reorder tree nodes after drag and drop
+  async reorderTreeNodes(book, draggedNodeId, targetNodeId, position) {
+    try {
+      const cfg = (await this.loadBookConfig(book)) || {};
+      if (!cfg.structure) cfg.structure = {};
+      if (!cfg.structure.tree) cfg.structure.tree = [];
+
+      const tree = cfg.structure.tree;
+      
+      // Find nodes recursively
+      const findNode = (nodes, id, parent = null) => {
+        for (let i = 0; i < nodes.length; i++) {
+          if (nodes[i].id === id) {
+            return { node: nodes[i], parent, index: i, siblings: nodes };
+          }
+          if (nodes[i].children) {
+            const result = findNode(nodes[i].children, id, nodes[i]);
+            if (result) return result;
+          }
+        }
+        return null;
+      };
+
+      const draggedInfo = findNode(tree, draggedNodeId);
+      const targetInfo = findNode(tree, targetNodeId);
+
+      if (!draggedInfo || !targetInfo) {
+        console.warn('Could not find nodes for reorder', { draggedNodeId, targetNodeId });
+        return false;
+      }
+
+      // Remove dragged node from its current position
+      draggedInfo.siblings.splice(draggedInfo.index, 1);
+
+      // Insert at new position
+      if (position === 'inside' && targetInfo.node.type === 'group') {
+        // Moving INTO a folder
+        const oldPath = `${book.path}/${draggedInfo.node.path}`;
+        const fileName = draggedInfo.node.path.split('/').pop();
+        const newPath = `${targetInfo.node.path}/${fileName}`;
+        
+        try {
+          const fileToMove = this.app.vault.getAbstractFileByPath(oldPath);
+          if (fileToMove) {
+            await this.app.fileManager.renameFile(fileToMove, `${book.path}/${newPath}`);
+            draggedInfo.node.path = newPath;
+          }
+        } catch (e) {
+          console.warn('Failed to move file in vault:', e);
+          return false;
+        }
+        
+        // Add to target's children
+        if (!targetInfo.node.children) targetInfo.node.children = [];
+        targetInfo.node.children.push(draggedInfo.node);
+      } else {
+        // Moving BEFORE or AFTER (might be changing parent level)
+        // Check if moving from inside a folder to a different level
+        const draggedWasNested = draggedInfo.node.path.includes('/');
+        const targetIsNested = targetInfo.node.path.includes('/');
+        const draggedParentPath = draggedInfo.node.path.split('/').slice(0, -1).join('/');
+        const targetParentPath = targetInfo.node.path.split('/').slice(0, -1).join('/');
+        
+        // If parent paths differ, we need to physically move the file
+        if (draggedParentPath !== targetParentPath) {
+          const oldPath = `${book.path}/${draggedInfo.node.path}`;
+          const fileName = draggedInfo.node.path.split('/').pop();
+          const newPath = targetParentPath ? `${targetParentPath}/${fileName}` : fileName;
+          
+          try {
+            const fileToMove = this.app.vault.getAbstractFileByPath(oldPath);
+            if (fileToMove) {
+              await this.app.fileManager.renameFile(fileToMove, `${book.path}/${newPath}`);
+              draggedInfo.node.path = newPath;
+            }
+          } catch (e) {
+            console.warn('Failed to move file to new level:', e);
+            return false;
+          }
+        }
+        
+        // Find target's new index after removal (in case it shifted)
+        const newTargetIndex = targetInfo.siblings.findIndex(n => n.id === targetNodeId);
+        if (newTargetIndex === -1) return false;
+
+        const insertIndex = position === 'before' ? newTargetIndex : newTargetIndex + 1;
+        targetInfo.siblings.splice(insertIndex, 0, draggedInfo.node);
+      }
+
+      // Reorder all nodes
+      const reorderNodes = (nodes) => {
+        nodes.forEach((node, idx) => {
+          node.order = idx + 1;
+          node.last_modified = new Date().toISOString();
+          if (node.children) reorderNodes(node.children);
+        });
+      };
+      reorderNodes(tree);
+
+      // Save updated tree
+      await this.saveBookConfig(book, cfg);
+      return true;
+    } catch (e) {
+      console.warn('reorderTreeNodes failed', e);
+      return false;
+    }
+  }
 };
 
 /* ===============================================================
@@ -1573,7 +1835,8 @@ class NovelistView extends ItemView {
   }
 
   // Render a filesystem-backed editorial tree for a book folder (Obsidian-safe)
-  renderBookTree(container, bookFolder) {
+  // Now with Book-Smith style drag & drop support
+  async renderBookTree(container, bookFolder) {
     container.empty();
 
     const folder =
@@ -1583,189 +1846,258 @@ class NovelistView extends ItemView {
             bookFolder?.path || bookFolder
           );
 
-    // allow right-click on empty tree area to create items in the root folder
-    try {
-      container.addEventListener('contextmenu', (evt) => {
-        try {
-          // ignore when clicking on an existing tree item
-          if (evt.target && evt.target.closest && evt.target.closest('.tree-item')) return;
-          evt.preventDefault();
-          this.openVolumeMenu(evt, folder, true);
-        } catch (e) {}
-      });
-    } catch {}
-
     if (!(folder instanceof TFolder)) {
       console.error("Invalid book folder", bookFolder);
       return;
     }
 
-    const children = folder.children ?? [];
+    const book = this.plugin.activeBook;
+    if (!book) return;
 
-    // collect top-level markdown and canvas files (root files) excluding misc
-    const rootFiles = children.filter(
-      (c) => c instanceof TFile && (c.extension === 'md' || c.extension === 'canvas')
-    );
+    // Always sync tree from filesystem to pick up new/deleted files
+    // while preserving existing order and metadata (Book-Smith pattern)
+    let configTree = [];
+    let useConfigTree = false;
+    
+    try {
+      // Build/sync tree from filesystem (merges with existing config)
+      configTree = await this.plugin.buildTreeFromFilesystem(folder);
+      
+      if (configTree.length > 0) {
+        // Save the synced tree
+        const cfg = (await this.plugin.loadBookConfig(book)) || {};
+        if (!cfg.structure) cfg.structure = {};
+        cfg.structure.tree = configTree;
+        await this.plugin.saveBookConfig(book, cfg);
+        useConfigTree = true;
+      }
+    } catch (e) {
+      console.warn('Failed to build/sync tree from filesystem', e);
+    }
 
-    const volumes = children.filter(
-      (c) => c instanceof TFolder && c.name !== "misc"
-    );
+    // Drag and drop state
+    let draggedElement = null;
+    let draggedNodeId = null;
 
-    const misc = children.find((c) => c instanceof TFolder && c.name === "misc");
+    // Helper to setup drag events
+    const setupDragEvents = (element, nodeId, nodeType) => {
+      element.setAttribute('draggable', 'true');
+      
+      element.addEventListener('dragstart', (e) => {
+        draggedElement = element;
+        draggedNodeId = nodeId;
+        element.classList.add('novelist-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', nodeId);
+      });
 
-    const findRoot = (name) =>
-      rootFiles.find((f) => f.name.toLowerCase() === name.toLowerCase());
+      element.addEventListener('dragend', (e) => {
+        element.classList.remove('novelist-dragging');
+        document.querySelectorAll('.novelist-dragover, .novelist-dragover-before, .novelist-dragover-after, .novelist-dragover-inside')
+          .forEach(el => el.classList.remove('novelist-dragover', 'novelist-dragover-before', 'novelist-dragover-after', 'novelist-dragover-inside'));
+        draggedElement = null;
+        draggedNodeId = null;
+      });
 
-    const renderFile = (file) => {
-      if (!file) return;
-      const row = container.createDiv("novelist-tree-file tree-item is-file");
-      row.dataset.path = file.path;
-      const icon = row.createSpan({ cls: "novelist-tree-icon" });
-    try { setIcon(icon, file.extension === 'canvas' ? 'layout-dashboard' : 'file'); } catch {}
-      row.createSpan({ text: file.basename, cls: "novelist-tree-label" });
-      row.onclick = (e) => {
+      element.addEventListener('dragover', (e) => {
+        if (!draggedElement || draggedElement === element) return;
+        e.preventDefault();
         e.stopPropagation();
-        this.plugin.app.workspace.openLinkText(file.path, "", false);
-      };
-      // custom minimal menu for chapters/root files
-      try {
-        row.addEventListener("contextmenu", (evt) => {
-          evt.preventDefault();
-          this.plugin.openChapterContextMenu(evt, file);
-        });
-      } catch {}
+        
+        const rect = element.getBoundingClientRect();
+        const mouseY = e.clientY;
+        const elementTop = rect.top;
+        const elementBottom = rect.bottom;
+        const elementHeight = rect.height;
+        
+        element.classList.remove('novelist-dragover-before', 'novelist-dragover-after', 'novelist-dragover-inside');
+        
+        if (nodeType === 'group') {
+          // Use quarters instead of thirds for better "after" zone when expanded
+          const topQuarter = elementTop + elementHeight / 4;
+          const bottomHalf = elementTop + elementHeight / 2;
+          
+          if (mouseY < topQuarter) {
+            element.classList.add('novelist-dragover-before');
+            e.dataTransfer.dropEffect = 'move';
+          } else if (mouseY > bottomHalf) {
+            element.classList.add('novelist-dragover-after');
+            e.dataTransfer.dropEffect = 'move';
+          } else {
+            element.classList.add('novelist-dragover-inside');
+            e.dataTransfer.dropEffect = 'move';
+          }
+        } else {
+          const middle = elementTop + elementHeight / 2;
+          if (mouseY < middle) {
+            element.classList.add('novelist-dragover-before');
+          } else {
+            element.classList.add('novelist-dragover-after');
+          }
+          e.dataTransfer.dropEffect = 'move';
+        }
+      });
+
+      element.addEventListener('dragleave', (e) => {
+        element.classList.remove('novelist-dragover-before', 'novelist-dragover-after', 'novelist-dragover-inside');
+      });
+
+      element.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (!draggedNodeId || draggedElement === element) return;
+        
+        const rect = element.getBoundingClientRect();
+        const mouseY = e.clientY;
+        const elementTop = rect.top;
+        const elementBottom = rect.bottom;
+        const elementHeight = rect.height;
+        
+        let position = 'after';
+        
+        if (nodeType === 'group') {
+          // Use quarters instead of thirds for better "after" zone detection
+          const topQuarter = elementTop + elementHeight / 4;
+          const bottomHalf = elementTop + elementHeight / 2;
+          
+          if (mouseY < topQuarter) {
+            position = 'before';
+          } else if (mouseY > bottomHalf) {
+            position = 'after';
+          } else {
+            position = 'inside';
+          }
+        } else {
+          const middle = elementTop + elementHeight / 2;
+          position = mouseY < middle ? 'before' : 'after';
+        }
+        
+        const success = await this.plugin.reorderTreeNodes(book, draggedNodeId, nodeId, position);
+        if (success) {
+          this.plugin.rerenderViews();
+        }
+        
+        element.classList.remove('novelist-dragover-before', 'novelist-dragover-after', 'novelist-dragover-inside');
+      });
     };
 
-    // Preface / Outline first (if present)
-    ["Preface.md", "Outline.md"].forEach((n) => renderFile(findRoot(n)));
+    // Render tree from config structure (Book-Smith pattern)
+    const renderNodeFromConfig = (node, parentContainer) => {
+      // Get the actual file/folder from vault
+      const fullPath = `${book.path}/${node.path}`;
+      const vaultItem = this.plugin.app.vault.getAbstractFileByPath(fullPath);
+      
+      // Skip if file/folder doesn't exist in vault
+      if (!vaultItem) {
+        console.warn('Vault item not found:', fullPath, 'for node:', node);
+        return;
+      }
 
-    // Render any other top-level root markdown files (excluding Preface/Outline/Afterword)
-    const otherRoot = rootFiles
-      .filter((f) => !["Preface.md", "Outline.md", "Afterword.md"].includes(f.name))
-      .sort((a, b) => a.name.localeCompare(b.name));
-    otherRoot.forEach((f) => renderFile(f));
-
-    // Volumes in the middle (sorted)
-    volumes
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .forEach((volume) => {
-        const folderRow = container.createDiv("novelist-tree-folder tree-item is-folder");
-        folderRow.dataset.path = volume.path;
-        const volumeHasChildren = (volume.children && volume.children.length > 0);
-        const path = volume.path;
+      if (node.type === 'group') {
+        // Render folder
+        const folderRow = parentContainer.createDiv("novelist-tree-folder tree-item is-folder");
+        folderRow.dataset.path = fullPath;
+        folderRow.dataset.nodeId = node.id;
+        
         const collapse = folderRow.createSpan({ cls: "novelist-tree-toggle" });
-        collapse.classList.toggle("is-open", this.plugin.expandedFolders.has(path));
+        collapse.classList.toggle("is-open", this.plugin.expandedFolders.has(fullPath));
+        
         const folderIcon = folderRow.createSpan({ cls: "novelist-tree-icon folder-icon" });
-        try { setIcon(folderIcon, this.plugin.expandedFolders.has(path) ? "folder-open" : "folder"); } catch {}
-        try { setIcon(collapse, this.plugin.expandedFolders.has(path) ? "chevron-down" : "chevron-right"); } catch {}
-        const titleSpan = folderRow.createSpan({ text: volume.name, cls: "novelist-tree-label" });
+        try { 
+          setIcon(folderIcon, this.plugin.expandedFolders.has(fullPath) ? "folder-open" : "folder"); 
+          setIcon(collapse, this.plugin.expandedFolders.has(fullPath) ? "chevron-down" : "chevron-right"); 
+        } catch {}
+        
+        const titleSpan = folderRow.createSpan({ text: node.title, cls: "novelist-tree-label" });
 
-        // custom minimal menu for volumes
+        setupDragEvents(folderRow, node.id, 'group');
+
         try {
           folderRow.addEventListener("contextmenu", (evt) => {
             evt.preventDefault();
-            this.plugin.openVolumeMenu(evt, volume);
+            this.plugin.openVolumeMenu(evt, vaultItem);
           });
         } catch {}
 
-        const childrenEl = container.createDiv("novelist-tree-children");
-        // mark open state on the children container so CSS can show connectors
-        childrenEl.classList.toggle("is-open", this.plugin.expandedFolders.has(path));
-        // restore display from expandedFolders
-        if (!this.plugin.expandedFolders.has(path)) childrenEl.style.display = "none";
-        // toggle behavior for the volume (collapse control to the left)
+        const childrenEl = parentContainer.createDiv("novelist-tree-children");
+        childrenEl.classList.toggle("is-open", this.plugin.expandedFolders.has(fullPath));
+        if (!this.plugin.expandedFolders.has(fullPath)) childrenEl.style.display = "none";
+        
         collapse.onclick = (e) => {
           e.stopPropagation();
           const isHidden = childrenEl.style.display === "none";
           childrenEl.style.display = isHidden ? "" : "none";
           collapse.classList.toggle("is-open", isHidden);
           childrenEl.classList.toggle("is-open", isHidden);
-          if (isHidden) this.plugin.expandedFolders.add(path);
-          else this.plugin.expandedFolders.delete(path);
-          try { setIcon(folderIcon, isHidden ? "folder-open" : "folder"); } catch {}
-          try { setIcon(collapse, isHidden ? "chevron-down" : "chevron-right"); } catch {}
+          if (isHidden) this.plugin.expandedFolders.add(fullPath);
+          else this.plugin.expandedFolders.delete(fullPath);
+          try { 
+            setIcon(folderIcon, isHidden ? "folder-open" : "folder"); 
+            setIcon(collapse, isHidden ? "chevron-down" : "chevron-right"); 
+          } catch {}
         };
 
-        // recursive renderer for folder/file nodes inside a volume
-        const renderNode = (node, parentEl) => {
-          if (node instanceof TFolder) {
-            const subFolderRow = parentEl.createDiv("novelist-tree-folder subfolder tree-item is-folder");
-            subFolderRow.dataset.path = node.path;
-            const hasChildren = (node.children && node.children.length > 0);
-            const subPath = node.path;
-            const subCollapse = subFolderRow.createSpan({ cls: "novelist-tree-toggle" });
-            subCollapse.classList.toggle("is-open", this.plugin.expandedFolders.has(subPath));
-            const subFolderIcon = subFolderRow.createSpan({ cls: "novelist-tree-icon folder-icon" });
-            try { setIcon(subFolderIcon, this.plugin.expandedFolders.has(subPath) ? "folder-open" : "folder"); } catch {}
-            try { setIcon(subCollapse, this.plugin.expandedFolders.has(subPath) ? "chevron-down" : "chevron-right"); } catch {}
-            subFolderRow.createSpan({ text: node.name, cls: "novelist-tree-label" });
-
-            try {
-              subFolderRow.addEventListener("contextmenu", (evt) => {
-                evt.preventDefault();
-                this.plugin.openVolumeMenu(evt, node);
-              });
-            } catch {}
-
-            const subChildrenEl = parentEl.createDiv("novelist-tree-children");
-            // mark open state for CSS
-            subChildrenEl.classList.toggle("is-open", this.plugin.expandedFolders.has(subPath));
-            if (!this.plugin.expandedFolders.has(subPath)) subChildrenEl.style.display = "none";
-            // toggle for subfolder
-            subCollapse.onclick = (e) => {
-              e.stopPropagation();
-              const isHidden = subChildrenEl.style.display === "none";
-              subChildrenEl.style.display = isHidden ? "" : "none";
-              subCollapse.classList.toggle("is-open", isHidden);
-              subChildrenEl.classList.toggle("is-open", isHidden);
-              if (isHidden) this.plugin.expandedFolders.add(subPath);
-              else this.plugin.expandedFolders.delete(subPath);
-              try { setIcon(subFolderIcon, isHidden ? "folder-open" : "folder"); } catch {}
-              try { setIcon(subCollapse, isHidden ? "chevron-down" : "chevron-right"); } catch {}
-            };
-
-            (node.children ?? [])
-              .sort((a, b) => a.name.localeCompare(b.name))
-              .forEach((child) => renderNode(child, subChildrenEl));
-          } else if (node instanceof TFile && (node.extension === "md" || node.extension === "canvas")) {
-            const chapterRow = parentEl.createDiv("novelist-tree-file tree-item is-file");
-            chapterRow.dataset.path = node.path;
-            const icon = chapterRow.createSpan({ cls: "novelist-tree-icon" });
-            try { setIcon(icon, "file"); } catch {}
-            chapterRow.createSpan({ text: node.basename, cls: "novelist-tree-label" });
-            chapterRow.onclick = (e) => {
-              e.stopPropagation();
-              this.plugin.app.workspace.openLinkText(node.path, "", false);
-            };
-
-            try {
-              chapterRow.addEventListener("contextmenu", (evt) => {
-                evt.preventDefault();
-                this.plugin.openChapterContextMenu(evt, node);
-              });
-            } catch {}
-          }
+        // Render children
+        if (node.children && node.children.length > 0) {
+          const sortedChildren = [...node.children].sort((a, b) => a.order - b.order);
+          sortedChildren.forEach(child => renderNodeFromConfig(child, childrenEl));
+        }
+      } else {
+        // Render file (file or canvas)
+        const fileRow = parentContainer.createDiv("novelist-tree-file tree-item is-file");
+        fileRow.dataset.path = fullPath;
+        fileRow.dataset.nodeId = node.id;
+        
+        const icon = fileRow.createSpan({ cls: "novelist-tree-icon" });
+        try { 
+          setIcon(icon, node.type === 'canvas' ? 'layout-dashboard' : 'file'); 
+        } catch {}
+        
+        const label = fileRow.createSpan({ text: node.title, cls: "novelist-tree-label" });
+        
+        if (node.exclude) {
+          label.classList.add('exclude-from-stats');
+        }
+        if (node.completed) {
+          label.classList.add('is-done');
+        }
+        
+        fileRow.onclick = (e) => {
+          e.stopPropagation();
+          this.plugin.app.workspace.openLinkText(fullPath, "", false);
         };
+        
+        setupDragEvents(fileRow, node.id, 'file');
+        
+        try {
+          fileRow.addEventListener("contextmenu", (evt) => {
+            evt.preventDefault();
+            this.plugin.openChapterContextMenu(evt, vaultItem);
+          });
+        } catch {}
+      }
+    };
 
-        (volume.children ?? [])
-          .sort((a, b) => a.name.localeCompare(b.name))
-          .forEach((child) => renderNode(child, childrenEl));
-      });
-
-    // Afterword last
-    renderFile(findRoot("Afterword.md"));
-
-    // Misc (secondary)
-    if (misc) {
-      const miscRow = container.createDiv("novelist-tree-folder novelist-tree-misc");
-      miscRow.createSpan({ text: "misc" });
-      try {
-        miscRow.addEventListener("contextmenu", (evt) => {
-          evt.preventDefault();
-          this.plugin.openVolumeMenu(evt, misc);
-        });
-      } catch {}
+    // Render the tree
+    if (useConfigTree && configTree.length > 0) {
+      console.log('Rendering tree with', configTree.length, 'root nodes');
+      const sortedTree = [...configTree].sort((a, b) => a.order - b.order);
+      sortedTree.forEach(node => renderNodeFromConfig(node, container));
+    } else {
+      console.warn('No config tree to render, useConfigTree:', useConfigTree, 'length:', configTree.length);
     }
+
+    // Allow right-click on empty tree area
+    try {
+      container.addEventListener('contextmenu', (evt) => {
+        try {
+          if (evt.target && evt.target.closest && evt.target.closest('.tree-item')) return;
+          evt.preventDefault();
+          this.plugin.openVolumeMenu(evt, folder, true);
+        } catch (e) {}
+      });
+    } catch {}
   }
 
   async renderStats(container, book) {
@@ -2038,7 +2370,7 @@ class NovelistView extends ItemView {
       const bookFolder = this.plugin.app.vault.getAbstractFileByPath(book.path);
       if (this._renderCounter !== token) return;
       if (bookFolder instanceof TFolder) {
-        this.renderBookTree(structureEl, bookFolder);
+        await this.renderBookTree(structureEl, bookFolder);
       } else {
         // fallback to in-memory model if filesystem folder missing
         structureEl.createEl("p", { text: "(No folder found on disk)" });
