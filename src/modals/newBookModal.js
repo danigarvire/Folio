@@ -6,7 +6,9 @@ export class NewBookModal extends Modal {
   constructor(plugin) {
     super(plugin.app);
     this.plugin = plugin;
-    this.selectedProjectType = null; // No default - user must select
+    // Use default project type from settings if set
+    const defaultType = plugin.settings?.defaultProjectType;
+    this.selectedProjectType = defaultType || null;
   }
 
   async onOpen() {
@@ -25,14 +27,24 @@ export class NewBookModal extends Modal {
     typeLeft.createEl('div', { text: 'Select the type of project', cls: 'folio-modal-row-sub' });
     const typeRight = typeRow.createDiv({ cls: 'folio-modal-right' });
     
+    // Get templates from settings
+    const templates = this.plugin.settings?.projectTemplates || [];
+    
+    // Build type names from templates
+    const typeNames = {};
+    templates.forEach(t => {
+      const emoji = { book: '📘', script: '📺', film: '🎬', essay: '📰' }[t.id] || '📄';
+      typeNames[t.id] = `${emoji} ${t.name}`;
+    });
+    // Fallback for standard types
+    if (!typeNames[PROJECT_TYPES.BOOK]) typeNames[PROJECT_TYPES.BOOK] = '📘 Book';
+    if (!typeNames[PROJECT_TYPES.SCRIPT]) typeNames[PROJECT_TYPES.SCRIPT] = '📺 TV Show';
+    if (!typeNames[PROJECT_TYPES.FILM]) typeNames[PROJECT_TYPES.FILM] = '🎬 Film';
+    if (!typeNames[PROJECT_TYPES.ESSAY]) typeNames[PROJECT_TYPES.ESSAY] = '📰 Essay';
+    
     // Button to open project type selector
     const typeButton = typeRight.createEl('button', { text: 'Select', cls: 'folio-project-type-button' });
     const updateButtonText = () => {
-      const typeNames = {
-        [PROJECT_TYPES.BOOK]: '📘 Book',
-        [PROJECT_TYPES.SCRIPT]: '📺 TV Show',
-        [PROJECT_TYPES.FILM]: '🎬 Film'
-      };
       typeButton.textContent = typeNames[this.selectedProjectType] || 'Select type';
     };
     
@@ -40,7 +52,7 @@ export class NewBookModal extends Modal {
       const modal = new ProjectTypeSelectorModal(this.app, (projectType) => {
         this.selectedProjectType = projectType;
         updateButtonText();
-      });
+      }, templates.length > 0 ? templates : null);
       modal.open();
     };
     
@@ -91,7 +103,7 @@ export class NewBookModal extends Modal {
     const titleRight = titleRow.createDiv({ cls: 'folio-modal-right' });
     // responsive field width (max 320px or 60% of modal)
     const fieldWidth = 'min(320px, 60%)';
-    const titleInput = titleRight.createEl('input', { type: 'text', placeholder: 'Book title', cls: 'folio-modal-input' });
+    const titleInput = titleRight.createEl('input', { type: 'text', placeholder: 'Project title', cls: 'folio-modal-input' });
     try { titleInput.style.width = fieldWidth; } catch {}
 
     // Subtitle
@@ -114,7 +126,7 @@ export class NewBookModal extends Modal {
     const targetInput = targetRight.createEl('input', { type: 'text', placeholder: 'e.g., 20 (20k) or 20000', cls: 'folio-modal-input' });
     try { targetInput.style.width = fieldWidth; } catch {}
 
-    // Author
+    // Author - use default from settings
     makeDivider();
     const authorRow = contentEl.createDiv({ cls: 'folio-modal-row' });
     const authorLeft = authorRow.createDiv({ cls: 'folio-modal-left' });
@@ -122,6 +134,11 @@ export class NewBookModal extends Modal {
     authorLeft.createEl('div', { text: 'Enter author names, separate multiple authors with commas', cls: 'folio-modal-row-sub' });
     const authorRight = authorRow.createDiv({ cls: 'folio-modal-right' });
     const authorInput = authorRight.createEl('input', { type: 'text', placeholder: 'Author', cls: 'folio-modal-input' });
+    // Pre-fill with default author from settings
+    const defaultAuthor = this.plugin.settings?.defaultAuthor || '';
+    if (defaultAuthor) {
+      authorInput.value = defaultAuthor;
+    }
     try { authorInput.style.width = fieldWidth; } catch {}
 
     // Description
@@ -142,9 +159,17 @@ export class NewBookModal extends Modal {
     createBtn.onclick = async () => {
       const title = titleInput.value.trim();
       if (!title) return;
-      
-      // Get selected project type from dropdown
-const projectType = this.selectedProjectType;
+
+      // Get selected project type from dropdown; fallback to button label if unset
+      let projectType = this.selectedProjectType;
+      if (!projectType) {
+        const btnText = typeButton.textContent || '';
+        if (btnText.includes('Essay')) projectType = PROJECT_TYPES.ESSAY;
+        else if (btnText.includes('TV Show') || btnText.includes('TV')) projectType = PROJECT_TYPES.SCRIPT;
+        else if (btnText.includes('Film')) projectType = PROJECT_TYPES.FILM;
+        else projectType = PROJECT_TYPES.BOOK;
+      }
+      console.debug && console.debug('Creating project with type:', projectType);
       
       // capture fields before closing the modal (closing may remove DOM inputs)
       const subtitleVal = subtitleInput.value.trim();
@@ -219,6 +244,9 @@ const projectType = this.selectedProjectType;
           await this.plugin.createChapter({ path: `${book.path}/${episodeName}/${sequenceName}` }, sceneName, projectType);
         } else if (projectType === PROJECT_TYPES.FILM) {
           // For film projects, structure is already created by ensureFilmStructure
+          // No additional volumes/chapters needed
+        } else if (projectType === PROJECT_TYPES.ESSAY) {
+          // Essay structure is created by ensureEssayStructure (Documentation, Outline, Manuscript)
           // No additional volumes/chapters needed
         } else {
           // For book projects, create Volume 1/Chapter 1

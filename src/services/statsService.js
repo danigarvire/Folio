@@ -2,6 +2,8 @@
  * Stats Service - Handles word count statistics and progress tracking
  */
 
+import { PROJECT_TYPES } from '../constants/index.js';
+
 export class StatsService {
   constructor(app, configService) {
     this.app = app;
@@ -45,6 +47,31 @@ export class StatsService {
   }
 
   /**
+   * Build a set of excluded paths from the config tree
+   * Includes both directly excluded items and children of excluded folders
+   */
+  buildExcludedPathsSet(configTree) {
+    const excludedPaths = new Set();
+    
+    const traverse = (nodes, parentExcluded = false) => {
+      for (const node of nodes) {
+        const isExcluded = parentExcluded || node.exclude;
+        
+        if (isExcluded) {
+          excludedPaths.add(node.path);
+        }
+        
+        if (node.children) {
+          traverse(node.children, isExcluded);
+        }
+      }
+    };
+    
+    traverse(configTree || []);
+    return excludedPaths;
+  }
+
+  /**
    * Collect all markdown files recursively from a folder
    */
   collectMarkdownFiles(folder) {
@@ -65,6 +92,64 @@ export class StatsService {
   }
 
   /**
+   * Filter files based on project type structure and exclusions
+   * - Book: Chapters inside Volumes (depth >= 2)
+   * - TV Show (script): Scenes inside Sequences inside Episodes (depth >= 3)
+   * - Film: Scenes inside Sequences (depth >= 2)
+   * - Essay: Manuscript.md, Outline.md at root + files in Documentation folder
+   * 
+   * @param {Array} files - Array of TFile objects
+   * @param {string} bookPath - The book's root path
+   * @param {string} projectType - The project type
+   * @param {Set} excludedPaths - Set of relative paths to exclude
+   */
+  filterFilesByProjectType(files, bookPath, projectType, excludedPaths = new Set()) {
+    return files.filter((f) => {
+      const rel = f.path.replace(bookPath + '/', '');
+      
+      // Check if file is excluded
+      if (excludedPaths.has(rel)) return false;
+      
+      // Always exclude misc folder
+      if (rel.startsWith('misc/')) return false;
+      
+      const parts = rel.split('/');
+      const fileName = parts[parts.length - 1];
+      
+      switch (projectType) {
+        case PROJECT_TYPES.SCRIPT:
+          // TV Show: Scenes inside Sequences inside Episodes (depth >= 3)
+          // Structure: Episode/Sequence/Scene.md
+          return parts.length >= 3;
+          
+        case PROJECT_TYPES.FILM:
+          // Film: Scenes inside Sequences (depth >= 2)
+          // Structure: Sequence/Scene.md
+          return parts.length >= 2;
+          
+        case PROJECT_TYPES.ESSAY:
+          // Essay: Manuscript.md, Outline.md at root + files in Documentation folder
+          // Structure: Manuscript.md, Outline.md, Documentation/Document.md
+          if (parts.length === 1) {
+            // Root level files: Manuscript.md, Outline.md
+            return fileName === 'Manuscript.md' || fileName === 'Outline.md';
+          }
+          // Documentation folder files
+          if (parts.length >= 2 && parts[0] === 'Documentation') {
+            return true;
+          }
+          return false;
+          
+        case PROJECT_TYPES.BOOK:
+        default:
+          // Book: Chapters inside Volumes (depth >= 2)
+          // Structure: Volume/Chapter.md
+          return parts.length >= 2;
+      }
+    });
+  }
+
+  /**
    * Compute basic stats for a book and persist into book-config.json.stats
    */
   async computeAndSaveStatsForBook(book) {
@@ -72,15 +157,15 @@ export class StatsService {
       const folder = this.app.vault.getAbstractFileByPath(book.path);
       if (!folder) return;
       
-      const mdFiles = this.collectMarkdownFiles(folder).filter((f) => {
-        const rel = f.path.replace(book.path + '/', '');
-        // exclude misc folder and only include files that live inside a volume (i.e., have a subfolder)
-        if (rel.startsWith('misc/')) return false;
-        const parts = rel.split('/');
-        // require files to be inside at least one subfolder (volumes/subfolders)
-        if (parts.length < 2) return false;
-        return true;
-      });
+      // Load config to get project type and tree structure
+      let cfg = (await this.configService.loadBookConfig(book)) || {};
+      const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
+      
+      // Build set of excluded paths from config tree
+      const excludedPaths = this.buildExcludedPathsSet(cfg.structure?.tree || []);
+      
+      const allMdFiles = this.collectMarkdownFiles(folder);
+      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, excludedPaths);
       
       const perChapter = {};
       let total = 0;
@@ -96,9 +181,6 @@ export class StatsService {
         }
       }
 
-      // load or create config
-      let cfg = (await this.configService.loadBookConfig(book)) || {};
-      
       // Ensure basic exists so stats-only saves don't create configs without basic metadata
       cfg.basic = cfg.basic || { title: book.name };
       cfg.stats = cfg.stats || {};
@@ -156,6 +238,7 @@ export class StatsService {
    * Sync chapter structure into stats baseline.
    * - Adds missing chapters with 0 words
    * - Removes deleted chapters from stats
+   * - Removes excluded chapters from stats
    * DOES NOT recompute stats.
    */
   async syncChapterStatsBaseline(book) {
@@ -164,17 +247,16 @@ export class StatsService {
       cfg.stats = cfg.stats || {};
       cfg.stats.per_chapter = cfg.stats.per_chapter || {};
 
+      const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
+      
+      // Build set of excluded paths from config tree
+      const excludedPaths = this.buildExcludedPathsSet(cfg.structure?.tree || []);
+
       const folder = this.app.vault.getAbstractFileByPath(book.path);
       if (!folder) return;
 
-      const mdFiles = this.collectMarkdownFiles(folder).filter((f) => {
-        const rel = f.path.replace(book.path + '/', '');
-        if (rel.startsWith('misc/')) return false;
-        const parts = rel.split('/');
-        // only include chapter files that live inside a volume (or subfolder)
-        if (parts.length < 2) return false;
-        return true;
-      });
+      const allMdFiles = this.collectMarkdownFiles(folder);
+      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, excludedPaths);
       
       const currentPaths = new Set(mdFiles.map((f) => f.path.replace(book.path + '/', '')));
 
@@ -185,7 +267,7 @@ export class StatsService {
         }
       }
 
-      // remove deleted chapters
+      // remove deleted chapters and excluded chapters
       for (const storedPath of Object.keys(cfg.stats.per_chapter)) {
         if (!currentPaths.has(storedPath)) {
           delete cfg.stats.per_chapter[storedPath];

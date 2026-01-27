@@ -1,14 +1,14 @@
 /**
- * Project Type Selector Modal - Choose between Book, TV Show, or Film
+ * Project Type Selector Modal - Choose project type from configured templates
  */
 
 import { Modal, setIcon } from 'obsidian';
-import { PROJECT_TYPES } from '../constants/index.js';
 
 export class ProjectTypeSelectorModal extends Modal {
-  constructor(app, onSelect) {
+  constructor(app, onSelect, templates = null) {
     super(app);
     this.onSelect = onSelect;
+    this.templates = templates;
   }
 
   onOpen() {
@@ -20,28 +20,22 @@ export class ProjectTypeSelectorModal extends Modal {
 
     const optionsContainer = contentEl.createDiv({ cls: 'folio-project-type-options' });
 
-    // Book option
-    this.createProjectOption(optionsContainer, {
-      title: 'Book',
-      description: 'Novel or written work',
-      icon: 'book',
-      value: PROJECT_TYPES.BOOK
-    });
+    // Use templates from settings if provided, otherwise use defaults
+    const templates = this.templates || [
+      { id: 'book', name: 'Book', icon: 'book', order: 1, description: 'Novel or written work' },
+      { id: 'script', name: 'TV Show', icon: 'tv-minimal-play', order: 2, description: 'Series with episodes and sequences' },
+      { id: 'film', name: 'Film', icon: 'clapperboard', order: 3, description: 'Feature film or short' },
+      { id: 'essay', name: 'Essay', icon: 'newspaper', order: 4, description: 'Essay or short nonfiction piece' }
+    ];
 
-    // TV Show option
-    this.createProjectOption(optionsContainer, {
-      title: 'TV Show',
-      description: 'Series with episodes and sequences',
-      icon: 'tv-minimal-play',
-      value: PROJECT_TYPES.SCRIPT
-    });
-
-    // Film option
-    this.createProjectOption(optionsContainer, {
-      title: 'Film',
-      description: 'Feature film or short',
-      icon: 'clapperboard',
-      value: PROJECT_TYPES.FILM
+    // Sort by order and render each template
+    templates.sort((a, b) => a.order - b.order).forEach(template => {
+      this.createProjectOption(optionsContainer, {
+        title: template.name,
+        description: template.description || '',
+        icon: template.icon || 'file',
+        value: template.id
+      });
     });
   }
 

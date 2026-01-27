@@ -220,54 +220,23 @@ export class TreeService {
   }
 
   /**
-   * Mark a chapter as complete/incomplete
+   * Toggle exclude/include from stats for a file or folder
    * Updates both frontmatter and config tree
+   * For folders, recursively updates all children
    */
-  async markChapterComplete(book, file, completed) {
+  async toggleExcludeFromStats(book, file, exclude) {
     try {
-      // Update frontmatter
-      await this.app.fileManager.processFrontMatter(file, (fm) => {
-        fm.is_done = completed;
-      });
-
-      // Update config tree
-      const cfg = (await this.configService.loadBookConfig(book)) || {};
-      if (!cfg.structure?.tree) return;
-
-      const relativePath = file.path.replace(book.path + '/', '');
+      const isFolder = file.children !== undefined;
       
-      const updateNode = (nodes) => {
-        for (const node of nodes) {
-          if (node.path === relativePath) {
-            node.completed = completed;
-            node.last_modified = new Date().toISOString();
-            return true;
-          }
-          if (node.children && updateNode(node.children)) {
-            return true;
-          }
-        }
-        return false;
-      };
-
-      if (updateNode(cfg.structure.tree)) {
-        await this.configService.saveBookConfig(book, cfg);
+      if (isFolder) {
+        // For folders, recursively exclude all children
+        await this.excludeFolderFromStats(book, file, exclude);
+      } else {
+        // For files, update frontmatter and config tree
+        await this.app.fileManager.processFrontMatter(file, (fm) => {
+          fm.exclude_from_stats = exclude;
+        });
       }
-    } catch (e) {
-      console.warn('markChapterComplete failed', e);
-    }
-  }
-
-  /**
-   * Exclude/include a chapter from stats
-   * Updates both frontmatter and config tree
-   */
-  async excludeFromStats(book, file, exclude) {
-    try {
-      // Update frontmatter
-      await this.app.fileManager.processFrontMatter(file, (fm) => {
-        fm.exclude_from_stats = exclude;
-      });
 
       // Update config tree
       const cfg = (await this.configService.loadBookConfig(book)) || {};
@@ -280,6 +249,10 @@ export class TreeService {
           if (node.path === relativePath) {
             node.exclude = exclude;
             node.last_modified = new Date().toISOString();
+            // For folders, also mark all children
+            if (isFolder && node.children) {
+              this.markAllChildrenExcluded(node.children, exclude);
+            }
             return true;
           }
           if (node.children && updateNode(node.children)) {
@@ -293,7 +266,41 @@ export class TreeService {
         await this.configService.saveBookConfig(book, cfg);
       }
     } catch (e) {
-      console.warn('excludeFromStats failed', e);
+      console.warn('toggleExcludeFromStats failed', e);
+    }
+  }
+
+  /**
+   * Helper: Mark all children nodes as excluded/included in config
+   */
+  markAllChildrenExcluded(children, exclude) {
+    for (const node of children) {
+      node.exclude = exclude;
+      node.last_modified = new Date().toISOString();
+      if (node.children) {
+        this.markAllChildrenExcluded(node.children, exclude);
+      }
+    }
+  }
+
+  /**
+   * Helper: Recursively exclude all files in a folder from stats
+   */
+  async excludeFolderFromStats(book, folder, exclude) {
+    for (const child of folder.children || []) {
+      if (child.children !== undefined) {
+        // It's a subfolder
+        await this.excludeFolderFromStats(book, child, exclude);
+      } else if (child.extension === 'md') {
+        // It's a markdown file - update frontmatter
+        try {
+          await this.app.fileManager.processFrontMatter(child, (fm) => {
+            fm.exclude_from_stats = exclude;
+          });
+        } catch (e) {
+          console.warn('Failed to update frontmatter for', child.path, e);
+        }
+      }
     }
   }
 }

@@ -156,8 +156,8 @@ module.exports = class FolioPlugin extends Plugin {
     // Context menus for volumes/chapters are built inline in the view
   }
 
-  // Minimal chapter context menu (Open in new tab/pane, Mark complete, Exclude, Create copy, Rename, Delete)
-  openChapterContextMenu(evt, file) {
+  // Minimal chapter context menu (Open in new tab/pane, Exclude toggle, Create copy, Rename, Delete)
+  openChapterContextMenu(evt, file, node = null) {
     try {
       evt.preventDefault?.();
       const menu = new Menu(this.app);
@@ -206,18 +206,14 @@ module.exports = class FolioPlugin extends Plugin {
 
       menu.addSeparator();
 
-      // Mark as complete
+      // Exclude from stats toggle - show current state
+      const isExcluded = node?.exclude || false;
       menu.addItem((it) =>
-        it.setTitle("Mark as complete").setIcon("check").onClick(() => {
-          this.markChapterComplete(file);
-        })
-      );
-
-      // Exclude from stats
-      menu.addItem((it) =>
-        it.setTitle("Exclude from stats").setIcon("eye-off").onClick(() => {
-          this.excludeFromStats(file);
-        })
+        it.setTitle(isExcluded ? "Include in stats" : "Exclude from stats")
+          .setIcon(isExcluded ? "eye" : "eye-off")
+          .onClick(() => {
+            this.toggleExcludeFromStats(file, !isExcluded);
+          })
       );
 
       menu.addSeparator();
@@ -263,7 +259,7 @@ module.exports = class FolioPlugin extends Plugin {
     }
   }
 
-  openVolumeMenu(evt, folder, isRoot = false) {
+  openVolumeMenu(evt, folder, isRoot = false, node = null) {
     try {
       evt.preventDefault?.();
       const menu = new Menu(this.app);
@@ -348,6 +344,20 @@ module.exports = class FolioPlugin extends Plugin {
           modal.open();
         })
       );
+
+      menu.addSeparator();
+
+      // Exclude from stats toggle (only for non-root folders)
+      if (!isRoot && node) {
+        const isExcluded = node.exclude || false;
+        menu.addItem((it) =>
+          it.setTitle(isExcluded ? "Include in stats" : "Exclude from stats")
+            .setIcon(isExcluded ? "eye" : "eye-off")
+            .onClick(() => {
+              this.toggleExcludeFromStats(folder, !isExcluded);
+            })
+        );
+      }
 
       // Create copy
       menu.addItem((it) =>
@@ -604,8 +614,16 @@ module.exports = class FolioPlugin extends Plugin {
     this.rerenderViews();
   }
 
+  // Normalize basePath - remove leading/trailing slashes and multiple slashes
+  getBasePath() {
+    let base = this.settings.basePath || "projects";
+    // Remove leading/trailing slashes and normalize multiple slashes
+    base = base.replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
+    return base || "projects";
+  }
+
   async ensureBasePath() {
-    const base = this.settings.basePath || "projects";
+    const base = this.getBasePath();
     if (!(await this.app.vault.adapter.exists(base))) {
       await this.app.vault.createFolder(base);
     }
@@ -616,7 +634,7 @@ module.exports = class FolioPlugin extends Plugin {
    * =============================================================== */
 
   async scanBooks() {
-    const basePath = this.settings.basePath || "projects";
+    const basePath = this.getBasePath();
     this.booksIndex = await this.bookService.scanBooks(basePath);
     
     if (!this.activeBook && this.booksIndex.length > 0) {
@@ -634,7 +652,7 @@ module.exports = class FolioPlugin extends Plugin {
    * =============================================================== */
 
   async createBook(name, projectType = 'book') {
-    const basePath = this.settings.basePath || "projects";
+    const basePath = this.getBasePath();
     return this.bookService.createBook(basePath, name, projectType);
   }
 
@@ -698,76 +716,27 @@ module.exports = class FolioPlugin extends Plugin {
     }
   }
 
-  // Delete a folder and all its children recursively using Vault API
+  // Move a folder and all its children to trash
   async deleteFolderRecursive(path) {
     try {
       const af = this.app.vault.getAbstractFileByPath(path);
       if (!af) return;
-      if (af instanceof TFile) {
-        await this.app.vault.delete(af);
-        return;
-      }
-      // Prefer vault.delete with recursive flag to remove folder and contents.
-      try {
-        if (typeof this.app.vault.delete === 'function') {
-          await this.app.vault.delete(af, true);
-          return;
-        }
-      } catch (e) {
-        // If recursive delete not supported or failed, fall back to manual removal
-        console.warn('vault.delete recursive attempt failed, falling back', e);
-      }
-
-      // directory: delete children first (fallback)
-      if (af.children && af.children.length > 0) {
-        const children = Array.from(af.children);
-        for (const c of children) {
-          if (c instanceof TFile) {
-            try { await this.app.vault.delete(c); } catch (e) { console.warn('delete child file failed', c.path, e); }
-          } else {
-            await this.deleteFolderRecursive(c.path);
-          }
-        }
-      }
-
-      // now remove the folder itself
-      try {
-        await this.app.vault.delete(af);
-      } catch (e) {
-        // fallback to adapter rmdir if vault.delete fails
-        try {
-          if (this.app.vault.adapter && typeof this.app.vault.adapter.rmdir === 'function') {
-            await this.app.vault.adapter.rmdir(path);
-          }
-        } catch (e2) {
-          console.warn('deleteFolderRecursive: failed to remove folder', path, e2);
-        }
-      }
-      // Wait for folder to disappear from vault index to avoid race with refresh
-      try {
-        const maxRetries = 20;
-        let retries = maxRetries;
-        while (retries-- > 0) {
-          const test = this.plugin ? this.app.vault.getAbstractFileByPath(path) : this.app.vault.getAbstractFileByPath(path);
-          if (!test) break;
-          await new Promise((r) => setTimeout(r, 100));
-        }
-      } catch (e) {
-        // ignore polling errors
-      }
+      // Use vault.trash to move to system trash (true = use system trash)
+      await this.app.vault.trash(af, true);
     } catch (e) {
-      console.warn('deleteFolderRecursive failed', path, e);
+      console.warn('deleteFolderRecursive (trash) failed', path, e);
     }
   }
 
-  async markChapterComplete(file) {
-    await this.treeService.markChapterComplete(file);
+  async toggleExcludeFromStats(file, exclude) {
+    const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
+    if (!book) {
+      console.warn('Could not find book for file:', file.path);
+      return;
+    }
+    await this.treeService.toggleExcludeFromStats(book, file, exclude);
     await this.refresh();
-  }
-
-  async excludeFromStats(file) {
-    await this.treeService.excludeFromStats(file);
-    await this.refresh();
+    this.rerenderViews();
   }
 
   async loadSettings() {

@@ -21,7 +21,7 @@ export class WriterToolsView extends ItemView {
   }
 
   getIcon() {
-    return "wrench";
+    return "drafting-compass";
   }
 
   async onOpen() {

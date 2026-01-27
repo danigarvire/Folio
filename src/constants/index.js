@@ -8,7 +8,8 @@ export const WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
 export const PROJECT_TYPES = {
   BOOK: "book",
   SCRIPT: "script",
-  FILM: "film"
+  FILM: "film",
+  ESSAY: "essay"
 };
 
 export const DEFAULT_SETTINGS = {
@@ -16,6 +17,14 @@ export const DEFAULT_SETTINGS = {
   basePath: "projects",  // Legacy compatibility
   lastActiveBookPath: null,
   verboseLogs: false,
+  defaultAuthor: "",
+  defaultProjectType: "book",
+  projectTemplates: [
+    { id: "book", name: "Book", icon: "book", order: 1, description: "Novel or written work" },
+    { id: "script", name: "TV Show", icon: "tv-minimal-play", order: 2, description: "Series with episodes and sequences" },
+    { id: "film", name: "Film", icon: "clapperboard", order: 3, description: "Feature film or short" },
+    { id: "essay", name: "Essay", icon: "newspaper", order: 4, description: "Essay or short nonfiction piece" }
+  ]
 };
 
 export const DEFAULT_BOOK_CONFIG = {

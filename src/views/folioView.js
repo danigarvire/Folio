@@ -5,6 +5,19 @@
 import { ItemView, TFolder, Menu, setIcon } from 'obsidian';
 import { VIEW_TYPE, PROJECT_TYPES } from '../constants/index.js';
 
+// Helper to get icon from settings templates
+function getProjectTypeIcon(plugin, projectType) {
+  const templates = plugin.settings?.projectTemplates || [];
+  const template = templates.find(t => t.id === projectType);
+  if (template?.icon) return template.icon;
+  // Fallback to defaults
+  if (projectType === PROJECT_TYPES.BOOK) return 'book';
+  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv-minimal-play';
+  if (projectType === PROJECT_TYPES.FILM) return 'clapperboard';
+  if (projectType === PROJECT_TYPES.ESSAY) return 'newspaper';
+  return 'book';
+}
+
 export class FolioView extends ItemView {
   constructor(leaf, plugin) {
     super(leaf);
@@ -240,13 +253,18 @@ export class FolioView extends ItemView {
         } catch {}
         
         const titleSpan = folderRow.createSpan({ text: node.title, cls: "folio-tree-label" });
+        
+        // Add visual indicator if folder is excluded
+        if (node.exclude) {
+          titleSpan.classList.add('exclude-from-stats');
+        }
 
         setupDragEvents(folderRow, node.id, 'group');
 
         try {
           folderRow.addEventListener("contextmenu", (evt) => {
             evt.preventDefault();
-            this.plugin.openVolumeMenu(evt, vaultItem);
+            this.plugin.openVolumeMenu(evt, vaultItem, false, node);
           });
         } catch {}
 
@@ -304,7 +322,7 @@ export class FolioView extends ItemView {
         try {
           fileRow.addEventListener("contextmenu", (evt) => {
             evt.preventDefault();
-            this.plugin.openChapterContextMenu(evt, vaultItem);
+            this.plugin.openChapterContextMenu(evt, vaultItem, node);
           });
         } catch {}
       }
@@ -423,7 +441,7 @@ export class FolioView extends ItemView {
       const newBtn = topBar.createEl("button", { cls: "folio-top-btn" });
       const newIcon = newBtn.createSpan({ cls: "folio-top-icon" });
       try { setIcon(newIcon, 'edit'); } catch {}
-      newBtn.createSpan({ text: "New", cls: "folio-top-label" });
+      newBtn.createSpan({ text: "New Project", cls: "folio-top-label" });
 
       const switchBtn = topBar.createEl("button", { cls: "folio-top-btn" });
       const switchIcon = switchBtn.createSpan({ cls: "folio-top-icon" });
@@ -466,11 +484,11 @@ export class FolioView extends ItemView {
         try {
           coverEl.addClass('folio-book-cover-placeholder');
           const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
-          setIcon(iconEl, 'book');
+          setIcon(iconEl, 'square-plus');
         } catch {}
         const titleBlock = headerEl.createDiv("folio-book-title-block");
-        titleBlock.createEl("div", { cls: "folio-book-title", text: "No active book" });
-        titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "(Select or create a book)" });
+        titleBlock.createEl("div", { cls: "folio-book-title", text: "No active project" });
+        titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "(Select or create a project)" });
 
         // metadata placeholder (empty)
         const metaBlock = el.createDiv("folio-book-meta folio-book-info");
@@ -483,7 +501,7 @@ export class FolioView extends ItemView {
 
         // empty structure area
         const structureEl = el.createDiv("folio-structure");
-        structureEl.createEl('p', { text: '(No book selected)' });
+        structureEl.createEl('p', { text: '(No project selected)' });
 
         // minimal stats placeholder so the header area doesn't look empty
         try {
@@ -516,11 +534,11 @@ export class FolioView extends ItemView {
         try {
           coverEl.addClass('folio-book-cover-placeholder');
           const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
-          setIcon(iconEl, 'book');
+          setIcon(iconEl, 'square-plus');
         } catch {}
         const titleBlock = headerEl.createDiv("folio-book-title-block");
-        titleBlock.createEl("div", { cls: "folio-book-title", text: "No active book" });
-        titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "(Book folder missing)" });
+        titleBlock.createEl("div", { cls: "folio-book-title", text: "No active project" });
+        titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "(Project folder missing)" });
 
         // metadata placeholder (empty)
         const metaBlock = el.createDiv("folio-book-meta folio-book-info");
@@ -582,9 +600,7 @@ export class FolioView extends ItemView {
           coverEl.addClass('folio-book-cover-placeholder');
           const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
           const projectType = metadata?.projectType || PROJECT_TYPES.BOOK;
-          const iconName = projectType === PROJECT_TYPES.BOOK ? 'book' : 
-                         projectType === PROJECT_TYPES.SCRIPT ? 'tv-minimal-play' : 
-                         projectType === PROJECT_TYPES.FILM ? 'clapperboard' : 'book';
+          const iconName = getProjectTypeIcon(this.plugin, projectType);
           setIcon(iconEl, iconName);
         } catch {}
       }

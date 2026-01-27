@@ -129,7 +129,7 @@ export class BookService {
       const bookConfigPath = `${path}/misc/book-config.json`;
       const now = new Date().toISOString();
       
-      // Different default tree structure for script vs book projects
+      // Different default tree structure for script, essay, vs book projects
       const defaultTree = projectType === PROJECT_TYPES.SCRIPT ? [
         { 
           id: 'series-framework', 
@@ -151,6 +151,13 @@ export class BookService {
           ]
         },
         { id: 'episode1', title: 'Episode 1', type: 'group', path: 'Episode 1', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
+      ] : projectType === PROJECT_TYPES.ESSAY ? [
+        { id: 'documentation', title: 'Documentation', type: 'group', path: 'Documentation', order: 1, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [
+            { id: 'document1', title: 'Document 1', type: 'file', path: 'Documentation/Document 1.md', order: 1, default_status: 'draft', created_at: now, last_modified: now }
+          ]
+        },
+        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 2, default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'manuscript', title: 'Manuscript', type: 'file', path: 'Manuscript.md', order: 3, default_status: 'draft', created_at: now, last_modified: now }
       ] : [
         { id: 'preface', title: 'Preface', type: 'file', path: 'Preface.md', order: 1, default_status: 'draft', created_at: now, last_modified: now },
         { id: 'moodboard', title: 'Moodboard', type: 'canvas', path: 'Moodboard.canvas', order: 2, default_status: 'draft', created_at: now, last_modified: now },
@@ -204,9 +211,38 @@ export class BookService {
         await this.ensureScriptStructure(bookFolder);
       } else if (projectType === PROJECT_TYPES.FILM) {
         await this.ensureFilmStructure(bookFolder);
+      } else if (projectType === PROJECT_TYPES.ESSAY) {
+        await this.ensureEssayStructure(bookFolder);
       } else {
         await this.ensureBookBaseStructure(bookFolder);
       }
+    }
+  }
+
+  /**
+   * Ensure essay project has minimal structure: Documentation folder, Document 1.md, Outline.md, Manuscript.md
+   */
+  async ensureEssayStructure(bookFolder) {
+    const vault = this.app.vault;
+
+    const documentationPath = `${bookFolder.path}/Documentation`;
+    if (!vault.getAbstractFileByPath(documentationPath)) {
+      await vault.createFolder(documentationPath);
+    }
+
+    const document1Path = `${documentationPath}/Document 1.md`;
+    if (!vault.getAbstractFileByPath(document1Path)) {
+      await vault.create(document1Path, `---\nprojectType: essay\n---\n\n`);
+    }
+
+    const outlinePath = `${bookFolder.path}/Outline.md`;
+    if (!vault.getAbstractFileByPath(outlinePath)) {
+      await vault.create(outlinePath, `---\nprojectType: essay\n---\n\n`);
+    }
+
+    const manuscriptPath = `${bookFolder.path}/Manuscript.md`;
+    if (!vault.getAbstractFileByPath(manuscriptPath)) {
+      await vault.create(manuscriptPath, `---\nprojectType: essay\n---\n\n`);
     }
   }
 

@@ -3,6 +3,19 @@ import { PROJECT_TYPES } from '../constants/index.js';
 import { ConfirmModal } from './confirmModal.js';
 import { EditBookModal } from './editBookModal.js';
 
+// Helper to get icon from settings templates
+function getProjectTypeIcon(plugin, projectType) {
+  const templates = plugin.settings?.projectTemplates || [];
+  const template = templates.find(t => t.id === projectType);
+  if (template?.icon) return template.icon;
+  // Fallback to defaults
+  if (projectType === PROJECT_TYPES.BOOK) return 'book';
+  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv-minimal-play';
+  if (projectType === PROJECT_TYPES.FILM) return 'clapperboard';
+  if (projectType === PROJECT_TYPES.ESSAY) return 'newspaper';
+  return 'book';
+}
+
 export class ManageBooksModal extends Modal {
   constructor(plugin) {
     super(plugin.app);
@@ -90,9 +103,7 @@ export class ManageBooksModal extends Modal {
             coverWrap.addClass('folio-manage-cover-placeholder');
             const iconEl = coverWrap.createDiv({ cls: 'folio-manage-cover-icon' });
             const projectType = cfg?.basic?.projectType || PROJECT_TYPES.BOOK;
-            const iconName = projectType === PROJECT_TYPES.BOOK ? 'book' : 
-                           projectType === PROJECT_TYPES.SCRIPT ? 'tv-minimal-play' : 
-                           projectType === PROJECT_TYPES.FILM ? 'clapperboard' : 'book';
+            const iconName = getProjectTypeIcon(this.plugin, projectType);
             setIcon(iconEl, iconName);
           }
         } catch {}
@@ -112,8 +123,9 @@ export class ManageBooksModal extends Modal {
         // Project Type
         const projectType = cfg?.basic?.projectType || PROJECT_TYPES.BOOK;
         const typeLabel = projectType === PROJECT_TYPES.BOOK ? 'Book' : 
-                         projectType === PROJECT_TYPES.SCRIPT ? 'TV Show' : 
-                         projectType === PROJECT_TYPES.FILM ? 'Film' : 'Book';
+             projectType === PROJECT_TYPES.SCRIPT ? 'TV Show' : 
+             projectType === PROJECT_TYPES.FILM ? 'Film' : 
+             projectType === PROJECT_TYPES.ESSAY ? 'Essay' : 'Book';
         labelsCol.createEl('div', { text: 'Type', cls: 'folio-manage-label' });
         valuesCol.createEl('div', { text: typeLabel, cls: 'folio-manage-author' });
 

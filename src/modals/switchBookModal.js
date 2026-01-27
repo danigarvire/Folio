@@ -1,6 +1,19 @@
 const { Modal, setIcon } = require("obsidian");
 import { PROJECT_TYPES } from '../constants/index.js';
 
+// Helper to get icon from settings templates
+function getProjectTypeIcon(plugin, projectType) {
+  const templates = plugin.settings?.projectTemplates || [];
+  const template = templates.find(t => t.id === projectType);
+  if (template?.icon) return template.icon;
+  // Fallback to defaults
+  if (projectType === PROJECT_TYPES.BOOK) return 'book';
+  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv-minimal-play';
+  if (projectType === PROJECT_TYPES.FILM) return 'clapperboard';
+  if (projectType === PROJECT_TYPES.ESSAY) return 'newspaper';
+  return 'book';
+}
+
 export class SwitchBookModal extends Modal {
   constructor(plugin) {
     super(plugin.app);
@@ -72,9 +85,7 @@ export class SwitchBookModal extends Modal {
         // Add project type icon
         const iconEl = titleRow.createSpan({ cls: 'folio-switch-icon' });
         const projectType = cfg?.basic?.projectType || PROJECT_TYPES.BOOK;
-        const iconName = projectType === PROJECT_TYPES.BOOK ? 'book' : 
-                       projectType === PROJECT_TYPES.SCRIPT ? 'tv-minimal-play' : 
-                       projectType === PROJECT_TYPES.FILM ? 'clapperboard' : 'book';
+        const iconName = getProjectTypeIcon(this.plugin, projectType);
         setIcon(iconEl, iconName);
         
         titleRow.createSpan({ text: displayTitle || book.name || 'Untitled', cls: 'folio-switch-title' });
