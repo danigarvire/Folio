@@ -201,6 +201,9 @@
   background-image: none !important;
   border: 1px solid rgba(0,0,0,0.6);
   color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -211,6 +214,17 @@
     border: 1px solid rgba(255,255,255,0.03);
     color: var(--text-normal);
   }
+}
+
+.folio-book-cover-icon {
+  width: 48px;
+  height: 48px;
+  opacity: 0.3;
+}
+
+.folio-book-cover-icon svg {
+  width: 48px;
+  height: 48px;
 }
 .folio-book-title {
   font-size: 15px;
@@ -463,6 +477,21 @@
   gap: 6px;
   min-width: 0;
 }
+
+.folio-switch-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+}
+
+.folio-switch-icon svg {
+  width: 16px;
+  height: 16px;
+}
 .folio-switch-dash {
   color: var(--text-muted);
 }
@@ -517,6 +546,7 @@
   box-shadow: 0 1px 0 rgba(255,255,255,0.02) inset;
   border: 1px solid rgba(var(--background-modifier-border-rgb), 0.6);
   position: relative; /* enable absolute positioning for actions */
+  min-width: 650px; /* Ensure sufficient width for content and buttons */
 }
 
 /* Placeholder when no books match the filter */
@@ -545,7 +575,20 @@
   background-size: cover;
   background-position: center;
   box-shadow: 0 4px 12px rgba(0,0,0,0.35);
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.folio-manage-cover-icon {
+  width: 40px;
+  height: 40px;
+  opacity: 0.3;
+}
+
+.folio-manage-cover-icon svg {
+  width: 40px;
+  height: 40px;
 }
 
 .folio-manage-right {
@@ -588,8 +631,9 @@
 .folio-manage-desc {
   color: var(--text-muted);
   font-size: 13px;
-  max-width: 80%;
+  max-width: 100%; /* Allow full width, layout will handle spacing */
   line-height: 1.35;
+  padding-right: 120px; /* Reserve space for action buttons */
 }
 
 .folio-manage-actions {
@@ -1077,7 +1121,6 @@ body.theme-dark .folio-book-header::after {
   width: 75px;
   height: 105px;
   border-radius: 4px;
-  background: linear-gradient(160deg, #444, #222);
   background-size: cover;
   background-position: center;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
@@ -1665,4 +1708,90 @@ body.theme-light .folio-tree-children::before {
   background-color: var(--background-primary);
   color: var(--text-normal);
   padding: 8px;
+}
+/* Project Type Selector Modal */
+.folio-project-type-selector-modal .modal-content {
+  padding: 24px;
+}
+
+.folio-project-type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.folio-project-type-option {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border: 2px solid var(--background-modifier-border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.folio-project-type-option:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+  transform: translateX(4px);
+}
+
+.folio-project-type-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--background-modifier-border);
+  border-radius: 8px;
+}
+
+.folio-project-type-icon svg {
+  width: 28px;
+  height: 28px;
+  color: var(--text-muted);
+}
+
+.folio-project-type-option:hover .folio-project-type-icon {
+  background-color: var(--interactive-accent);
+}
+
+.folio-project-type-option:hover .folio-project-type-icon svg {
+  color: var(--text-on-accent);
+}
+
+.folio-project-type-content {
+  flex: 1;
+}
+
+.folio-project-type-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-normal);
+  margin-bottom: 4px;
+}
+
+.folio-project-type-description {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.folio-project-type-button {
+  min-width: 120px;
+  padding: 8px 16px;
+  background-color: var(--interactive-normal);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.folio-project-type-button:hover {
+  background-color: var(--interactive-hover);
+  border-color: var(--interactive-accent);
 }

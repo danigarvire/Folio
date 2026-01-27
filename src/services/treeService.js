@@ -94,9 +94,12 @@ export class TreeService {
         return a.title.localeCompare(b.title);
       });
       
-      // Reassign sequential order numbers
-      nodes.forEach((node, idx) => {
-        node.order = idx + 1;
+      // Only reassign order numbers to nodes that don't have one
+      let nextOrder = Math.max(0, ...nodes.map(n => n.order || 0)) + 1;
+      nodes.forEach((node) => {
+        if (!node.order || node.order === 0) {
+          node.order = nextOrder++;
+        }
         tree.push(node);
       });
 

@@ -1,10 +1,12 @@
 const { Modal, TFile } = require("obsidian");
 import { PROJECT_TYPES } from '../constants/index.js';
+import { ProjectTypeSelectorModal } from './projectTypeSelectorModal.js';
 
 export class NewBookModal extends Modal {
   constructor(plugin) {
     super(plugin.app);
     this.plugin = plugin;
+    this.selectedProjectType = null; // No default - user must select
   }
 
   async onOpen() {
@@ -23,16 +25,26 @@ export class NewBookModal extends Modal {
     typeLeft.createEl('div', { text: 'Select the type of project', cls: 'folio-modal-row-sub' });
     const typeRight = typeRow.createDiv({ cls: 'folio-modal-right' });
     
-    // Dropdown selector for project type
-    const typeSelect = typeRight.createEl('select', { cls: 'folio-project-type-select' });
-    typeSelect.createEl('option', { 
-      text: '📘 Book / Novel', 
-      value: PROJECT_TYPES.BOOK 
-    });
-    typeSelect.createEl('option', { 
-      text: '🎬 Script / Screenplay', 
-      value: PROJECT_TYPES.SCRIPT 
-    });
+    // Button to open project type selector
+    const typeButton = typeRight.createEl('button', { text: 'Select', cls: 'folio-project-type-button' });
+    const updateButtonText = () => {
+      const typeNames = {
+        [PROJECT_TYPES.BOOK]: '📘 Book',
+        [PROJECT_TYPES.SCRIPT]: '📺 TV Show',
+        [PROJECT_TYPES.FILM]: '🎬 Film'
+      };
+      typeButton.textContent = typeNames[this.selectedProjectType] || 'Select type';
+    };
+    
+    typeButton.onclick = () => {
+      const modal = new ProjectTypeSelectorModal(this.app, (projectType) => {
+        this.selectedProjectType = projectType;
+        updateButtonText();
+      });
+      modal.open();
+    };
+    
+    updateButtonText();
 
     // Cover row
     makeDivider();
@@ -132,7 +144,7 @@ export class NewBookModal extends Modal {
       if (!title) return;
       
       // Get selected project type from dropdown
-      const projectType = typeSelect.value;
+const projectType = this.selectedProjectType;
       
       // capture fields before closing the modal (closing may remove DOM inputs)
       const subtitleVal = subtitleInput.value.trim();
@@ -196,11 +208,26 @@ export class NewBookModal extends Modal {
         }
 
         // create initial volume/chapter after metadata persisted (with project type)
-        const volumeName = projectType === PROJECT_TYPES.SCRIPT ? "Sequence 1" : "Volume 1";
-        const chapterName = projectType === PROJECT_TYPES.SCRIPT ? "Scene 1" : "Chapter 1";
-        
-        await this.plugin.createVolume(book, volumeName);
-        await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
+        if (projectType === PROJECT_TYPES.SCRIPT) {
+          // For script projects, create Episode 1/Sequence 1/Scene 1
+          const episodeName = "Episode 1";
+          const sequenceName = "Sequence 1";
+          const sceneName = "Scene 1";
+          
+          await this.plugin.createVolume(book, episodeName);
+          await this.plugin.createVolume({ path: `${book.path}/${episodeName}` }, sequenceName);
+          await this.plugin.createChapter({ path: `${book.path}/${episodeName}/${sequenceName}` }, sceneName, projectType);
+        } else if (projectType === PROJECT_TYPES.FILM) {
+          // For film projects, structure is already created by ensureFilmStructure
+          // No additional volumes/chapters needed
+        } else {
+          // For book projects, create Volume 1/Chapter 1
+          const volumeName = "Volume 1";
+          const chapterName = "Chapter 1";
+          
+          await this.plugin.createVolume(book, volumeName);
+          await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
+        }
 
         // Refresh to get updated book structure with volumes/chapters
         await this.plugin.refresh();

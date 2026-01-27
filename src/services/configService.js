@@ -132,6 +132,7 @@ export class ConfigService {
         uuid: cfg.basic?.uuid || '',
         created_at: cfg.basic?.created_at || new Date().toISOString(),
         target_words: cfg.stats?.target_total_words || 0,
+        projectType: cfg.basic?.projectType || 'book',
       };
     } catch (e) {
       console.warn('loadBookMeta failed', e);

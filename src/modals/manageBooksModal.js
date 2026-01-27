@@ -1,4 +1,5 @@
-const { Modal, TFile } = require("obsidian");
+const { Modal, TFile, setIcon } = require("obsidian");
+import { PROJECT_TYPES } from '../constants/index.js';
 import { ConfirmModal } from './confirmModal.js';
 import { EditBookModal } from './editBookModal.js';
 
@@ -11,8 +12,12 @@ export class ManageBooksModal extends Modal {
   async onOpen() {
     const { contentEl } = this;
     contentEl.empty();
+    
+    // Set wider default width for the modal
+    this.modalEl.style.width = '750px';
+    this.modalEl.style.maxWidth = '90vw';
 
-    contentEl.createEl("h2", { text: "Manage books" });
+    contentEl.createEl("h2", { text: "Manage projects" });
     const search = contentEl.createEl("input", {
       type: "text",
       placeholder: "Search books...",
@@ -78,12 +83,17 @@ export class ManageBooksModal extends Modal {
             coverWrap.style.backgroundImage = `url("${url}")`;
           }
         } catch {}
-        // placeholder when no cover exists
+        // placeholder when no cover exists - show project type icon
         try {
           const coverFile = book.cover instanceof TFile ? book.cover : (book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null);
           if (!(coverFile instanceof TFile)) {
             coverWrap.addClass('folio-manage-cover-placeholder');
-            try { coverWrap.createSpan({ text: 'TBD', cls: 'folio-manage-cover-txt' }); } catch { coverWrap.textContent = 'TBD'; }
+            const iconEl = coverWrap.createDiv({ cls: 'folio-manage-cover-icon' });
+            const projectType = cfg?.basic?.projectType || PROJECT_TYPES.BOOK;
+            const iconName = projectType === PROJECT_TYPES.BOOK ? 'book' : 
+                           projectType === PROJECT_TYPES.SCRIPT ? 'tv-minimal-play' : 
+                           projectType === PROJECT_TYPES.FILM ? 'clapperboard' : 'book';
+            setIcon(iconEl, iconName);
           }
         } catch {}
 
@@ -94,16 +104,31 @@ export class ManageBooksModal extends Modal {
         const deleteBtn = actions.createEl('button', { text: 'Delete', cls: 'mod-danger' });
         const editBtn = actions.createEl('button', { text: 'Edit' });
 
-        // Metadata grid: labels on left, values on right (Author / Description / Progress)
+        // Metadata grid: labels on left, values on right (Type / Author / Description / Progress)
         const metaGrid = right.createDiv({ cls: 'folio-manage-meta-grid' });
         const labelsCol = metaGrid.createDiv({ cls: 'folio-manage-labels' });
         const valuesCol = metaGrid.createDiv({ cls: 'folio-manage-values' });
+
+        // Project Type
+        const projectType = cfg?.basic?.projectType || PROJECT_TYPES.BOOK;
+        const typeLabel = projectType === PROJECT_TYPES.BOOK ? 'Book' : 
+                         projectType === PROJECT_TYPES.SCRIPT ? 'TV Show' : 
+                         projectType === PROJECT_TYPES.FILM ? 'Film' : 'Book';
+        labelsCol.createEl('div', { text: 'Type', cls: 'folio-manage-label' });
+        valuesCol.createEl('div', { text: typeLabel, cls: 'folio-manage-author' });
 
         labelsCol.createEl('div', { text: 'Author', cls: 'folio-manage-label' });
         valuesCol.createEl('div', { text: authors || '—', cls: 'folio-manage-author' });
 
         labelsCol.createEl('div', { text: 'Description', cls: 'folio-manage-label' });
-        const short = desc ? (desc.length > 160 ? desc.slice(0, 157) + '…' : desc) : '—';
+        // Truncate to 5 words
+        const truncateToWords = (text, wordLimit) => {
+          if (!text) return '—';
+          const words = text.trim().split(/\s+/);
+          if (words.length <= wordLimit) return text;
+          return words.slice(0, wordLimit).join(' ') + '...';
+        };
+        const short = truncateToWords(desc, 5);
         valuesCol.createEl('div', { text: short, cls: 'folio-manage-desc' });
 
         labelsCol.createEl('div', { text: 'Progress', cls: 'folio-manage-label' });

@@ -294,16 +294,32 @@ module.exports = class FolioPlugin extends Plugin {
         })
       );
 
-      // New file (create Chapter N.md automatically)
+      // New file (ask for name)
       menu.addItem((it) =>
-        it.setTitle(isRoot ? "New root file" : "New file").setIcon("file-plus").onClick(async () => {
-          try {
-            await this.createNextChapterFile(folder);
-            await this.refresh();
-            this.rerenderViews();
-          } catch (e) {
-            console.error(e);
-          }
+        it.setTitle(isRoot ? "New root file" : "New file").setIcon("file-plus").onClick(() => {
+          const modal = new TextInputModal(this.app, {
+            title: "New file",
+            placeholder: "File name",
+            cta: "Create",
+            onSubmit: async (value) => {
+              const name = (value || "").trim();
+              if (!name) return;
+              try {
+                const fileName = name.endsWith('.md') ? name : `${name}.md`;
+                const dest = `${folder.path}/${fileName}`;
+                if (!this.app.vault.getAbstractFileByPath(dest)) {
+                  await this.app.vault.create(dest, "");
+                  const book = this.booksIndex.find((b) => dest.startsWith(b.path));
+                  if (book) await this.syncChapterStatsBaseline(book);
+                }
+                await this.refresh();
+                this.rerenderViews();
+              } catch (e) {
+                console.error(e);
+              }
+            },
+          });
+          modal.open();
         })
       );
 

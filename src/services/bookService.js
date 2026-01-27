@@ -128,6 +128,37 @@ export class BookService {
     try {
       const bookConfigPath = `${path}/misc/book-config.json`;
       const now = new Date().toISOString();
+      
+      // Different default tree structure for script vs book projects
+      const defaultTree = projectType === PROJECT_TYPES.SCRIPT ? [
+        { 
+          id: 'series-framework', 
+          title: 'Show Dossier', 
+          type: 'group', 
+          path: 'Show Dossier', 
+          order: 1, 
+          default_status: 'draft', 
+          is_expanded: false, 
+          created_at: now, 
+          last_modified: now, 
+          children: [
+            { id: 'concept', title: 'Concept', type: 'group', path: 'Show Dossier/Concept', order: 1, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'structure', title: 'Structure', type: 'group', path: 'Show Dossier/Structure', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'faces', title: 'Faces', type: 'group', path: 'Show Dossier/Faces', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'places', title: 'Places', type: 'group', path: 'Show Dossier/Places', order: 4, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'objects', title: 'Objects', type: 'group', path: 'Show Dossier/Objects', order: 5, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'documentation', title: 'Documentation', type: 'group', path: 'Show Dossier/Documentation', order: 6, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
+          ]
+        },
+        { id: 'episode1', title: 'Episode 1', type: 'group', path: 'Episode 1', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
+      ] : [
+        { id: 'preface', title: 'Preface', type: 'file', path: 'Preface.md', order: 1, default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'moodboard', title: 'Moodboard', type: 'canvas', path: 'Moodboard.canvas', order: 2, default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'volume1', title: 'Volume 1', type: 'group', path: 'Volume 1', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 4, default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'afterword', title: 'Afterword', type: 'file', path: 'Afterword.md', order: 5, default_status: 'draft', created_at: now, last_modified: now }
+      ];
+      
       const defaultConfig = {
         basic: {
           title: name,
@@ -139,13 +170,7 @@ export class BookService {
           projectType: projectType, // Save project type
         },
         structure: {
-          tree: [
-            { id: 'preface', title: 'Preface', type: 'file', path: 'Preface.md', order: 1, default_status: 'draft', created_at: now, last_modified: now },
-            { id: 'moodboard', title: 'Moodboard', type: 'canvas', path: 'Moodboard.canvas', order: 2, default_status: 'draft', created_at: now, last_modified: now },
-            { id: 'volume1', title: 'Volume 1', type: 'group', path: 'Volume 1', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 4, default_status: 'draft', created_at: now, last_modified: now },
-            { id: 'afterword', title: 'Afterword', type: 'file', path: 'Afterword.md', order: 5, default_status: 'draft', created_at: now, last_modified: now }
-          ]
+          tree: defaultTree
         },
         stats: {
           total_words: 0,
@@ -177,6 +202,8 @@ export class BookService {
     if (bookFolder instanceof TFolder) {
       if (projectType === PROJECT_TYPES.SCRIPT) {
         await this.ensureScriptStructure(bookFolder);
+      } else if (projectType === PROJECT_TYPES.FILM) {
+        await this.ensureFilmStructure(bookFolder);
       } else {
         await this.ensureBookBaseStructure(bookFolder);
       }
@@ -189,16 +216,27 @@ export class BookService {
   async ensureScriptStructure(bookFolder) {
     const vault = this.app.vault;
     
-    // Create Bible folder structure
-    const biblePath = `${bookFolder.path}/Bible`;
+    // Create Show Dossier folder structure FIRST (to ensure it appears before Episode)
+    const biblePath = `${bookFolder.path}/Show Dossier`;
     if (!vault.getAbstractFileByPath(biblePath)) {
       await vault.createFolder(biblePath);
     }
     
-    // Create Bible subfolders first
+    // Create Show Dossier subfolders in order: Concept, Structure, Faces, Places, Objects, Documentation
+    const conceptPath = `${biblePath}/Concept`;
+    const structurePath = `${biblePath}/Structure`;
     const facesPath = `${biblePath}/Faces`;
     const placesPath = `${biblePath}/Places`;
     const objectsPath = `${biblePath}/Objects`;
+    const documentationPath = `${biblePath}/Documentation`;
+    
+    if (!vault.getAbstractFileByPath(conceptPath)) {
+      await vault.createFolder(conceptPath);
+    }
+    
+    if (!vault.getAbstractFileByPath(structurePath)) {
+      await vault.createFolder(structurePath);
+    }
     
     if (!vault.getAbstractFileByPath(facesPath)) {
       await vault.createFolder(facesPath);
@@ -212,13 +250,32 @@ export class BookService {
       await vault.createFolder(objectsPath);
     }
     
-    // Create Bible files in order
-    const bibleFiles = ["Logline.md", "Theme.md", "Structure.md"];
-    for (const file of bibleFiles) {
-      const filePath = `${biblePath}/${file}`;
+    if (!vault.getAbstractFileByPath(documentationPath)) {
+      await vault.createFolder(documentationPath);
+    }
+    
+    // Create Concept files in order
+    const conceptFiles = ["Logline.md", "Theme.md", "Premise & Tone.md", "Moodboard.canvas"];
+    for (const file of conceptFiles) {
+      const filePath = `${conceptPath}/${file}`;
+      if (!vault.getAbstractFileByPath(filePath)) {
+        await vault.create(filePath, file.endsWith('.canvas') ? "" : `---\nprojectType: script\n---\n\n`);
+      }
+    }
+    
+    // Create Structure files in order
+    const structureFiles = ["Arcs.md", "Outline.md"];
+    for (const file of structureFiles) {
+      const filePath = `${structurePath}/${file}`;
       if (!vault.getAbstractFileByPath(filePath)) {
         await vault.create(filePath, `---\nprojectType: script\n---\n\n`);
       }
+    }
+    
+    // Create initial documentation file
+    const document1Path = `${documentationPath}/Document 1.md`;
+    if (!vault.getAbstractFileByPath(document1Path)) {
+      await vault.create(document1Path, `---\nprojectType: script\n---\n\n`);
     }
     
     // Create initial character file
@@ -239,15 +296,56 @@ export class BookService {
       await vault.create(object1Path, `---\nprojectType: script\n---\n\n`);
     }
     
-    // Create root files
-    const moodboardPath = `${bookFolder.path}/Moodboard.canvas`;
+    // Create Episode 1 folder and Sequence 1 inside it
+    const episode1Path = `${bookFolder.path}/Episode 1`;
+    if (!vault.getAbstractFileByPath(episode1Path)) {
+      await vault.createFolder(episode1Path);
+    }
+    
+    const sequence1Path = `${episode1Path}/Sequence 1`;
+    if (!vault.getAbstractFileByPath(sequence1Path)) {
+      await vault.createFolder(sequence1Path);
+    }
+  }
+
+  /**
+   * Ensure film project has simplified structure
+   */
+  async ensureFilmStructure(bookFolder) {
+    const vault = this.app.vault;
+    
+    // Create Film Dossier folder
+    const dossierPath = `${bookFolder.path}/Film Dossier`;
+    if (!vault.getAbstractFileByPath(dossierPath)) {
+      await vault.createFolder(dossierPath);
+    }
+    
+    // Create files inside Film Dossier
+    const moodboardPath = `${dossierPath}/Moodboard.canvas`;
     if (!vault.getAbstractFileByPath(moodboardPath)) {
       await vault.create(moodboardPath, "");
     }
     
-    const outlinePath = `${bookFolder.path}/Outline.md`;
+    const outlinePath = `${dossierPath}/Outline.md`;
     if (!vault.getAbstractFileByPath(outlinePath)) {
-      await vault.create(outlinePath, `---\nprojectType: script\n---\n\n`);
+      await vault.create(outlinePath, `---\nprojectType: film\n---\n\n`);
+    }
+    
+    const themePath = `${dossierPath}/Theme & Tone.md`;
+    if (!vault.getAbstractFileByPath(themePath)) {
+      await vault.create(themePath, `---\nprojectType: film\n---\n\n`);
+    }
+    
+    // Create Sequence 1 folder
+    const sequence1Path = `${bookFolder.path}/Sequence 1`;
+    if (!vault.getAbstractFileByPath(sequence1Path)) {
+      await vault.createFolder(sequence1Path);
+    }
+    
+    // Create Scene 1.md inside Sequence 1
+    const scene1Path = `${sequence1Path}/Scene 1.md`;
+    if (!vault.getAbstractFileByPath(scene1Path)) {
+      await vault.create(scene1Path, `---\nprojectType: film\n---\n\n`);
     }
   }
 

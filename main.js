@@ -21,7 +21,8 @@ var init_constants = __esm({
     WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
     PROJECT_TYPES = {
       BOOK: "book",
-      SCRIPT: "script"
+      SCRIPT: "script",
+      FILM: "film"
     };
     DEFAULT_SETTINGS = {
       booksPath: "projects",
@@ -65,20 +66,78 @@ var init_constants = __esm({
   }
 });
 
+// src/modals/projectTypeSelectorModal.js
+var import_obsidian3, ProjectTypeSelectorModal;
+var init_projectTypeSelectorModal = __esm({
+  "src/modals/projectTypeSelectorModal.js"() {
+    import_obsidian3 = require("obsidian");
+    init_constants();
+    ProjectTypeSelectorModal = class extends import_obsidian3.Modal {
+      constructor(app, onSelect) {
+        super(app);
+        this.onSelect = onSelect;
+      }
+      onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+        contentEl.addClass("folio-project-type-selector-modal");
+        contentEl.createEl("h2", { text: "Select Project Type" });
+        const optionsContainer = contentEl.createDiv({ cls: "folio-project-type-options" });
+        this.createProjectOption(optionsContainer, {
+          title: "Book",
+          description: "Novel or written work",
+          icon: "book",
+          value: PROJECT_TYPES.BOOK
+        });
+        this.createProjectOption(optionsContainer, {
+          title: "TV Show",
+          description: "Series with episodes and sequences",
+          icon: "tv-minimal-play",
+          value: PROJECT_TYPES.SCRIPT
+        });
+        this.createProjectOption(optionsContainer, {
+          title: "Film",
+          description: "Feature film or short",
+          icon: "clapperboard",
+          value: PROJECT_TYPES.FILM
+        });
+      }
+      createProjectOption(container, { title, description, icon, value }) {
+        const option = container.createDiv({ cls: "folio-project-type-option" });
+        const iconEl = option.createDiv({ cls: "folio-project-type-icon" });
+        (0, import_obsidian3.setIcon)(iconEl, icon);
+        const content = option.createDiv({ cls: "folio-project-type-content" });
+        content.createEl("div", { text: title, cls: "folio-project-type-title" });
+        content.createEl("div", { text: description, cls: "folio-project-type-description" });
+        option.addEventListener("click", () => {
+          this.onSelect(value);
+          this.close();
+        });
+      }
+      onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+      }
+    };
+  }
+});
+
 // src/modals/newBookModal.js
 var newBookModal_exports = {};
 __export(newBookModal_exports, {
   NewBookModal: () => NewBookModal
 });
-var Modal, TFile3, NewBookModal;
+var Modal2, TFile3, NewBookModal;
 var init_newBookModal = __esm({
   "src/modals/newBookModal.js"() {
     init_constants();
-    ({ Modal, TFile: TFile3 } = require("obsidian"));
-    NewBookModal = class extends Modal {
+    init_projectTypeSelectorModal();
+    ({ Modal: Modal2, TFile: TFile3 } = require("obsidian"));
+    NewBookModal = class extends Modal2 {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
+        this.selectedProjectType = null;
       }
       async onOpen() {
         const { contentEl } = this;
@@ -91,15 +150,23 @@ var init_newBookModal = __esm({
         typeLeft.createEl("div", { text: "Project Type", cls: "folio-modal-row-title" });
         typeLeft.createEl("div", { text: "Select the type of project", cls: "folio-modal-row-sub" });
         const typeRight = typeRow.createDiv({ cls: "folio-modal-right" });
-        const typeSelect = typeRight.createEl("select", { cls: "folio-project-type-select" });
-        typeSelect.createEl("option", {
-          text: "\u{1F4D8} Book / Novel",
-          value: PROJECT_TYPES.BOOK
-        });
-        typeSelect.createEl("option", {
-          text: "\u{1F3AC} Script / Screenplay",
-          value: PROJECT_TYPES.SCRIPT
-        });
+        const typeButton = typeRight.createEl("button", { text: "Select", cls: "folio-project-type-button" });
+        const updateButtonText = () => {
+          const typeNames = {
+            [PROJECT_TYPES.BOOK]: "\u{1F4D8} Book",
+            [PROJECT_TYPES.SCRIPT]: "\u{1F4FA} TV Show",
+            [PROJECT_TYPES.FILM]: "\u{1F3AC} Film"
+          };
+          typeButton.textContent = typeNames[this.selectedProjectType] || "Select type";
+        };
+        typeButton.onclick = () => {
+          const modal = new ProjectTypeSelectorModal(this.app, (projectType) => {
+            this.selectedProjectType = projectType;
+            updateButtonText();
+          });
+          modal.open();
+        };
+        updateButtonText();
         makeDivider();
         const coverRow = contentEl.createDiv({ cls: "folio-modal-row" });
         const coverLeft = coverRow.createDiv({ cls: "folio-modal-left" });
@@ -197,7 +264,7 @@ var init_newBookModal = __esm({
           const title = titleInput.value.trim();
           if (!title)
             return;
-          const projectType = typeSelect.value;
+          const projectType = this.selectedProjectType;
           const subtitleVal = subtitleInput.value.trim();
           const authorVal = authorInput.value.trim();
           const descVal = descInput.value.trim();
@@ -266,10 +333,20 @@ var init_newBookModal = __esm({
             } catch (e) {
               console.warn(e);
             }
-            const volumeName = projectType === PROJECT_TYPES.SCRIPT ? "Sequence 1" : "Volume 1";
-            const chapterName = projectType === PROJECT_TYPES.SCRIPT ? "Scene 1" : "Chapter 1";
-            await this.plugin.createVolume(book, volumeName);
-            await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
+            if (projectType === PROJECT_TYPES.SCRIPT) {
+              const episodeName = "Episode 1";
+              const sequenceName = "Sequence 1";
+              const sceneName = "Scene 1";
+              await this.plugin.createVolume(book, episodeName);
+              await this.plugin.createVolume({ path: `${book.path}/${episodeName}` }, sequenceName);
+              await this.plugin.createChapter({ path: `${book.path}/${episodeName}/${sequenceName}` }, sceneName, projectType);
+            } else if (projectType === PROJECT_TYPES.FILM) {
+            } else {
+              const volumeName = "Volume 1";
+              const chapterName = "Chapter 1";
+              await this.plugin.createVolume(book, volumeName);
+              await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
+            }
             await this.plugin.refresh();
             const updatedBook = this.plugin.booksIndex.find((b) => b.path === book.path);
             if (updatedBook) {
@@ -304,11 +381,12 @@ var switchBookModal_exports = {};
 __export(switchBookModal_exports, {
   SwitchBookModal: () => SwitchBookModal
 });
-var Modal2, SwitchBookModal;
+var Modal3, setIcon2, SwitchBookModal;
 var init_switchBookModal = __esm({
   "src/modals/switchBookModal.js"() {
-    ({ Modal: Modal2 } = require("obsidian"));
-    SwitchBookModal = class extends Modal2 {
+    init_constants();
+    ({ Modal: Modal3, setIcon: setIcon2 } = require("obsidian"));
+    SwitchBookModal = class extends Modal3 {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -316,7 +394,7 @@ var init_switchBookModal = __esm({
       async onOpen() {
         const { contentEl } = this;
         contentEl.empty();
-        contentEl.createEl("h2", { text: "Switch book" });
+        contentEl.createEl("h2", { text: "Switch project" });
         const search = contentEl.createEl("input", {
           type: "text",
           placeholder: "Search books...",
@@ -334,7 +412,7 @@ var init_switchBookModal = __esm({
           return String(num);
         };
         const renderList = async (filter) => {
-          var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+          var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
           list.empty();
           const seen = /* @__PURE__ */ new Set();
           for (const book of this.plugin.booksIndex) {
@@ -370,6 +448,10 @@ var init_switchBookModal = __esm({
             const leftCol = row.createDiv({ cls: "folio-switch-left" });
             const rightCol = row.createDiv({ cls: "folio-switch-right" });
             const titleRow = leftCol.createDiv({ cls: "folio-switch-title-row" });
+            const iconEl = titleRow.createSpan({ cls: "folio-switch-icon" });
+            const projectType = ((_i = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _i.projectType) || PROJECT_TYPES.BOOK;
+            const iconName = projectType === PROJECT_TYPES.BOOK ? "book" : projectType === PROJECT_TYPES.SCRIPT ? "tv-minimal-play" : projectType === PROJECT_TYPES.FILM ? "clapperboard" : "book";
+            setIcon2(iconEl, iconName);
             titleRow.createSpan({ text: displayTitle || book.name || "Untitled", cls: "folio-switch-title" });
             if (subtitle) {
               titleRow.createSpan({ text: " - ", cls: "folio-switch-dash" });
@@ -378,7 +460,7 @@ var init_switchBookModal = __esm({
             const progressPct = targetWords > 0 ? Math.round(Number(totalWords) / Number(targetWords) * 100) : "\u2014";
             let lastMod = "\u2014";
             try {
-              const lm = ((_i = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _i.last_modified) || ((_j = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _j.lastModified) || "";
+              const lm = ((_j = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _j.last_modified) || ((_k = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _k.lastModified) || "";
               if (lm)
                 lastMod = new Date(lm).toLocaleString();
             } catch (e) {
@@ -404,11 +486,11 @@ var init_switchBookModal = __esm({
 });
 
 // src/modals/confirmModal.js
-var Modal3, ConfirmModal;
+var Modal4, ConfirmModal;
 var init_confirmModal = __esm({
   "src/modals/confirmModal.js"() {
-    ({ Modal: Modal3 } = require("obsidian"));
-    ConfirmModal = class extends Modal3 {
+    ({ Modal: Modal4 } = require("obsidian"));
+    ConfirmModal = class extends Modal4 {
       constructor(app, { title, message, confirmText, onConfirm }) {
         super(app);
         this.title = title;
@@ -438,11 +520,11 @@ var init_confirmModal = __esm({
 });
 
 // src/modals/editBookModal.js
-var Modal4, TFile4, EditBookModal;
+var Modal5, TFile4, EditBookModal;
 var init_editBookModal = __esm({
   "src/modals/editBookModal.js"() {
-    ({ Modal: Modal4, TFile: TFile4 } = require("obsidian"));
-    EditBookModal = class extends Modal4 {
+    ({ Modal: Modal5, TFile: TFile4 } = require("obsidian"));
+    EditBookModal = class extends Modal5 {
       constructor(plugin, book) {
         super(plugin.app);
         this.plugin = plugin;
@@ -794,13 +876,14 @@ var manageBooksModal_exports = {};
 __export(manageBooksModal_exports, {
   ManageBooksModal: () => ManageBooksModal
 });
-var Modal5, TFile5, ManageBooksModal;
+var Modal6, TFile5, setIcon3, ManageBooksModal;
 var init_manageBooksModal = __esm({
   "src/modals/manageBooksModal.js"() {
+    init_constants();
     init_confirmModal();
     init_editBookModal();
-    ({ Modal: Modal5, TFile: TFile5 } = require("obsidian"));
-    ManageBooksModal = class extends Modal5 {
+    ({ Modal: Modal6, TFile: TFile5, setIcon: setIcon3 } = require("obsidian"));
+    ManageBooksModal = class extends Modal6 {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -808,7 +891,9 @@ var init_manageBooksModal = __esm({
       async onOpen() {
         const { contentEl } = this;
         contentEl.empty();
-        contentEl.createEl("h2", { text: "Manage books" });
+        this.modalEl.style.width = "750px";
+        this.modalEl.style.maxWidth = "90vw";
+        contentEl.createEl("h2", { text: "Manage projects" });
         const search = contentEl.createEl("input", {
           type: "text",
           placeholder: "Search books...",
@@ -826,7 +911,7 @@ var init_manageBooksModal = __esm({
           return String(num);
         };
         const renderList = async (filter) => {
-          var _a, _b, _c, _d, _e, _f, _g, _h;
+          var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
           list.empty();
           const seen = /* @__PURE__ */ new Set();
           for (const book of this.plugin.booksIndex) {
@@ -874,11 +959,10 @@ var init_manageBooksModal = __esm({
               const coverFile = book.cover instanceof TFile5 ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
               if (!(coverFile instanceof TFile5)) {
                 coverWrap.addClass("folio-manage-cover-placeholder");
-                try {
-                  coverWrap.createSpan({ text: "TBD", cls: "folio-manage-cover-txt" });
-                } catch (e) {
-                  coverWrap.textContent = "TBD";
-                }
+                const iconEl = coverWrap.createDiv({ cls: "folio-manage-cover-icon" });
+                const projectType2 = ((_i = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _i.projectType) || PROJECT_TYPES.BOOK;
+                const iconName = projectType2 === PROJECT_TYPES.BOOK ? "book" : projectType2 === PROJECT_TYPES.SCRIPT ? "tv-minimal-play" : projectType2 === PROJECT_TYPES.FILM ? "clapperboard" : "book";
+                setIcon3(iconEl, iconName);
               }
             } catch (e) {
             }
@@ -890,10 +974,22 @@ var init_manageBooksModal = __esm({
             const metaGrid = right.createDiv({ cls: "folio-manage-meta-grid" });
             const labelsCol = metaGrid.createDiv({ cls: "folio-manage-labels" });
             const valuesCol = metaGrid.createDiv({ cls: "folio-manage-values" });
+            const projectType = ((_j = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _j.projectType) || PROJECT_TYPES.BOOK;
+            const typeLabel = projectType === PROJECT_TYPES.BOOK ? "Book" : projectType === PROJECT_TYPES.SCRIPT ? "TV Show" : projectType === PROJECT_TYPES.FILM ? "Film" : "Book";
+            labelsCol.createEl("div", { text: "Type", cls: "folio-manage-label" });
+            valuesCol.createEl("div", { text: typeLabel, cls: "folio-manage-author" });
             labelsCol.createEl("div", { text: "Author", cls: "folio-manage-label" });
             valuesCol.createEl("div", { text: authors || "\u2014", cls: "folio-manage-author" });
             labelsCol.createEl("div", { text: "Description", cls: "folio-manage-label" });
-            const short = desc ? desc.length > 160 ? desc.slice(0, 157) + "\u2026" : desc : "\u2014";
+            const truncateToWords = (text, wordLimit) => {
+              if (!text)
+                return "\u2014";
+              const words = text.trim().split(/\s+/);
+              if (words.length <= wordLimit)
+                return text;
+              return words.slice(0, wordLimit).join(" ") + "...";
+            };
+            const short = truncateToWords(desc, 5);
             valuesCol.createEl("div", { text: short, cls: "folio-manage-desc" });
             labelsCol.createEl("div", { text: "Progress", cls: "folio-manage-label" });
             valuesCol.createEl("div", { text: `${totalWords} / ${formatTarget(targetWords)}`, cls: "folio-manage-progress" });
@@ -951,11 +1047,11 @@ var helpModal_exports = {};
 __export(helpModal_exports, {
   HelpModal: () => HelpModal
 });
-var Modal6, HelpModal;
+var Modal7, HelpModal;
 var init_helpModal = __esm({
   "src/modals/helpModal.js"() {
-    ({ Modal: Modal6 } = require("obsidian"));
-    HelpModal = class extends Modal6 {
+    ({ Modal: Modal7 } = require("obsidian"));
+    HelpModal = class extends Modal7 {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -975,11 +1071,11 @@ var textInputModal_exports = {};
 __export(textInputModal_exports, {
   TextInputModal: () => TextInputModal
 });
-var Modal7, TextInputModal;
+var Modal8, TextInputModal;
 var init_textInputModal = __esm({
   "src/modals/textInputModal.js"() {
-    ({ Modal: Modal7 } = require("obsidian"));
-    TextInputModal = class extends Modal7 {
+    ({ Modal: Modal8 } = require("obsidian"));
+    TextInputModal = class extends Modal8 {
       constructor(app, { title, placeholder, cta, onSubmit }) {
         super(app);
         this.title = title;
@@ -1123,7 +1219,7 @@ var ConfigService = class {
    * Load book metadata (simplified view of config)
    */
   async loadBookMeta(book) {
-    var _a, _b, _c, _d, _e, _f, _g;
+    var _a, _b, _c, _d, _e, _f, _g, _h;
     try {
       const cfg = await this.loadBookConfig(book);
       if (!cfg)
@@ -1135,7 +1231,8 @@ var ConfigService = class {
         description: ((_d = cfg.basic) == null ? void 0 : _d.desc) || "",
         uuid: ((_e = cfg.basic) == null ? void 0 : _e.uuid) || "",
         created_at: ((_f = cfg.basic) == null ? void 0 : _f.created_at) || new Date().toISOString(),
-        target_words: ((_g = cfg.stats) == null ? void 0 : _g.target_total_words) || 0
+        target_words: ((_g = cfg.stats) == null ? void 0 : _g.target_total_words) || 0,
+        projectType: ((_h = cfg.basic) == null ? void 0 : _h.projectType) || "book"
       };
     } catch (e) {
       console.warn("loadBookMeta failed", e);
@@ -1267,8 +1364,11 @@ var TreeService = class {
           return a.order - b.order;
         return a.title.localeCompare(b.title);
       });
-      nodes.forEach((node, idx) => {
-        node.order = idx + 1;
+      let nextOrder = Math.max(0, ...nodes.map((n) => n.order || 0)) + 1;
+      nodes.forEach((node) => {
+        if (!node.order || node.order === 0) {
+          node.order = nextOrder++;
+        }
         tree.push(node);
       });
       console.log("Built tree from filesystem:", tree);
@@ -1707,6 +1807,34 @@ var BookService = class {
     try {
       const bookConfigPath = `${path}/misc/book-config.json`;
       const now = new Date().toISOString();
+      const defaultTree = projectType === PROJECT_TYPES.SCRIPT ? [
+        {
+          id: "series-framework",
+          title: "Show Dossier",
+          type: "group",
+          path: "Show Dossier",
+          order: 1,
+          default_status: "draft",
+          is_expanded: false,
+          created_at: now,
+          last_modified: now,
+          children: [
+            { id: "concept", title: "Concept", type: "group", path: "Show Dossier/Concept", order: 1, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "structure", title: "Structure", type: "group", path: "Show Dossier/Structure", order: 2, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "faces", title: "Faces", type: "group", path: "Show Dossier/Faces", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "places", title: "Places", type: "group", path: "Show Dossier/Places", order: 4, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "objects", title: "Objects", type: "group", path: "Show Dossier/Objects", order: 5, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "documentation", title: "Documentation", type: "group", path: "Show Dossier/Documentation", order: 6, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
+          ]
+        },
+        { id: "episode1", title: "Episode 1", type: "group", path: "Episode 1", order: 2, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
+      ] : [
+        { id: "preface", title: "Preface", type: "file", path: "Preface.md", order: 1, default_status: "draft", created_at: now, last_modified: now },
+        { id: "moodboard", title: "Moodboard", type: "canvas", path: "Moodboard.canvas", order: 2, default_status: "draft", created_at: now, last_modified: now },
+        { id: "volume1", title: "Volume 1", type: "group", path: "Volume 1", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 4, default_status: "draft", created_at: now, last_modified: now },
+        { id: "afterword", title: "Afterword", type: "file", path: "Afterword.md", order: 5, default_status: "draft", created_at: now, last_modified: now }
+      ];
       const defaultConfig = {
         basic: {
           title: name,
@@ -1719,13 +1847,7 @@ var BookService = class {
           // Save project type
         },
         structure: {
-          tree: [
-            { id: "preface", title: "Preface", type: "file", path: "Preface.md", order: 1, default_status: "draft", created_at: now, last_modified: now },
-            { id: "moodboard", title: "Moodboard", type: "canvas", path: "Moodboard.canvas", order: 2, default_status: "draft", created_at: now, last_modified: now },
-            { id: "volume1", title: "Volume 1", type: "group", path: "Volume 1", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 4, default_status: "draft", created_at: now, last_modified: now },
-            { id: "afterword", title: "Afterword", type: "file", path: "Afterword.md", order: 5, default_status: "draft", created_at: now, last_modified: now }
-          ]
+          tree: defaultTree
         },
         stats: {
           total_words: 0,
@@ -1754,6 +1876,8 @@ var BookService = class {
     if (bookFolder instanceof import_obsidian2.TFolder) {
       if (projectType === PROJECT_TYPES.SCRIPT) {
         await this.ensureScriptStructure(bookFolder);
+      } else if (projectType === PROJECT_TYPES.FILM) {
+        await this.ensureFilmStructure(bookFolder);
       } else {
         await this.ensureBookBaseStructure(bookFolder);
       }
@@ -1764,13 +1888,22 @@ var BookService = class {
    */
   async ensureScriptStructure(bookFolder) {
     const vault = this.app.vault;
-    const biblePath = `${bookFolder.path}/Bible`;
+    const biblePath = `${bookFolder.path}/Show Dossier`;
     if (!vault.getAbstractFileByPath(biblePath)) {
       await vault.createFolder(biblePath);
     }
+    const conceptPath = `${biblePath}/Concept`;
+    const structurePath = `${biblePath}/Structure`;
     const facesPath = `${biblePath}/Faces`;
     const placesPath = `${biblePath}/Places`;
     const objectsPath = `${biblePath}/Objects`;
+    const documentationPath = `${biblePath}/Documentation`;
+    if (!vault.getAbstractFileByPath(conceptPath)) {
+      await vault.createFolder(conceptPath);
+    }
+    if (!vault.getAbstractFileByPath(structurePath)) {
+      await vault.createFolder(structurePath);
+    }
     if (!vault.getAbstractFileByPath(facesPath)) {
       await vault.createFolder(facesPath);
     }
@@ -1780,9 +1913,23 @@ var BookService = class {
     if (!vault.getAbstractFileByPath(objectsPath)) {
       await vault.createFolder(objectsPath);
     }
-    const bibleFiles = ["Logline.md", "Theme.md", "Structure.md"];
-    for (const file of bibleFiles) {
-      const filePath = `${biblePath}/${file}`;
+    if (!vault.getAbstractFileByPath(documentationPath)) {
+      await vault.createFolder(documentationPath);
+    }
+    const conceptFiles = ["Logline.md", "Theme.md", "Premise & Tone.md", "Moodboard.canvas"];
+    for (const file of conceptFiles) {
+      const filePath = `${conceptPath}/${file}`;
+      if (!vault.getAbstractFileByPath(filePath)) {
+        await vault.create(filePath, file.endsWith(".canvas") ? "" : `---
+projectType: script
+---
+
+`);
+      }
+    }
+    const structureFiles = ["Arcs.md", "Outline.md"];
+    for (const file of structureFiles) {
+      const filePath = `${structurePath}/${file}`;
       if (!vault.getAbstractFileByPath(filePath)) {
         await vault.create(filePath, `---
 projectType: script
@@ -1790,6 +1937,14 @@ projectType: script
 
 `);
       }
+    }
+    const document1Path = `${documentationPath}/Document 1.md`;
+    if (!vault.getAbstractFileByPath(document1Path)) {
+      await vault.create(document1Path, `---
+projectType: script
+---
+
+`);
     }
     const character1Path = `${facesPath}/Character 1.md`;
     if (!vault.getAbstractFileByPath(character1Path)) {
@@ -1815,14 +1970,52 @@ projectType: script
 
 `);
     }
-    const moodboardPath = `${bookFolder.path}/Moodboard.canvas`;
+    const episode1Path = `${bookFolder.path}/Episode 1`;
+    if (!vault.getAbstractFileByPath(episode1Path)) {
+      await vault.createFolder(episode1Path);
+    }
+    const sequence1Path = `${episode1Path}/Sequence 1`;
+    if (!vault.getAbstractFileByPath(sequence1Path)) {
+      await vault.createFolder(sequence1Path);
+    }
+  }
+  /**
+   * Ensure film project has simplified structure
+   */
+  async ensureFilmStructure(bookFolder) {
+    const vault = this.app.vault;
+    const dossierPath = `${bookFolder.path}/Film Dossier`;
+    if (!vault.getAbstractFileByPath(dossierPath)) {
+      await vault.createFolder(dossierPath);
+    }
+    const moodboardPath = `${dossierPath}/Moodboard.canvas`;
     if (!vault.getAbstractFileByPath(moodboardPath)) {
       await vault.create(moodboardPath, "");
     }
-    const outlinePath = `${bookFolder.path}/Outline.md`;
+    const outlinePath = `${dossierPath}/Outline.md`;
     if (!vault.getAbstractFileByPath(outlinePath)) {
       await vault.create(outlinePath, `---
-projectType: script
+projectType: film
+---
+
+`);
+    }
+    const themePath = `${dossierPath}/Theme & Tone.md`;
+    if (!vault.getAbstractFileByPath(themePath)) {
+      await vault.create(themePath, `---
+projectType: film
+---
+
+`);
+    }
+    const sequence1Path = `${bookFolder.path}/Sequence 1`;
+    if (!vault.getAbstractFileByPath(sequence1Path)) {
+      await vault.createFolder(sequence1Path);
+    }
+    const scene1Path = `${sequence1Path}/Scene 1.md`;
+    if (!vault.getAbstractFileByPath(scene1Path)) {
+      await vault.create(scene1Path, `---
+projectType: film
 ---
 
 `);
@@ -1941,9 +2134,9 @@ projectType: script
 init_constants();
 
 // src/views/folioView.js
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 init_constants();
-var FolioView = class extends import_obsidian3.ItemView {
+var FolioView = class extends import_obsidian4.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -1976,12 +2169,33 @@ var FolioView = class extends import_obsidian3.ItemView {
   }
   // Render a filesystem-backed editorial tree for a book folder (Obsidian-safe)
   // Now with Book-Smith style drag & drop support
+  // Get custom icon for specific folder/file names
+  getCustomIcon(title, isExpanded = false) {
+    const lowerTitle = title.toLowerCase();
+    if (lowerTitle === "show dossier")
+      return "book-marked";
+    if (lowerTitle === "film dossier")
+      return "book-marked";
+    if (lowerTitle === "concept")
+      return "lightbulb";
+    if (lowerTitle === "faces")
+      return "drama";
+    if (lowerTitle === "places")
+      return "map-pin";
+    if (lowerTitle === "objects")
+      return "box";
+    if (lowerTitle === "structure")
+      return "map";
+    if (lowerTitle === "documentation")
+      return "scroll-text";
+    return isExpanded ? "folder-open" : "folder";
+  }
   async renderBookTree(container, bookFolder) {
     container.empty();
-    const folder = bookFolder instanceof import_obsidian3.TFolder ? bookFolder : this.plugin.app.vault.getAbstractFileByPath(
+    const folder = bookFolder instanceof import_obsidian4.TFolder ? bookFolder : this.plugin.app.vault.getAbstractFileByPath(
       (bookFolder == null ? void 0 : bookFolder.path) || bookFolder
     );
-    if (!(folder instanceof import_obsidian3.TFolder)) {
+    if (!(folder instanceof import_obsidian4.TFolder)) {
       console.error("Invalid book folder", bookFolder);
       return;
     }
@@ -2104,8 +2318,10 @@ var FolioView = class extends import_obsidian3.ItemView {
         collapse.classList.toggle("is-open", this.plugin.expandedFolders.has(fullPath));
         const folderIcon = folderRow.createSpan({ cls: "folio-tree-icon folder-icon" });
         try {
-          (0, import_obsidian3.setIcon)(folderIcon, this.plugin.expandedFolders.has(fullPath) ? "folder-open" : "folder");
-          (0, import_obsidian3.setIcon)(collapse, this.plugin.expandedFolders.has(fullPath) ? "chevron-down" : "chevron-right");
+          const isExpanded = this.plugin.expandedFolders.has(fullPath);
+          const iconName = this.getCustomIcon(node.title, isExpanded);
+          (0, import_obsidian4.setIcon)(folderIcon, iconName);
+          (0, import_obsidian4.setIcon)(collapse, isExpanded ? "chevron-down" : "chevron-right");
         } catch (e) {
         }
         const titleSpan = folderRow.createSpan({ text: node.title, cls: "folio-tree-label" });
@@ -2132,8 +2348,9 @@ var FolioView = class extends import_obsidian3.ItemView {
           else
             this.plugin.expandedFolders.delete(fullPath);
           try {
-            (0, import_obsidian3.setIcon)(folderIcon, isHidden ? "folder-open" : "folder");
-            (0, import_obsidian3.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
+            const iconName = this.getCustomIcon(node.title, isHidden);
+            (0, import_obsidian4.setIcon)(folderIcon, iconName);
+            (0, import_obsidian4.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
           } catch (e2) {
           }
         };
@@ -2147,7 +2364,7 @@ var FolioView = class extends import_obsidian3.ItemView {
         fileRow.dataset.nodeId = node.id;
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
-          (0, import_obsidian3.setIcon)(icon, node.type === "canvas" ? "layout-dashboard" : "file");
+          (0, import_obsidian4.setIcon)(icon, node.type === "canvas" ? "layout-dashboard" : "file");
         } catch (e) {
         }
         const label = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });
@@ -2237,13 +2454,13 @@ var FolioView = class extends import_obsidian3.ItemView {
             iconName.forEach((n, i) => {
               const s = iconSpan.createSpan({ cls: `folio-stat-icon-part part-${i}` });
               try {
-                (0, import_obsidian3.setIcon)(s, n);
+                (0, import_obsidian4.setIcon)(s, n);
               } catch (e) {
               }
             });
           } else {
             try {
-              (0, import_obsidian3.setIcon)(iconSpan, iconName);
+              (0, import_obsidian4.setIcon)(iconSpan, iconName);
             } catch (e) {
             }
           }
@@ -2281,28 +2498,28 @@ var FolioView = class extends import_obsidian3.ItemView {
       const newBtn = topBar.createEl("button", { cls: "folio-top-btn" });
       const newIcon = newBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian3.setIcon)(newIcon, "edit");
+        (0, import_obsidian4.setIcon)(newIcon, "edit");
       } catch (e) {
       }
       newBtn.createSpan({ text: "New", cls: "folio-top-label" });
       const switchBtn = topBar.createEl("button", { cls: "folio-top-btn" });
       const switchIcon = switchBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian3.setIcon)(switchIcon, "repeat");
+        (0, import_obsidian4.setIcon)(switchIcon, "repeat");
       } catch (e) {
       }
       switchBtn.createSpan({ text: "Switch", cls: "folio-top-label" });
       const manageBtn = topBar.createEl("button", { cls: "folio-top-btn" });
       const manageIcon = manageBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian3.setIcon)(manageIcon, "library");
+        (0, import_obsidian4.setIcon)(manageIcon, "library");
       } catch (e) {
       }
       manageBtn.createSpan({ text: "Manage", cls: "folio-top-label" });
       const helpBtn = topBar.createEl("button", { cls: "folio-help-btn" });
       const helpIcon = helpBtn.createSpan({ cls: "folio-help-icon" });
       try {
-        (0, import_obsidian3.setIcon)(helpIcon, "help");
+        (0, import_obsidian4.setIcon)(helpIcon, "help");
       } catch (e) {
       }
       newBtn.onclick = () => {
@@ -2324,7 +2541,9 @@ var FolioView = class extends import_obsidian3.ItemView {
         const coverEl2 = coverCol2.createDiv("folio-book-cover");
         coverEl2.style.background = "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))";
         try {
-          coverEl2.addClass && coverEl2.addClass("folio-book-cover-placeholder");
+          coverEl2.addClass("folio-book-cover-placeholder");
+          const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
+          (0, import_obsidian4.setIcon)(iconEl, "book");
         } catch (e) {
         }
         const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
@@ -2358,13 +2577,15 @@ var FolioView = class extends import_obsidian3.ItemView {
         return;
       }
       const bookFolderCheck = this.plugin.app.vault.getAbstractFileByPath(book.path);
-      if (!bookFolderCheck || !(bookFolderCheck instanceof import_obsidian3.TFolder)) {
+      if (!bookFolderCheck || !(bookFolderCheck instanceof import_obsidian4.TFolder)) {
         const headerEl2 = el.createDiv("folio-book-header");
         const coverCol2 = headerEl2.createDiv("folio-book-cover-col");
         const coverEl2 = coverCol2.createDiv("folio-book-cover");
         coverEl2.style.background = "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))";
         try {
-          coverEl2.addClass && coverEl2.addClass("folio-book-cover-placeholder");
+          coverEl2.addClass("folio-book-cover-placeholder");
+          const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
+          (0, import_obsidian4.setIcon)(iconEl, "book");
         } catch (e) {
         }
         const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
@@ -2412,6 +2633,15 @@ var FolioView = class extends import_obsidian3.ItemView {
       const coverPath = book.cover ? this.plugin.app.vault.getResourcePath(book.cover) : null;
       if (coverPath) {
         coverEl.style.backgroundImage = `url("${coverPath}")`;
+      } else {
+        try {
+          coverEl.addClass("folio-book-cover-placeholder");
+          const iconEl = coverEl.createDiv({ cls: "folio-book-cover-icon" });
+          const projectType = (metadata == null ? void 0 : metadata.projectType) || PROJECT_TYPES.BOOK;
+          const iconName = projectType === PROJECT_TYPES.BOOK ? "book" : projectType === PROJECT_TYPES.SCRIPT ? "tv-minimal-play" : projectType === PROJECT_TYPES.FILM ? "clapperboard" : "book";
+          (0, import_obsidian4.setIcon)(iconEl, iconName);
+        } catch (e) {
+        }
       }
       const titleBlock = headerEl.createDiv("folio-book-title-block");
       titleBlock.createEl("div", {
@@ -2440,7 +2670,7 @@ var FolioView = class extends import_obsidian3.ItemView {
       const bookFolder = this.plugin.app.vault.getAbstractFileByPath(book.path);
       if (this._renderCounter !== token)
         return;
-      if (bookFolder instanceof import_obsidian3.TFolder) {
+      if (bookFolder instanceof import_obsidian4.TFolder) {
         await this.renderBookTree(structureEl, bookFolder);
       } else {
         structureEl.createEl("p", { text: "(No folder found on disk)" });
@@ -2452,7 +2682,7 @@ var FolioView = class extends import_obsidian3.ItemView {
             if (item)
               return;
             evt.preventDefault();
-            const menu = new import_obsidian3.Menu(this.plugin.app);
+            const menu = new import_obsidian4.Menu(this.plugin.app);
             menu.addItem(
               (it) => it.setTitle("New root canvas").setIcon("layout-dashboard").onClick(() => {
                 const modal = new TextInputModal2(this.plugin.app, {
@@ -2549,7 +2779,7 @@ var FolioView = class extends import_obsidian3.ItemView {
               const row = evt.target && evt.target.closest && evt.target.closest(".folio-stat-row");
               if (row)
                 return;
-              const menu = new import_obsidian3.Menu(this.plugin.app);
+              const menu = new import_obsidian4.Menu(this.plugin.app);
               menu.addItem(
                 (it) => it.setTitle("New root canvas").setIcon("layout-dashboard").onClick(() => {
                   const modal = new TextInputModal2(this.plugin.app, {
@@ -2643,9 +2873,9 @@ var FolioView = class extends import_obsidian3.ItemView {
 };
 
 // src/views/writerToolsView.js
-var import_obsidian4 = require("obsidian");
+var import_obsidian5 = require("obsidian");
 var WRITER_TOOLS_VIEW_TYPE2 = "folio-writer-tools";
-var WriterToolsView = class extends import_obsidian4.ItemView {
+var WriterToolsView = class extends import_obsidian5.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -2681,8 +2911,8 @@ var WriterToolsView = class extends import_obsidian4.ItemView {
 };
 
 // src/views/folioSettingTab.js
-var import_obsidian5 = require("obsidian");
-var FolioSettingTab = class extends import_obsidian5.PluginSettingTab {
+var import_obsidian6 = require("obsidian");
+var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -2691,7 +2921,7 @@ var FolioSettingTab = class extends import_obsidian5.PluginSettingTab {
     const el = this.containerEl;
     el.empty();
     el.createEl("h2", { text: "Folio Settings" });
-    new import_obsidian5.Setting(el).setName("Books base path").setDesc("Folder where all books are stored").addText(
+    new import_obsidian6.Setting(el).setName("Books base path").setDesc("Folder where all books are stored").addText(
       (text) => text.setValue(this.plugin.settings.basePath).onChange(async (value) => {
         this.plugin.settings.basePath = value.trim() || "projects";
         await this.plugin.saveSettings();
@@ -2716,9 +2946,9 @@ var {
   ItemView: ItemView3,
   TFile: TFile6,
   TFolder: TFolder4,
-  Modal: Modal8,
+  Modal: Modal9,
   Menu: Menu2,
-  setIcon: setIcon2
+  setIcon: setIcon5
 } = require("obsidian");
 module.exports = class FolioPlugin extends Plugin {
   async onload() {
@@ -2934,14 +3164,32 @@ module.exports = class FolioPlugin extends Plugin {
         })
       );
       menu.addItem(
-        (it) => it.setTitle(isRoot ? "New root file" : "New file").setIcon("file-plus").onClick(async () => {
-          try {
-            await this.createNextChapterFile(folder);
-            await this.refresh();
-            this.rerenderViews();
-          } catch (e) {
-            console.error(e);
-          }
+        (it) => it.setTitle(isRoot ? "New root file" : "New file").setIcon("file-plus").onClick(() => {
+          const modal = new TextInputModal(this.app, {
+            title: "New file",
+            placeholder: "File name",
+            cta: "Create",
+            onSubmit: async (value) => {
+              const name = (value || "").trim();
+              if (!name)
+                return;
+              try {
+                const fileName = name.endsWith(".md") ? name : `${name}.md`;
+                const dest = `${folder.path}/${fileName}`;
+                if (!this.app.vault.getAbstractFileByPath(dest)) {
+                  await this.app.vault.create(dest, "");
+                  const book = this.booksIndex.find((b) => dest.startsWith(b.path));
+                  if (book)
+                    await this.syncChapterStatsBaseline(book);
+                }
+                await this.refresh();
+                this.rerenderViews();
+              } catch (e) {
+                console.error(e);
+              }
+            }
+          });
+          modal.open();
         })
       );
       menu.addItem(

@@ -1,4 +1,5 @@
-const { Modal } = require("obsidian");
+const { Modal, setIcon } = require("obsidian");
+import { PROJECT_TYPES } from '../constants/index.js';
 
 export class SwitchBookModal extends Modal {
   constructor(plugin) {
@@ -10,7 +11,7 @@ export class SwitchBookModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
 
-    contentEl.createEl("h2", { text: "Switch book" });
+    contentEl.createEl("h2", { text: "Switch project" });
 
     const search = contentEl.createEl("input", {
       type: "text",
@@ -65,8 +66,17 @@ export class SwitchBookModal extends Modal {
         const leftCol = row.createDiv({ cls: 'folio-switch-left' });
         const rightCol = row.createDiv({ cls: 'folio-switch-right' });
 
-        // Title + subtitle inline
+        // Title + subtitle inline with project icon
         const titleRow = leftCol.createDiv({ cls: 'folio-switch-title-row' });
+        
+        // Add project type icon
+        const iconEl = titleRow.createSpan({ cls: 'folio-switch-icon' });
+        const projectType = cfg?.basic?.projectType || PROJECT_TYPES.BOOK;
+        const iconName = projectType === PROJECT_TYPES.BOOK ? 'book' : 
+                       projectType === PROJECT_TYPES.SCRIPT ? 'tv-minimal-play' : 
+                       projectType === PROJECT_TYPES.FILM ? 'clapperboard' : 'book';
+        setIcon(iconEl, iconName);
+        
         titleRow.createSpan({ text: displayTitle || book.name || 'Untitled', cls: 'folio-switch-title' });
         if (subtitle) {
           titleRow.createSpan({ text: ' - ', cls: 'folio-switch-dash' });

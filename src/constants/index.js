@@ -7,7 +7,8 @@ export const WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
 
 export const PROJECT_TYPES = {
   BOOK: "book",
-  SCRIPT: "script"
+  SCRIPT: "script",
+  FILM: "film"
 };
 
 export const DEFAULT_SETTINGS = {

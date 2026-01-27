@@ -3,7 +3,7 @@
  */
 
 import { ItemView, TFolder, Menu, setIcon } from 'obsidian';
-import { VIEW_TYPE } from '../constants/index.js';
+import { VIEW_TYPE, PROJECT_TYPES } from '../constants/index.js';
 
 export class FolioView extends ItemView {
   constructor(leaf, plugin) {
@@ -46,6 +46,24 @@ export class FolioView extends ItemView {
 
   // Render a filesystem-backed editorial tree for a book folder (Obsidian-safe)
   // Now with Book-Smith style drag & drop support
+  // Get custom icon for specific folder/file names
+  getCustomIcon(title, isExpanded = false) {
+    const lowerTitle = title.toLowerCase();
+    
+    // Custom folder icons
+    if (lowerTitle === 'show dossier') return 'book-marked';
+    if (lowerTitle === 'film dossier') return 'book-marked';
+    if (lowerTitle === 'concept') return 'lightbulb';
+    if (lowerTitle === 'faces') return 'drama';
+    if (lowerTitle === 'places') return 'map-pin';
+    if (lowerTitle === 'objects') return 'box';
+    if (lowerTitle === 'structure') return 'map';
+    if (lowerTitle === 'documentation') return 'scroll-text';
+    
+    // Default folder icons
+    return isExpanded ? 'folder-open' : 'folder';
+  }
+
   async renderBookTree(container, bookFolder) {
     container.empty();
 
@@ -215,8 +233,10 @@ export class FolioView extends ItemView {
         
         const folderIcon = folderRow.createSpan({ cls: "folio-tree-icon folder-icon" });
         try { 
-          setIcon(folderIcon, this.plugin.expandedFolders.has(fullPath) ? "folder-open" : "folder"); 
-          setIcon(collapse, this.plugin.expandedFolders.has(fullPath) ? "chevron-down" : "chevron-right"); 
+          const isExpanded = this.plugin.expandedFolders.has(fullPath);
+          const iconName = this.getCustomIcon(node.title, isExpanded);
+          setIcon(folderIcon, iconName); 
+          setIcon(collapse, isExpanded ? "chevron-down" : "chevron-right"); 
         } catch {}
         
         const titleSpan = folderRow.createSpan({ text: node.title, cls: "folio-tree-label" });
@@ -243,7 +263,8 @@ export class FolioView extends ItemView {
           if (isHidden) this.plugin.expandedFolders.add(fullPath);
           else this.plugin.expandedFolders.delete(fullPath);
           try { 
-            setIcon(folderIcon, isHidden ? "folder-open" : "folder"); 
+            const iconName = this.getCustomIcon(node.title, isHidden);
+            setIcon(folderIcon, iconName); 
             setIcon(collapse, isHidden ? "chevron-down" : "chevron-right"); 
           } catch {}
         };
@@ -442,7 +463,11 @@ export class FolioView extends ItemView {
         const coverEl = coverCol.createDiv("folio-book-cover");
         coverEl.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))';
         // ensure placeholder styling is applied when no cover image exists
-        try { coverEl.addClass && coverEl.addClass('folio-book-cover-placeholder'); } catch {}
+        try {
+          coverEl.addClass('folio-book-cover-placeholder');
+          const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
+          setIcon(iconEl, 'book');
+        } catch {}
         const titleBlock = headerEl.createDiv("folio-book-title-block");
         titleBlock.createEl("div", { cls: "folio-book-title", text: "No active book" });
         titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "(Select or create a book)" });
@@ -488,7 +513,11 @@ export class FolioView extends ItemView {
         const coverCol = headerEl.createDiv("folio-book-cover-col");
         const coverEl = coverCol.createDiv("folio-book-cover");
         coverEl.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))';
-        try { coverEl.addClass && coverEl.addClass('folio-book-cover-placeholder'); } catch {}
+        try {
+          coverEl.addClass('folio-book-cover-placeholder');
+          const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
+          setIcon(iconEl, 'book');
+        } catch {}
         const titleBlock = headerEl.createDiv("folio-book-title-block");
         titleBlock.createEl("div", { cls: "folio-book-title", text: "No active book" });
         titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "(Book folder missing)" });
@@ -547,6 +576,17 @@ export class FolioView extends ItemView {
         : null;
       if (coverPath) {
         coverEl.style.backgroundImage = `url("${coverPath}")`;
+      } else {
+        // No cover image - add placeholder with project type icon
+        try {
+          coverEl.addClass('folio-book-cover-placeholder');
+          const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
+          const projectType = metadata?.projectType || PROJECT_TYPES.BOOK;
+          const iconName = projectType === PROJECT_TYPES.BOOK ? 'book' : 
+                         projectType === PROJECT_TYPES.SCRIPT ? 'tv-minimal-play' : 
+                         projectType === PROJECT_TYPES.FILM ? 'clapperboard' : 'book';
+          setIcon(iconEl, iconName);
+        } catch {}
       }
 
       // Title block inside header (cover left, title/subtitle right)
