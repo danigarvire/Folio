@@ -23,9 +23,9 @@ import { BookService } from './services/bookService.js';
 import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, DEFAULT_SETTINGS } from './constants/index.js';
 
 // Import views
-import { NovelistView } from './views/novelistView.js';
+import { FolioView } from './views/folioView.js';
 import { WriterToolsView } from './views/writerToolsView.js';
-import { NovelistSettingTab } from './views/novelistSettingTab.js';
+import { FolioSettingTab } from './views/folioSettingTab.js';
 
 // Import modals
 import { NewBookModal } from './modals/newBookModal.js';
@@ -40,7 +40,7 @@ import { ConfirmModal } from './modals/confirmModal.js';
  * PLUGIN
  * =============================================================== */
 
-module.exports = class NovelistPlugin extends Plugin {
+module.exports = class FolioPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
@@ -52,8 +52,8 @@ module.exports = class NovelistPlugin extends Plugin {
 
     this.booksIndex = [];
     this.activeBook = null;
-    // singleton leaf holder — ensure only one NovelistView exists
-    this.novelistLeaf = null;
+    // singleton leaf holder — ensure only one FolioView exists
+    this.folioLeaf = null;
     // track active editor file for UI sync
     this.activeFile = null;
 
@@ -73,7 +73,7 @@ module.exports = class NovelistPlugin extends Plugin {
 
     this.registerView(
       VIEW_TYPE,
-      (leaf) => new NovelistView(leaf, this)
+      (leaf) => new FolioView(leaf, this)
     );
 
     this.registerView(
@@ -81,11 +81,11 @@ module.exports = class NovelistPlugin extends Plugin {
       (leaf) => new WriterToolsView(leaf, this)
     );
 
-    this.addRibbonIcon("book", "Open Novelist", () => {
-      this.activateNovelist();
+    this.addRibbonIcon("book", "Open Folio", () => {
+      this.activateFolio();
     });
 
-    this.addSettingTab(new NovelistSettingTab(this.app, this));
+    this.addSettingTab(new FolioSettingTab(this.app, this));
 
 
     /* LIVE SYNC */
@@ -529,9 +529,9 @@ module.exports = class NovelistPlugin extends Plugin {
   }
   
 
-  /* Activate both views: Novelist (left) + Writer Tools (right) */
-  async activateNovelist() {
-    // Open Novelist View on the left
+  /* Activate both views: Folio (left) + Writer Tools (right) */
+  async activateFolio() {
+    // Open Folio View on the left
     await this.activateView();
     
     // Open Writer Tools on the right
@@ -546,7 +546,7 @@ module.exports = class NovelistPlugin extends Plugin {
     const existing = workspace.getLeavesOfType(VIEW_TYPE);
     if (existing.length > 0) {
       workspace.revealLeaf(existing[0]);
-      this.novelistLeaf = existing[0];
+      this.folioLeaf = existing[0];
       return;
     }
 
@@ -556,7 +556,7 @@ module.exports = class NovelistPlugin extends Plugin {
       type: VIEW_TYPE,
       active: true,
     });
-    this.novelistLeaf = leftLeaf;
+    this.folioLeaf = leftLeaf;
     workspace.revealLeaf(leftLeaf);
   }
 
@@ -617,9 +617,9 @@ module.exports = class NovelistPlugin extends Plugin {
    * CREATE METHODS
    * =============================================================== */
 
-  async createBook(name) {
+  async createBook(name, projectType = 'book') {
     const basePath = this.settings.basePath || "projects";
-    return this.bookService.createBook(basePath, name);
+    return this.bookService.createBook(basePath, name, projectType);
   }
 
   async ensureBookBaseStructure(bookFolder) {
@@ -630,8 +630,8 @@ module.exports = class NovelistPlugin extends Plugin {
     return this.bookService.createVolume(book, name);
   }
 
-  async createChapter(volume, name) {
-    const result = await this.bookService.createChapter(volume, name);
+  async createChapter(volume, name, projectType = 'book') {
+    const result = await this.bookService.createChapter(volume, name, projectType);
     try {
       const book = this.booksIndex.find((b) => `${volume.path}/${name}.md`.startsWith(b.path));
       if (book) await this.syncChapterStatsBaseline(book);
@@ -828,7 +828,7 @@ module.exports = class NovelistPlugin extends Plugin {
     }
   }
 
-  // Update only the stats block in existing Novelist views to avoid full re-renders
+  // Update only the stats block in existing Folio views to avoid full re-renders
   async updateStatsInViews(book) {
     try {
       const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
@@ -889,7 +889,27 @@ module.exports = class NovelistPlugin extends Plugin {
   // Count words in text
   _countWords(text) {
     if (!text) return 0;
-    const parts = text.replace(/\n/g, ' ').split(/\s+/).filter(Boolean);
+    
+    // Remove frontmatter (content between --- and ---)
+    let content = text;
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    content = content.replace(frontmatterRegex, '');
+    
+    // Remove markdown syntax
+    content = content
+      .replace(/^#{1,6}\s+/gm, '')        // Remove headers (# ## ### etc)
+      .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold **text**
+      .replace(/\*([^*]+)\*/g, '$1')      // Remove italic *text*
+      .replace(/\_\_([^_]+)\_\_/g, '$1')  // Remove bold __text__
+      .replace(/\_([^_]+)\_/g, '$1')      // Remove italic _text_
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove links [text](url)
+      .replace(/```[\s\S]*?```/g, '')     // Remove code blocks
+      .replace(/`([^`]+)`/g, '$1')        // Remove inline code `text`
+      .replace(/^\s*[-*+]\s+/gm, '')      // Remove list markers
+      .replace(/^\s*\d+\.\s+/gm, '')      // Remove numbered list markers
+      .replace(/^>\s+/gm, '');            // Remove blockquote markers
+    
+    const parts = content.replace(/\n/g, ' ').split(/\s+/).filter(Boolean);
     return parts.length;
   }
 

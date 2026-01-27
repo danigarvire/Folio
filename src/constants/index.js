@@ -1,9 +1,14 @@
 /**
- * Constants for Novelist plugin
+ * Constants for Folio plugin
  */
 
-export const VIEW_TYPE = "novelist-view";
-export const WRITER_TOOLS_VIEW_TYPE = "novelist-writer-tools";
+export const VIEW_TYPE = "folio-view";
+export const WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
+
+export const PROJECT_TYPES = {
+  BOOK: "book",
+  SCRIPT: "script"
+};
 
 export const DEFAULT_SETTINGS = {
   booksPath: "projects",
@@ -20,6 +25,7 @@ export const DEFAULT_BOOK_CONFIG = {
     desc: "",
     uuid: "",
     created_at: new Date().toISOString(),
+    projectType: "book", // Default project type
   },
   structure: {
     tree: [],

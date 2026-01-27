@@ -13,6 +13,58 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
+// src/constants/index.js
+var VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, PROJECT_TYPES, DEFAULT_SETTINGS, DEFAULT_BOOK_CONFIG;
+var init_constants = __esm({
+  "src/constants/index.js"() {
+    VIEW_TYPE = "folio-view";
+    WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
+    PROJECT_TYPES = {
+      BOOK: "book",
+      SCRIPT: "script"
+    };
+    DEFAULT_SETTINGS = {
+      booksPath: "projects",
+      basePath: "projects",
+      // Legacy compatibility
+      lastActiveBookPath: null,
+      verboseLogs: false
+    };
+    DEFAULT_BOOK_CONFIG = {
+      basic: {
+        title: "",
+        author: [],
+        subtitle: "",
+        desc: "",
+        uuid: "",
+        created_at: new Date().toISOString(),
+        projectType: "book"
+        // Default project type
+      },
+      structure: {
+        tree: []
+      },
+      stats: {
+        total_words: 0,
+        target_total_words: 1e4,
+        progress_by_words: 0,
+        progress_by_chapter: 0,
+        daily_words: {},
+        writing_days: 0,
+        average_daily_words: 0,
+        last_writing_date: new Date().toISOString(),
+        last_modified: new Date().toISOString(),
+        per_chapter: {}
+      },
+      export: {
+        default_format: "pdf",
+        template: "default",
+        include_cover: true
+      }
+    };
+  }
+});
+
 // src/modals/newBookModal.js
 var newBookModal_exports = {};
 __export(newBookModal_exports, {
@@ -21,6 +73,7 @@ __export(newBookModal_exports, {
 var Modal, TFile3, NewBookModal;
 var init_newBookModal = __esm({
   "src/modals/newBookModal.js"() {
+    init_constants();
     ({ Modal, TFile: TFile3 } = require("obsidian"));
     NewBookModal = class extends Modal {
       constructor(plugin) {
@@ -30,22 +83,29 @@ var init_newBookModal = __esm({
       async onOpen() {
         const { contentEl } = this;
         contentEl.empty();
-        contentEl.createEl("h2", { text: "Create new book" });
-        const makeDivider = () => contentEl.createDiv({ cls: "novelist-modal-divider" });
+        contentEl.createEl("h2", { text: "Create new project" });
+        const makeDivider = () => contentEl.createDiv({ cls: "folio-modal-divider" });
         makeDivider();
-        const tplRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const tplLeft = tplRow.createDiv({ cls: "novelist-modal-left" });
-        tplLeft.createEl("div", { text: "Template", cls: "novelist-modal-row-title" });
-        tplLeft.createEl("div", { text: "Please select a book template", cls: "novelist-modal-row-sub" });
-        const tplRight = tplRow.createDiv({ cls: "novelist-modal-right" });
-        const tplSelect = tplRight.createEl("select", { cls: "novelist-template-select" });
-        tplSelect.createEl("option", { text: "default", value: "default" });
+        const typeRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const typeLeft = typeRow.createDiv({ cls: "folio-modal-left" });
+        typeLeft.createEl("div", { text: "Project Type", cls: "folio-modal-row-title" });
+        typeLeft.createEl("div", { text: "Select the type of project", cls: "folio-modal-row-sub" });
+        const typeRight = typeRow.createDiv({ cls: "folio-modal-right" });
+        const typeSelect = typeRight.createEl("select", { cls: "folio-project-type-select" });
+        typeSelect.createEl("option", {
+          text: "\u{1F4D8} Book / Novel",
+          value: PROJECT_TYPES.BOOK
+        });
+        typeSelect.createEl("option", {
+          text: "\u{1F3AC} Script / Screenplay",
+          value: PROJECT_TYPES.SCRIPT
+        });
         makeDivider();
-        const coverRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const coverLeft = coverRow.createDiv({ cls: "novelist-modal-left" });
-        coverLeft.createEl("div", { text: "Cover", cls: "novelist-modal-row-title" });
-        coverLeft.createEl("div", { text: "Select cover image (optional)", cls: "novelist-modal-row-sub" });
-        const coverRight = coverRow.createDiv({ cls: "novelist-modal-right" });
+        const coverRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const coverLeft = coverRow.createDiv({ cls: "folio-modal-left" });
+        coverLeft.createEl("div", { text: "Cover", cls: "folio-modal-row-title" });
+        coverLeft.createEl("div", { text: "Select cover image (optional)", cls: "folio-modal-row-sub" });
+        const coverRight = coverRow.createDiv({ cls: "folio-modal-right" });
         const coverBtn = coverRight.createEl("button", { text: "Select Image" });
         this._selectedCover = null;
         coverBtn.onclick = () => {
@@ -74,81 +134,82 @@ var init_newBookModal = __esm({
           document.body.removeChild(input);
         };
         makeDivider();
-        const titleRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const titleLeft = titleRow.createDiv({ cls: "novelist-modal-left" });
-        titleLeft.createEl("div", { text: "Title", cls: "novelist-modal-row-title" });
-        titleLeft.createEl("div", { text: "Please enter book title", cls: "novelist-modal-row-sub" });
-        const titleRight = titleRow.createDiv({ cls: "novelist-modal-right" });
+        const titleRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const titleLeft = titleRow.createDiv({ cls: "folio-modal-left" });
+        titleLeft.createEl("div", { text: "Title", cls: "folio-modal-row-title" });
+        titleLeft.createEl("div", { text: "Please enter project title", cls: "folio-modal-row-sub" });
+        const titleRight = titleRow.createDiv({ cls: "folio-modal-right" });
         const fieldWidth = "min(320px, 60%)";
-        const titleInput = titleRight.createEl("input", { type: "text", placeholder: "Book title", cls: "novelist-modal-input" });
+        const titleInput = titleRight.createEl("input", { type: "text", placeholder: "Book title", cls: "folio-modal-input" });
         try {
           titleInput.style.width = fieldWidth;
         } catch (e) {
         }
         makeDivider();
-        const subRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const subLeft = subRow.createDiv({ cls: "novelist-modal-left" });
-        subLeft.createEl("div", { text: "Subtitle", cls: "novelist-modal-row-title" });
-        subLeft.createEl("div", { text: "Optional", cls: "novelist-modal-row-sub" });
-        const subRight = subRow.createDiv({ cls: "novelist-modal-right" });
-        const subtitleInput = subRight.createEl("input", { type: "text", placeholder: "Subtitle", cls: "novelist-modal-input" });
+        const subRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const subLeft = subRow.createDiv({ cls: "folio-modal-left" });
+        subLeft.createEl("div", { text: "Subtitle", cls: "folio-modal-row-title" });
+        subLeft.createEl("div", { text: "Optional", cls: "folio-modal-row-sub" });
+        const subRight = subRow.createDiv({ cls: "folio-modal-right" });
+        const subtitleInput = subRight.createEl("input", { type: "text", placeholder: "Subtitle", cls: "folio-modal-input" });
         try {
           subtitleInput.style.width = fieldWidth;
         } catch (e) {
         }
         makeDivider();
-        const targetRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const targetLeft = targetRow.createDiv({ cls: "novelist-modal-left" });
-        targetLeft.createEl("div", { text: "Target word count", cls: "novelist-modal-row-title" });
-        targetLeft.createEl("div", { text: "Set estimated total word count (in 1k)", cls: "novelist-modal-row-sub" });
-        const targetRight = targetRow.createDiv({ cls: "novelist-modal-right" });
-        const targetInput = targetRight.createEl("input", { type: "text", placeholder: "e.g., 20 (20k) or 20000", cls: "novelist-modal-input" });
+        const targetRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const targetLeft = targetRow.createDiv({ cls: "folio-modal-left" });
+        targetLeft.createEl("div", { text: "Target word count", cls: "folio-modal-row-title" });
+        targetLeft.createEl("div", { text: "Set estimated total word count (in 1k)", cls: "folio-modal-row-sub" });
+        const targetRight = targetRow.createDiv({ cls: "folio-modal-right" });
+        const targetInput = targetRight.createEl("input", { type: "text", placeholder: "e.g., 20 (20k) or 20000", cls: "folio-modal-input" });
         try {
           targetInput.style.width = fieldWidth;
         } catch (e) {
         }
         makeDivider();
-        const authorRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const authorLeft = authorRow.createDiv({ cls: "novelist-modal-left" });
-        authorLeft.createEl("div", { text: "Author", cls: "novelist-modal-row-title" });
-        authorLeft.createEl("div", { text: "Enter author names, separate multiple authors with commas", cls: "novelist-modal-row-sub" });
-        const authorRight = authorRow.createDiv({ cls: "novelist-modal-right" });
-        const authorInput = authorRight.createEl("input", { type: "text", placeholder: "Author", cls: "novelist-modal-input" });
+        const authorRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const authorLeft = authorRow.createDiv({ cls: "folio-modal-left" });
+        authorLeft.createEl("div", { text: "Author", cls: "folio-modal-row-title" });
+        authorLeft.createEl("div", { text: "Enter author names, separate multiple authors with commas", cls: "folio-modal-row-sub" });
+        const authorRight = authorRow.createDiv({ cls: "folio-modal-right" });
+        const authorInput = authorRight.createEl("input", { type: "text", placeholder: "Author", cls: "folio-modal-input" });
         try {
           authorInput.style.width = fieldWidth;
         } catch (e) {
         }
         makeDivider();
-        const descRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const descLeft = descRow.createDiv({ cls: "novelist-modal-left" });
-        descLeft.createEl("div", { text: "Description", cls: "novelist-modal-row-title" });
-        descLeft.createEl("div", { text: "Please enter book description", cls: "novelist-modal-row-sub" });
-        const descRight = descRow.createDiv({ cls: "novelist-modal-right" });
-        const descInput = descRight.createEl("textarea", { placeholder: "Book description", cls: "novelist-modal-textarea" });
+        const descRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const descLeft = descRow.createDiv({ cls: "folio-modal-left" });
+        descLeft.createEl("div", { text: "Description", cls: "folio-modal-row-title" });
+        descLeft.createEl("div", { text: "Please enter book description", cls: "folio-modal-row-sub" });
+        const descRight = descRow.createDiv({ cls: "folio-modal-right" });
+        const descInput = descRight.createEl("textarea", { placeholder: "Book description", cls: "folio-modal-textarea" });
         try {
           descInput.style.width = fieldWidth;
           descInput.style.minHeight = "120px";
         } catch (e) {
         }
         makeDivider();
-        const actions = contentEl.createDiv({ cls: "novelist-modal-actions" });
-        const createBtn = actions.createEl("button", { text: "Create", cls: "mod-cta novelist-modal-create" });
+        const actions = contentEl.createDiv({ cls: "folio-modal-actions" });
+        const createBtn = actions.createEl("button", { text: "Create", cls: "mod-cta folio-modal-create" });
         createBtn.onclick = async () => {
           const title = titleInput.value.trim();
           if (!title)
             return;
+          const projectType = typeSelect.value;
           const subtitleVal = subtitleInput.value.trim();
           const authorVal = authorInput.value.trim();
           const descVal = descInput.value.trim();
           const targetValRaw = targetInput.value;
           const targetValNum = parseFloat(targetValRaw) || 0;
           this.close();
-          await this.plugin.createBook(title);
+          await this.plugin.createBook(title, projectType);
           const basePath = this.plugin.settings && this.plugin.settings.basePath ? String(this.plugin.settings.basePath).replace(/\/+/g, "/") : "projects";
           const bookPath = `${basePath}/${title}`.replace(/\/+/g, "/");
           try {
             if (this.plugin && this.plugin.settings && this.plugin.settings.verboseLogs)
-              console.debug("NewBookModal.create captured", { title, subtitleVal, authorVal, descVal, targetValNum, bookPath });
+              console.debug("NewBookModal.create captured", { title, projectType, subtitleVal, authorVal, descVal, targetValNum, bookPath });
           } catch (e) {
           }
           await this.plugin.waitForFolderSync(bookPath);
@@ -205,8 +266,10 @@ var init_newBookModal = __esm({
             } catch (e) {
               console.warn(e);
             }
-            await this.plugin.createVolume(book, "Volume 1");
-            await this.plugin.createChapter({ path: `${book.path}/Volume 1` }, "Chapter 1");
+            const volumeName = projectType === PROJECT_TYPES.SCRIPT ? "Sequence 1" : "Volume 1";
+            const chapterName = projectType === PROJECT_TYPES.SCRIPT ? "Scene 1" : "Chapter 1";
+            await this.plugin.createVolume(book, volumeName);
+            await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
             await this.plugin.refresh();
             const updatedBook = this.plugin.booksIndex.find((b) => b.path === book.path);
             if (updatedBook) {
@@ -257,9 +320,9 @@ var init_switchBookModal = __esm({
         const search = contentEl.createEl("input", {
           type: "text",
           placeholder: "Search books...",
-          cls: "novelist-manage-search"
+          cls: "folio-manage-search"
         });
-        const list = contentEl.createDiv({ cls: "novelist-manage-list" });
+        const list = contentEl.createDiv({ cls: "folio-manage-list" });
         const formatTarget = (n) => {
           if (!n)
             return "\u2014";
@@ -303,14 +366,14 @@ var init_switchBookModal = __esm({
               if (!matches)
                 continue;
             }
-            const row = list.createDiv({ cls: "novelist-switch-book-row" });
-            const leftCol = row.createDiv({ cls: "novelist-switch-left" });
-            const rightCol = row.createDiv({ cls: "novelist-switch-right" });
-            const titleRow = leftCol.createDiv({ cls: "novelist-switch-title-row" });
-            titleRow.createSpan({ text: displayTitle || book.name || "Untitled", cls: "novelist-switch-title" });
+            const row = list.createDiv({ cls: "folio-switch-book-row" });
+            const leftCol = row.createDiv({ cls: "folio-switch-left" });
+            const rightCol = row.createDiv({ cls: "folio-switch-right" });
+            const titleRow = leftCol.createDiv({ cls: "folio-switch-title-row" });
+            titleRow.createSpan({ text: displayTitle || book.name || "Untitled", cls: "folio-switch-title" });
             if (subtitle) {
-              titleRow.createSpan({ text: " - ", cls: "novelist-switch-dash" });
-              titleRow.createSpan({ text: subtitle, cls: "novelist-switch-subtitle" });
+              titleRow.createSpan({ text: " - ", cls: "folio-switch-dash" });
+              titleRow.createSpan({ text: subtitle, cls: "folio-switch-subtitle" });
             }
             const progressPct = targetWords > 0 ? Math.round(Number(totalWords) / Number(targetWords) * 100) : "\u2014";
             let lastMod = "\u2014";
@@ -320,8 +383,8 @@ var init_switchBookModal = __esm({
                 lastMod = new Date(lm).toLocaleString();
             } catch (e) {
             }
-            leftCol.createDiv({ text: `Author: ${authors || "\u2014"} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: "novelist-switch-meta" });
-            leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: "novelist-switch-meta-second" });
+            leftCol.createDiv({ text: `Author: ${authors || "\u2014"} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: "folio-switch-meta" });
+            leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: "folio-switch-meta-second" });
             const selectBtn = rightCol.createEl("button", { text: "Select", cls: "mod-cta" });
             selectBtn.onclick = () => {
               this.plugin.activeBook = book;
@@ -419,12 +482,12 @@ var init_editBookModal = __esm({
         }
         const fieldWidth = "min(320px, 60%)";
         let selectedCover = null;
-        contentEl.createDiv({ cls: "novelist-modal-divider" });
-        const coverRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const coverLeft = coverRow.createDiv({ cls: "novelist-modal-left" });
-        coverLeft.createEl("div", { text: "Cover", cls: "novelist-modal-row-title" });
-        coverLeft.createEl("div", { text: "Select image (optional)", cls: "novelist-modal-row-sub" });
-        const coverRight = coverRow.createDiv({ cls: "novelist-modal-right" });
+        contentEl.createDiv({ cls: "folio-modal-divider" });
+        const coverRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const coverLeft = coverRow.createDiv({ cls: "folio-modal-left" });
+        coverLeft.createEl("div", { text: "Cover", cls: "folio-modal-row-title" });
+        coverLeft.createEl("div", { text: "Select image (optional)", cls: "folio-modal-row-sub" });
+        const coverRight = coverRow.createDiv({ cls: "folio-modal-right" });
         const coverBtn = coverRight.createEl("button", { text: "Select Image" });
         try {
           const existingCover = ((_a = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _a.cover) || "";
@@ -459,49 +522,49 @@ var init_editBookModal = __esm({
           input.click();
           document.body.removeChild(input);
         };
-        contentEl.createDiv({ cls: "novelist-modal-divider" });
-        const titleRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const titleLeft = titleRow.createDiv({ cls: "novelist-modal-left" });
-        titleLeft.createEl("div", { text: "Title", cls: "novelist-modal-row-title" });
-        titleLeft.createEl("div", { text: "Please enter book title", cls: "novelist-modal-row-sub" });
-        const titleRight = titleRow.createDiv({ cls: "novelist-modal-right" });
-        const titleInput = titleRight.createEl("input", { type: "text", cls: "novelist-modal-input" });
+        contentEl.createDiv({ cls: "folio-modal-divider" });
+        const titleRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const titleLeft = titleRow.createDiv({ cls: "folio-modal-left" });
+        titleLeft.createEl("div", { text: "Title", cls: "folio-modal-row-title" });
+        titleLeft.createEl("div", { text: "Please enter book title", cls: "folio-modal-row-sub" });
+        const titleRight = titleRow.createDiv({ cls: "folio-modal-right" });
+        const titleInput = titleRight.createEl("input", { type: "text", cls: "folio-modal-input" });
         try {
           titleInput.style.width = fieldWidth;
         } catch (e) {
         }
         titleInput.value = meta.title || this.book.name || "";
-        contentEl.createDiv({ cls: "novelist-modal-divider" });
-        const subRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const subLeft = subRow.createDiv({ cls: "novelist-modal-left" });
-        subLeft.createEl("div", { text: "Subtitle", cls: "novelist-modal-row-title" });
-        subLeft.createEl("div", { text: "Optional", cls: "novelist-modal-row-sub" });
-        const subRight = subRow.createDiv({ cls: "novelist-modal-right" });
-        const subtitleInput = subRight.createEl("input", { type: "text", cls: "novelist-modal-input" });
+        contentEl.createDiv({ cls: "folio-modal-divider" });
+        const subRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const subLeft = subRow.createDiv({ cls: "folio-modal-left" });
+        subLeft.createEl("div", { text: "Subtitle", cls: "folio-modal-row-title" });
+        subLeft.createEl("div", { text: "Optional", cls: "folio-modal-row-sub" });
+        const subRight = subRow.createDiv({ cls: "folio-modal-right" });
+        const subtitleInput = subRight.createEl("input", { type: "text", cls: "folio-modal-input" });
         try {
           subtitleInput.style.width = fieldWidth;
         } catch (e) {
         }
         subtitleInput.value = meta.subtitle || "";
-        contentEl.createDiv({ cls: "novelist-modal-divider" });
-        const authorRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const authorLeft = authorRow.createDiv({ cls: "novelist-modal-left" });
-        authorLeft.createEl("div", { text: "Author", cls: "novelist-modal-row-title" });
-        authorLeft.createEl("div", { text: "Enter author names, separate multiple authors with commas", cls: "novelist-modal-row-sub" });
-        const authorRight = authorRow.createDiv({ cls: "novelist-modal-right" });
-        const authorInput = authorRight.createEl("input", { type: "text", cls: "novelist-modal-input" });
+        contentEl.createDiv({ cls: "folio-modal-divider" });
+        const authorRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const authorLeft = authorRow.createDiv({ cls: "folio-modal-left" });
+        authorLeft.createEl("div", { text: "Author", cls: "folio-modal-row-title" });
+        authorLeft.createEl("div", { text: "Enter author names, separate multiple authors with commas", cls: "folio-modal-row-sub" });
+        const authorRight = authorRow.createDiv({ cls: "folio-modal-right" });
+        const authorInput = authorRight.createEl("input", { type: "text", cls: "folio-modal-input" });
         try {
           authorInput.style.width = fieldWidth;
         } catch (e) {
         }
         authorInput.value = meta.author || "";
-        contentEl.createDiv({ cls: "novelist-modal-divider" });
-        const descRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const descLeft = descRow.createDiv({ cls: "novelist-modal-left" });
-        descLeft.createEl("div", { text: "Description", cls: "novelist-modal-row-title" });
-        descLeft.createEl("div", { text: "Please enter book description", cls: "novelist-modal-row-sub" });
-        const descRight = descRow.createDiv({ cls: "novelist-modal-right" });
-        const descInput = descRight.createEl("textarea", { cls: "novelist-modal-textarea" });
+        contentEl.createDiv({ cls: "folio-modal-divider" });
+        const descRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const descLeft = descRow.createDiv({ cls: "folio-modal-left" });
+        descLeft.createEl("div", { text: "Description", cls: "folio-modal-row-title" });
+        descLeft.createEl("div", { text: "Please enter book description", cls: "folio-modal-row-sub" });
+        const descRight = descRow.createDiv({ cls: "folio-modal-right" });
+        const descInput = descRight.createEl("textarea", { cls: "folio-modal-textarea" });
         try {
           descInput.style.width = fieldWidth;
           descInput.style.minHeight = "120px";
@@ -509,13 +572,13 @@ var init_editBookModal = __esm({
         } catch (e) {
         }
         descInput.value = meta.description || "";
-        contentEl.createDiv({ cls: "novelist-modal-divider" });
-        const targetRow = contentEl.createDiv({ cls: "novelist-modal-row" });
-        const targetLeft = targetRow.createDiv({ cls: "novelist-modal-left" });
-        targetLeft.createEl("div", { text: "Target word count", cls: "novelist-modal-row-title" });
-        targetLeft.createEl("div", { text: "Set estimated total word count (in 1k)", cls: "novelist-modal-row-sub" });
-        const targetRight = targetRow.createDiv({ cls: "novelist-modal-right" });
-        const targetInput = targetRight.createEl("input", { type: "text", cls: "novelist-modal-input", placeholder: "e.g., 20 (20k) or 20000" });
+        contentEl.createDiv({ cls: "folio-modal-divider" });
+        const targetRow = contentEl.createDiv({ cls: "folio-modal-row" });
+        const targetLeft = targetRow.createDiv({ cls: "folio-modal-left" });
+        targetLeft.createEl("div", { text: "Target word count", cls: "folio-modal-row-title" });
+        targetLeft.createEl("div", { text: "Set estimated total word count (in 1k)", cls: "folio-modal-row-sub" });
+        const targetRight = targetRow.createDiv({ cls: "folio-modal-right" });
+        const targetInput = targetRight.createEl("input", { type: "text", cls: "folio-modal-input", placeholder: "e.g., 20 (20k) or 20000" });
         const existingTarget = (_g = (_f = (_d = (_b = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _b.targetWordCount) != null ? _d : (_c = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _c.target_total_words) != null ? _f : (_e = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _e.targetWordCount) != null ? _g : "";
         try {
           const num = Number(existingTarget) || 0;
@@ -749,9 +812,9 @@ var init_manageBooksModal = __esm({
         const search = contentEl.createEl("input", {
           type: "text",
           placeholder: "Search books...",
-          cls: "novelist-manage-search"
+          cls: "folio-manage-search"
         });
-        const list = contentEl.createDiv({ cls: "novelist-manage-list" });
+        const list = contentEl.createDiv({ cls: "folio-manage-list" });
         const formatTarget = (n) => {
           if (!n)
             return "\u2014";
@@ -795,10 +858,10 @@ var init_manageBooksModal = __esm({
               if (!matches)
                 continue;
             }
-            const card = list.createDiv({ cls: "novelist-manage-card" });
-            const left = card.createDiv({ cls: "novelist-manage-left" });
-            const right = card.createDiv({ cls: "novelist-manage-right" });
-            const coverWrap = left.createDiv({ cls: "novelist-manage-cover" });
+            const card = list.createDiv({ cls: "folio-manage-card" });
+            const left = card.createDiv({ cls: "folio-manage-left" });
+            const right = card.createDiv({ cls: "folio-manage-right" });
+            const coverWrap = left.createDiv({ cls: "folio-manage-cover" });
             try {
               const coverFile = book.cover instanceof TFile5 ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
               if (coverFile instanceof TFile5) {
@@ -810,30 +873,30 @@ var init_manageBooksModal = __esm({
             try {
               const coverFile = book.cover instanceof TFile5 ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
               if (!(coverFile instanceof TFile5)) {
-                coverWrap.addClass("novelist-manage-cover-placeholder");
+                coverWrap.addClass("folio-manage-cover-placeholder");
                 try {
-                  coverWrap.createSpan({ text: "TBD", cls: "novelist-manage-cover-txt" });
+                  coverWrap.createSpan({ text: "TBD", cls: "folio-manage-cover-txt" });
                 } catch (e) {
                   coverWrap.textContent = "TBD";
                 }
               }
             } catch (e) {
             }
-            const titleRow = right.createDiv({ cls: "novelist-manage-title-row" });
-            titleRow.createDiv({ text: displayTitle || book.name || "Untitled", cls: "novelist-manage-title" });
-            const actions = titleRow.createDiv({ cls: "novelist-manage-actions" });
+            const titleRow = right.createDiv({ cls: "folio-manage-title-row" });
+            titleRow.createDiv({ text: displayTitle || book.name || "Untitled", cls: "folio-manage-title" });
+            const actions = titleRow.createDiv({ cls: "folio-manage-actions" });
             const deleteBtn = actions.createEl("button", { text: "Delete", cls: "mod-danger" });
             const editBtn = actions.createEl("button", { text: "Edit" });
-            const metaGrid = right.createDiv({ cls: "novelist-manage-meta-grid" });
-            const labelsCol = metaGrid.createDiv({ cls: "novelist-manage-labels" });
-            const valuesCol = metaGrid.createDiv({ cls: "novelist-manage-values" });
-            labelsCol.createEl("div", { text: "Author", cls: "novelist-manage-label" });
-            valuesCol.createEl("div", { text: authors || "\u2014", cls: "novelist-manage-author" });
-            labelsCol.createEl("div", { text: "Description", cls: "novelist-manage-label" });
+            const metaGrid = right.createDiv({ cls: "folio-manage-meta-grid" });
+            const labelsCol = metaGrid.createDiv({ cls: "folio-manage-labels" });
+            const valuesCol = metaGrid.createDiv({ cls: "folio-manage-values" });
+            labelsCol.createEl("div", { text: "Author", cls: "folio-manage-label" });
+            valuesCol.createEl("div", { text: authors || "\u2014", cls: "folio-manage-author" });
+            labelsCol.createEl("div", { text: "Description", cls: "folio-manage-label" });
             const short = desc ? desc.length > 160 ? desc.slice(0, 157) + "\u2026" : desc : "\u2014";
-            valuesCol.createEl("div", { text: short, cls: "novelist-manage-desc" });
-            labelsCol.createEl("div", { text: "Progress", cls: "novelist-manage-label" });
-            valuesCol.createEl("div", { text: `${totalWords} / ${formatTarget(targetWords)}`, cls: "novelist-manage-progress" });
+            valuesCol.createEl("div", { text: short, cls: "folio-manage-desc" });
+            labelsCol.createEl("div", { text: "Progress", cls: "folio-manage-label" });
+            valuesCol.createEl("div", { text: `${totalWords} / ${formatTarget(targetWords)}`, cls: "folio-manage-progress" });
             deleteBtn.onclick = async () => {
               const self = this;
               const modal = new ConfirmModal(this.plugin.app, {
@@ -857,7 +920,7 @@ var init_manageBooksModal = __esm({
             };
           }
           if (!list.children || list.children.length === 0) {
-            const empty = list.createDiv({ cls: "novelist-manage-empty" });
+            const empty = list.createDiv({ cls: "folio-manage-empty" });
             empty.createEl("div", { text: "No books found" });
           }
         };
@@ -961,48 +1024,8 @@ var init_textInputModal = __esm({
   }
 });
 
-// src/constants/index.js
-var VIEW_TYPE = "novelist-view";
-var WRITER_TOOLS_VIEW_TYPE = "novelist-writer-tools";
-var DEFAULT_SETTINGS = {
-  booksPath: "projects",
-  basePath: "projects",
-  // Legacy compatibility
-  lastActiveBookPath: null,
-  verboseLogs: false
-};
-var DEFAULT_BOOK_CONFIG = {
-  basic: {
-    title: "",
-    author: [],
-    subtitle: "",
-    desc: "",
-    uuid: "",
-    created_at: new Date().toISOString()
-  },
-  structure: {
-    tree: []
-  },
-  stats: {
-    total_words: 0,
-    target_total_words: 1e4,
-    progress_by_words: 0,
-    progress_by_chapter: 0,
-    daily_words: {},
-    writing_days: 0,
-    average_daily_words: 0,
-    last_writing_date: new Date().toISOString(),
-    last_modified: new Date().toISOString(),
-    per_chapter: {}
-  },
-  export: {
-    default_format: "pdf",
-    template: "default",
-    include_cover: true
-  }
-};
-
 // src/services/configService.js
+init_constants();
 var ConfigService = class {
   constructor(app) {
     this.app = app;
@@ -1426,7 +1449,11 @@ var StatsService = class {
   countWords(text) {
     if (!text)
       return 0;
-    const parts = text.replace(/\n/g, " ").split(/\s+/).filter(Boolean);
+    let content = text;
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    content = content.replace(frontmatterRegex, "");
+    content = content.replace(/^#{1,6}\s+/gm, "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\*([^*]+)\*/g, "$1").replace(/\_\_([^_]+)\_\_/g, "$1").replace(/\_([^_]+)\_/g, "$1").replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/`([^`]+)`/g, "$1").replace(/^\s*[-*+]\s+/gm, "").replace(/^\s*\d+\.\s+/gm, "").replace(/^>\s+/gm, "");
+    const parts = content.replace(/\n/g, " ").split(/\s+/).filter(Boolean);
     return parts.length;
   }
   /**
@@ -1557,6 +1584,28 @@ var StatsService = class {
 
 // src/services/bookService.js
 var import_obsidian2 = require("obsidian");
+init_constants();
+
+// src/templates/project/book.js
+function bookChapterTemplate({ title }) {
+  return `---
+projectType: book
+---
+
+`;
+}
+
+// src/templates/project/script.js
+function scriptChapterTemplate({ title }) {
+  return `---
+projectType: script
+cssclasses: md-screenplay
+---
+
+`;
+}
+
+// src/services/bookService.js
 var BookService = class {
   constructor(app, configService) {
     this.app = app;
@@ -1644,7 +1693,7 @@ var BookService = class {
   /**
    * Create a new book with default structure
    */
-  async createBook(basePath, name) {
+  async createBook(basePath, name, projectType = "book") {
     if (!name)
       return;
     const path = `${basePath}/${name}`;
@@ -1665,7 +1714,9 @@ var BookService = class {
           subtitle: "",
           desc: "",
           uuid: `${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`,
-          created_at: now
+          created_at: now,
+          projectType
+          // Save project type
         },
         structure: {
           tree: [
@@ -1701,7 +1752,80 @@ var BookService = class {
     }
     const bookFolder = this.app.vault.getAbstractFileByPath(path);
     if (bookFolder instanceof import_obsidian2.TFolder) {
-      await this.ensureBookBaseStructure(bookFolder);
+      if (projectType === PROJECT_TYPES.SCRIPT) {
+        await this.ensureScriptStructure(bookFolder);
+      } else {
+        await this.ensureBookBaseStructure(bookFolder);
+      }
+    }
+  }
+  /**
+   * Ensure script project has screenplay-specific structure
+   */
+  async ensureScriptStructure(bookFolder) {
+    const vault = this.app.vault;
+    const biblePath = `${bookFolder.path}/Bible`;
+    if (!vault.getAbstractFileByPath(biblePath)) {
+      await vault.createFolder(biblePath);
+    }
+    const facesPath = `${biblePath}/Faces`;
+    const placesPath = `${biblePath}/Places`;
+    const objectsPath = `${biblePath}/Objects`;
+    if (!vault.getAbstractFileByPath(facesPath)) {
+      await vault.createFolder(facesPath);
+    }
+    if (!vault.getAbstractFileByPath(placesPath)) {
+      await vault.createFolder(placesPath);
+    }
+    if (!vault.getAbstractFileByPath(objectsPath)) {
+      await vault.createFolder(objectsPath);
+    }
+    const bibleFiles = ["Logline.md", "Theme.md", "Structure.md"];
+    for (const file of bibleFiles) {
+      const filePath = `${biblePath}/${file}`;
+      if (!vault.getAbstractFileByPath(filePath)) {
+        await vault.create(filePath, `---
+projectType: script
+---
+
+`);
+      }
+    }
+    const character1Path = `${facesPath}/Character 1.md`;
+    if (!vault.getAbstractFileByPath(character1Path)) {
+      await vault.create(character1Path, `---
+projectType: script
+---
+
+`);
+    }
+    const location1Path = `${placesPath}/Location 1.md`;
+    if (!vault.getAbstractFileByPath(location1Path)) {
+      await vault.create(location1Path, `---
+projectType: script
+---
+
+`);
+    }
+    const object1Path = `${objectsPath}/Object 1.md`;
+    if (!vault.getAbstractFileByPath(object1Path)) {
+      await vault.create(object1Path, `---
+projectType: script
+---
+
+`);
+    }
+    const moodboardPath = `${bookFolder.path}/Moodboard.canvas`;
+    if (!vault.getAbstractFileByPath(moodboardPath)) {
+      await vault.create(moodboardPath, "");
+    }
+    const outlinePath = `${bookFolder.path}/Outline.md`;
+    if (!vault.getAbstractFileByPath(outlinePath)) {
+      await vault.create(outlinePath, `---
+projectType: script
+---
+
+`);
     }
   }
   /**
@@ -1775,13 +1899,15 @@ var BookService = class {
   /**
    * Create a new chapter (markdown file) in a volume
    */
-  async createChapter(volume, name) {
+  async createChapter(volume, name, projectType = "book") {
     if (!name)
       return;
     const path = `${volume.path}/${name}.md`;
     if (await this.app.vault.adapter.exists(path))
       return;
-    await this.app.vault.create(path, "");
+    const template = projectType === PROJECT_TYPES.SCRIPT ? scriptChapterTemplate : bookChapterTemplate;
+    const content = template({ title: name });
+    await this.app.vault.create(path, content);
   }
   /**
    * Check if a file is a volume folder
@@ -1811,9 +1937,13 @@ var BookService = class {
   }
 };
 
-// src/views/novelistView.js
+// src/main.js
+init_constants();
+
+// src/views/folioView.js
 var import_obsidian3 = require("obsidian");
-var NovelistView = class extends import_obsidian3.ItemView {
+init_constants();
+var FolioView = class extends import_obsidian3.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -1824,7 +1954,7 @@ var NovelistView = class extends import_obsidian3.ItemView {
     return VIEW_TYPE;
   }
   getDisplayText() {
-    return "Novelist";
+    return "Folio";
   }
   getIcon() {
     return "book-open";
@@ -1880,13 +2010,13 @@ var NovelistView = class extends import_obsidian3.ItemView {
       element.addEventListener("dragstart", (e) => {
         draggedElement = element;
         draggedNodeId = nodeId;
-        element.classList.add("novelist-dragging");
+        element.classList.add("folio-dragging");
         e.dataTransfer.effectAllowed = "move";
         e.dataTransfer.setData("text/plain", nodeId);
       });
       element.addEventListener("dragend", (e) => {
-        element.classList.remove("novelist-dragging");
-        document.querySelectorAll(".novelist-dragover, .novelist-dragover-before, .novelist-dragover-after, .novelist-dragover-inside").forEach((el) => el.classList.remove("novelist-dragover", "novelist-dragover-before", "novelist-dragover-after", "novelist-dragover-inside"));
+        element.classList.remove("folio-dragging");
+        document.querySelectorAll(".folio-dragover, .folio-dragover-before, .folio-dragover-after, .folio-dragover-inside").forEach((el) => el.classList.remove("folio-dragover", "folio-dragover-before", "folio-dragover-after", "folio-dragover-inside"));
         draggedElement = null;
         draggedNodeId = null;
       });
@@ -1900,32 +2030,32 @@ var NovelistView = class extends import_obsidian3.ItemView {
         const elementTop = rect.top;
         const elementBottom = rect.bottom;
         const elementHeight = rect.height;
-        element.classList.remove("novelist-dragover-before", "novelist-dragover-after", "novelist-dragover-inside");
+        element.classList.remove("folio-dragover-before", "folio-dragover-after", "folio-dragover-inside");
         if (nodeType === "group") {
           const topQuarter = elementTop + elementHeight / 4;
           const bottomHalf = elementTop + elementHeight / 2;
           if (mouseY < topQuarter) {
-            element.classList.add("novelist-dragover-before");
+            element.classList.add("folio-dragover-before");
             e.dataTransfer.dropEffect = "move";
           } else if (mouseY > bottomHalf) {
-            element.classList.add("novelist-dragover-after");
+            element.classList.add("folio-dragover-after");
             e.dataTransfer.dropEffect = "move";
           } else {
-            element.classList.add("novelist-dragover-inside");
+            element.classList.add("folio-dragover-inside");
             e.dataTransfer.dropEffect = "move";
           }
         } else {
           const middle = elementTop + elementHeight / 2;
           if (mouseY < middle) {
-            element.classList.add("novelist-dragover-before");
+            element.classList.add("folio-dragover-before");
           } else {
-            element.classList.add("novelist-dragover-after");
+            element.classList.add("folio-dragover-after");
           }
           e.dataTransfer.dropEffect = "move";
         }
       });
       element.addEventListener("dragleave", (e) => {
-        element.classList.remove("novelist-dragover-before", "novelist-dragover-after", "novelist-dragover-inside");
+        element.classList.remove("folio-dragover-before", "folio-dragover-after", "folio-dragover-inside");
       });
       element.addEventListener("drop", async (e) => {
         e.preventDefault();
@@ -1956,7 +2086,7 @@ var NovelistView = class extends import_obsidian3.ItemView {
         if (success) {
           this.plugin.rerenderViews();
         }
-        element.classList.remove("novelist-dragover-before", "novelist-dragover-after", "novelist-dragover-inside");
+        element.classList.remove("folio-dragover-before", "folio-dragover-after", "folio-dragover-inside");
       });
     };
     const renderNodeFromConfig = (node, parentContainer) => {
@@ -1967,18 +2097,18 @@ var NovelistView = class extends import_obsidian3.ItemView {
         return;
       }
       if (node.type === "group") {
-        const folderRow = parentContainer.createDiv("novelist-tree-folder tree-item is-folder");
+        const folderRow = parentContainer.createDiv("folio-tree-folder tree-item is-folder");
         folderRow.dataset.path = fullPath;
         folderRow.dataset.nodeId = node.id;
-        const collapse = folderRow.createSpan({ cls: "novelist-tree-toggle" });
+        const collapse = folderRow.createSpan({ cls: "folio-tree-toggle" });
         collapse.classList.toggle("is-open", this.plugin.expandedFolders.has(fullPath));
-        const folderIcon = folderRow.createSpan({ cls: "novelist-tree-icon folder-icon" });
+        const folderIcon = folderRow.createSpan({ cls: "folio-tree-icon folder-icon" });
         try {
           (0, import_obsidian3.setIcon)(folderIcon, this.plugin.expandedFolders.has(fullPath) ? "folder-open" : "folder");
           (0, import_obsidian3.setIcon)(collapse, this.plugin.expandedFolders.has(fullPath) ? "chevron-down" : "chevron-right");
         } catch (e) {
         }
-        const titleSpan = folderRow.createSpan({ text: node.title, cls: "novelist-tree-label" });
+        const titleSpan = folderRow.createSpan({ text: node.title, cls: "folio-tree-label" });
         setupDragEvents(folderRow, node.id, "group");
         try {
           folderRow.addEventListener("contextmenu", (evt) => {
@@ -1987,7 +2117,7 @@ var NovelistView = class extends import_obsidian3.ItemView {
           });
         } catch (e) {
         }
-        const childrenEl = parentContainer.createDiv("novelist-tree-children");
+        const childrenEl = parentContainer.createDiv("folio-tree-children");
         childrenEl.classList.toggle("is-open", this.plugin.expandedFolders.has(fullPath));
         if (!this.plugin.expandedFolders.has(fullPath))
           childrenEl.style.display = "none";
@@ -2012,15 +2142,15 @@ var NovelistView = class extends import_obsidian3.ItemView {
           sortedChildren.forEach((child) => renderNodeFromConfig(child, childrenEl));
         }
       } else {
-        const fileRow = parentContainer.createDiv("novelist-tree-file tree-item is-file");
+        const fileRow = parentContainer.createDiv("folio-tree-file tree-item is-file");
         fileRow.dataset.path = fullPath;
         fileRow.dataset.nodeId = node.id;
-        const icon = fileRow.createSpan({ cls: "novelist-tree-icon" });
+        const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
           (0, import_obsidian3.setIcon)(icon, node.type === "canvas" ? "layout-dashboard" : "file");
         } catch (e) {
         }
-        const label = fileRow.createSpan({ text: node.title, cls: "novelist-tree-label" });
+        const label = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });
         if (node.exclude) {
           label.classList.add("exclude-from-stats");
         }
@@ -2072,7 +2202,7 @@ var NovelistView = class extends import_obsidian3.ItemView {
       }
       try {
         if (this.plugin && this.plugin.settings && this.plugin.settings.verboseLogs)
-          console.debug("Novelist.renderStats loaded cfg", book && book.path, { basic: cfg.basic, stats: cfg.stats });
+          console.debug("Folio.renderStats loaded cfg", book && book.path, { basic: cfg.basic, stats: cfg.stats });
       } catch (e) {
       }
       const stats = cfg.stats || {};
@@ -2099,13 +2229,13 @@ var NovelistView = class extends import_obsidian3.ItemView {
       const dailyAvg = typeof stats.average_daily_words === "number" ? stats.average_daily_words : writingDays > 0 ? Math.round(totalWords / writingDays) : 0;
       container.empty();
       const row = (iconName, label, value, extra) => {
-        const r = container.createDiv("novelist-stat-row");
-        const left = r.createDiv({ cls: "novelist-stat-left" });
-        const iconSpan = left.createSpan({ cls: "novelist-stat-icon" });
+        const r = container.createDiv("folio-stat-row");
+        const left = r.createDiv({ cls: "folio-stat-left" });
+        const iconSpan = left.createSpan({ cls: "folio-stat-icon" });
         try {
           if (Array.isArray(iconName)) {
             iconName.forEach((n, i) => {
-              const s = iconSpan.createSpan({ cls: `novelist-stat-icon-part part-${i}` });
+              const s = iconSpan.createSpan({ cls: `folio-stat-icon-part part-${i}` });
               try {
                 (0, import_obsidian3.setIcon)(s, n);
               } catch (e) {
@@ -2119,8 +2249,8 @@ var NovelistView = class extends import_obsidian3.ItemView {
           }
         } catch (e) {
         }
-        left.createSpan({ text: label, cls: "novelist-stat-label" });
-        r.createSpan({ text: value, cls: "novelist-stat-value" });
+        left.createSpan({ text: label, cls: "folio-stat-label" });
+        r.createSpan({ text: value, cls: "folio-stat-value" });
         if (extra && typeof extra === "function")
           extra(r);
       };
@@ -2146,31 +2276,31 @@ var NovelistView = class extends import_obsidian3.ItemView {
       el.empty();
       if (this._renderCounter !== token)
         return;
-      el.addClass("novelist-view");
-      const topBar = el.createDiv("novelist-topbar");
-      const newBtn = topBar.createEl("button", { cls: "novelist-top-btn" });
-      const newIcon = newBtn.createSpan({ cls: "novelist-top-icon" });
+      el.addClass("folio-view");
+      const topBar = el.createDiv("folio-topbar");
+      const newBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const newIcon = newBtn.createSpan({ cls: "folio-top-icon" });
       try {
         (0, import_obsidian3.setIcon)(newIcon, "edit");
       } catch (e) {
       }
-      newBtn.createSpan({ text: "New", cls: "novelist-top-label" });
-      const switchBtn = topBar.createEl("button", { cls: "novelist-top-btn" });
-      const switchIcon = switchBtn.createSpan({ cls: "novelist-top-icon" });
+      newBtn.createSpan({ text: "New", cls: "folio-top-label" });
+      const switchBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const switchIcon = switchBtn.createSpan({ cls: "folio-top-icon" });
       try {
         (0, import_obsidian3.setIcon)(switchIcon, "repeat");
       } catch (e) {
       }
-      switchBtn.createSpan({ text: "Switch", cls: "novelist-top-label" });
-      const manageBtn = topBar.createEl("button", { cls: "novelist-top-btn" });
-      const manageIcon = manageBtn.createSpan({ cls: "novelist-top-icon" });
+      switchBtn.createSpan({ text: "Switch", cls: "folio-top-label" });
+      const manageBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const manageIcon = manageBtn.createSpan({ cls: "folio-top-icon" });
       try {
         (0, import_obsidian3.setIcon)(manageIcon, "library");
       } catch (e) {
       }
-      manageBtn.createSpan({ text: "Manage", cls: "novelist-top-label" });
-      const helpBtn = topBar.createEl("button", { cls: "novelist-help-btn" });
-      const helpIcon = helpBtn.createSpan({ cls: "novelist-help-icon" });
+      manageBtn.createSpan({ text: "Manage", cls: "folio-top-label" });
+      const helpBtn = topBar.createEl("button", { cls: "folio-help-btn" });
+      const helpIcon = helpBtn.createSpan({ cls: "folio-help-icon" });
       try {
         (0, import_obsidian3.setIcon)(helpIcon, "help");
       } catch (e) {
@@ -2189,34 +2319,34 @@ var NovelistView = class extends import_obsidian3.ItemView {
       };
       const book = this.plugin.activeBook;
       if (!book) {
-        const headerEl2 = el.createDiv("novelist-book-header");
-        const coverCol2 = headerEl2.createDiv("novelist-book-cover-col");
-        const coverEl2 = coverCol2.createDiv("novelist-book-cover");
+        const headerEl2 = el.createDiv("folio-book-header");
+        const coverCol2 = headerEl2.createDiv("folio-book-cover-col");
+        const coverEl2 = coverCol2.createDiv("folio-book-cover");
         coverEl2.style.background = "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))";
         try {
-          coverEl2.addClass && coverEl2.addClass("novelist-book-cover-placeholder");
+          coverEl2.addClass && coverEl2.addClass("folio-book-cover-placeholder");
         } catch (e) {
         }
-        const titleBlock2 = headerEl2.createDiv("novelist-book-title-block");
-        titleBlock2.createEl("div", { cls: "novelist-book-title", text: "No active book" });
-        titleBlock2.createEl("div", { cls: "novelist-book-subtitle", text: "(Select or create a book)" });
-        const metaBlock2 = el.createDiv("novelist-book-meta novelist-book-info");
-        const authorRow2 = metaBlock2.createDiv("novelist-meta-row");
-        authorRow2.createEl("div", { text: "Author", cls: "novelist-meta-label" });
-        authorRow2.createEl("div", { text: "\u2014", cls: "novelist-meta-value" });
-        const descRow2 = metaBlock2.createDiv("novelist-meta-row");
-        descRow2.createEl("div", { text: "Description", cls: "novelist-meta-label" });
-        descRow2.createEl("div", { text: "\u2014", cls: "novelist-meta-value novelist-meta-desc" });
-        const structureEl2 = el.createDiv("novelist-structure");
+        const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
+        titleBlock2.createEl("div", { cls: "folio-book-title", text: "No active book" });
+        titleBlock2.createEl("div", { cls: "folio-book-subtitle", text: "(Select or create a book)" });
+        const metaBlock2 = el.createDiv("folio-book-meta folio-book-info");
+        const authorRow2 = metaBlock2.createDiv("folio-meta-row");
+        authorRow2.createEl("div", { text: "Author", cls: "folio-meta-label" });
+        authorRow2.createEl("div", { text: "\u2014", cls: "folio-meta-value" });
+        const descRow2 = metaBlock2.createDiv("folio-meta-row");
+        descRow2.createEl("div", { text: "Description", cls: "folio-meta-label" });
+        descRow2.createEl("div", { text: "\u2014", cls: "folio-meta-value folio-meta-desc" });
+        const structureEl2 = el.createDiv("folio-structure");
         structureEl2.createEl("p", { text: "(No book selected)" });
         try {
-          const statsEl = el.createDiv("novelist-stats");
+          const statsEl = el.createDiv("folio-stats");
           const makeRow = (label, value) => {
-            const r = statsEl.createDiv("novelist-stat-row");
-            const left = r.createDiv({ cls: "novelist-stat-left" });
-            left.createSpan({ cls: "novelist-stat-icon" });
-            left.createSpan({ text: label, cls: "novelist-stat-label" });
-            r.createSpan({ text: value, cls: "novelist-stat-value" });
+            const r = statsEl.createDiv("folio-stat-row");
+            const left = r.createDiv({ cls: "folio-stat-left" });
+            left.createSpan({ cls: "folio-stat-icon" });
+            left.createSpan({ text: label, cls: "folio-stat-label" });
+            r.createSpan({ text: value, cls: "folio-stat-value" });
           };
           makeRow("Today", "\u2014");
           makeRow("Total words", "\u2014 / \u2014");
@@ -2229,34 +2359,34 @@ var NovelistView = class extends import_obsidian3.ItemView {
       }
       const bookFolderCheck = this.plugin.app.vault.getAbstractFileByPath(book.path);
       if (!bookFolderCheck || !(bookFolderCheck instanceof import_obsidian3.TFolder)) {
-        const headerEl2 = el.createDiv("novelist-book-header");
-        const coverCol2 = headerEl2.createDiv("novelist-book-cover-col");
-        const coverEl2 = coverCol2.createDiv("novelist-book-cover");
+        const headerEl2 = el.createDiv("folio-book-header");
+        const coverCol2 = headerEl2.createDiv("folio-book-cover-col");
+        const coverEl2 = coverCol2.createDiv("folio-book-cover");
         coverEl2.style.background = "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))";
         try {
-          coverEl2.addClass && coverEl2.addClass("novelist-book-cover-placeholder");
+          coverEl2.addClass && coverEl2.addClass("folio-book-cover-placeholder");
         } catch (e) {
         }
-        const titleBlock2 = headerEl2.createDiv("novelist-book-title-block");
-        titleBlock2.createEl("div", { cls: "novelist-book-title", text: "No active book" });
-        titleBlock2.createEl("div", { cls: "novelist-book-subtitle", text: "(Book folder missing)" });
-        const metaBlock2 = el.createDiv("novelist-book-meta novelist-book-info");
-        const authorRow2 = metaBlock2.createDiv("novelist-meta-row");
-        authorRow2.createEl("div", { text: "Author", cls: "novelist-meta-label" });
-        authorRow2.createEl("div", { text: "\u2014", cls: "novelist-meta-value" });
-        const descRow2 = metaBlock2.createDiv("novelist-meta-row");
-        descRow2.createEl("div", { text: "Description", cls: "novelist-meta-label" });
-        descRow2.createEl("div", { text: "\u2014", cls: "novelist-meta-value novelist-meta-desc" });
-        const structureEl2 = el.createDiv("novelist-structure");
+        const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
+        titleBlock2.createEl("div", { cls: "folio-book-title", text: "No active book" });
+        titleBlock2.createEl("div", { cls: "folio-book-subtitle", text: "(Book folder missing)" });
+        const metaBlock2 = el.createDiv("folio-book-meta folio-book-info");
+        const authorRow2 = metaBlock2.createDiv("folio-meta-row");
+        authorRow2.createEl("div", { text: "Author", cls: "folio-meta-label" });
+        authorRow2.createEl("div", { text: "\u2014", cls: "folio-meta-value" });
+        const descRow2 = metaBlock2.createDiv("folio-meta-row");
+        descRow2.createEl("div", { text: "Description", cls: "folio-meta-label" });
+        descRow2.createEl("div", { text: "\u2014", cls: "folio-meta-value folio-meta-desc" });
+        const structureEl2 = el.createDiv("folio-structure");
         structureEl2.createEl("p", { text: "(Book folder missing on disk)" });
         try {
-          const statsEl = el.createDiv("novelist-stats");
+          const statsEl = el.createDiv("folio-stats");
           const makeRow = (label, value) => {
-            const r = statsEl.createDiv("novelist-stat-row");
-            const left = r.createDiv({ cls: "novelist-stat-left" });
-            left.createSpan({ cls: "novelist-stat-icon" });
-            left.createSpan({ text: label, cls: "novelist-stat-label" });
-            r.createSpan({ text: value, cls: "novelist-stat-value" });
+            const r = statsEl.createDiv("folio-stat-row");
+            const left = r.createDiv({ cls: "folio-stat-left" });
+            left.createSpan({ cls: "folio-stat-icon" });
+            left.createSpan({ text: label, cls: "folio-stat-label" });
+            r.createSpan({ text: value, cls: "folio-stat-value" });
           };
           makeRow("Today", "\u2014");
           makeRow("Total words", "\u2014 / \u2014");
@@ -2276,37 +2406,37 @@ var NovelistView = class extends import_obsidian3.ItemView {
       }
       if (this._renderCounter !== token)
         return;
-      const headerEl = el.createDiv("novelist-book-header");
-      const coverCol = headerEl.createDiv("novelist-book-cover-col");
-      const coverEl = coverCol.createDiv("novelist-book-cover");
+      const headerEl = el.createDiv("folio-book-header");
+      const coverCol = headerEl.createDiv("folio-book-cover-col");
+      const coverEl = coverCol.createDiv("folio-book-cover");
       const coverPath = book.cover ? this.plugin.app.vault.getResourcePath(book.cover) : null;
       if (coverPath) {
         coverEl.style.backgroundImage = `url("${coverPath}")`;
       }
-      const titleBlock = headerEl.createDiv("novelist-book-title-block");
+      const titleBlock = headerEl.createDiv("folio-book-title-block");
       titleBlock.createEl("div", {
-        cls: "novelist-book-title",
+        cls: "folio-book-title",
         text: metadata && metadata.title || book.name || "Untitled book"
       });
       const subtitleText = metadata && metadata.subtitle || "";
       if (subtitleText) {
         titleBlock.createEl("div", {
-          cls: "novelist-book-subtitle",
+          cls: "folio-book-subtitle",
           text: subtitleText
         });
       }
-      const metaBlock = el.createDiv("novelist-book-meta novelist-book-info");
+      const metaBlock = el.createDiv("folio-book-meta folio-book-info");
       const authorVal = metadata && metadata.author || "";
       const descVal = metadata && metadata.description || "";
-      const authorRow = metaBlock.createDiv("novelist-meta-row");
-      authorRow.createEl("div", { text: "Author", cls: "novelist-meta-label" });
-      authorRow.createEl("div", { text: authorVal || "\u2014", cls: "novelist-meta-value" });
-      const descRow = metaBlock.createDiv("novelist-meta-row");
-      descRow.createEl("div", { text: "Description", cls: "novelist-meta-label" });
-      descRow.createEl("div", { text: descVal || "\u2014", cls: "novelist-meta-value novelist-meta-desc" });
+      const authorRow = metaBlock.createDiv("folio-meta-row");
+      authorRow.createEl("div", { text: "Author", cls: "folio-meta-label" });
+      authorRow.createEl("div", { text: authorVal || "\u2014", cls: "folio-meta-value" });
+      const descRow = metaBlock.createDiv("folio-meta-row");
+      descRow.createEl("div", { text: "Description", cls: "folio-meta-label" });
+      descRow.createEl("div", { text: descVal || "\u2014", cls: "folio-meta-value folio-meta-desc" });
       if (this._renderCounter !== token)
         return;
-      const structureEl = el.createDiv("novelist-structure");
+      const structureEl = el.createDiv("folio-structure");
       const bookFolder = this.plugin.app.vault.getAbstractFileByPath(book.path);
       if (this._renderCounter !== token)
         return;
@@ -2409,14 +2539,14 @@ var NovelistView = class extends import_obsidian3.ItemView {
       }
       if (this._renderCounter !== token)
         return;
-      this.statsEl = el.createDiv("novelist-stats");
+      this.statsEl = el.createDiv("folio-stats");
       await this.renderStats(this.statsEl, book);
       try {
         if (this.statsEl)
           this.statsEl.addEventListener("contextmenu", (evt) => {
             try {
               evt.preventDefault();
-              const row = evt.target && evt.target.closest && evt.target.closest(".novelist-stat-row");
+              const row = evt.target && evt.target.closest && evt.target.closest(".folio-stat-row");
               if (row)
                 return;
               const menu = new import_obsidian3.Menu(this.plugin.app);
@@ -2514,7 +2644,7 @@ var NovelistView = class extends import_obsidian3.ItemView {
 
 // src/views/writerToolsView.js
 var import_obsidian4 = require("obsidian");
-var WRITER_TOOLS_VIEW_TYPE2 = "novelist-writer-tools";
+var WRITER_TOOLS_VIEW_TYPE2 = "folio-writer-tools";
 var WriterToolsView = class extends import_obsidian4.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
@@ -2532,7 +2662,7 @@ var WriterToolsView = class extends import_obsidian4.ItemView {
   async onOpen() {
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("novelist-writer-tools");
+    container.addClass("folio-writer-tools");
     const header = container.createDiv({ cls: "writer-tools-header" });
     header.createEl("h2", { text: "Writer Tools" });
     this.toolsContainer = container.createDiv({ cls: "writer-tools-container" });
@@ -2550,9 +2680,9 @@ var WriterToolsView = class extends import_obsidian4.ItemView {
   }
 };
 
-// src/views/novelistSettingTab.js
+// src/views/folioSettingTab.js
 var import_obsidian5 = require("obsidian");
-var NovelistSettingTab = class extends import_obsidian5.PluginSettingTab {
+var FolioSettingTab = class extends import_obsidian5.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -2560,7 +2690,7 @@ var NovelistSettingTab = class extends import_obsidian5.PluginSettingTab {
   display() {
     const el = this.containerEl;
     el.empty();
-    el.createEl("h2", { text: "Novelist Settings" });
+    el.createEl("h2", { text: "Folio Settings" });
     new import_obsidian5.Setting(el).setName("Books base path").setDesc("Folder where all books are stored").addText(
       (text) => text.setValue(this.plugin.settings.basePath).onChange(async (value) => {
         this.plugin.settings.basePath = value.trim() || "projects";
@@ -2590,7 +2720,7 @@ var {
   Menu: Menu2,
   setIcon: setIcon2
 } = require("obsidian");
-module.exports = class NovelistPlugin extends Plugin {
+module.exports = class FolioPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
     this.configService = new ConfigService(this.app);
@@ -2599,7 +2729,7 @@ module.exports = class NovelistPlugin extends Plugin {
     this.bookService = new BookService(this.app, this.configService);
     this.booksIndex = [];
     this.activeBook = null;
-    this.novelistLeaf = null;
+    this.folioLeaf = null;
     this.activeFile = null;
     await this.ensureBasePath();
     await this.scanBooks();
@@ -2615,16 +2745,16 @@ module.exports = class NovelistPlugin extends Plugin {
     this.activeFilePath = null;
     this.registerView(
       VIEW_TYPE,
-      (leaf) => new NovelistView(leaf, this)
+      (leaf) => new FolioView(leaf, this)
     );
     this.registerView(
       WRITER_TOOLS_VIEW_TYPE,
       (leaf) => new WriterToolsView(leaf, this)
     );
-    this.addRibbonIcon("book", "Open Novelist", () => {
-      this.activateNovelist();
+    this.addRibbonIcon("book", "Open Folio", () => {
+      this.activateFolio();
     });
-    this.addSettingTab(new NovelistSettingTab(this.app, this));
+    this.addSettingTab(new FolioSettingTab(this.app, this));
     this.registerEvent(
       this.app.vault.on("create", () => this.refresh())
     );
@@ -3017,8 +3147,8 @@ module.exports = class NovelistPlugin extends Plugin {
     });
     modal.open();
   }
-  /* Activate both views: Novelist (left) + Writer Tools (right) */
-  async activateNovelist() {
+  /* Activate both views: Folio (left) + Writer Tools (right) */
+  async activateFolio() {
     await this.activateView();
     await this.openWriterTools();
   }
@@ -3028,7 +3158,7 @@ module.exports = class NovelistPlugin extends Plugin {
     const existing = workspace.getLeavesOfType(VIEW_TYPE);
     if (existing.length > 0) {
       workspace.revealLeaf(existing[0]);
-      this.novelistLeaf = existing[0];
+      this.folioLeaf = existing[0];
       return;
     }
     const leftLeaf = workspace.getLeftLeaf(false);
@@ -3036,7 +3166,7 @@ module.exports = class NovelistPlugin extends Plugin {
       type: VIEW_TYPE,
       active: true
     });
-    this.novelistLeaf = leftLeaf;
+    this.folioLeaf = leftLeaf;
     workspace.revealLeaf(leftLeaf);
   }
   /* Open Writer Tools in right sidebar */
@@ -3084,9 +3214,9 @@ module.exports = class NovelistPlugin extends Plugin {
   /* ===============================================================
    * CREATE METHODS
    * =============================================================== */
-  async createBook(name) {
+  async createBook(name, projectType = "book") {
     const basePath = this.settings.basePath || "projects";
-    return this.bookService.createBook(basePath, name);
+    return this.bookService.createBook(basePath, name, projectType);
   }
   async ensureBookBaseStructure(bookFolder) {
     return this.bookService.ensureBookBaseStructure(bookFolder);
@@ -3094,8 +3224,8 @@ module.exports = class NovelistPlugin extends Plugin {
   async createVolume(book, name) {
     return this.bookService.createVolume(book, name);
   }
-  async createChapter(volume, name) {
-    const result = await this.bookService.createChapter(volume, name);
+  async createChapter(volume, name, projectType = "book") {
+    const result = await this.bookService.createChapter(volume, name, projectType);
     try {
       const book = this.booksIndex.find((b) => `${volume.path}/${name}.md`.startsWith(b.path));
       if (book)
@@ -3277,7 +3407,7 @@ module.exports = class NovelistPlugin extends Plugin {
       }
     }
   }
-  // Update only the stats block in existing Novelist views to avoid full re-renders
+  // Update only the stats block in existing Folio views to avoid full re-renders
   async updateStatsInViews(book) {
     try {
       const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
@@ -3339,7 +3469,11 @@ module.exports = class NovelistPlugin extends Plugin {
   _countWords(text) {
     if (!text)
       return 0;
-    const parts = text.replace(/\n/g, " ").split(/\s+/).filter(Boolean);
+    let content = text;
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    content = content.replace(frontmatterRegex, "");
+    content = content.replace(/^#{1,6}\s+/gm, "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\*([^*]+)\*/g, "$1").replace(/\_\_([^_]+)\_\_/g, "$1").replace(/\_([^_]+)\_/g, "$1").replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/`([^`]+)`/g, "$1").replace(/^\s*[-*+]\s+/gm, "").replace(/^\s*\d+\.\s+/gm, "").replace(/^>\s+/gm, "");
+    const parts = content.replace(/\n/g, " ").split(/\s+/).filter(Boolean);
     return parts.length;
   }
   _getTodayKey() {

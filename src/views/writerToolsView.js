@@ -4,7 +4,7 @@
 
 import { ItemView } from 'obsidian';
 
-export const WRITER_TOOLS_VIEW_TYPE = "novelist-writer-tools";
+export const WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
 
 export class WriterToolsView extends ItemView {
   constructor(leaf, plugin) {
@@ -27,7 +27,7 @@ export class WriterToolsView extends ItemView {
   async onOpen() {
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("novelist-writer-tools");
+    container.addClass("folio-writer-tools");
 
     // Header
     const header = container.createDiv({ cls: "writer-tools-header" });

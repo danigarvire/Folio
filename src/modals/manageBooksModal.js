@@ -16,11 +16,11 @@ export class ManageBooksModal extends Modal {
     const search = contentEl.createEl("input", {
       type: "text",
       placeholder: "Search books...",
-      cls: 'novelist-manage-search'
+      cls: 'folio-manage-search'
     });
     // import button intentionally omitted — search field serves as primary control
 
-    const list = contentEl.createDiv({ cls: 'novelist-manage-list' });
+    const list = contentEl.createDiv({ cls: 'folio-manage-list' });
 
     // helper to format large targets (e.g., 20000 -> 20K or 20.5K)
     const formatTarget = (n) => {
@@ -65,12 +65,12 @@ export class ManageBooksModal extends Modal {
           if (!matches) continue;
         }
 
-        const card = list.createDiv({ cls: 'novelist-manage-card' });
-        const left = card.createDiv({ cls: 'novelist-manage-left' });
-        const right = card.createDiv({ cls: 'novelist-manage-right' });
+        const card = list.createDiv({ cls: 'folio-manage-card' });
+        const left = card.createDiv({ cls: 'folio-manage-left' });
+        const right = card.createDiv({ cls: 'folio-manage-right' });
 
         // cover (left)
-        const coverWrap = left.createDiv({ cls: 'novelist-manage-cover' });
+        const coverWrap = left.createDiv({ cls: 'folio-manage-cover' });
         try {
           const coverFile = book.cover instanceof TFile ? book.cover : (book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null);
           if (coverFile instanceof TFile) {
@@ -82,32 +82,32 @@ export class ManageBooksModal extends Modal {
         try {
           const coverFile = book.cover instanceof TFile ? book.cover : (book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null);
           if (!(coverFile instanceof TFile)) {
-            coverWrap.addClass('novelist-manage-cover-placeholder');
-            try { coverWrap.createSpan({ text: 'TBD', cls: 'novelist-manage-cover-txt' }); } catch { coverWrap.textContent = 'TBD'; }
+            coverWrap.addClass('folio-manage-cover-placeholder');
+            try { coverWrap.createSpan({ text: 'TBD', cls: 'folio-manage-cover-txt' }); } catch { coverWrap.textContent = 'TBD'; }
           }
         } catch {}
 
         // Title row: use configured title when available; actions live at right of title
-        const titleRow = right.createDiv({ cls: 'novelist-manage-title-row' });
-        titleRow.createDiv({ text: displayTitle || book.name || 'Untitled', cls: 'novelist-manage-title' });
-        const actions = titleRow.createDiv({ cls: 'novelist-manage-actions' });
+        const titleRow = right.createDiv({ cls: 'folio-manage-title-row' });
+        titleRow.createDiv({ text: displayTitle || book.name || 'Untitled', cls: 'folio-manage-title' });
+        const actions = titleRow.createDiv({ cls: 'folio-manage-actions' });
         const deleteBtn = actions.createEl('button', { text: 'Delete', cls: 'mod-danger' });
         const editBtn = actions.createEl('button', { text: 'Edit' });
 
         // Metadata grid: labels on left, values on right (Author / Description / Progress)
-        const metaGrid = right.createDiv({ cls: 'novelist-manage-meta-grid' });
-        const labelsCol = metaGrid.createDiv({ cls: 'novelist-manage-labels' });
-        const valuesCol = metaGrid.createDiv({ cls: 'novelist-manage-values' });
+        const metaGrid = right.createDiv({ cls: 'folio-manage-meta-grid' });
+        const labelsCol = metaGrid.createDiv({ cls: 'folio-manage-labels' });
+        const valuesCol = metaGrid.createDiv({ cls: 'folio-manage-values' });
 
-        labelsCol.createEl('div', { text: 'Author', cls: 'novelist-manage-label' });
-        valuesCol.createEl('div', { text: authors || '—', cls: 'novelist-manage-author' });
+        labelsCol.createEl('div', { text: 'Author', cls: 'folio-manage-label' });
+        valuesCol.createEl('div', { text: authors || '—', cls: 'folio-manage-author' });
 
-        labelsCol.createEl('div', { text: 'Description', cls: 'novelist-manage-label' });
+        labelsCol.createEl('div', { text: 'Description', cls: 'folio-manage-label' });
         const short = desc ? (desc.length > 160 ? desc.slice(0, 157) + '…' : desc) : '—';
-        valuesCol.createEl('div', { text: short, cls: 'novelist-manage-desc' });
+        valuesCol.createEl('div', { text: short, cls: 'folio-manage-desc' });
 
-        labelsCol.createEl('div', { text: 'Progress', cls: 'novelist-manage-label' });
-        valuesCol.createEl('div', { text: `${totalWords} / ${formatTarget(targetWords)}`, cls: 'novelist-manage-progress' });
+        labelsCol.createEl('div', { text: 'Progress', cls: 'folio-manage-label' });
+        valuesCol.createEl('div', { text: `${totalWords} / ${formatTarget(targetWords)}`, cls: 'folio-manage-progress' });
 
         deleteBtn.onclick = async () => {
           const self = this;
@@ -133,7 +133,7 @@ export class ManageBooksModal extends Modal {
 
       // show placeholder when no items match filter
       if (!list.children || list.children.length === 0) {
-        const empty = list.createDiv({ cls: 'novelist-manage-empty' });
+        const empty = list.createDiv({ cls: 'folio-manage-empty' });
         empty.createEl('div', { text: 'No books found' });
       }
     };

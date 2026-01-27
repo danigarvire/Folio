@@ -2,7 +2,7 @@
    ROOT
 =============================================================== */
 
-.novelist-view {
+.folio-view {
   padding: 16px;
   font-size: 14px;
   display: flex;
@@ -17,24 +17,24 @@
 /* Novelist theme tints (single source of truth for cover/header/stats) */
 :root {
   /* Use the editor background RGB as the base so tints match the editor zone shade */
-  --novelist-tint-light: rgba(var(--background-primary-rgb), 0.06);
-  --novelist-tint-dark: rgba(var(--background-primary-rgb), 0.16);
+  --folio-tint-light: rgba(var(--background-primary-rgb), 0.06);
+  --folio-tint-dark: rgba(var(--background-primary-rgb), 0.16);
   /* baseline for label column: padding-left + label width + column-gap
-     matches the `.novelist-book-meta` grid (16px + 84px + 12px = 112px) */
-  --novelist-padding: 16px;
-  --novelist-label-width: 84px;
-  --novelist-col-gap: 12px;
-  --novelist-cover-width: 75px;
-  --novelist-header-gap: 14px;
-  --novelist-label-offset: calc(var(--novelist-padding) + var(--novelist-label-width) + var(--novelist-col-gap));
+     matches the `.folio-book-meta` grid (16px + 84px + 12px = 112px) */
+  --folio-padding: 16px;
+  --folio-label-width: 84px;
+  --folio-col-gap: 12px;
+  --folio-cover-width: 75px;
+  --folio-header-gap: 14px;
+  --folio-label-offset: calc(var(--folio-padding) + var(--folio-label-width) + var(--folio-col-gap));
 }
 
 /* Neutralize outer workspace padding so our block paddings control layout
    Targets both possible data-type values to be robust */
-.workspace-leaf-content[data-type="novelist-view"] .view-content,
+.workspace-leaf-content[data-type="folio-view"] .view-content,
 .workspace-leaf-content[data-type="novelist"] .view-content {
   padding: 0 !important;
-  /* make the view-content a flex column so .novelist-view can size correctly */
+  /* make the view-content a flex column so .folio-view can size correctly */
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -43,8 +43,8 @@
 
 /* Stronger layout guarantees: ensure our view and tree can shrink/grow inside Obsidian
    common flex pitfall: children need min-height:0 to allow overflow-y to work inside flex containers */
-.workspace-leaf-content[data-type="novelist-view"] .view-content > .novelist-view,
-.workspace-leaf-content[data-type="novelist"] .view-content > .novelist-view {
+.workspace-leaf-content[data-type="folio-view"] .view-content > .folio-view,
+.workspace-leaf-content[data-type="novelist"] .view-content > .folio-view {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -52,16 +52,16 @@
   overflow-x: hidden; /* ensure the immediate child also hides horizontal overflow */
 }
 
-.novelist-view {
+.folio-view {
   min-height: 0;
 }
 
-.novelist-structure,
-.novelist-tree {
+.folio-structure,
+.folio-tree {
   min-height: 0; /* allow these to shrink inside flex parents */
 }
 
-.novelist-tree {
+.folio-tree {
   /* ensure tree fills remaining space and scrolls */
   flex: 1 1 auto;
   overflow-y: auto;
@@ -71,7 +71,7 @@
    BOOK CONTAINER
 =============================================================== */
 
-.novelist-book {
+.folio-book {
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -87,7 +87,7 @@
    VOLUMES
 =============================================================== */
 
-.novelist-volumes {
+.folio-volumes {
   display: flex;
   flex-direction: column;
   gap: 14px;
@@ -96,7 +96,7 @@
 /* ===============================================================
   VOLUME CARD
 =============================================================== */
-.novelist-volume {
+.folio-volume {
   background: var(--background-primary);
   border-radius: 12px;
   max-width: calc(100% - 8px);
@@ -111,8 +111,8 @@
 /* --- Book-Smith-like block structure --- */
 
 /* toolbar block (alias for existing topbar) */
-.novelist-toolbar,
-.novelist-topbar {
+.folio-toolbar,
+.folio-topbar {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -123,7 +123,7 @@
 }
 
 /* header block: cover + title block feel like a card */
-.novelist-book-header {
+.folio-book-header {
   display: flex;
   gap: 14px;
   padding: 16px 16px 12px; /* header spacing per spec */
@@ -142,13 +142,13 @@
 /* Align the header title block with the meta value column produced by the grid.
    Compute the left margin for the title block so its left edge lines up with
    the meta value column baseline (uses the variables defined above). */
-.novelist-book-title-block {
-  margin-left: calc(var(--novelist-label-offset) - (var(--novelist-padding) + var(--novelist-cover-width) + var(--novelist-header-gap)));
+.folio-book-title-block {
+  margin-left: calc(var(--folio-label-offset) - (var(--folio-padding) + var(--folio-cover-width) + var(--folio-header-gap)));
 }
 
 /* metadata block: leaner, compact */
-.novelist-book-meta,
-.novelist-book-info {
+.folio-book-meta,
+.folio-book-info {
   padding: 12px 16px;
   margin-bottom: 0; /* remove gap so divider is flush with tree */
   display: flex;
@@ -163,28 +163,28 @@
 /* Kill theme / Obsidian pseudo-element separators that inject a visual "|" or
    decorative divider around the metadata block. This prevents themes from
    drawing a separator when author/description are empty. */
-.novelist-book-meta::before,
-.novelist-book-meta::after,
-.novelist-book-meta > *::before,
-.novelist-book-meta > *::after {
+.folio-book-meta::before,
+.folio-book-meta::after,
+.folio-book-meta > *::before,
+.folio-book-meta > *::after {
   content: none !important;
   display: none !important;
 }
 
 /* Optional finer rule: if you only want to suppress separators for empty
    author/description nodes, keep these rules instead of the global ones above.
-.novelist-book-author:empty::before,
-.novelist-book-author:empty::after,
-.novelist-book-description:empty::before,
-.novelist-book-description:empty::after {
+.folio-book-author:empty::before,
+.folio-book-author:empty::after,
+.folio-book-description:empty::before,
+.folio-book-description:empty::after {
   content: none !important;
   display: none !important;
 }
 */
 
 /* cover sizing */
-.novelist-book-cover,
-.novelist-book-cover img {
+.folio-book-cover,
+.folio-book-cover img {
   width: 75px;
   height: 105px;
   flex-shrink: 0;
@@ -195,8 +195,8 @@
 
 /* Placeholder styling for cover when no image exists. Ensure a visible
    black tile in light/day mode, and a subtle neutral in dark mode. */
-.novelist-book-cover-placeholder,
-.novelist-manage-cover-placeholder {
+.folio-book-cover-placeholder,
+.folio-manage-cover-placeholder {
   background-color: rgba(0,0,0,0.9); /* default strong black fallback */
   background-image: none !important;
   border: 1px solid rgba(0,0,0,0.6);
@@ -204,27 +204,27 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  .novelist-book-cover-placeholder,
-  .novelist-manage-cover-placeholder {
+  .folio-book-cover-placeholder,
+  .folio-manage-cover-placeholder {
     /* in dark mode prefer a softer neutral so it doesn't feel 'heavy' */
     background-color: rgba(255,255,255,0.03);
     border: 1px solid rgba(255,255,255,0.03);
     color: var(--text-normal);
   }
 }
-.novelist-book-title {
+.folio-book-title {
   font-size: 15px;
   line-height: 1.3;
   margin-bottom: 4px;
 }
-.novelist-book-subtitle {
+.folio-book-subtitle {
   font-size: 12px;
   opacity: 0.7;
 }
 
 /* tree block: provide breathing room but no background */
-.novelist-book-meta,
-.novelist-book-info {
+.folio-book-meta,
+.folio-book-info {
   padding: 12px 16px;
   margin-bottom: 0; /* remove gap so divider is flush with tree */
   display: flex;
@@ -236,14 +236,14 @@
   border-bottom: 1px solid var(--background-modifier-border);
 }
 /* stats / footer block */
-.novelist-bottom-divider {
+.folio-bottom-divider {
   height: 1px;
   margin: 8px 0;
   background: var(--background-modifier-border);
   opacity: 0.6;
 }
 
-.novelist-stats {
+.folio-stats {
   /* Stats/footer: make flexible and tighten vertical spacing so content hugs the bottom */
   flex: none;
   min-height: 110px;
@@ -260,52 +260,52 @@
 }
 
 /* Ensure stats children fit the container and cannot force scrolling */
-.novelist-stats,
-.novelist-stats > * {
+.folio-stats,
+.folio-stats > * {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
 }
 
-.novelist-stats .novelist-stat-row {
+.folio-stats .folio-stat-row {
   overflow: hidden; /* ensure long labels/values don't create horizontal scroll */
 }
 
-.novelist-stat-label {
+.folio-stat-label {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.novelist-stat-value {
+.folio-stat-value {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 /* ensure tree sits above stats to receive clicks */
-.novelist-tree { z-index: 2; overflow: visible; }
-.novelist-structure {
+.folio-tree { z-index: 2; overflow: visible; }
+.folio-structure {
   position: relative;
   z-index: 3;
 }
 
 /* stat row icon layout */
-.novelist-stat-left {
+.folio-stat-left {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   flex: 1 1 auto; /* allow left column to shrink */
   min-width: 0; /* critical to allow truncation inside flex */
 }
-.novelist-stat-icon {
+.folio-stat-icon {
   display: inline-flex;
   width: 12px; /* slightly larger for readability */
   height: 12px;
   align-items: center;
   justify-content: center;
 }
-.novelist-stat-icon-part {
+.folio-stat-icon-part {
   display: inline-flex;
   width: 10px; /* slightly larger composite parts */
   height: 10px;
@@ -313,20 +313,20 @@
 }
 
 /* composite icon for topbar new button */
-.novelist-top-icon-combo {
+.folio-top-icon-combo {
   position: relative;
   width: 20px;
   height: 20px;
   display: inline-block;
 }
-.novelist-top-icon-combo .file-icon {
+.folio-top-icon-combo .file-icon {
   position: absolute;
   left: 0;
   top: 0;
   width: 20px;
   height: 20px;
 }
-.novelist-top-icon-combo .pencil-icon {
+.folio-top-icon-combo .pencil-icon {
   position: absolute;
   right: -2px;
   bottom: -2px;
@@ -336,7 +336,7 @@
 }
 
 /* Simple stat row layout */
-.novelist-stat-row {
+.folio-stat-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -344,18 +344,18 @@
   padding: 5px 0; /* slightly tighter rows to lift content */
   border-bottom: 1px dashed rgba(var(--text-muted-rgb), 0.03);
 }
-.novelist-stat-row:last-child {
+.folio-stat-row:last-child {
   border-bottom: none;
   padding-bottom: 2px;
 }
-.novelist-stat-label {
+.folio-stat-label {
   color: var(--text-muted);
   font-size: 13px; /* increased for better readability */
   display: inline-flex;
   align-items: center; /* vertically center label with icon */
   line-height: 1; /* ensure consistent baseline */
 }
-.novelist-stat-value {
+.folio-stat-value {
   color: var(--text-normal);
   font-weight: 600;
   font-size: 12px; /* slightly smaller value */
@@ -364,22 +364,22 @@
 }
 
 /* make sure icons and text align precisely */
-.novelist-stat-icon svg,
-.novelist-top-icon svg {
+.folio-stat-icon svg,
+.folio-top-icon svg {
   /* use inline-block so vertical-align is honored (display:block causes it to be ignored) */
   display: inline-block;
   vertical-align: middle;
 }
 
 /* Nudge text slightly to visually center within the stat block */
-.novelist-stat-label,
-.novelist-stat-value { transform: translateY(-1px); }
+.folio-stat-label,
+.folio-stat-value { transform: translateY(-1px); }
 
 /* ===============================================================
    VOLUME HEADER
 =============================================================== */
 
-.novelist-volume-title {
+.folio-volume-title {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -388,12 +388,12 @@
 }
 
 /* ❌ Kill any pseudo-toggle coming from CSS */
-.novelist-volume-header::before,
-.novelist-volume-header::after {
+.folio-volume-header::before,
+.folio-volume-header::after {
   content: none !important;
 }
 
-.novelist-volume-header {
+.folio-volume-header {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -401,13 +401,13 @@
   user-select: none;
 }
 
-.novelist-volume-toggle {
+.folio-volume-toggle {
   width: 16px;
   text-align: center;
   font-size: 14px;
   opacity: 0.8;
 }
-.novelist-volume-title {
+.folio-volume-title {
   font-size: 13px;
   font-weight: 600;
 }
@@ -417,7 +417,7 @@
    VOLUME CONTROLS
 =============================================================== */
 
-.novelist-volume-controls {
+.folio-volume-controls {
   display: flex;
   gap: 8px;
 }
@@ -428,14 +428,14 @@
 =============================================================== */
 
 /* Manage list container */
-.novelist-manage-list {
+.folio-manage-list {
   display: flex;
   flex-direction: column;
   gap: 14px;
   margin-top: 14px;
 
 /* Compact rows used by SwitchBookModal */
-.novelist-switch-book-row {
+.folio-switch-book-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -443,30 +443,30 @@
   padding: 8px 18px 8px 18px; /* add right padding so Select button isn't flush to edge */
   border-bottom: 1px solid var(--background-modifier-border);
 }
-.novelist-switch-left {
+.folio-switch-left {
   display: flex;
   flex-direction: column;
   gap: 2px;
   overflow: visible;
   min-width: 0;
 }
-.novelist-switch-title {
+.folio-switch-title {
   font-weight: 600;
   font-size: 14px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.novelist-switch-title-row {
+.folio-switch-title-row {
   display: flex;
   align-items: center;
   gap: 6px;
   min-width: 0;
 }
-.novelist-switch-dash {
+.folio-switch-dash {
   color: var(--text-muted);
 }
-.novelist-switch-subtitle {
+.folio-switch-subtitle {
   font-size: 13px;
   color: var(--text-muted);
   white-space: nowrap;
@@ -474,7 +474,7 @@
   text-overflow: ellipsis;
   max-width: 50ch;
 }
-.novelist-switch-meta {
+.folio-switch-meta {
   font-size: 11px;
   color: var(--text-muted);
   white-space: normal;
@@ -485,11 +485,11 @@
   -webkit-box-orient: vertical;
   margin-top: 4px; /* reduced gap between title and info */
 }
-.novelist-switch-meta,
-.novelist-switch-meta-second {
+.folio-switch-meta,
+.folio-switch-meta-second {
   padding-left: 12px; /* indent info lines but keep title/subtitle aligned */
 }
-.novelist-switch-meta-second {
+.folio-switch-meta-second {
   font-size: 11px;
   color: var(--text-muted);
   margin-top: 2px;
@@ -497,17 +497,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.novelist-switch-right {
+.folio-switch-right {
   flex: 0 0 auto;
 }
-.novelist-switch-right > button { padding: 6px 10px; }
+.folio-switch-right > button { padding: 6px 10px; }
   max-height: 60vh;
   overflow: auto;
   padding-right: 6px;
 }
 
 /* Card */
-.novelist-manage-card {
+.folio-manage-card {
   display: flex;
   gap: 18px;
   background: var(--background-secondary);
@@ -520,7 +520,7 @@
 }
 
 /* Placeholder when no books match the filter */
-.novelist-manage-empty {
+.folio-manage-empty {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -529,7 +529,7 @@
   font-style: italic;
 }
 
-.novelist-manage-left {
+.folio-manage-left {
   width: 96px;
   min-width: 96px;
   display: flex;
@@ -537,7 +537,7 @@
   justify-content: center;
 }
 
-.novelist-manage-cover {
+.folio-manage-cover {
   width: 84px;
   height: 112px;
   border-radius: 6px;
@@ -548,59 +548,59 @@
   display: block;
 }
 
-.novelist-manage-right {
+.folio-manage-right {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.novelist-manage-title {
+.folio-manage-title {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.2px;
 }
 
-.novelist-manage-subtitle {
+.folio-manage-subtitle {
   font-size: 13px;
   color: var(--text-muted);
 }
 
-.novelist-manage-meta-row {
+.folio-manage-meta-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 12px;
 }
 
-.novelist-manage-author {
+.folio-manage-author {
   color: var(--text-muted);
   font-size: 13px;
 }
 
-.novelist-manage-progress {
+.folio-manage-progress {
   color: var(--text-normal);
   font-weight: 600;
   font-size: 13px;
   white-space: nowrap;
 }
 
-.novelist-manage-desc {
+.folio-manage-desc {
   color: var(--text-muted);
   font-size: 13px;
   max-width: 80%;
   line-height: 1.35;
 }
 
-.novelist-manage-actions {
+.folio-manage-actions {
   display: flex;
   gap: 8px;
   margin-top: 6px;
 }
 
 /* Position actions on the card's right and vertically center on the card midline */
-.novelist-manage-card > .novelist-manage-title-row > .novelist-manage-actions,
-.novelist-manage-card .novelist-manage-actions {
+.folio-manage-card > .folio-manage-title-row > .folio-manage-actions,
+.folio-manage-card .folio-manage-actions {
   position: absolute;
   right: 18px;
   top: 50%;
@@ -609,9 +609,9 @@
 }
 
 /* When actions live in the title row, remove top margin so they align horizontally */
-.novelist-manage-title-row > .novelist-manage-actions { margin-top: 0; }
+.folio-manage-title-row > .folio-manage-actions { margin-top: 0; }
 
-.novelist-manage-actions > button {
+.folio-manage-actions > button {
   min-width: 64px;
   padding: 6px 10px;
   border-radius: 8px;
@@ -619,21 +619,21 @@
 }
 
 /* Use existing mod-danger class for delete; refine appearance */
-.novelist-manage-actions > .mod-danger {
+.folio-manage-actions > .mod-danger {
   background: linear-gradient(180deg, #ff5b5b, #e03b3b);
   color: white;
   border: none;
   box-shadow: 0 2px 0 rgba(0,0,0,0.25);
 }
 
-.novelist-manage-actions > button:not(.mod-danger) {
+.folio-manage-actions > button:not(.mod-danger) {
   background: var(--background-primary);
   color: var(--text-normal);
   border: 1px solid rgba(var(--background-modifier-border-rgb), 0.35);
 }
 
 /* Search input styling */
-.novelist-manage-search {
+.folio-manage-search {
   width: 56%;
   padding: 10px 12px;
   border-radius: 10px;
@@ -644,7 +644,7 @@
 }
 
 /* Modal form rows used by New/Edit modals */
-.modal .novelist-modal-row {
+.modal .folio-modal-row {
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -653,9 +653,9 @@
 }
 /* Theme-specific modal row divider colors: black in day, white in night */
 /* Strong, visible dividers: black in day, white in night */
-body.theme-light .modal .novelist-modal-row { border-bottom: 1px solid rgba(0,0,0,0.51) !important; }
-body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,255,255,0.51) !important; }
-.modal .novelist-modal-left {
+body.theme-light .modal .folio-modal-row { border-bottom: 1px solid rgba(0,0,0,0.51) !important; }
+body.theme-dark .modal .folio-modal-row { border-bottom: 1px solid rgba(255,255,255,0.51) !important; }
+.modal .folio-modal-left {
   min-width: 200px;
   max-width: 260px;
   padding-left: 6px;
@@ -663,24 +663,24 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
   flex-direction: column;
   justify-content: center;
 }
-.modal .novelist-modal-left .novelist-modal-row-title {
+.modal .folio-modal-left .folio-modal-row-title {
   font-weight: 600;
   margin-bottom: 6px;
   font-size: 15px;
 }
-.modal .novelist-modal-left .novelist-modal-row-sub {
+.modal .folio-modal-left .folio-modal-row-sub {
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 4px;
 }
-.modal .novelist-modal-right {
+.modal .folio-modal-right {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
 }
-.modal .novelist-modal-input,
-.modal .novelist-modal-textarea,
+.modal .folio-modal-input,
+.modal .folio-modal-textarea,
 .modal input[type="text"],
 .modal textarea {
   width: 100%;
@@ -692,10 +692,10 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
   box-sizing: border-box;
   box-shadow: inset 0 1px 0 rgba(0,0,0,0.18);
 }
-.modal .novelist-modal-textarea { min-height: 92px; }
+.modal .folio-modal-textarea { min-height: 92px; }
 
 /* Cover select button styling inside modal right column */
-.modal .novelist-modal-right button {
+.modal .folio-modal-right button {
   align-self: flex-end;
   background: transparent;
   border: 1px solid rgba(var(--background-modifier-border-rgb), 0.12);
@@ -705,10 +705,10 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
 }
 
 /* Slightly increase spacing for rows to match screenshot rhythm */
-.modal .novelist-modal-row + .novelist-modal-row { margin-top: 4px; }
+.modal .folio-modal-row + .folio-modal-row { margin-top: 4px; }
 
 /* Align action buttons for modal forms */
-.modal .novelist-modal-actions,
+.modal .folio-modal-actions,
 .modal .modal-button-container {
   display: flex;
   justify-content: flex-end;
@@ -718,15 +718,15 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
 
 /* Small responsive tweaks */
 @media (max-width: 720px) {
-  .novelist-manage-search { width: 100%; margin-bottom: 8px; }
-  .novelist-manage-card { flex-direction: column; align-items: center; }
-  .novelist-manage-left { width: auto; }
-  .modal .novelist-modal-left { display: none; }
-  .modal .novelist-modal-row { flex-direction: column; align-items: stretch; }
+  .folio-manage-search { width: 100%; margin-bottom: 8px; }
+  .folio-manage-card { flex-direction: column; align-items: center; }
+  .folio-manage-left { width: auto; }
+  .modal .folio-modal-left { display: none; }
+  .modal .folio-modal-row { flex-direction: column; align-items: stretch; }
 }
 
 /* cover placeholder */
-.novelist-manage-cover-placeholder {
+.folio-manage-cover-placeholder {
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -737,45 +737,45 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
 }
 
 /* Title row: title left, subtitle right */
-.novelist-manage-title-row {
+.folio-manage-title-row {
   display: flex;
   justify-content: space-between;
   align-items: center; /* vertically center actions on the right */
   gap: 12px;
 }
-.novelist-manage-subtitle-right {
+.folio-manage-subtitle-right {
   font-size: 13px;
   color: var(--text-muted);
   margin-left: 12px;
 }
 
 /* Meta grid: labels left column, values right column */
-.novelist-manage-meta-grid {
+.folio-manage-meta-grid {
   display: grid;
   grid-template-columns: 96px 1fr;
   column-gap: 12px;
   row-gap: 6px;
   align-items: start;
 }
-.novelist-manage-labels { display: flex; flex-direction: column; gap: 6px; }
-.novelist-manage-values { display: flex; flex-direction: column; gap: 6px; }
-.novelist-manage-label { color: var(--text-muted); font-size: 13px; }
+.folio-manage-labels { display: flex; flex-direction: column; gap: 6px; }
+.folio-manage-values { display: flex; flex-direction: column; gap: 6px; }
+.folio-manage-label { color: var(--text-muted); font-size: 13px; }
 
 /* ensure description in values column wraps nicely */
-.novelist-manage-values .novelist-manage-desc { max-width: 100%; }
+.folio-manage-values .folio-manage-desc { max-width: 100%; }
 
 /* End Manage Books / Edit modal enhancements */
 
 
-.novelist-tree-folder .novelist-tree-icon.folder-icon {
+.folio-tree-folder .folio-tree-icon.folder-icon {
   color: var(--text-normal);
 }
 
-.novelist-tree-file .novelist-tree-icon.file-icon {
+.folio-tree-file .folio-tree-icon.file-icon {
   color: var(--text-muted);
 }
 
-.novelist-volume-controls input {
+.folio-volume-controls input {
   flex: 1;
 }
 
@@ -783,19 +783,19 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
    CHAPTER LIST
 =============================================================== */
 
-.novelist-chapter-list {
+.folio-chapter-list {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.novelist-chapter {
+.folio-chapter {
   padding: 6px 8px;
   border-radius: 6px;
   cursor: pointer;
 }
 
-.novelist-chapter:hover {
+.folio-chapter:hover {
   background: var(--background-modifier-hover);
 }
 /* ===============================================================
@@ -803,7 +803,7 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
 =============================================================== */
 
 /* Wrapper select */
-.novelist-view select {
+.folio-view select {
   width: 100%;
   max-width: 100%;
   padding: 8px 12px;
@@ -831,7 +831,7 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
 }
 
 /* Custom dropdown arrow */
-.novelist-view select {
+.folio-view select {
   background-image:
     linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
     linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
@@ -845,12 +845,12 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
 }
 
 /* Hover */
-.novelist-view select:hover {
+.folio-view select:hover {
   background-color: var(--background-secondary-alt);
 }
 
 /* Focus (keyboard & click) */
-.novelist-view select:focus {
+.folio-view select:focus {
   outline: none;
   border-color: var(--interactive-accent);
   box-shadow:
@@ -859,18 +859,18 @@ body.theme-dark .modal .novelist-modal-row { border-bottom: 1px solid rgba(255,2
 }
 
 /* Theme-sensitive backgrounds for cover zone and stats zone (single source of truth via CSS vars) */
-body.theme-light .novelist-book-cover,
-body.theme-light .novelist-stats {
-  background-color: var(--novelist-tint-light);
+body.theme-light .folio-book-cover,
+body.theme-light .folio-stats {
+  background-color: var(--folio-tint-light);
 }
 
-body.theme-dark .novelist-book-cover,
-body.theme-dark .novelist-stats {
-  background-color: var(--novelist-tint-dark);
+body.theme-dark .folio-book-cover,
+body.theme-dark .folio-stats {
+  background-color: var(--folio-tint-dark);
 }
 /* Overlay for cover to tint light/dark without removing the cover image (preserve inline background-image)
    Uses a pseudo-element so image remains visible and we can tint it. */
-.novelist-book-cover::after {
+.folio-book-cover::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -879,25 +879,25 @@ body.theme-dark .novelist-stats {
   transition: background-color 160ms ease;
 }
 
-body.theme-light .novelist-book-cover::after {
-  background-color: var(--novelist-tint-light);
+body.theme-light .folio-book-cover::after {
+  background-color: var(--folio-tint-light);
 }
 
-body.theme-dark .novelist-book-cover::after {
-  background-color: var(--novelist-tint-dark);
+body.theme-dark .folio-book-cover::after {
+  background-color: var(--folio-tint-dark);
 }
 
 /* Ensure the stats zone doesn't inherit patterned backgrounds from the workspace */
-.novelist-stats {
+.folio-stats {
   background-image: none !important;
 }
 
 /* Header overlay so the entire cover+title area tints like the stats zone */
-.novelist-book-header {
+.folio-book-header {
   position: relative;
   overflow: hidden;
 }
-.novelist-book-header::after {
+.folio-book-header::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -906,69 +906,69 @@ body.theme-dark .novelist-book-cover::after {
   transition: background-color 160ms ease;
 }
 
-body.theme-light .novelist-book-header::after {
-  background-color: var(--novelist-tint-light);
+body.theme-light .folio-book-header::after {
+  background-color: var(--folio-tint-light);
 }
 
-body.theme-dark .novelist-book-header::after {
-  background-color: var(--novelist-tint-dark);
+body.theme-dark .folio-book-header::after {
+  background-color: var(--folio-tint-dark);
 }
 
 /* make divider between tree and stats explicit and slightly more visible */
-.novelist-tree {
+.folio-tree {
   border-bottom: 1px solid var(--background-modifier-border);
   opacity: 0.45; /* make the divider slightly lighter to avoid heavy bottom visual */
 }
 
 /* Reduce tree baseline padding so tree isn't overly centered */
-.novelist-tree {
+.folio-tree {
   /* Align tree to the start of the label column (the "Description" title)
      instead of the value column. */
-  padding-left: var(--novelist-padding);
+  padding-left: var(--folio-padding);
   padding-top: 10px; /* shift tree content down by 10px as requested */
 }
 
-.novelist-stats {
+.folio-stats {
   border-top: 1px solid var(--background-modifier-border);
 }
 
 /* Topbar button icon spacing */
-.novelist-top-btn {
+.folio-top-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 6px 12px;
   border-radius: 8px;
 }
-.novelist-top-icon > svg {
+.folio-top-icon > svg {
   width: 16px;
   height: 16px;
 }
-.novelist-top-label {
+.folio-top-label {
   line-height: 1;
 }
 
 /* Switch modal rows: restore hover shadow and pointer affordance */
-.novelist-switch-book-row {
+.folio-switch-book-row {
   padding: 8px 10px;
   border-radius: 8px;
   cursor: pointer;
   transition: box-shadow 120ms ease, transform 80ms ease, background 120ms ease;
 }
-.novelist-switch-book-row:hover {
+.folio-switch-book-row:hover {
   background: var(--background-modifier-hover);
   box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
-.novelist-switch-book-row:active {
+.folio-switch-book-row:active {
   transform: translateY(1px);
 }
 
 /* Minimal help button sizing inside topbar (icon-only) */
-.novelist-help-btn {
+.folio-help-btn {
   padding: 6px 10px;
   border-radius: 8px;
 }
-.novelist-help-icon > svg {
+.folio-help-icon > svg {
   width: 16px;
   height: 16px;
 }
@@ -978,7 +978,7 @@ body.theme-dark .novelist-book-header::after {
    TOP BAR (Sticky App Controls)
 =============================================================== */
 
-.novelist-topbar {
+.folio-topbar {
   position: sticky;
   top: 0;
   z-index: 10;
@@ -995,7 +995,7 @@ body.theme-dark .novelist-book-header::after {
   margin: -16px -16px 16px;
 }
 
-.novelist-topbar button {
+.folio-topbar button {
   padding: 6px 12px;
   border-radius: 8px;
   font-size: 0.9em;
@@ -1005,7 +1005,7 @@ body.theme-dark .novelist-book-header::after {
    STRUCTURE TREE
 =============================================================== */
 
-.novelist-structure {
+.folio-structure {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1016,21 +1016,21 @@ body.theme-dark .novelist-book-header::after {
 }
 
 /* Structure container baseline padding (reduced) */
-.novelist-structure {
-  padding-left: var(--novelist-padding);
+.folio-structure {
+  padding-left: var(--folio-padding);
   padding-top: 10px; /* nudge tree content down */
   /* Structure aligned to label column start */
 }
 
 /* VOLUME */
 
-.novelist-volume-row {
+.folio-volume-row {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.novelist-volume-header {
+.folio-volume-header {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1038,7 +1038,7 @@ body.theme-dark .novelist-book-header::after {
   user-select: none;
 }
 
-.novelist-volume-toggle {
+.folio-volume-toggle {
   width: 16px;
   text-align: center;
   font-size: 13px;
@@ -1046,21 +1046,21 @@ body.theme-dark .novelist-book-header::after {
   cursor: pointer;
 }
 
-.novelist-volume-title {
+.folio-volume-title {
   font-weight: 600;
   font-size: 1em;
 }
 
 /* CHAPTERS */
 
-.novelist-chapter-list {
+.folio-chapter-list {
   display: flex;
   flex-direction: column;
   padding-left: 12px;
   gap: 2px;
 }
 
-.novelist-chapter-row {
+.folio-chapter-row {
   padding: 4px 6px;
   border-radius: 4px;
   cursor: pointer;
@@ -1068,12 +1068,12 @@ body.theme-dark .novelist-book-header::after {
 
 /* New book header layout (cover left, meta right) -- consolidated earlier; duplicate removed */
 
-.novelist-book-cover-col {
+.folio-book-cover-col {
   width: 75px; /* match Book Smith baseline */
   flex-shrink: 0;
 }
 
-.novelist-book-cover {
+.folio-book-cover {
   width: 75px;
   height: 105px;
   border-radius: 4px;
@@ -1083,7 +1083,7 @@ body.theme-dark .novelist-book-header::after {
   box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
 }
 
-.novelist-book-meta {
+.folio-book-meta {
   /* Use a two-column grid for label/value so alignment is exact and stable */
   display: grid;
   grid-template-columns: 84px 1fr;
@@ -1096,7 +1096,7 @@ body.theme-dark .novelist-book-header::after {
   padding-left: 16px;
 }
 
-.novelist-book-title {
+.folio-book-title {
   font-size: 17px;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -1105,42 +1105,42 @@ body.theme-dark .novelist-book-header::after {
   margin-bottom: 4px;
 }
 
-.novelist-book-subtitle {
+.folio-book-subtitle {
   font-size: 12px;
   opacity: 0.7;
 }
 
-.novelist-book-meta-below {
+.folio-book-meta-below {
   margin-top: 12px;
 }
 
-.novelist-book-author,
-.novelist-book-description {  font-size: 12px;
+.folio-book-author,
+.folio-book-description {  font-size: 12px;
   opacity: 0.75;
   margin-bottom: 4px;
 }
 /* keep description line-height slightly looser for readability */
-.novelist-book-description {
+.folio-book-description {
   line-height: 1.4;
   opacity: 0.6;
 }
 
 /* Meta input fields (Author / Description) */
-.novelist-meta-row {
+.folio-meta-row {
   display: contents; /* let the book-meta grid control layout for rows */
 }
-.novelist-meta-label {
+.folio-meta-label {
   font-size: 13px;
   color: var(--text-normal); /* use normal text color (white in dark themes) */
   text-transform: none;
   align-self: center;
 }
-.novelist-meta-value {
+.folio-meta-value {
   flex: 1 1 auto;
   font-size: 13px;
   color: var(--text-normal);
 }
-.novelist-meta-desc {
+.folio-meta-desc {
   white-space: pre-wrap;
   line-height: 1.3;
   opacity: 0.85;
@@ -1148,8 +1148,8 @@ body.theme-dark .novelist-book-header::after {
 }
 
 /* Ensure meta values have no extra padding/margin or text-indent so Author and Description align */
-.novelist-meta-value,
-.novelist-meta-desc {
+.folio-meta-value,
+.folio-meta-desc {
   display: block;
   margin: 0;
   padding: 0;
@@ -1157,9 +1157,9 @@ body.theme-dark .novelist-book-header::after {
   grid-column: 2 / 3;
 }
 
-.novelist-meta-desc { align-self: start; }
+.folio-meta-desc { align-self: start; }
 
-.novelist-chapter-row:hover {
+.folio-chapter-row:hover {
   background: var(--background-modifier-hover);
 }
 
@@ -1167,19 +1167,19 @@ body.theme-dark .novelist-book-header::after {
    EDITORIAL TREE STYLES
 =============================================================== */
 
-.novelist-tree-file,
-.novelist-tree-folder {
+.folio-tree-file,
+.folio-tree-folder {
   padding: 4px 6px;
   cursor: pointer;
   border-radius: 4px;
 }
 
-.novelist-tree-file:hover,
-.novelist-tree-folder:hover {
+.folio-tree-file:hover,
+.folio-tree-folder:hover {
   background: rgba(255,255,255,0.05);
 }
 
-.novelist-tree-children {
+.folio-tree-children {
   /* Indent children so their labels line up with the parent folder label
      We base this on the tree icon size + spacing so alignment stays consistent. */
   /* balanced indent between folder icon and label — tuned to sit in the middle */
@@ -1189,7 +1189,7 @@ body.theme-dark .novelist-book-header::after {
 }
 
 /* vertical connector line for tree levels */
-.novelist-tree-children::before {
+.folio-tree-children::before {
   content: "";
   position: absolute;
   /* place connector between the toggle caret and the folder icon */
@@ -1204,20 +1204,20 @@ body.theme-dark .novelist-book-header::after {
 }
 
 /* show the connector for any children container when it is open */
-.novelist-tree-children.is-open::before {
+.folio-tree-children.is-open::before {
   display: block;
 }
 
 /* Theme-specific tweaks so connector is visible in both light and dark themes */
-body.theme-dark .novelist-tree-children::before {
+body.theme-dark .folio-tree-children::before {
   background: linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
 }
-body.theme-light .novelist-tree-children::before {
+body.theme-light .folio-tree-children::before {
   background: linear-gradient(to bottom, rgba(0,0,0,0.09), rgba(0,0,0,0.03));
 }
 
 /* Icon next to file/folder name */
-.novelist-tree-icon {
+.folio-tree-icon {
   width: 18px;
   display: inline-block;
   text-align: center;
@@ -1226,7 +1226,7 @@ body.theme-light .novelist-tree-children::before {
 }
 
 /* Toggle caret for folders */
-.novelist-tree-toggle {
+.folio-tree-toggle {
   width: 18px;
   display: inline-block;
   text-align: center;
@@ -1235,7 +1235,7 @@ body.theme-light .novelist-tree-children::before {
   cursor: pointer;
 }
 
-.novelist-tree-folder > .novelist-tree-toggle {
+.folio-tree-folder > .folio-tree-toggle {
   transform-origin: center;
 }
 
@@ -1246,8 +1246,8 @@ body.theme-light .novelist-tree-children::before {
   --tree-icon-color-active: var(--interactive-accent);
 }
 
-.novelist-tree-icon,
-.novelist-tree-toggle {
+.folio-tree-icon,
+.folio-tree-toggle {
   width: var(--tree-icon-size);
   height: var(--tree-icon-size);
   display: inline-flex;
@@ -1257,30 +1257,30 @@ body.theme-light .novelist-tree-children::before {
   margin-right: 8px;
 }
 
-.novelist-tree-icon svg,
-.novelist-tree-toggle svg {
+.folio-tree-icon svg,
+.folio-tree-toggle svg {
   width: var(--tree-icon-size);
   height: var(--tree-icon-size);
   opacity: 0.95;
 }
 
 /* colors on hover / active to match Book Smith feel */
-.novelist-tree-file,
-.novelist-tree-folder {
+.folio-tree-file,
+.folio-tree-folder {
   color: var(--text-normal);
 }
 
-.novelist-tree-file:hover,
-.novelist-tree-folder:hover {
+.folio-tree-file:hover,
+.folio-tree-folder:hover {
   background: rgba(255,255,255,0.03);
 }
 
-.novelist-tree-file.is-active > .novelist-tree-icon,
-.novelist-tree-folder.is-active > .novelist-tree-toggle {
+.folio-tree-file.is-active > .folio-tree-icon,
+.folio-tree-folder.is-active > .folio-tree-toggle {
   color: var(--tree-icon-color-active);
 }
 
-.novelist-tree-misc {
+.folio-tree-misc {
   opacity: 0.4;
   font-style: italic;
 }
@@ -1288,7 +1288,7 @@ body.theme-light .novelist-tree-children::before {
    VIEW SCROLL STABILITY
 =============================================================== */
 
-.novelist-divider {
+.folio-divider {
   height: 1px;
   margin: 16px 0;
   background: var(--background-modifier-border);
@@ -1296,57 +1296,57 @@ body.theme-light .novelist-tree-children::before {
 }
 
 /* Modal layout for New Book / Edit Book */
-.novelist-modal-row {
+.folio-modal-row {
   display: grid;
   grid-template-columns: 1fr 320px; /* left label column, right control column */
   column-gap: 18px;
   align-items: center;
   padding: 14px 0;
 }
-.novelist-modal-left {
+.folio-modal-left {
   display: flex;
   flex-direction: column;
 }
-.novelist-modal-row-title {
+.folio-modal-row-title {
   font-weight: 600;
   font-size: 14px;
 }
-.novelist-modal-row-sub {
+.folio-modal-row-sub {
   font-size: 12px;
   opacity: 0.7;
 }
-.novelist-modal-right {
+.folio-modal-right {
   display: flex;
   justify-content: flex-end;
   align-items: center;
 }
-.novelist-template-select,
-.novelist-modal-input,
-.novelist-modal-textarea {
+.folio-template-select,
+.folio-modal-input,
+.folio-modal-textarea {
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
 }
-.novelist-modal-textarea {
+.folio-modal-textarea {
   height: 96px;
   resize: vertical;
 }
-.novelist-modal-divider {
+.folio-modal-divider {
   height: 1px;
   background: var(--background-modifier-border);
   opacity: 0.08;
   margin: 8px 0 8px 0;
 }
-.novelist-modal-actions {
+.folio-modal-actions {
   display: flex;
   justify-content: flex-end;
   padding-top: 12px;
 }
-.novelist-modal-create {
+.folio-modal-create {
   min-width: 110px;
 }
 
-.novelist-stats {
+.folio-stats {
   margin-top: auto;
   padding: 12px 16px;
   background: var(--background-secondary);
@@ -1358,54 +1358,54 @@ body.theme-light .novelist-tree-children::before {
    TREE ACTIONS
 =============================================================== */
 
-.novelist-add-volume,
-.novelist-add-chapter {
+.folio-add-volume,
+.folio-add-chapter {
   margin-left: 22px;
   font-size: 0.85em;
   opacity: 0.6;
   cursor: pointer;
 }
 
-.novelist-add-volume:hover,
-.novelist-add-chapter:hover {
+.folio-add-volume:hover,
+.folio-add-chapter:hover {
   opacity: 1;
 }
 /* ===============================================================
    ACTIVE CHAPTER
 =============================================================== */
 
-.novelist-chapter-row.is-active {
+.folio-chapter-row.is-active {
   background: var(--background-modifier-active-hover);
   font-weight: 600;
 }
 
 /* Manage modal: subtitle inline with title but visually aligned with meta values */
-.novelist-manage-title-row {
+.folio-manage-title-row {
   display: flex;
   align-items: flex-start;
   gap: 8px;
 }
-.novelist-manage-subtitle-right {
+.folio-manage-subtitle-right {
   font-size: 12px;
   color: var(--text-muted);
   margin-left: 8px;
   margin-top: 10px; /* nudge down to visually align with Author/Description text */
   line-height: 1.2;
 }
-.novelist-manage-meta-grid {
+.folio-manage-meta-grid {
   display: flex;
   gap: 12px;
   margin-top: 6px;
 }
-.novelist-manage-labels {
-  width: var(--novelist-label-width);
+.folio-manage-labels {
+  width: var(--folio-label-width);
   display: flex;
   flex-direction: column;
   gap: 8px;
   color: var(--text-muted);
   font-size: 13px;
 }
-.novelist-manage-values {
+.folio-manage-values {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -1413,34 +1413,34 @@ body.theme-light .novelist-tree-children::before {
 }
 
 /* Layout tweaks to ensure subtitle sits inline with the title without pushing values */
-.novelist-manage-card {
+.folio-manage-card {
   display: flex;
   gap: 16px;
   align-items: flex-start;
   padding: 14px 18px;
   border-radius: 8px;
 }
-.novelist-manage-left {
-  flex: 0 0 var(--novelist-cover-width);
+.folio-manage-left {
+  flex: 0 0 var(--folio-cover-width);
 }
-.novelist-manage-right {
+.folio-manage-right {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 }
-.novelist-manage-title-row {
+.folio-manage-title-row {
   display: flex;
   align-items: flex-start;
   gap: 8px;
 }
-.novelist-manage-title {
+.folio-manage-title {
   font-weight: 700;
   font-size: 18px;
   line-height: 1.1;
   margin-right: 8px;
   flex: 0 1 auto;
 }
-.novelist-manage-subtitle-right {
+.folio-manage-subtitle-right {
   font-size: 12px;
   color: var(--text-muted);
   margin-top: 6px; /* smaller nudge to align with meta values */
@@ -1453,7 +1453,7 @@ body.theme-light .novelist-tree-children::before {
 =============================================================== */
 
 /* Dragging state */
-.novelist-dragging {
+.folio-dragging {
   opacity: 0.5;
   position: relative;
   z-index: 1000;
@@ -1464,18 +1464,18 @@ body.theme-light .novelist-tree-children::before {
 }
 
 /* General dragover state */
-.novelist-dragover {
+.folio-dragover {
   background-color: var(--interactive-accent-hover);
   transition: background-color 0.1s ease;
 }
 
 /* Drop zone indicators */
-.novelist-dragover-before {
+.folio-dragover-before {
   position: relative;
   transition: all 0.1s ease;
 }
 
-.novelist-dragover-before::before {
+.folio-dragover-before::before {
   content: '';
   position: absolute;
   top: 0;
@@ -1486,12 +1486,12 @@ body.theme-light .novelist-tree-children::before {
   box-shadow: 0 0 3px var(--interactive-accent);
 }
 
-.novelist-dragover-after {
+.folio-dragover-after {
   position: relative;
   transition: all 0.1s ease;
 }
 
-.novelist-dragover-after::after {
+.folio-dragover-after::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -1502,30 +1502,30 @@ body.theme-light .novelist-tree-children::before {
   box-shadow: 0 0 3px var(--interactive-accent);
 }
 
-.novelist-dragover-inside {
+.folio-dragover-inside {
   background-color: var(--interactive-accent-hover);
   opacity: 0.5;
   transition: all 0.1s ease;
 }
 
 /* Tree items should have grab cursor when draggable */
-.novelist-tree-file,
-.novelist-tree-folder {
+.folio-tree-file,
+.folio-tree-folder {
   cursor: grab;
 }
 
-.novelist-tree-file:active,
-.novelist-tree-folder:active {
+.folio-tree-file:active,
+.folio-tree-folder:active {
   cursor: grabbing;
 }
 
 /* Exclude from stats visual indicator */
-.novelist-tree-label.exclude-from-stats {
+.folio-tree-label.exclude-from-stats {
   color: var(--text-muted);
   opacity: 0.8;
 }
 
-.novelist-tree-label.exclude-from-stats::after {
+.folio-tree-label.exclude-from-stats::after {
   content: '';
   position: absolute;
   right: 0;
@@ -1542,7 +1542,7 @@ body.theme-light .novelist-tree-children::before {
 }
 
 /* Completed/done indicator */
-.novelist-tree-label.is-done::after {
+.folio-tree-label.is-done::after {
   content: '';
   position: absolute;
   right: 0;
@@ -1559,7 +1559,7 @@ body.theme-light .novelist-tree-children::before {
 }
 
 /* Ensure label has room for status indicators */
-.novelist-tree-label {
+.folio-tree-label {
   position: relative;
   padding-right: 20px;
 }
@@ -1567,7 +1567,7 @@ body.theme-light .novelist-tree-children::before {
    WRITER TOOLS VIEW
 =============================================================== */
 
-.novelist-writer-tools {
+.folio-writer-tools {
   padding: 20px;
   height: 100%;
   overflow-y: auto;
@@ -1623,4 +1623,46 @@ body.theme-light .novelist-tree-children::before {
   font-size: 16px;
   font-weight: 600;
   color: var(--text-normal);
+}
+
+/* ===============================================================
+   PROJECT TYPE SELECTION
+=============================================================== */
+
+.folio-project-type-select {
+  min-width: 280px;
+  padding: 10px 14px;
+  font-size: 15px;
+  font-weight: 500;
+  border: 2px solid var(--background-modifier-border-hover);
+  background-color: var(--background-primary-alt);
+  color: var(--text-accent);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url('data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%23888888" d="M6 9L1 4h10z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+}
+
+.folio-project-type-select:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+
+.folio-project-type-select:focus {
+  outline: none;
+  border-color: var(--interactive-accent);
+  box-shadow: 0 0 0 2px var(--interactive-accent-hover);
+  background-color: var(--background-modifier-hover);
+}
+
+.folio-project-type-select option {
+  background-color: var(--background-primary);
+  color: var(--text-normal);
+  padding: 8px;
 }

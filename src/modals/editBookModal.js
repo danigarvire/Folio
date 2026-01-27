@@ -42,12 +42,12 @@ export class EditBookModal extends Modal {
 
     // Cover selector — prefill if config has cover
     let selectedCover = null;
-    contentEl.createDiv({ cls: 'novelist-modal-divider' });
-    const coverRow = contentEl.createDiv({ cls: 'novelist-modal-row' });
-    const coverLeft = coverRow.createDiv({ cls: 'novelist-modal-left' });
-    coverLeft.createEl('div', { text: 'Cover', cls: 'novelist-modal-row-title' });
-    coverLeft.createEl('div', { text: 'Select image (optional)', cls: 'novelist-modal-row-sub' });
-    const coverRight = coverRow.createDiv({ cls: 'novelist-modal-right' });
+    contentEl.createDiv({ cls: 'folio-modal-divider' });
+    const coverRow = contentEl.createDiv({ cls: 'folio-modal-row' });
+    const coverLeft = coverRow.createDiv({ cls: 'folio-modal-left' });
+    coverLeft.createEl('div', { text: 'Cover', cls: 'folio-modal-row-title' });
+    coverLeft.createEl('div', { text: 'Select image (optional)', cls: 'folio-modal-row-sub' });
+    const coverRight = coverRow.createDiv({ cls: 'folio-modal-right' });
     const coverBtn = coverRight.createEl('button', { text: 'Select Image' });
     try {
       const existingCover = cfg?.basic?.cover || '';
@@ -81,57 +81,57 @@ export class EditBookModal extends Modal {
     };
 
     // Title row
-    contentEl.createDiv({ cls: 'novelist-modal-divider' });
-    const titleRow = contentEl.createDiv({ cls: 'novelist-modal-row' });
-    const titleLeft = titleRow.createDiv({ cls: 'novelist-modal-left' });
-    titleLeft.createEl('div', { text: 'Title', cls: 'novelist-modal-row-title' });
-    titleLeft.createEl('div', { text: 'Please enter book title', cls: 'novelist-modal-row-sub' });
-    const titleRight = titleRow.createDiv({ cls: 'novelist-modal-right' });
-    const titleInput = titleRight.createEl('input', { type: 'text', cls: 'novelist-modal-input' });
+    contentEl.createDiv({ cls: 'folio-modal-divider' });
+    const titleRow = contentEl.createDiv({ cls: 'folio-modal-row' });
+    const titleLeft = titleRow.createDiv({ cls: 'folio-modal-left' });
+    titleLeft.createEl('div', { text: 'Title', cls: 'folio-modal-row-title' });
+    titleLeft.createEl('div', { text: 'Please enter book title', cls: 'folio-modal-row-sub' });
+    const titleRight = titleRow.createDiv({ cls: 'folio-modal-right' });
+    const titleInput = titleRight.createEl('input', { type: 'text', cls: 'folio-modal-input' });
     try { titleInput.style.width = fieldWidth; } catch {}
     titleInput.value = meta.title || this.book.name || '';
 
     // Subtitle row
-    contentEl.createDiv({ cls: 'novelist-modal-divider' });
-    const subRow = contentEl.createDiv({ cls: 'novelist-modal-row' });
-    const subLeft = subRow.createDiv({ cls: 'novelist-modal-left' });
-    subLeft.createEl('div', { text: 'Subtitle', cls: 'novelist-modal-row-title' });
-    subLeft.createEl('div', { text: 'Optional', cls: 'novelist-modal-row-sub' });
-    const subRight = subRow.createDiv({ cls: 'novelist-modal-right' });
-    const subtitleInput = subRight.createEl('input', { type: 'text', cls: 'novelist-modal-input' });
+    contentEl.createDiv({ cls: 'folio-modal-divider' });
+    const subRow = contentEl.createDiv({ cls: 'folio-modal-row' });
+    const subLeft = subRow.createDiv({ cls: 'folio-modal-left' });
+    subLeft.createEl('div', { text: 'Subtitle', cls: 'folio-modal-row-title' });
+    subLeft.createEl('div', { text: 'Optional', cls: 'folio-modal-row-sub' });
+    const subRight = subRow.createDiv({ cls: 'folio-modal-right' });
+    const subtitleInput = subRight.createEl('input', { type: 'text', cls: 'folio-modal-input' });
     try { subtitleInput.style.width = fieldWidth; } catch {}
     subtitleInput.value = meta.subtitle || '';
 
     // Author row
-    contentEl.createDiv({ cls: 'novelist-modal-divider' });
-    const authorRow = contentEl.createDiv({ cls: 'novelist-modal-row' });
-    const authorLeft = authorRow.createDiv({ cls: 'novelist-modal-left' });
-    authorLeft.createEl('div', { text: 'Author', cls: 'novelist-modal-row-title' });
-    authorLeft.createEl('div', { text: 'Enter author names, separate multiple authors with commas', cls: 'novelist-modal-row-sub' });
-    const authorRight = authorRow.createDiv({ cls: 'novelist-modal-right' });
-    const authorInput = authorRight.createEl('input', { type: 'text', cls: 'novelist-modal-input' });
+    contentEl.createDiv({ cls: 'folio-modal-divider' });
+    const authorRow = contentEl.createDiv({ cls: 'folio-modal-row' });
+    const authorLeft = authorRow.createDiv({ cls: 'folio-modal-left' });
+    authorLeft.createEl('div', { text: 'Author', cls: 'folio-modal-row-title' });
+    authorLeft.createEl('div', { text: 'Enter author names, separate multiple authors with commas', cls: 'folio-modal-row-sub' });
+    const authorRight = authorRow.createDiv({ cls: 'folio-modal-right' });
+    const authorInput = authorRight.createEl('input', { type: 'text', cls: 'folio-modal-input' });
     try { authorInput.style.width = fieldWidth; } catch {}
     authorInput.value = meta.author || '';
 
     // Description row
-    contentEl.createDiv({ cls: 'novelist-modal-divider' });
-    const descRow = contentEl.createDiv({ cls: 'novelist-modal-row' });
-    const descLeft = descRow.createDiv({ cls: 'novelist-modal-left' });
-    descLeft.createEl('div', { text: 'Description', cls: 'novelist-modal-row-title' });
-    descLeft.createEl('div', { text: 'Please enter book description', cls: 'novelist-modal-row-sub' });
-    const descRight = descRow.createDiv({ cls: 'novelist-modal-right' });
-    const descInput = descRight.createEl('textarea', { cls: 'novelist-modal-textarea' });
+    contentEl.createDiv({ cls: 'folio-modal-divider' });
+    const descRow = contentEl.createDiv({ cls: 'folio-modal-row' });
+    const descLeft = descRow.createDiv({ cls: 'folio-modal-left' });
+    descLeft.createEl('div', { text: 'Description', cls: 'folio-modal-row-title' });
+    descLeft.createEl('div', { text: 'Please enter book description', cls: 'folio-modal-row-sub' });
+    const descRight = descRow.createDiv({ cls: 'folio-modal-right' });
+    const descInput = descRight.createEl('textarea', { cls: 'folio-modal-textarea' });
     try { descInput.style.width = fieldWidth; descInput.style.minHeight = '120px'; descInput.style.maxWidth = '100%'; } catch {}
     descInput.value = meta.description || '';
 
     // Target row (1k units)
-    contentEl.createDiv({ cls: 'novelist-modal-divider' });
-    const targetRow = contentEl.createDiv({ cls: 'novelist-modal-row' });
-    const targetLeft = targetRow.createDiv({ cls: 'novelist-modal-left' });
-    targetLeft.createEl('div', { text: 'Target word count', cls: 'novelist-modal-row-title' });
-    targetLeft.createEl('div', { text: 'Set estimated total word count (in 1k)', cls: 'novelist-modal-row-sub' });
-    const targetRight = targetRow.createDiv({ cls: 'novelist-modal-right' });
-    const targetInput = targetRight.createEl('input', { type: 'text', cls: 'novelist-modal-input', placeholder: 'e.g., 20 (20k) or 20000' });
+    contentEl.createDiv({ cls: 'folio-modal-divider' });
+    const targetRow = contentEl.createDiv({ cls: 'folio-modal-row' });
+    const targetLeft = targetRow.createDiv({ cls: 'folio-modal-left' });
+    targetLeft.createEl('div', { text: 'Target word count', cls: 'folio-modal-row-title' });
+    targetLeft.createEl('div', { text: 'Set estimated total word count (in 1k)', cls: 'folio-modal-row-sub' });
+    const targetRight = targetRow.createDiv({ cls: 'folio-modal-right' });
+    const targetInput = targetRight.createEl('input', { type: 'text', cls: 'folio-modal-input', placeholder: 'e.g., 20 (20k) or 20000' });
     // detect existing target keys and present a human-friendly value (match NewBook modal scale in 1k)
     const existingTarget = cfg?.basic?.targetWordCount ?? cfg?.stats?.target_total_words ?? cfg?.stats?.targetWordCount ?? '';
     try {

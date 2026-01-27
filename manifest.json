@@ -1,9 +1,9 @@
 {
-  "id": "novelist",
-  "name": "Novelist",
-  "version": "0.0.1",
-  "minAppVersion": "1.0.0",
-  "description": "Long-form writing tool for novelists",
+  "id": "folio",
+  "name": "Folio",
+  "version": "1.0.0",
+  "minAppVersion": "1.7.2",
+  "description": "Long-form writing tool for books and screenplays",
   "author": "You",
   "main": "main.js"
 }

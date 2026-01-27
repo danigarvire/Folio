@@ -1,10 +1,10 @@
 /**
- * Novelist Settings Tab
+ * Folio Settings Tab
  */
 
 import { PluginSettingTab, Setting } from 'obsidian';
 
-export class NovelistSettingTab extends PluginSettingTab {
+export class FolioSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -14,7 +14,7 @@ export class NovelistSettingTab extends PluginSettingTab {
     const el = this.containerEl;
     el.empty();
 
-    el.createEl("h2", { text: "Novelist Settings" });
+    el.createEl("h2", { text: "Folio Settings" });
 
     new Setting(el)
       .setName("Books base path")

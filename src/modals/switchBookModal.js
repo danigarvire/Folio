@@ -15,10 +15,10 @@ export class SwitchBookModal extends Modal {
     const search = contentEl.createEl("input", {
       type: "text",
       placeholder: "Search books...",
-      cls: 'novelist-manage-search'
+      cls: 'folio-manage-search'
     });
 
-    const list = contentEl.createDiv({ cls: 'novelist-manage-list' });
+    const list = contentEl.createDiv({ cls: 'folio-manage-list' });
 
     const formatTarget = (n) => {
       if (!n) return '—';
@@ -61,16 +61,16 @@ export class SwitchBookModal extends Modal {
         }
 
         // Compact horizontal row for switch modal (no cover)
-        const row = list.createDiv({ cls: 'novelist-switch-book-row' });
-        const leftCol = row.createDiv({ cls: 'novelist-switch-left' });
-        const rightCol = row.createDiv({ cls: 'novelist-switch-right' });
+        const row = list.createDiv({ cls: 'folio-switch-book-row' });
+        const leftCol = row.createDiv({ cls: 'folio-switch-left' });
+        const rightCol = row.createDiv({ cls: 'folio-switch-right' });
 
         // Title + subtitle inline
-        const titleRow = leftCol.createDiv({ cls: 'novelist-switch-title-row' });
-        titleRow.createSpan({ text: displayTitle || book.name || 'Untitled', cls: 'novelist-switch-title' });
+        const titleRow = leftCol.createDiv({ cls: 'folio-switch-title-row' });
+        titleRow.createSpan({ text: displayTitle || book.name || 'Untitled', cls: 'folio-switch-title' });
         if (subtitle) {
-          titleRow.createSpan({ text: ' - ', cls: 'novelist-switch-dash' });
-          titleRow.createSpan({ text: subtitle, cls: 'novelist-switch-subtitle' });
+          titleRow.createSpan({ text: ' - ', cls: 'folio-switch-dash' });
+          titleRow.createSpan({ text: subtitle, cls: 'folio-switch-subtitle' });
         }
 
         // compute progress and last modified
@@ -81,8 +81,8 @@ export class SwitchBookModal extends Modal {
           if (lm) lastMod = (new Date(lm)).toLocaleString();
         } catch {}
 
-        leftCol.createDiv({ text: `Author: ${authors || '—'} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: 'novelist-switch-meta' });
-        leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: 'novelist-switch-meta-second' });
+        leftCol.createDiv({ text: `Author: ${authors || '—'} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: 'folio-switch-meta' });
+        leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: 'folio-switch-meta-second' });
 
         // Select button on the right
         const selectBtn = rightCol.createEl('button', { text: 'Select', cls: 'mod-cta' });

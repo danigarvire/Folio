@@ -3,7 +3,9 @@
  */
 
 import { TFile, TFolder } from 'obsidian';
-import { BOOK_STRUCTURE_FILES } from '../constants/index.js';
+import { BOOK_STRUCTURE_FILES, PROJECT_TYPES } from '../constants/index.js';
+import { bookChapterTemplate } from '../templates/project/book.js';
+import { scriptChapterTemplate } from '../templates/project/script.js';
 
 export class BookService {
   constructor(app, configService) {
@@ -107,7 +109,7 @@ export class BookService {
   /**
    * Create a new book with default structure
    */
-  async createBook(basePath, name) {
+  async createBook(basePath, name, projectType = 'book') {
     if (!name) return;
     const path = `${basePath}/${name}`;
     if (await this.app.vault.adapter.exists(path)) return;
@@ -134,6 +136,7 @@ export class BookService {
           desc: "",
           uuid: `${Date.now().toString(16)}-${Math.random().toString(16).slice(2, 10)}`,
           created_at: now,
+          projectType: projectType, // Save project type
         },
         structure: {
           tree: [
@@ -169,10 +172,82 @@ export class BookService {
       console.warn('createBook: failed to create book-config.json in misc', e);
     }
 
-    // Ensure base structure
+    // Ensure base structure based on project type
     const bookFolder = this.app.vault.getAbstractFileByPath(path);
     if (bookFolder instanceof TFolder) {
-      await this.ensureBookBaseStructure(bookFolder);
+      if (projectType === PROJECT_TYPES.SCRIPT) {
+        await this.ensureScriptStructure(bookFolder);
+      } else {
+        await this.ensureBookBaseStructure(bookFolder);
+      }
+    }
+  }
+
+  /**
+   * Ensure script project has screenplay-specific structure
+   */
+  async ensureScriptStructure(bookFolder) {
+    const vault = this.app.vault;
+    
+    // Create Bible folder structure
+    const biblePath = `${bookFolder.path}/Bible`;
+    if (!vault.getAbstractFileByPath(biblePath)) {
+      await vault.createFolder(biblePath);
+    }
+    
+    // Create Bible subfolders first
+    const facesPath = `${biblePath}/Faces`;
+    const placesPath = `${biblePath}/Places`;
+    const objectsPath = `${biblePath}/Objects`;
+    
+    if (!vault.getAbstractFileByPath(facesPath)) {
+      await vault.createFolder(facesPath);
+    }
+    
+    if (!vault.getAbstractFileByPath(placesPath)) {
+      await vault.createFolder(placesPath);
+    }
+    
+    if (!vault.getAbstractFileByPath(objectsPath)) {
+      await vault.createFolder(objectsPath);
+    }
+    
+    // Create Bible files in order
+    const bibleFiles = ["Logline.md", "Theme.md", "Structure.md"];
+    for (const file of bibleFiles) {
+      const filePath = `${biblePath}/${file}`;
+      if (!vault.getAbstractFileByPath(filePath)) {
+        await vault.create(filePath, `---\nprojectType: script\n---\n\n`);
+      }
+    }
+    
+    // Create initial character file
+    const character1Path = `${facesPath}/Character 1.md`;
+    if (!vault.getAbstractFileByPath(character1Path)) {
+      await vault.create(character1Path, `---\nprojectType: script\n---\n\n`);
+    }
+    
+    // Create initial location file
+    const location1Path = `${placesPath}/Location 1.md`;
+    if (!vault.getAbstractFileByPath(location1Path)) {
+      await vault.create(location1Path, `---\nprojectType: script\n---\n\n`);
+    }
+    
+    // Create initial object file
+    const object1Path = `${objectsPath}/Object 1.md`;
+    if (!vault.getAbstractFileByPath(object1Path)) {
+      await vault.create(object1Path, `---\nprojectType: script\n---\n\n`);
+    }
+    
+    // Create root files
+    const moodboardPath = `${bookFolder.path}/Moodboard.canvas`;
+    if (!vault.getAbstractFileByPath(moodboardPath)) {
+      await vault.create(moodboardPath, "");
+    }
+    
+    const outlinePath = `${bookFolder.path}/Outline.md`;
+    if (!vault.getAbstractFileByPath(outlinePath)) {
+      await vault.create(outlinePath, `---\nprojectType: script\n---\n\n`);
     }
   }
 
@@ -253,11 +328,18 @@ export class BookService {
   /**
    * Create a new chapter (markdown file) in a volume
    */
-  async createChapter(volume, name) {
+  async createChapter(volume, name, projectType = 'book') {
     if (!name) return;
     const path = `${volume.path}/${name}.md`;
     if (await this.app.vault.adapter.exists(path)) return;
-    await this.app.vault.create(path, "");
+    
+    // Use template based on project type
+    const template = projectType === PROJECT_TYPES.SCRIPT
+      ? scriptChapterTemplate
+      : bookChapterTemplate;
+    
+    const content = template({ title: name });
+    await this.app.vault.create(path, content);
   }
 
   /**
