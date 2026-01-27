@@ -651,9 +651,9 @@ module.exports = class FolioPlugin extends Plugin {
    * CREATE METHODS
    * =============================================================== */
 
-  async createBook(name, projectType = 'book') {
+  async createBook(name, projectType = 'book', templateStructure = null) {
     const basePath = this.getBasePath();
-    return this.bookService.createBook(basePath, name, projectType);
+    return this.bookService.createBook(basePath, name, projectType, templateStructure);
   }
 
   async ensureBookBaseStructure(bookFolder) {
@@ -740,11 +740,53 @@ module.exports = class FolioPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign(
-      {},
-      DEFAULT_SETTINGS,
-      await this.loadData()
-    );
+    const savedData = await this.loadData() || {};
+    
+    // Start with defaults
+    this.settings = { ...DEFAULT_SETTINGS };
+    
+    // Merge non-template settings from saved data
+    Object.keys(savedData).forEach(key => {
+      if (key !== 'projectTemplates') {
+        this.settings[key] = savedData[key];
+      }
+    });
+    
+    // Handle projectTemplates specially - saved templates fully override defaults by ID
+    if (savedData.projectTemplates && Array.isArray(savedData.projectTemplates)) {
+      // Create a map of default templates for fallback properties only
+      const defaultTemplatesMap = new Map(
+        DEFAULT_SETTINGS.projectTemplates.map(t => [t.id, t])
+      );
+      
+      // Start with saved templates - they take full priority
+      const mergedTemplates = savedData.projectTemplates.map(savedTemplate => {
+        const defaultTemplate = defaultTemplatesMap.get(savedTemplate.id);
+        if (defaultTemplate) {
+          // For built-in templates: use saved values, fall back to defaults only for missing properties
+          // This ensures user changes persist while new default properties are available
+          return {
+            id: savedTemplate.id,
+            name: savedTemplate.name !== undefined ? savedTemplate.name : defaultTemplate.name,
+            icon: savedTemplate.icon !== undefined ? savedTemplate.icon : defaultTemplate.icon,
+            order: savedTemplate.order !== undefined ? savedTemplate.order : defaultTemplate.order,
+            description: savedTemplate.description !== undefined ? savedTemplate.description : defaultTemplate.description,
+            structure: savedTemplate.structure !== undefined ? savedTemplate.structure : defaultTemplate.structure
+          };
+        }
+        // Custom template - use as-is
+        return savedTemplate;
+      });
+      
+      // Add any NEW default templates that user hasn't seen yet
+      DEFAULT_SETTINGS.projectTemplates.forEach(defaultTemplate => {
+        if (!mergedTemplates.find(t => t.id === defaultTemplate.id)) {
+          mergedTemplates.push({ ...defaultTemplate });
+        }
+      });
+      
+      this.settings.projectTemplates = mergedTemplates;
+    }
   }
 
   async saveSettings() {

@@ -2091,7 +2091,312 @@ body.theme-light .folio-tree-children::before {
   height: 18px;
 }
 
-/* Order input styling */
-.folio-template-editor-input[type="number"] {
-  width: 100px;
+/* Larger modal for structure editor */
+.folio-template-editor-modal-large {
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* Structure section */
+.folio-template-structure-section {
+  margin-top: 16px;
+  border-top: 1px solid var(--background-modifier-border);
+  padding-top: 16px;
+}
+
+.folio-template-structure-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.folio-template-structure-header label {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.folio-template-structure-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.folio-template-structure-add-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.folio-template-structure-add-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.folio-template-structure-add-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.folio-template-structure-tree {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  padding: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.folio-template-structure-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.folio-template-structure-node-container {
+  position: relative;
+}
+
+.folio-template-structure-node {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  background: var(--background-primary);
+}
+
+.folio-template-structure-node:hover {
+  background: var(--background-modifier-hover);
+}
+
+.folio-template-structure-node-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.folio-template-structure-node-toggle:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.folio-template-structure-node-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+.folio-template-structure-node-spacer {
+  width: 18px;
+  flex-shrink: 0;
+}
+
+.folio-template-structure-node-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.folio-template-structure-node-icon.folio-icon-clickable:hover {
+  background: var(--background-modifier-hover);
+  color: var(--interactive-accent);
+}
+
+.folio-template-structure-node-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.folio-node-icon-picker {
+  position: absolute;
+  left: 40px;
+  top: 100%;
+  z-index: 100;
+  width: 280px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.folio-template-structure-node-title {
+  flex: 1;
+  min-width: 100px;
+  padding: 4px 8px;
+  font-size: 13px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-normal);
+}
+
+.folio-template-structure-node-title:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.folio-template-structure-node-type {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: var(--background-modifier-border);
+  border-radius: 3px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.folio-template-structure-node-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.folio-template-structure-node:hover .folio-template-structure-node-actions {
+  opacity: 1;
+}
+
+.folio-template-structure-node-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.folio-template-structure-node-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.folio-template-structure-node-btn.mod-danger:hover {
+  background: var(--background-modifier-error);
+  color: var(--text-on-accent);
+}
+
+.folio-template-structure-node-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Icon Picker Modal */
+.folio-icon-picker-modal {
+  max-width: 500px;
+}
+
+.folio-icon-picker-modal.modal {
+  z-index: 1000;
+}
+
+.modal-container:has(.folio-icon-picker-modal) {
+  z-index: 999;
+}
+
+.folio-icon-picker-modal h2 {
+  margin-bottom: 12px;
+}
+
+.folio-icon-picker-search {
+  margin-bottom: 12px;
+}
+
+.folio-icon-picker-search-input {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  color: var(--text-normal);
+}
+
+.folio-icon-picker-search-input:focus {
+  border-color: var(--interactive-accent);
+  outline: none;
+}
+
+.folio-icon-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+  gap: 6px;
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 4px;
+}
+
+.folio-icon-picker-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 4px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: var(--background-secondary);
+  border: 2px solid transparent;
+}
+
+.folio-icon-picker-option:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent-hover);
+}
+
+.folio-icon-picker-option.is-selected {
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  border-color: var(--interactive-accent);
+}
+
+.folio-icon-picker-option svg {
+  width: 20px;
+  height: 20px;
+}
+
+.folio-icon-picker-label {
+  font-size: 9px;
+  text-align: center;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.folio-icon-picker-option.is-selected .folio-icon-picker-label {
+  color: var(--text-on-accent);
+}
+
+.folio-icon-picker-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
 }

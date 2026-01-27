@@ -171,6 +171,10 @@ export class NewBookModal extends Modal {
       }
       console.debug && console.debug('Creating project with type:', projectType);
       
+      // Get template structure for the selected project type
+      const selectedTemplate = templates.find(t => t.id === projectType);
+      const templateStructure = selectedTemplate?.structure || null;
+      
       // capture fields before closing the modal (closing may remove DOM inputs)
       const subtitleVal = subtitleInput.value.trim();
       const authorVal = authorInput.value.trim();
@@ -178,8 +182,8 @@ export class NewBookModal extends Modal {
       const targetValRaw = targetInput.value;
       const targetValNum = parseFloat(targetValRaw) || 0;
       this.close();
-      // create book folder and base files WITH project type
-      await this.plugin.createBook(title, projectType);
+      // create book folder and base files WITH project type and template structure
+      await this.plugin.createBook(title, projectType, templateStructure);
       // normalize base path to match createBook's behavior
       const basePath = (this.plugin.settings && this.plugin.settings.basePath) ? String(this.plugin.settings.basePath).replace(/\/+/g, '/') : 'projects';
       const bookPath = `${basePath}/${title}`.replace(/\/+/g, "/");
@@ -232,29 +236,31 @@ export class NewBookModal extends Modal {
           console.warn(e);
         }
 
-        // create initial volume/chapter after metadata persisted (with project type)
-        if (projectType === PROJECT_TYPES.SCRIPT) {
-          // For script projects, create Episode 1/Sequence 1/Scene 1
-          const episodeName = "Episode 1";
-          const sequenceName = "Sequence 1";
-          const sceneName = "Scene 1";
-          
-          await this.plugin.createVolume(book, episodeName);
-          await this.plugin.createVolume({ path: `${book.path}/${episodeName}` }, sequenceName);
-          await this.plugin.createChapter({ path: `${book.path}/${episodeName}/${sequenceName}` }, sceneName, projectType);
-        } else if (projectType === PROJECT_TYPES.FILM) {
-          // For film projects, structure is already created by ensureFilmStructure
-          // No additional volumes/chapters needed
-        } else if (projectType === PROJECT_TYPES.ESSAY) {
-          // Essay structure is created by ensureEssayStructure (Documentation, Outline, Manuscript)
-          // No additional volumes/chapters needed
-        } else {
-          // For book projects, create Volume 1/Chapter 1
-          const volumeName = "Volume 1";
-          const chapterName = "Chapter 1";
-          
-          await this.plugin.createVolume(book, volumeName);
-          await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
+        // create initial volume/chapter after metadata persisted (only if no template structure was used)
+        if (!templateStructure || templateStructure.length === 0) {
+          if (projectType === PROJECT_TYPES.SCRIPT) {
+            // For script projects, create Episode 1/Sequence 1/Scene 1
+            const episodeName = "Episode 1";
+            const sequenceName = "Sequence 1";
+            const sceneName = "Scene 1";
+            
+            await this.plugin.createVolume(book, episodeName);
+            await this.plugin.createVolume({ path: `${book.path}/${episodeName}` }, sequenceName);
+            await this.plugin.createChapter({ path: `${book.path}/${episodeName}/${sequenceName}` }, sceneName, projectType);
+          } else if (projectType === PROJECT_TYPES.FILM) {
+            // For film projects, structure is already created by ensureFilmStructure
+            // No additional volumes/chapters needed
+          } else if (projectType === PROJECT_TYPES.ESSAY) {
+            // Essay structure is created by ensureEssayStructure (Documentation, Outline, Manuscript)
+            // No additional volumes/chapters needed
+          } else {
+            // For book projects, create Volume 1/Chapter 1
+            const volumeName = "Volume 1";
+            const chapterName = "Chapter 1";
+            
+            await this.plugin.createVolume(book, volumeName);
+            await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
+          }
         }
 
         // Refresh to get updated book structure with volumes/chapters

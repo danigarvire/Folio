@@ -34,10 +34,72 @@ var init_constants = __esm({
       defaultAuthor: "",
       defaultProjectType: "book",
       projectTemplates: [
-        { id: "book", name: "Book", icon: "book", order: 1, description: "Novel or written work" },
-        { id: "script", name: "TV Show", icon: "tv-minimal-play", order: 2, description: "Series with episodes and sequences" },
-        { id: "film", name: "Film", icon: "clapperboard", order: 3, description: "Feature film or short" },
-        { id: "essay", name: "Essay", icon: "newspaper", order: 4, description: "Essay or short nonfiction piece" }
+        {
+          id: "book",
+          name: "Book",
+          icon: "book",
+          order: 1,
+          description: "Novel or written work",
+          structure: [
+            { title: "Preface", type: "file" },
+            { title: "Moodboard", type: "canvas" },
+            { title: "Volume 1", type: "folder", children: [] },
+            { title: "Outline", type: "file" },
+            { title: "Afterword", type: "file" }
+          ]
+        },
+        {
+          id: "script",
+          name: "TV Show",
+          icon: "tv-minimal-play",
+          order: 2,
+          description: "Series with episodes and sequences",
+          structure: [
+            {
+              title: "Show Dossier",
+              type: "folder",
+              children: [
+                { title: "Concept", type: "folder", children: [] },
+                { title: "Structure", type: "folder", children: [] },
+                { title: "Faces", type: "folder", children: [] },
+                { title: "Places", type: "folder", children: [] },
+                { title: "Objects", type: "folder", children: [] },
+                { title: "Documentation", type: "folder", children: [] }
+              ]
+            },
+            { title: "Episode 1", type: "folder", children: [] }
+          ]
+        },
+        {
+          id: "film",
+          name: "Film",
+          icon: "clapperboard",
+          order: 3,
+          description: "Feature film or short",
+          structure: [
+            { title: "Moodboard", type: "canvas" },
+            { title: "Sequence 1", type: "folder", children: [] },
+            { title: "Outline", type: "file" }
+          ]
+        },
+        {
+          id: "essay",
+          name: "Essay",
+          icon: "newspaper",
+          order: 4,
+          description: "Essay or short nonfiction piece",
+          structure: [
+            {
+              title: "Documentation",
+              type: "folder",
+              children: [
+                { title: "Document 1", type: "file" }
+              ]
+            },
+            { title: "Outline", type: "file" },
+            { title: "Manuscript", type: "file" }
+          ]
+        }
       ]
     };
     DEFAULT_BOOK_CONFIG = {
@@ -298,13 +360,15 @@ var init_newBookModal = __esm({
               projectType = PROJECT_TYPES.BOOK;
           }
           console.debug && console.debug("Creating project with type:", projectType);
+          const selectedTemplate = templates.find((t) => t.id === projectType);
+          const templateStructure = (selectedTemplate == null ? void 0 : selectedTemplate.structure) || null;
           const subtitleVal = subtitleInput.value.trim();
           const authorVal = authorInput.value.trim();
           const descVal = descInput.value.trim();
           const targetValRaw = targetInput.value;
           const targetValNum = parseFloat(targetValRaw) || 0;
           this.close();
-          await this.plugin.createBook(title, projectType);
+          await this.plugin.createBook(title, projectType, templateStructure);
           const basePath = this.plugin.settings && this.plugin.settings.basePath ? String(this.plugin.settings.basePath).replace(/\/+/g, "/") : "projects";
           const bookPath = `${basePath}/${title}`.replace(/\/+/g, "/");
           try {
@@ -366,20 +430,22 @@ var init_newBookModal = __esm({
             } catch (e) {
               console.warn(e);
             }
-            if (projectType === PROJECT_TYPES.SCRIPT) {
-              const episodeName = "Episode 1";
-              const sequenceName = "Sequence 1";
-              const sceneName = "Scene 1";
-              await this.plugin.createVolume(book, episodeName);
-              await this.plugin.createVolume({ path: `${book.path}/${episodeName}` }, sequenceName);
-              await this.plugin.createChapter({ path: `${book.path}/${episodeName}/${sequenceName}` }, sceneName, projectType);
-            } else if (projectType === PROJECT_TYPES.FILM) {
-            } else if (projectType === PROJECT_TYPES.ESSAY) {
-            } else {
-              const volumeName = "Volume 1";
-              const chapterName = "Chapter 1";
-              await this.plugin.createVolume(book, volumeName);
-              await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
+            if (!templateStructure || templateStructure.length === 0) {
+              if (projectType === PROJECT_TYPES.SCRIPT) {
+                const episodeName = "Episode 1";
+                const sequenceName = "Sequence 1";
+                const sceneName = "Scene 1";
+                await this.plugin.createVolume(book, episodeName);
+                await this.plugin.createVolume({ path: `${book.path}/${episodeName}` }, sequenceName);
+                await this.plugin.createChapter({ path: `${book.path}/${episodeName}/${sequenceName}` }, sceneName, projectType);
+              } else if (projectType === PROJECT_TYPES.FILM) {
+              } else if (projectType === PROJECT_TYPES.ESSAY) {
+              } else {
+                const volumeName = "Volume 1";
+                const chapterName = "Chapter 1";
+                await this.plugin.createVolume(book, volumeName);
+                await this.plugin.createChapter({ path: `${book.path}/${volumeName}` }, chapterName, projectType);
+              }
             }
             await this.plugin.refresh();
             const updatedBook = this.plugin.booksIndex.find((b) => b.path === book.path);
@@ -1916,9 +1982,9 @@ var BookService = class {
     return booksIndex;
   }
   /**
-   * Create a new book with default structure
+   * Create a new book with structure from template
    */
-  async createBook(basePath, name, projectType = "book") {
+  async createBook(basePath, name, projectType = "book", templateStructure = null) {
     if (!name)
       return;
     const path = `${basePath}/${name}`;
@@ -1932,51 +1998,7 @@ var BookService = class {
     try {
       const bookConfigPath = `${path}/misc/book-config.json`;
       const now = new Date().toISOString();
-      const defaultTree = projectType === PROJECT_TYPES.SCRIPT ? [
-        {
-          id: "series-framework",
-          title: "Show Dossier",
-          type: "group",
-          path: "Show Dossier",
-          order: 1,
-          default_status: "draft",
-          is_expanded: false,
-          created_at: now,
-          last_modified: now,
-          children: [
-            { id: "concept", title: "Concept", type: "group", path: "Show Dossier/Concept", order: 1, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "structure", title: "Structure", type: "group", path: "Show Dossier/Structure", order: 2, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "faces", title: "Faces", type: "group", path: "Show Dossier/Faces", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "places", title: "Places", type: "group", path: "Show Dossier/Places", order: 4, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "objects", title: "Objects", type: "group", path: "Show Dossier/Objects", order: 5, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "documentation", title: "Documentation", type: "group", path: "Show Dossier/Documentation", order: 6, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
-          ]
-        },
-        { id: "episode1", title: "Episode 1", type: "group", path: "Episode 1", order: 2, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
-      ] : projectType === PROJECT_TYPES.ESSAY ? [
-        {
-          id: "documentation",
-          title: "Documentation",
-          type: "group",
-          path: "Documentation",
-          order: 1,
-          default_status: "draft",
-          is_expanded: false,
-          created_at: now,
-          last_modified: now,
-          children: [
-            { id: "document1", title: "Document 1", type: "file", path: "Documentation/Document 1.md", order: 1, default_status: "draft", created_at: now, last_modified: now }
-          ]
-        },
-        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 2, default_status: "draft", created_at: now, last_modified: now },
-        { id: "manuscript", title: "Manuscript", type: "file", path: "Manuscript.md", order: 3, default_status: "draft", created_at: now, last_modified: now }
-      ] : [
-        { id: "preface", title: "Preface", type: "file", path: "Preface.md", order: 1, default_status: "draft", created_at: now, last_modified: now },
-        { id: "moodboard", title: "Moodboard", type: "canvas", path: "Moodboard.canvas", order: 2, default_status: "draft", created_at: now, last_modified: now },
-        { id: "volume1", title: "Volume 1", type: "group", path: "Volume 1", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 4, default_status: "draft", created_at: now, last_modified: now },
-        { id: "afterword", title: "Afterword", type: "file", path: "Afterword.md", order: 5, default_status: "draft", created_at: now, last_modified: now }
-      ];
+      const defaultTree = templateStructure ? this.buildTreeFromTemplateStructure(templateStructure, "", now) : this.getDefaultTreeForProjectType(projectType, now);
       const defaultConfig = {
         basic: {
           title: name,
@@ -2016,15 +2038,166 @@ var BookService = class {
     }
     const bookFolder = this.app.vault.getAbstractFileByPath(path);
     if (bookFolder instanceof import_obsidian2.TFolder) {
-      if (projectType === PROJECT_TYPES.SCRIPT) {
-        await this.ensureScriptStructure(bookFolder);
-      } else if (projectType === PROJECT_TYPES.FILM) {
-        await this.ensureFilmStructure(bookFolder);
-      } else if (projectType === PROJECT_TYPES.ESSAY) {
-        await this.ensureEssayStructure(bookFolder);
+      if (templateStructure && templateStructure.length > 0) {
+        await this.createStructureFromTemplate(bookFolder, templateStructure, projectType);
       } else {
-        await this.ensureBookBaseStructure(bookFolder);
+        if (projectType === PROJECT_TYPES.SCRIPT) {
+          await this.ensureScriptStructure(bookFolder);
+        } else if (projectType === PROJECT_TYPES.FILM) {
+          await this.ensureFilmStructure(bookFolder);
+        } else if (projectType === PROJECT_TYPES.ESSAY) {
+          await this.ensureEssayStructure(bookFolder);
+        } else {
+          await this.ensureBookBaseStructure(bookFolder);
+        }
       }
+    }
+  }
+  /**
+   * Build tree config from simple template structure
+   */
+  buildTreeFromTemplateStructure(structure, parentPath, now) {
+    let order = 1;
+    return structure.map((item) => {
+      const itemPath = parentPath ? `${parentPath}/${item.title}` : item.title;
+      const id = `${item.title.toLowerCase().replace(/\s+/g, "-")}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+      if (item.type === "folder") {
+        const filePath = itemPath;
+        const node = {
+          id,
+          title: item.title,
+          type: "group",
+          path: filePath,
+          order: order++,
+          default_status: "draft",
+          is_expanded: false,
+          created_at: now,
+          last_modified: now,
+          children: item.children ? this.buildTreeFromTemplateStructure(item.children, filePath, now) : []
+        };
+        if (item.icon)
+          node.icon = item.icon;
+        return node;
+      } else if (item.type === "canvas") {
+        const node = {
+          id,
+          title: item.title,
+          type: "canvas",
+          path: `${itemPath}.canvas`,
+          order: order++,
+          default_status: "draft",
+          created_at: now,
+          last_modified: now
+        };
+        if (item.icon)
+          node.icon = item.icon;
+        return node;
+      } else {
+        const node = {
+          id,
+          title: item.title,
+          type: "file",
+          path: `${itemPath}.md`,
+          order: order++,
+          default_status: "draft",
+          created_at: now,
+          last_modified: now
+        };
+        if (item.icon)
+          node.icon = item.icon;
+        return node;
+      }
+    });
+  }
+  /**
+   * Create actual files and folders from template structure
+   */
+  async createStructureFromTemplate(bookFolder, structure, projectType) {
+    const vault = this.app.vault;
+    const createItems = async (items, parentPath) => {
+      for (const item of items) {
+        const itemPath = `${parentPath}/${item.title}`;
+        if (item.type === "folder") {
+          if (!vault.getAbstractFileByPath(itemPath)) {
+            await vault.createFolder(itemPath);
+          }
+          if (item.children && item.children.length > 0) {
+            await createItems(item.children, itemPath);
+          }
+        } else if (item.type === "canvas") {
+          const canvasPath = `${itemPath}.canvas`;
+          if (!vault.getAbstractFileByPath(canvasPath)) {
+            await vault.create(canvasPath, '{"nodes":[],"edges":[]}');
+          }
+        } else {
+          const filePath = `${itemPath}.md`;
+          if (!vault.getAbstractFileByPath(filePath)) {
+            const frontmatter = `---
+projectType: ${projectType}
+---
+
+`;
+            await vault.create(filePath, frontmatter);
+          }
+        }
+      }
+    };
+    await createItems(structure, bookFolder.path);
+  }
+  /**
+   * Get default tree structure for project type (legacy fallback)
+   */
+  getDefaultTreeForProjectType(projectType, now) {
+    if (projectType === PROJECT_TYPES.SCRIPT) {
+      return [
+        {
+          id: "series-framework",
+          title: "Show Dossier",
+          type: "group",
+          path: "Show Dossier",
+          order: 1,
+          default_status: "draft",
+          is_expanded: false,
+          created_at: now,
+          last_modified: now,
+          children: [
+            { id: "concept", title: "Concept", type: "group", path: "Show Dossier/Concept", order: 1, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "structure", title: "Structure", type: "group", path: "Show Dossier/Structure", order: 2, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "faces", title: "Faces", type: "group", path: "Show Dossier/Faces", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "places", title: "Places", type: "group", path: "Show Dossier/Places", order: 4, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "objects", title: "Objects", type: "group", path: "Show Dossier/Objects", order: 5, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "documentation", title: "Documentation", type: "group", path: "Show Dossier/Documentation", order: 6, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
+          ]
+        },
+        { id: "episode1", title: "Episode 1", type: "group", path: "Episode 1", order: 2, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
+      ];
+    } else if (projectType === PROJECT_TYPES.ESSAY) {
+      return [
+        {
+          id: "documentation",
+          title: "Documentation",
+          type: "group",
+          path: "Documentation",
+          order: 1,
+          default_status: "draft",
+          is_expanded: false,
+          created_at: now,
+          last_modified: now,
+          children: [
+            { id: "document1", title: "Document 1", type: "file", path: "Documentation/Document 1.md", order: 1, default_status: "draft", created_at: now, last_modified: now }
+          ]
+        },
+        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 2, default_status: "draft", created_at: now, last_modified: now },
+        { id: "manuscript", title: "Manuscript", type: "file", path: "Manuscript.md", order: 3, default_status: "draft", created_at: now, last_modified: now }
+      ];
+    } else {
+      return [
+        { id: "preface", title: "Preface", type: "file", path: "Preface.md", order: 1, default_status: "draft", created_at: now, last_modified: now },
+        { id: "moodboard", title: "Moodboard", type: "canvas", path: "Moodboard.canvas", order: 2, default_status: "draft", created_at: now, last_modified: now },
+        { id: "volume1", title: "Volume 1", type: "group", path: "Volume 1", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 4, default_status: "draft", created_at: now, last_modified: now },
+        { id: "afterword", title: "Afterword", type: "file", path: "Afterword.md", order: 5, default_status: "draft", created_at: now, last_modified: now }
+      ];
     }
   }
   /**
@@ -2513,7 +2686,7 @@ var FolioView = class extends import_obsidian4.ItemView {
         const folderIcon = folderRow.createSpan({ cls: "folio-tree-icon folder-icon" });
         try {
           const isExpanded = this.plugin.expandedFolders.has(fullPath);
-          const iconName = this.getCustomIcon(node.title, isExpanded);
+          const iconName = node.icon || this.getCustomIcon(node.title, isExpanded);
           (0, import_obsidian4.setIcon)(folderIcon, iconName);
           (0, import_obsidian4.setIcon)(collapse, isExpanded ? "chevron-down" : "chevron-right");
         } catch (e) {
@@ -2545,7 +2718,7 @@ var FolioView = class extends import_obsidian4.ItemView {
           else
             this.plugin.expandedFolders.delete(fullPath);
           try {
-            const iconName = this.getCustomIcon(node.title, isHidden);
+            const iconName = node.icon || this.getCustomIcon(node.title, isHidden);
             (0, import_obsidian4.setIcon)(folderIcon, iconName);
             (0, import_obsidian4.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
           } catch (e2) {
@@ -2561,7 +2734,8 @@ var FolioView = class extends import_obsidian4.ItemView {
         fileRow.dataset.nodeId = node.id;
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
-          (0, import_obsidian4.setIcon)(icon, node.type === "canvas" ? "layout-dashboard" : "file");
+          const defaultIcon = node.type === "canvas" ? "layout-dashboard" : "file";
+          (0, import_obsidian4.setIcon)(icon, node.icon || defaultIcon);
         } catch (e) {
         }
         const label = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });
@@ -3108,6 +3282,9 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
 };
 
 // src/views/folioSettingTab.js
+var import_obsidian7 = require("obsidian");
+
+// src/modals/iconPickerModal.js
 var import_obsidian6 = require("obsidian");
 var COMMON_ICONS = [
   "book",
@@ -3162,9 +3339,177 @@ var COMMON_ICONS = [
   "rocket",
   "plane",
   "car",
-  "ship"
+  "ship",
+  "crown",
+  "gem",
+  "diamond",
+  "sparkles",
+  "sun",
+  "moon",
+  "cloud",
+  "umbrella",
+  "tree",
+  "flower",
+  "leaf",
+  "mountain",
+  "home",
+  "building",
+  "castle",
+  "tent",
+  "gift",
+  "shopping-bag",
+  "package",
+  "box",
+  "clock",
+  "calendar",
+  "alarm-clock",
+  "timer",
+  "mail",
+  "message-circle",
+  "message-square",
+  "send",
+  "phone",
+  "smartphone",
+  "tablet",
+  "monitor",
+  "wifi",
+  "bluetooth",
+  "battery",
+  "plug",
+  "key",
+  "lock",
+  "unlock",
+  "shield",
+  "user",
+  "users",
+  "user-circle",
+  "contact",
+  "settings",
+  "sliders",
+  "tool",
+  "wrench",
+  "search",
+  "zoom-in",
+  "zoom-out",
+  "filter",
+  "link",
+  "external-link",
+  "share",
+  "download",
+  "upload",
+  "save",
+  "copy",
+  "clipboard-copy",
+  "trash",
+  "archive",
+  "inbox",
+  "outbox",
+  "check",
+  "check-circle",
+  "x",
+  "x-circle",
+  "alert-circle",
+  "alert-triangle",
+  "info",
+  "help-circle",
+  "play",
+  "pause",
+  "stop",
+  "skip-forward",
+  "volume",
+  "volume-2",
+  "speaker",
+  "bell",
+  "eye",
+  "eye-off",
+  "glasses",
+  "scan",
+  "printer",
+  "scanner",
+  "fax",
+  "projector",
+  "cpu",
+  "hard-drive",
+  "memory-stick",
+  "usb",
+  "git-branch",
+  "git-commit",
+  "git-merge",
+  "git-pull-request",
+  "layout-dashboard",
+  "layout-grid",
+  "layout-list",
+  "kanban"
 ];
-var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
+var IconPickerModal = class extends import_obsidian6.Modal {
+  constructor(app, { title, currentIcon, onSelect }) {
+    super(app);
+    this.title = title || "Select Icon";
+    this.currentIcon = currentIcon;
+    this.onSelect = onSelect;
+    this.searchQuery = "";
+    this.filteredIcons = [...COMMON_ICONS];
+  }
+  onOpen() {
+    const { contentEl, modalEl, containerEl } = this;
+    contentEl.empty();
+    contentEl.addClass("folio-icon-picker-modal");
+    if (containerEl) {
+      containerEl.style.zIndex = "9999";
+    }
+    if (modalEl) {
+      modalEl.style.zIndex = "10000";
+    }
+    contentEl.createEl("h2", { text: this.title });
+    const searchContainer = contentEl.createDiv({ cls: "folio-icon-picker-search" });
+    const searchInput = searchContainer.createEl("input", {
+      type: "text",
+      placeholder: "Search icons...",
+      cls: "folio-icon-picker-search-input"
+    });
+    searchInput.oninput = (e) => {
+      this.searchQuery = e.target.value.toLowerCase();
+      this.filterAndRenderIcons(iconGrid);
+    };
+    const iconGrid = contentEl.createDiv({ cls: "folio-icon-picker-grid" });
+    this.renderIcons(iconGrid, COMMON_ICONS);
+    searchInput.focus();
+  }
+  filterAndRenderIcons(container) {
+    const filtered = this.searchQuery ? COMMON_ICONS.filter((icon) => icon.toLowerCase().includes(this.searchQuery)) : COMMON_ICONS;
+    this.renderIcons(container, filtered);
+  }
+  renderIcons(container, icons) {
+    container.empty();
+    if (icons.length === 0) {
+      container.createDiv({
+        cls: "folio-icon-picker-empty",
+        text: "No icons found"
+      });
+      return;
+    }
+    icons.forEach((iconName) => {
+      const iconOption = container.createDiv({
+        cls: "folio-icon-picker-option" + (iconName === this.currentIcon ? " is-selected" : "")
+      });
+      iconOption.title = iconName;
+      (0, import_obsidian6.setIcon)(iconOption, iconName);
+      const label = iconOption.createSpan({ cls: "folio-icon-picker-label" });
+      label.textContent = iconName;
+      iconOption.onclick = () => {
+        this.onSelect(iconName);
+        this.close();
+      };
+    });
+  }
+  onClose() {
+    const { contentEl } = this;
+    contentEl.empty();
+  }
+};
+
+// src/views/folioSettingTab.js
+var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -3176,20 +3521,20 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
     const basicSection = el.createDiv({ cls: "folio-settings-section" });
     const basicHeader = basicSection.createDiv({ cls: "folio-settings-section-header" });
     const basicToggle = basicHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian6.setIcon)(basicToggle, "chevron-down");
+    (0, import_obsidian7.setIcon)(basicToggle, "chevron-right");
     basicHeader.createSpan({ text: "Basic options", cls: "folio-settings-section-title" });
-    const basicContent = basicSection.createDiv({ cls: "folio-settings-section-content" });
+    const basicContent = basicSection.createDiv({ cls: "folio-settings-section-content collapsed" });
     basicHeader.onclick = () => {
       basicContent.classList.toggle("collapsed");
-      (0, import_obsidian6.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
+      (0, import_obsidian7.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
     };
-    new import_obsidian6.Setting(basicContent).setName("Default author").setDesc("Default author name for new projects").addText(
+    new import_obsidian7.Setting(basicContent).setName("Default author").setDesc("Default author name for new projects").addText(
       (text) => text.setPlaceholder("Author name").setValue(this.plugin.settings.defaultAuthor || "").onChange(async (value) => {
         this.plugin.settings.defaultAuthor = value.trim();
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian6.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText(
+    new import_obsidian7.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText(
       (text) => text.setPlaceholder("projects").setValue(this.plugin.settings.basePath || "projects").onChange(async (value) => {
         let normalizedPath = value.trim().replace(/^\/+|\/+$/g, "") || "projects";
         this.plugin.settings.basePath = normalizedPath;
@@ -3201,12 +3546,12 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
     const templateSection = el.createDiv({ cls: "folio-settings-section" });
     const templateHeader = templateSection.createDiv({ cls: "folio-settings-section-header" });
     const templateToggle = templateHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian6.setIcon)(templateToggle, "chevron-down");
+    (0, import_obsidian7.setIcon)(templateToggle, "chevron-right");
     templateHeader.createSpan({ text: "Template options", cls: "folio-settings-section-title" });
-    const templateContent = templateSection.createDiv({ cls: "folio-settings-section-content" });
+    const templateContent = templateSection.createDiv({ cls: "folio-settings-section-content collapsed" });
     templateHeader.onclick = () => {
       templateContent.classList.toggle("collapsed");
-      (0, import_obsidian6.setIcon)(templateToggle, templateContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
+      (0, import_obsidian7.setIcon)(templateToggle, templateContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
     };
     if (!this.plugin.settings.projectTemplates) {
       this.plugin.settings.projectTemplates = [
@@ -3221,7 +3566,7 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
     templates.sort((a, b) => a.order - b.order).forEach((t) => {
       defaultOptions[t.id] = t.name;
     });
-    new import_obsidian6.Setting(templateContent).setName("Default template").setDesc("Default template used when creating new projects").addDropdown(
+    new import_obsidian7.Setting(templateContent).setName("Default template").setDesc("Default template used when creating new projects").addDropdown(
       (dropdown) => dropdown.addOptions(defaultOptions).setValue(this.plugin.settings.defaultProjectType || "book").onChange(async (value) => {
         this.plugin.settings.defaultProjectType = value;
         await this.plugin.saveSettings();
@@ -3242,20 +3587,20 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
     templates.forEach((template, index) => {
       const row = container.createDiv({ cls: "folio-template-row" });
       const iconEl = row.createDiv({ cls: "folio-template-icon" });
-      (0, import_obsidian6.setIcon)(iconEl, template.icon || "file");
+      (0, import_obsidian7.setIcon)(iconEl, template.icon || "file");
       const infoEl = row.createDiv({ cls: "folio-template-info" });
       infoEl.createDiv({ text: template.name, cls: "folio-template-name" });
       infoEl.createDiv({ text: template.description || "", cls: "folio-template-desc" });
       const actionsEl = row.createDiv({ cls: "folio-template-actions" });
       const editBtn = actionsEl.createEl("button", { cls: "folio-template-action-btn" });
-      (0, import_obsidian6.setIcon)(editBtn, "pencil");
+      (0, import_obsidian7.setIcon)(editBtn, "pencil");
       editBtn.title = "Edit template";
       editBtn.onclick = () => {
         this.openTemplateEditor(template, container);
       };
       if (templates.length > 1) {
         const deleteBtn = actionsEl.createEl("button", { cls: "folio-template-action-btn mod-danger" });
-        (0, import_obsidian6.setIcon)(deleteBtn, "trash");
+        (0, import_obsidian7.setIcon)(deleteBtn, "trash");
         deleteBtn.title = "Delete template";
         deleteBtn.onclick = async () => {
           this.plugin.settings.projectTemplates = templates.filter((t) => t.id !== template.id);
@@ -3269,17 +3614,21 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
   openTemplateEditor(template, listContainer) {
     var _a;
     const isNew = !template;
-    const editData = template ? { ...template } : {
+    const editData = template ? JSON.parse(JSON.stringify(template)) : {
       id: `custom-${Date.now()}`,
       name: "",
       icon: "file",
       order: (((_a = this.plugin.settings.projectTemplates) == null ? void 0 : _a.length) || 0) + 1,
-      description: ""
+      description: "",
+      structure: []
     };
+    if (!editData.structure) {
+      editData.structure = [];
+    }
     const overlay = document.createElement("div");
     overlay.className = "folio-template-editor-overlay";
     const modal = document.createElement("div");
-    modal.className = "folio-template-editor-modal";
+    modal.className = "folio-template-editor-modal folio-template-editor-modal-large";
     const title = document.createElement("h3");
     title.textContent = isNew ? "Add new template" : "Edit template";
     modal.appendChild(title);
@@ -3292,6 +3641,7 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
     nameInput.className = "folio-template-editor-input";
     nameInput.value = editData.name;
     nameInput.placeholder = "Template name";
+    nameInput.onkeydown = (e) => e.stopPropagation();
     nameRow.appendChild(nameLabel);
     nameRow.appendChild(nameInput);
     modal.appendChild(nameRow);
@@ -3310,38 +3660,30 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
     iconInput.className = "folio-template-editor-input";
     iconInput.value = editData.icon;
     iconInput.placeholder = "e.g., book, newspaper, file";
+    iconInput.onkeydown = (e) => e.stopPropagation();
     iconInputRow.appendChild(iconPreview);
     iconInputRow.appendChild(iconInput);
     iconRow.appendChild(iconInputRow);
-    const iconPicker = document.createElement("div");
-    iconPicker.className = "folio-icon-picker";
-    iconPicker.style.display = "none";
-    COMMON_ICONS.forEach((iconName) => {
-      const iconOption = document.createElement("div");
-      iconOption.className = "folio-icon-option";
-      iconOption.title = iconName;
-      (0, import_obsidian6.setIcon)(iconOption, iconName);
-      iconOption.onclick = () => {
-        iconInput.value = iconName;
-        updateIconPreview();
-        iconPicker.style.display = "none";
-      };
-      iconPicker.appendChild(iconOption);
-    });
-    iconRow.appendChild(iconPicker);
     modal.appendChild(iconRow);
     const updateIconPreview = () => {
       iconPreview.innerHTML = "";
       try {
-        (0, import_obsidian6.setIcon)(iconPreview, iconInput.value || "file");
+        (0, import_obsidian7.setIcon)(iconPreview, iconInput.value || "file");
       } catch (e) {
-        (0, import_obsidian6.setIcon)(iconPreview, "file");
+        (0, import_obsidian7.setIcon)(iconPreview, "file");
       }
     };
     updateIconPreview();
     iconInput.addEventListener("input", updateIconPreview);
     iconPreview.onclick = () => {
-      iconPicker.style.display = iconPicker.style.display === "none" ? "grid" : "none";
+      new IconPickerModal(this.app, {
+        title: "Select Template Icon",
+        currentIcon: iconInput.value,
+        onSelect: (iconName) => {
+          iconInput.value = iconName;
+          updateIconPreview();
+        }
+      }).open();
     };
     const descRow = document.createElement("div");
     descRow.className = "folio-template-editor-row";
@@ -3352,9 +3694,218 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
     descInput.className = "folio-template-editor-input";
     descInput.value = editData.description || "";
     descInput.placeholder = "Short description";
+    descInput.onkeydown = (e) => e.stopPropagation();
     descRow.appendChild(descLabel);
     descRow.appendChild(descInput);
     modal.appendChild(descRow);
+    const structureSection = document.createElement("div");
+    structureSection.className = "folio-template-structure-section";
+    const structureHeader = document.createElement("div");
+    structureHeader.className = "folio-template-structure-header";
+    const structureLabel = document.createElement("label");
+    structureLabel.textContent = "Default structure";
+    structureHeader.appendChild(structureLabel);
+    const structureActions = document.createElement("div");
+    structureActions.className = "folio-template-structure-actions";
+    const addFileBtn = document.createElement("button");
+    addFileBtn.className = "folio-template-structure-add-btn";
+    addFileBtn.type = "button";
+    (0, import_obsidian7.setIcon)(addFileBtn, "file-plus");
+    addFileBtn.appendChild(document.createTextNode(" File"));
+    addFileBtn.onclick = () => {
+      editData.structure.push({ title: "New File", type: "file" });
+      renderStructureTree();
+    };
+    const addFolderBtn = document.createElement("button");
+    addFolderBtn.className = "folio-template-structure-add-btn";
+    addFolderBtn.type = "button";
+    (0, import_obsidian7.setIcon)(addFolderBtn, "folder-plus");
+    addFolderBtn.appendChild(document.createTextNode(" Folder"));
+    addFolderBtn.onclick = () => {
+      editData.structure.push({ title: "New Folder", type: "folder", children: [] });
+      renderStructureTree();
+    };
+    const addCanvasBtn = document.createElement("button");
+    addCanvasBtn.className = "folio-template-structure-add-btn";
+    addCanvasBtn.type = "button";
+    (0, import_obsidian7.setIcon)(addCanvasBtn, "layout-dashboard");
+    addCanvasBtn.appendChild(document.createTextNode(" Canvas"));
+    addCanvasBtn.onclick = () => {
+      editData.structure.push({ title: "New Canvas", type: "canvas" });
+      renderStructureTree();
+    };
+    structureActions.appendChild(addFileBtn);
+    structureActions.appendChild(addFolderBtn);
+    structureActions.appendChild(addCanvasBtn);
+    structureHeader.appendChild(structureActions);
+    structureSection.appendChild(structureHeader);
+    const structureTree = document.createElement("div");
+    structureTree.className = "folio-template-structure-tree";
+    structureSection.appendChild(structureTree);
+    const expandedFolders = /* @__PURE__ */ new Set();
+    const renderStructureTree = () => {
+      structureTree.innerHTML = "";
+      const renderNode = (node, parentArray, index, depth = 0) => {
+        const nodeContainer = document.createElement("div");
+        nodeContainer.className = "folio-template-structure-node-container";
+        const nodeRow = document.createElement("div");
+        nodeRow.className = "folio-template-structure-node";
+        nodeRow.style.paddingLeft = `${depth * 20}px`;
+        if (node.type === "folder") {
+          const toggleBtn = document.createElement("span");
+          toggleBtn.className = "folio-template-structure-node-toggle";
+          const isExpanded = expandedFolders.has(node);
+          (0, import_obsidian7.setIcon)(toggleBtn, isExpanded ? "chevron-down" : "chevron-right");
+          toggleBtn.onclick = () => {
+            if (expandedFolders.has(node)) {
+              expandedFolders.delete(node);
+            } else {
+              expandedFolders.add(node);
+            }
+            renderStructureTree();
+          };
+          nodeRow.appendChild(toggleBtn);
+        } else {
+          const spacer = document.createElement("span");
+          spacer.className = "folio-template-structure-node-spacer";
+          nodeRow.appendChild(spacer);
+        }
+        const nodeIcon = document.createElement("span");
+        nodeIcon.className = "folio-template-structure-node-icon folio-icon-clickable";
+        nodeIcon.title = "Click to change icon";
+        const defaultIcon = node.type === "folder" ? "folder" : node.type === "canvas" ? "layout-dashboard" : "file";
+        (0, import_obsidian7.setIcon)(nodeIcon, node.icon || defaultIcon);
+        nodeIcon.onclick = (e) => {
+          e.stopPropagation();
+          new IconPickerModal(this.app, {
+            title: `Select Icon for "${node.title}"`,
+            currentIcon: node.icon || defaultIcon,
+            onSelect: (iconName) => {
+              node.icon = iconName;
+              renderStructureTree();
+            }
+          }).open();
+        };
+        nodeRow.appendChild(nodeIcon);
+        const titleInput = document.createElement("input");
+        titleInput.type = "text";
+        titleInput.className = "folio-template-structure-node-title";
+        titleInput.value = node.title;
+        titleInput.onclick = (e) => e.stopPropagation();
+        titleInput.onkeydown = (e) => e.stopPropagation();
+        titleInput.oninput = (e) => {
+          node.title = e.target.value;
+        };
+        titleInput.onblur = (e) => {
+          node.title = e.target.value.trim() || "Untitled";
+          if (!e.target.value.trim()) {
+            e.target.value = "Untitled";
+          }
+        };
+        nodeRow.appendChild(titleInput);
+        const typeBadge = document.createElement("span");
+        typeBadge.className = "folio-template-structure-node-type";
+        typeBadge.textContent = node.type;
+        nodeRow.appendChild(typeBadge);
+        const nodeActions = document.createElement("div");
+        nodeActions.className = "folio-template-structure-node-actions";
+        if (index > 0) {
+          const upBtn = document.createElement("button");
+          upBtn.className = "folio-template-structure-node-btn";
+          upBtn.type = "button";
+          upBtn.title = "Move up";
+          (0, import_obsidian7.setIcon)(upBtn, "chevron-up");
+          upBtn.onclick = () => {
+            [parentArray[index - 1], parentArray[index]] = [parentArray[index], parentArray[index - 1]];
+            renderStructureTree();
+          };
+          nodeActions.appendChild(upBtn);
+        }
+        if (index < parentArray.length - 1) {
+          const downBtn = document.createElement("button");
+          downBtn.className = "folio-template-structure-node-btn";
+          downBtn.type = "button";
+          downBtn.title = "Move down";
+          (0, import_obsidian7.setIcon)(downBtn, "chevron-down");
+          downBtn.onclick = () => {
+            [parentArray[index], parentArray[index + 1]] = [parentArray[index + 1], parentArray[index]];
+            renderStructureTree();
+          };
+          nodeActions.appendChild(downBtn);
+        }
+        if (node.type === "folder") {
+          const addFileBtn2 = document.createElement("button");
+          addFileBtn2.className = "folio-template-structure-node-btn";
+          addFileBtn2.type = "button";
+          addFileBtn2.title = "Add file";
+          (0, import_obsidian7.setIcon)(addFileBtn2, "file-plus");
+          addFileBtn2.onclick = () => {
+            if (!node.children)
+              node.children = [];
+            node.children.push({ title: "New File", type: "file" });
+            expandedFolders.add(node);
+            renderStructureTree();
+          };
+          nodeActions.appendChild(addFileBtn2);
+          const addFolderBtn2 = document.createElement("button");
+          addFolderBtn2.className = "folio-template-structure-node-btn";
+          addFolderBtn2.type = "button";
+          addFolderBtn2.title = "Add folder";
+          (0, import_obsidian7.setIcon)(addFolderBtn2, "folder-plus");
+          addFolderBtn2.onclick = () => {
+            if (!node.children)
+              node.children = [];
+            node.children.push({ title: "New Folder", type: "folder", children: [] });
+            expandedFolders.add(node);
+            renderStructureTree();
+          };
+          nodeActions.appendChild(addFolderBtn2);
+          const addCanvasBtn2 = document.createElement("button");
+          addCanvasBtn2.className = "folio-template-structure-node-btn";
+          addCanvasBtn2.type = "button";
+          addCanvasBtn2.title = "Add canvas";
+          (0, import_obsidian7.setIcon)(addCanvasBtn2, "layout-dashboard");
+          addCanvasBtn2.onclick = () => {
+            if (!node.children)
+              node.children = [];
+            node.children.push({ title: "New Canvas", type: "canvas" });
+            expandedFolders.add(node);
+            renderStructureTree();
+          };
+          nodeActions.appendChild(addCanvasBtn2);
+        }
+        const deleteBtn = document.createElement("button");
+        deleteBtn.className = "folio-template-structure-node-btn mod-danger";
+        deleteBtn.type = "button";
+        deleteBtn.title = "Delete";
+        (0, import_obsidian7.setIcon)(deleteBtn, "trash");
+        deleteBtn.onclick = () => {
+          parentArray.splice(index, 1);
+          renderStructureTree();
+        };
+        nodeActions.appendChild(deleteBtn);
+        nodeRow.appendChild(nodeActions);
+        nodeContainer.appendChild(nodeRow);
+        structureTree.appendChild(nodeContainer);
+        if (node.type === "folder" && node.children && node.children.length > 0 && expandedFolders.has(node)) {
+          node.children.forEach((child, childIndex) => {
+            renderNode(child, node.children, childIndex, depth + 1);
+          });
+        }
+      };
+      if (editData.structure.length === 0) {
+        const emptyMsg = document.createElement("div");
+        emptyMsg.className = "folio-template-structure-empty";
+        emptyMsg.textContent = "No items. Add files or folders above.";
+        structureTree.appendChild(emptyMsg);
+      } else {
+        editData.structure.forEach((node, index) => {
+          renderNode(node, editData.structure, index, 0);
+        });
+      }
+    };
+    renderStructureTree();
+    modal.appendChild(structureSection);
     const actions = document.createElement("div");
     actions.className = "folio-template-editor-actions";
     const cancelBtn = document.createElement("button");
@@ -3400,11 +3951,9 @@ var FolioSettingTab = class extends import_obsidian6.PluginSettingTab {
       if (e.target === overlay)
         overlay.remove();
     };
-    modal.onclick = (e) => {
-      if (!iconInputRow.contains(e.target) && !iconPicker.contains(e.target)) {
-        iconPicker.style.display = "none";
-      }
-    };
+    modal.onkeydown = (e) => e.stopPropagation();
+    modal.onkeyup = (e) => e.stopPropagation();
+    modal.onkeypress = (e) => e.stopPropagation();
     nameInput.focus();
   }
 };
@@ -3424,9 +3973,9 @@ var {
   ItemView: ItemView3,
   TFile: TFile6,
   TFolder: TFolder4,
-  Modal: Modal9,
+  Modal: Modal10,
   Menu: Menu2,
-  setIcon: setIcon6
+  setIcon: setIcon7
 } = require("obsidian");
 module.exports = class FolioPlugin extends Plugin {
   async onload() {
@@ -3951,9 +4500,9 @@ module.exports = class FolioPlugin extends Plugin {
   /* ===============================================================
    * CREATE METHODS
    * =============================================================== */
-  async createBook(name, projectType = "book") {
+  async createBook(name, projectType = "book", templateStructure = null) {
     const basePath = this.getBasePath();
-    return this.bookService.createBook(basePath, name, projectType);
+    return this.bookService.createBook(basePath, name, projectType, templateStructure);
   }
   async ensureBookBaseStructure(bookFolder) {
     return this.bookService.ensureBookBaseStructure(bookFolder);
@@ -4032,11 +4581,38 @@ module.exports = class FolioPlugin extends Plugin {
     this.rerenderViews();
   }
   async loadSettings() {
-    this.settings = Object.assign(
-      {},
-      DEFAULT_SETTINGS,
-      await this.loadData()
-    );
+    const savedData = await this.loadData() || {};
+    this.settings = { ...DEFAULT_SETTINGS };
+    Object.keys(savedData).forEach((key) => {
+      if (key !== "projectTemplates") {
+        this.settings[key] = savedData[key];
+      }
+    });
+    if (savedData.projectTemplates && Array.isArray(savedData.projectTemplates)) {
+      const defaultTemplatesMap = new Map(
+        DEFAULT_SETTINGS.projectTemplates.map((t) => [t.id, t])
+      );
+      const mergedTemplates = savedData.projectTemplates.map((savedTemplate) => {
+        const defaultTemplate = defaultTemplatesMap.get(savedTemplate.id);
+        if (defaultTemplate) {
+          return {
+            id: savedTemplate.id,
+            name: savedTemplate.name !== void 0 ? savedTemplate.name : defaultTemplate.name,
+            icon: savedTemplate.icon !== void 0 ? savedTemplate.icon : defaultTemplate.icon,
+            order: savedTemplate.order !== void 0 ? savedTemplate.order : defaultTemplate.order,
+            description: savedTemplate.description !== void 0 ? savedTemplate.description : defaultTemplate.description,
+            structure: savedTemplate.structure !== void 0 ? savedTemplate.structure : defaultTemplate.structure
+          };
+        }
+        return savedTemplate;
+      });
+      DEFAULT_SETTINGS.projectTemplates.forEach((defaultTemplate) => {
+        if (!mergedTemplates.find((t) => t.id === defaultTemplate.id)) {
+          mergedTemplates.push({ ...defaultTemplate });
+        }
+      });
+      this.settings.projectTemplates = mergedTemplates;
+    }
   }
   async saveSettings() {
     await this.saveData(this.settings);

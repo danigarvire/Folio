@@ -3,23 +3,7 @@
  */
 
 import { PluginSettingTab, Setting, setIcon } from 'obsidian';
-
-// Common Lucide icons for project templates
-const COMMON_ICONS = [
-  'book', 'book-open', 'book-text', 'library',
-  'newspaper', 'file-text', 'scroll', 'scroll-text',
-  'tv', 'tv-minimal-play', 'clapperboard', 'film', 'video',
-  'pen', 'pen-tool', 'pencil', 'feather',
-  'folder', 'folder-open', 'file', 'files',
-  'notebook', 'clipboard', 'sticky-note', 'bookmark',
-  'graduation-cap', 'school', 'brain', 'lightbulb',
-  'music', 'mic', 'headphones', 'radio',
-  'camera', 'image', 'palette', 'brush',
-  'code', 'terminal', 'database', 'server',
-  'globe', 'map', 'compass', 'navigation',
-  'heart', 'star', 'trophy', 'medal',
-  'rocket', 'plane', 'car', 'ship'
-];
+import { IconPickerModal } from '../modals/iconPickerModal';
 
 export class FolioSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
@@ -37,9 +21,9 @@ export class FolioSettingTab extends PluginSettingTab {
     const basicSection = el.createDiv({ cls: 'folio-settings-section' });
     const basicHeader = basicSection.createDiv({ cls: 'folio-settings-section-header' });
     const basicToggle = basicHeader.createSpan({ cls: 'folio-settings-toggle' });
-    setIcon(basicToggle, 'chevron-down');
+    setIcon(basicToggle, 'chevron-right');
     basicHeader.createSpan({ text: 'Basic options', cls: 'folio-settings-section-title' });
-    const basicContent = basicSection.createDiv({ cls: 'folio-settings-section-content' });
+    const basicContent = basicSection.createDiv({ cls: 'folio-settings-section-content collapsed' });
 
     basicHeader.onclick = () => {
       basicContent.classList.toggle('collapsed');
@@ -82,9 +66,9 @@ export class FolioSettingTab extends PluginSettingTab {
     const templateSection = el.createDiv({ cls: 'folio-settings-section' });
     const templateHeader = templateSection.createDiv({ cls: 'folio-settings-section-header' });
     const templateToggle = templateHeader.createSpan({ cls: 'folio-settings-toggle' });
-    setIcon(templateToggle, 'chevron-down');
+    setIcon(templateToggle, 'chevron-right');
     templateHeader.createSpan({ text: 'Template options', cls: 'folio-settings-section-title' });
-    const templateContent = templateSection.createDiv({ cls: 'folio-settings-section-content' });
+    const templateContent = templateSection.createDiv({ cls: 'folio-settings-section-content collapsed' });
 
     templateHeader.onclick = () => {
       templateContent.classList.toggle('collapsed');
@@ -180,20 +164,26 @@ export class FolioSettingTab extends PluginSettingTab {
 
   openTemplateEditor(template, listContainer) {
     const isNew = !template;
-    const editData = template ? { ...template } : {
+    const editData = template ? JSON.parse(JSON.stringify(template)) : {
       id: `custom-${Date.now()}`,
       name: '',
       icon: 'file',
       order: (this.plugin.settings.projectTemplates?.length || 0) + 1,
-      description: ''
+      description: '',
+      structure: []
     };
+    
+    // Ensure structure exists
+    if (!editData.structure) {
+      editData.structure = [];
+    }
 
     // Create modal overlay
     const overlay = document.createElement('div');
     overlay.className = 'folio-template-editor-overlay';
     
     const modal = document.createElement('div');
-    modal.className = 'folio-template-editor-modal';
+    modal.className = 'folio-template-editor-modal folio-template-editor-modal-large';
 
     // Build modal content using DOM methods for proper interactivity
     const title = document.createElement('h3');
@@ -210,6 +200,7 @@ export class FolioSettingTab extends PluginSettingTab {
     nameInput.className = 'folio-template-editor-input';
     nameInput.value = editData.name;
     nameInput.placeholder = 'Template name';
+    nameInput.onkeydown = (e) => e.stopPropagation();
     nameRow.appendChild(nameLabel);
     nameRow.appendChild(nameInput);
     modal.appendChild(nameRow);
@@ -233,30 +224,11 @@ export class FolioSettingTab extends PluginSettingTab {
     iconInput.className = 'folio-template-editor-input';
     iconInput.value = editData.icon;
     iconInput.placeholder = 'e.g., book, newspaper, file';
+    iconInput.onkeydown = (e) => e.stopPropagation();
 
     iconInputRow.appendChild(iconPreview);
     iconInputRow.appendChild(iconInput);
     iconRow.appendChild(iconInputRow);
-
-    // Icon picker dropdown (hidden by default)
-    const iconPicker = document.createElement('div');
-    iconPicker.className = 'folio-icon-picker';
-    iconPicker.style.display = 'none';
-    
-    COMMON_ICONS.forEach(iconName => {
-      const iconOption = document.createElement('div');
-      iconOption.className = 'folio-icon-option';
-      iconOption.title = iconName;
-      setIcon(iconOption, iconName);
-      iconOption.onclick = () => {
-        iconInput.value = iconName;
-        updateIconPreview();
-        iconPicker.style.display = 'none';
-      };
-      iconPicker.appendChild(iconOption);
-    });
-    
-    iconRow.appendChild(iconPicker);
     modal.appendChild(iconRow);
 
     // Update icon preview function
@@ -273,7 +245,14 @@ export class FolioSettingTab extends PluginSettingTab {
     // Icon input events
     iconInput.addEventListener('input', updateIconPreview);
     iconPreview.onclick = () => {
-      iconPicker.style.display = iconPicker.style.display === 'none' ? 'grid' : 'none';
+      new IconPickerModal(this.app, {
+        title: 'Select Template Icon',
+        currentIcon: iconInput.value,
+        onSelect: (iconName) => {
+          iconInput.value = iconName;
+          updateIconPreview();
+        }
+      }).open();
     };
 
     // Description row
@@ -286,9 +265,259 @@ export class FolioSettingTab extends PluginSettingTab {
     descInput.className = 'folio-template-editor-input';
     descInput.value = editData.description || '';
     descInput.placeholder = 'Short description';
+    descInput.onkeydown = (e) => e.stopPropagation();
     descRow.appendChild(descLabel);
     descRow.appendChild(descInput);
     modal.appendChild(descRow);
+
+    // Structure section
+    const structureSection = document.createElement('div');
+    structureSection.className = 'folio-template-structure-section';
+    
+    const structureHeader = document.createElement('div');
+    structureHeader.className = 'folio-template-structure-header';
+    const structureLabel = document.createElement('label');
+    structureLabel.textContent = 'Default structure';
+    structureHeader.appendChild(structureLabel);
+    
+    // Add buttons
+    const structureActions = document.createElement('div');
+    structureActions.className = 'folio-template-structure-actions';
+    
+    const addFileBtn = document.createElement('button');
+    addFileBtn.className = 'folio-template-structure-add-btn';
+    addFileBtn.type = 'button';
+    setIcon(addFileBtn, 'file-plus');
+    addFileBtn.appendChild(document.createTextNode(' File'));
+    addFileBtn.onclick = () => {
+      editData.structure.push({ title: 'New File', type: 'file' });
+      renderStructureTree();
+    };
+    
+    const addFolderBtn = document.createElement('button');
+    addFolderBtn.className = 'folio-template-structure-add-btn';
+    addFolderBtn.type = 'button';
+    setIcon(addFolderBtn, 'folder-plus');
+    addFolderBtn.appendChild(document.createTextNode(' Folder'));
+    addFolderBtn.onclick = () => {
+      editData.structure.push({ title: 'New Folder', type: 'folder', children: [] });
+      renderStructureTree();
+    };
+    
+    const addCanvasBtn = document.createElement('button');
+    addCanvasBtn.className = 'folio-template-structure-add-btn';
+    addCanvasBtn.type = 'button';
+    setIcon(addCanvasBtn, 'layout-dashboard');
+    addCanvasBtn.appendChild(document.createTextNode(' Canvas'));
+    addCanvasBtn.onclick = () => {
+      editData.structure.push({ title: 'New Canvas', type: 'canvas' });
+      renderStructureTree();
+    };
+    
+    structureActions.appendChild(addFileBtn);
+    structureActions.appendChild(addFolderBtn);
+    structureActions.appendChild(addCanvasBtn);
+    structureHeader.appendChild(structureActions);
+    structureSection.appendChild(structureHeader);
+    
+    const structureTree = document.createElement('div');
+    structureTree.className = 'folio-template-structure-tree';
+    structureSection.appendChild(structureTree);
+    
+    // Track expanded folders
+    const expandedFolders = new Set();
+    
+    // Render structure tree function
+    const renderStructureTree = () => {
+      structureTree.innerHTML = '';
+      
+      const renderNode = (node, parentArray, index, depth = 0) => {
+        const nodeContainer = document.createElement('div');
+        nodeContainer.className = 'folio-template-structure-node-container';
+        
+        const nodeRow = document.createElement('div');
+        nodeRow.className = 'folio-template-structure-node';
+        nodeRow.style.paddingLeft = `${depth * 20}px`;
+        
+        // Folder toggle (only for folders)
+        if (node.type === 'folder') {
+          const toggleBtn = document.createElement('span');
+          toggleBtn.className = 'folio-template-structure-node-toggle';
+          const isExpanded = expandedFolders.has(node);
+          setIcon(toggleBtn, isExpanded ? 'chevron-down' : 'chevron-right');
+          toggleBtn.onclick = () => {
+            if (expandedFolders.has(node)) {
+              expandedFolders.delete(node);
+            } else {
+              expandedFolders.add(node);
+            }
+            renderStructureTree();
+          };
+          nodeRow.appendChild(toggleBtn);
+        } else {
+          // Spacer for alignment
+          const spacer = document.createElement('span');
+          spacer.className = 'folio-template-structure-node-spacer';
+          nodeRow.appendChild(spacer);
+        }
+        
+        // Icon (clickable to change)
+        const nodeIcon = document.createElement('span');
+        nodeIcon.className = 'folio-template-structure-node-icon folio-icon-clickable';
+        nodeIcon.title = 'Click to change icon';
+        const defaultIcon = node.type === 'folder' ? 'folder' : node.type === 'canvas' ? 'layout-dashboard' : 'file';
+        setIcon(nodeIcon, node.icon || defaultIcon);
+        
+        nodeIcon.onclick = (e) => {
+          e.stopPropagation();
+          new IconPickerModal(this.app, {
+            title: `Select Icon for "${node.title}"`,
+            currentIcon: node.icon || defaultIcon,
+            onSelect: (iconName) => {
+              node.icon = iconName;
+              renderStructureTree();
+            }
+          }).open();
+        };
+        
+        nodeRow.appendChild(nodeIcon);
+        
+        // Title input
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.className = 'folio-template-structure-node-title';
+        titleInput.value = node.title;
+        titleInput.onclick = (e) => e.stopPropagation();
+        titleInput.onkeydown = (e) => e.stopPropagation();
+        titleInput.oninput = (e) => {
+          node.title = e.target.value;
+        };
+        titleInput.onblur = (e) => {
+          node.title = e.target.value.trim() || 'Untitled';
+          if (!e.target.value.trim()) {
+            e.target.value = 'Untitled';
+          }
+        };
+        nodeRow.appendChild(titleInput);
+        
+        // Type badge
+        const typeBadge = document.createElement('span');
+        typeBadge.className = 'folio-template-structure-node-type';
+        typeBadge.textContent = node.type;
+        nodeRow.appendChild(typeBadge);
+        
+        // Node actions
+        const nodeActions = document.createElement('div');
+        nodeActions.className = 'folio-template-structure-node-actions';
+        
+        // Move up
+        if (index > 0) {
+          const upBtn = document.createElement('button');
+          upBtn.className = 'folio-template-structure-node-btn';
+          upBtn.type = 'button';
+          upBtn.title = 'Move up';
+          setIcon(upBtn, 'chevron-up');
+          upBtn.onclick = () => {
+            [parentArray[index - 1], parentArray[index]] = [parentArray[index], parentArray[index - 1]];
+            renderStructureTree();
+          };
+          nodeActions.appendChild(upBtn);
+        }
+        
+        // Move down
+        if (index < parentArray.length - 1) {
+          const downBtn = document.createElement('button');
+          downBtn.className = 'folio-template-structure-node-btn';
+          downBtn.type = 'button';
+          downBtn.title = 'Move down';
+          setIcon(downBtn, 'chevron-down');
+          downBtn.onclick = () => {
+            [parentArray[index], parentArray[index + 1]] = [parentArray[index + 1], parentArray[index]];
+            renderStructureTree();
+          };
+          nodeActions.appendChild(downBtn);
+        }
+        
+        // Add child buttons (only for folders)
+        if (node.type === 'folder') {
+          const addFileBtn = document.createElement('button');
+          addFileBtn.className = 'folio-template-structure-node-btn';
+          addFileBtn.type = 'button';
+          addFileBtn.title = 'Add file';
+          setIcon(addFileBtn, 'file-plus');
+          addFileBtn.onclick = () => {
+            if (!node.children) node.children = [];
+            node.children.push({ title: 'New File', type: 'file' });
+            expandedFolders.add(node);
+            renderStructureTree();
+          };
+          nodeActions.appendChild(addFileBtn);
+          
+          const addFolderBtn = document.createElement('button');
+          addFolderBtn.className = 'folio-template-structure-node-btn';
+          addFolderBtn.type = 'button';
+          addFolderBtn.title = 'Add folder';
+          setIcon(addFolderBtn, 'folder-plus');
+          addFolderBtn.onclick = () => {
+            if (!node.children) node.children = [];
+            node.children.push({ title: 'New Folder', type: 'folder', children: [] });
+            expandedFolders.add(node);
+            renderStructureTree();
+          };
+          nodeActions.appendChild(addFolderBtn);
+          
+          const addCanvasBtn = document.createElement('button');
+          addCanvasBtn.className = 'folio-template-structure-node-btn';
+          addCanvasBtn.type = 'button';
+          addCanvasBtn.title = 'Add canvas';
+          setIcon(addCanvasBtn, 'layout-dashboard');
+          addCanvasBtn.onclick = () => {
+            if (!node.children) node.children = [];
+            node.children.push({ title: 'New Canvas', type: 'canvas' });
+            expandedFolders.add(node);
+            renderStructureTree();
+          };
+          nodeActions.appendChild(addCanvasBtn);
+        }
+        
+        // Delete
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'folio-template-structure-node-btn mod-danger';
+        deleteBtn.type = 'button';
+        deleteBtn.title = 'Delete';
+        setIcon(deleteBtn, 'trash');
+        deleteBtn.onclick = () => {
+          parentArray.splice(index, 1);
+          renderStructureTree();
+        };
+        nodeActions.appendChild(deleteBtn);
+        
+        nodeRow.appendChild(nodeActions);
+        nodeContainer.appendChild(nodeRow);
+        structureTree.appendChild(nodeContainer);
+        
+        // Render children (only if folder is expanded)
+        if (node.type === 'folder' && node.children && node.children.length > 0 && expandedFolders.has(node)) {
+          node.children.forEach((child, childIndex) => {
+            renderNode(child, node.children, childIndex, depth + 1);
+          });
+        }
+      };
+      
+      if (editData.structure.length === 0) {
+        const emptyMsg = document.createElement('div');
+        emptyMsg.className = 'folio-template-structure-empty';
+        emptyMsg.textContent = 'No items. Add files or folders above.';
+        structureTree.appendChild(emptyMsg);
+      } else {
+        editData.structure.forEach((node, index) => {
+          renderNode(node, editData.structure, index, 0);
+        });
+      }
+    };
+    
+    renderStructureTree();
+    modal.appendChild(structureSection);
 
     // Actions
     const actions = document.createElement('div');
@@ -346,12 +575,10 @@ export class FolioSettingTab extends PluginSettingTab {
       if (e.target === overlay) overlay.remove();
     };
 
-    // Close icon picker when clicking elsewhere
-    modal.onclick = (e) => {
-      if (!iconInputRow.contains(e.target) && !iconPicker.contains(e.target)) {
-        iconPicker.style.display = 'none';
-      }
-    };
+    // Prevent keyboard events from propagating to settings behind modal
+    modal.onkeydown = (e) => e.stopPropagation();
+    modal.onkeyup = (e) => e.stopPropagation();
+    modal.onkeypress = (e) => e.stopPropagation();
 
     // Focus name input
     nameInput.focus();

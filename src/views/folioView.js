@@ -247,7 +247,8 @@ export class FolioView extends ItemView {
         const folderIcon = folderRow.createSpan({ cls: "folio-tree-icon folder-icon" });
         try { 
           const isExpanded = this.plugin.expandedFolders.has(fullPath);
-          const iconName = this.getCustomIcon(node.title, isExpanded);
+          // Use custom icon if defined, otherwise use getCustomIcon for special folders
+          const iconName = node.icon || this.getCustomIcon(node.title, isExpanded);
           setIcon(folderIcon, iconName); 
           setIcon(collapse, isExpanded ? "chevron-down" : "chevron-right"); 
         } catch {}
@@ -281,7 +282,8 @@ export class FolioView extends ItemView {
           if (isHidden) this.plugin.expandedFolders.add(fullPath);
           else this.plugin.expandedFolders.delete(fullPath);
           try { 
-            const iconName = this.getCustomIcon(node.title, isHidden);
+            // Use custom icon if defined, otherwise use getCustomIcon
+            const iconName = node.icon || this.getCustomIcon(node.title, isHidden);
             setIcon(folderIcon, iconName); 
             setIcon(collapse, isHidden ? "chevron-down" : "chevron-right"); 
           } catch {}
@@ -300,7 +302,9 @@ export class FolioView extends ItemView {
         
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try { 
-          setIcon(icon, node.type === 'canvas' ? 'layout-dashboard' : 'file'); 
+          // Use custom icon if defined, otherwise default based on type
+          const defaultIcon = node.type === 'canvas' ? 'layout-dashboard' : 'file';
+          setIcon(icon, node.icon || defaultIcon); 
         } catch {}
         
         const label = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });

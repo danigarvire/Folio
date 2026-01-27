@@ -107,9 +107,9 @@ export class BookService {
   }
 
   /**
-   * Create a new book with default structure
+   * Create a new book with structure from template
    */
-  async createBook(basePath, name, projectType = 'book') {
+  async createBook(basePath, name, projectType = 'book', templateStructure = null) {
     if (!name) return;
     const path = `${basePath}/${name}`;
     if (await this.app.vault.adapter.exists(path)) return;
@@ -129,42 +129,10 @@ export class BookService {
       const bookConfigPath = `${path}/misc/book-config.json`;
       const now = new Date().toISOString();
       
-      // Different default tree structure for script, essay, vs book projects
-      const defaultTree = projectType === PROJECT_TYPES.SCRIPT ? [
-        { 
-          id: 'series-framework', 
-          title: 'Show Dossier', 
-          type: 'group', 
-          path: 'Show Dossier', 
-          order: 1, 
-          default_status: 'draft', 
-          is_expanded: false, 
-          created_at: now, 
-          last_modified: now, 
-          children: [
-            { id: 'concept', title: 'Concept', type: 'group', path: 'Show Dossier/Concept', order: 1, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'structure', title: 'Structure', type: 'group', path: 'Show Dossier/Structure', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'faces', title: 'Faces', type: 'group', path: 'Show Dossier/Faces', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'places', title: 'Places', type: 'group', path: 'Show Dossier/Places', order: 4, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'objects', title: 'Objects', type: 'group', path: 'Show Dossier/Objects', order: 5, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'documentation', title: 'Documentation', type: 'group', path: 'Show Dossier/Documentation', order: 6, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
-          ]
-        },
-        { id: 'episode1', title: 'Episode 1', type: 'group', path: 'Episode 1', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
-      ] : projectType === PROJECT_TYPES.ESSAY ? [
-        { id: 'documentation', title: 'Documentation', type: 'group', path: 'Documentation', order: 1, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [
-            { id: 'document1', title: 'Document 1', type: 'file', path: 'Documentation/Document 1.md', order: 1, default_status: 'draft', created_at: now, last_modified: now }
-          ]
-        },
-        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 2, default_status: 'draft', created_at: now, last_modified: now },
-        { id: 'manuscript', title: 'Manuscript', type: 'file', path: 'Manuscript.md', order: 3, default_status: 'draft', created_at: now, last_modified: now }
-      ] : [
-        { id: 'preface', title: 'Preface', type: 'file', path: 'Preface.md', order: 1, default_status: 'draft', created_at: now, last_modified: now },
-        { id: 'moodboard', title: 'Moodboard', type: 'canvas', path: 'Moodboard.canvas', order: 2, default_status: 'draft', created_at: now, last_modified: now },
-        { id: 'volume1', title: 'Volume 1', type: 'group', path: 'Volume 1', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 4, default_status: 'draft', created_at: now, last_modified: now },
-        { id: 'afterword', title: 'Afterword', type: 'file', path: 'Afterword.md', order: 5, default_status: 'draft', created_at: now, last_modified: now }
-      ];
+      // Build tree from template structure or use fallback
+      const defaultTree = templateStructure 
+        ? this.buildTreeFromTemplateStructure(templateStructure, '', now)
+        : this.getDefaultTreeForProjectType(projectType, now);
       
       const defaultConfig = {
         basic: {
@@ -204,18 +172,166 @@ export class BookService {
       console.warn('createBook: failed to create book-config.json in misc', e);
     }
 
-    // Ensure base structure based on project type
+    // Create actual files and folders from template structure
     const bookFolder = this.app.vault.getAbstractFileByPath(path);
     if (bookFolder instanceof TFolder) {
-      if (projectType === PROJECT_TYPES.SCRIPT) {
-        await this.ensureScriptStructure(bookFolder);
-      } else if (projectType === PROJECT_TYPES.FILM) {
-        await this.ensureFilmStructure(bookFolder);
-      } else if (projectType === PROJECT_TYPES.ESSAY) {
-        await this.ensureEssayStructure(bookFolder);
+      if (templateStructure && templateStructure.length > 0) {
+        await this.createStructureFromTemplate(bookFolder, templateStructure, projectType);
       } else {
-        await this.ensureBookBaseStructure(bookFolder);
+        // Fallback to legacy behavior
+        if (projectType === PROJECT_TYPES.SCRIPT) {
+          await this.ensureScriptStructure(bookFolder);
+        } else if (projectType === PROJECT_TYPES.FILM) {
+          await this.ensureFilmStructure(bookFolder);
+        } else if (projectType === PROJECT_TYPES.ESSAY) {
+          await this.ensureEssayStructure(bookFolder);
+        } else {
+          await this.ensureBookBaseStructure(bookFolder);
+        }
       }
+    }
+  }
+
+  /**
+   * Build tree config from simple template structure
+   */
+  buildTreeFromTemplateStructure(structure, parentPath, now) {
+    let order = 1;
+    return structure.map(item => {
+      const itemPath = parentPath ? `${parentPath}/${item.title}` : item.title;
+      const id = `${item.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+      
+      if (item.type === 'folder') {
+        const filePath = itemPath;
+        const node = {
+          id,
+          title: item.title,
+          type: 'group',
+          path: filePath,
+          order: order++,
+          default_status: 'draft',
+          is_expanded: false,
+          created_at: now,
+          last_modified: now,
+          children: item.children ? this.buildTreeFromTemplateStructure(item.children, filePath, now) : []
+        };
+        if (item.icon) node.icon = item.icon;
+        return node;
+      } else if (item.type === 'canvas') {
+        const node = {
+          id,
+          title: item.title,
+          type: 'canvas',
+          path: `${itemPath}.canvas`,
+          order: order++,
+          default_status: 'draft',
+          created_at: now,
+          last_modified: now
+        };
+        if (item.icon) node.icon = item.icon;
+        return node;
+      } else {
+        // file
+        const node = {
+          id,
+          title: item.title,
+          type: 'file',
+          path: `${itemPath}.md`,
+          order: order++,
+          default_status: 'draft',
+          created_at: now,
+          last_modified: now
+        };
+        if (item.icon) node.icon = item.icon;
+        return node;
+      }
+    });
+  }
+
+  /**
+   * Create actual files and folders from template structure
+   */
+  async createStructureFromTemplate(bookFolder, structure, projectType) {
+    const vault = this.app.vault;
+    
+    const createItems = async (items, parentPath) => {
+      for (const item of items) {
+        const itemPath = `${parentPath}/${item.title}`;
+        
+        if (item.type === 'folder') {
+          // Create folder
+          if (!vault.getAbstractFileByPath(itemPath)) {
+            await vault.createFolder(itemPath);
+          }
+          // Create children
+          if (item.children && item.children.length > 0) {
+            await createItems(item.children, itemPath);
+          }
+        } else if (item.type === 'canvas') {
+          // Create canvas file
+          const canvasPath = `${itemPath}.canvas`;
+          if (!vault.getAbstractFileByPath(canvasPath)) {
+            await vault.create(canvasPath, '{"nodes":[],"edges":[]}');
+          }
+        } else {
+          // Create markdown file
+          const filePath = `${itemPath}.md`;
+          if (!vault.getAbstractFileByPath(filePath)) {
+            const frontmatter = `---\nprojectType: ${projectType}\n---\n\n`;
+            await vault.create(filePath, frontmatter);
+          }
+        }
+      }
+    };
+    
+    await createItems(structure, bookFolder.path);
+  }
+
+  /**
+   * Get default tree structure for project type (legacy fallback)
+   */
+  getDefaultTreeForProjectType(projectType, now) {
+    if (projectType === PROJECT_TYPES.SCRIPT) {
+      return [
+        { 
+          id: 'series-framework', 
+          title: 'Show Dossier', 
+          type: 'group', 
+          path: 'Show Dossier', 
+          order: 1, 
+          default_status: 'draft', 
+          is_expanded: false, 
+          created_at: now, 
+          last_modified: now, 
+          children: [
+            { id: 'concept', title: 'Concept', type: 'group', path: 'Show Dossier/Concept', order: 1, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'structure', title: 'Structure', type: 'group', path: 'Show Dossier/Structure', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'faces', title: 'Faces', type: 'group', path: 'Show Dossier/Faces', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'places', title: 'Places', type: 'group', path: 'Show Dossier/Places', order: 4, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'objects', title: 'Objects', type: 'group', path: 'Show Dossier/Objects', order: 5, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'documentation', title: 'Documentation', type: 'group', path: 'Show Dossier/Documentation', order: 6, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
+          ]
+        },
+        { id: 'episode1', title: 'Episode 1', type: 'group', path: 'Episode 1', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
+      ];
+    } else if (projectType === PROJECT_TYPES.ESSAY) {
+      return [
+        { id: 'documentation', title: 'Documentation', type: 'group', path: 'Documentation', order: 1, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [
+            { id: 'document1', title: 'Document 1', type: 'file', path: 'Documentation/Document 1.md', order: 1, default_status: 'draft', created_at: now, last_modified: now }
+          ]
+        },
+        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 2, default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'manuscript', title: 'Manuscript', type: 'file', path: 'Manuscript.md', order: 3, default_status: 'draft', created_at: now, last_modified: now }
+      ];
+    } else {
+      // Default book structure
+      return [
+        { id: 'preface', title: 'Preface', type: 'file', path: 'Preface.md', order: 1, default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'moodboard', title: 'Moodboard', type: 'canvas', path: 'Moodboard.canvas', order: 2, default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'volume1', title: 'Volume 1', type: 'group', path: 'Volume 1', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 4, default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'afterword', title: 'Afterword', type: 'file', path: 'Afterword.md', order: 5, default_status: 'draft', created_at: now, last_modified: now }
+      ];
     }
   }
 
