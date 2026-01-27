@@ -1563,3 +1563,64 @@ body.theme-light .novelist-tree-children::before {
   position: relative;
   padding-right: 20px;
 }
+/* ===============================================================
+   WRITER TOOLS VIEW
+=============================================================== */
+
+.novelist-writer-tools {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.writer-tools-header {
+  border-bottom: 1px solid var(--background-modifier-border);
+  padding-bottom: 12px;
+  margin-bottom: 8px;
+}
+
+.writer-tools-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.writer-tools-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  flex: 1;
+}
+
+.writer-tools-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  opacity: 0.5;
+}
+
+.writer-tools-placeholder-text {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+/* Tool sections */
+.writer-tool {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 16px;
+}
+
+.writer-tool h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-normal);
+}

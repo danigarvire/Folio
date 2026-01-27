@@ -963,6 +963,7 @@ var init_textInputModal = __esm({
 
 // src/constants/index.js
 var VIEW_TYPE = "novelist-view";
+var WRITER_TOOLS_VIEW_TYPE = "novelist-writer-tools";
 var DEFAULT_SETTINGS = {
   booksPath: "projects",
   basePath: "projects",
@@ -2511,9 +2512,47 @@ var NovelistView = class extends import_obsidian3.ItemView {
   }
 };
 
-// src/views/novelistSettingTab.js
+// src/views/writerToolsView.js
 var import_obsidian4 = require("obsidian");
-var NovelistSettingTab = class extends import_obsidian4.PluginSettingTab {
+var WRITER_TOOLS_VIEW_TYPE2 = "novelist-writer-tools";
+var WriterToolsView = class extends import_obsidian4.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+  }
+  getViewType() {
+    return WRITER_TOOLS_VIEW_TYPE2;
+  }
+  getDisplayText() {
+    return "Writer Tools";
+  }
+  getIcon() {
+    return "wrench";
+  }
+  async onOpen() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("novelist-writer-tools");
+    const header = container.createDiv({ cls: "writer-tools-header" });
+    header.createEl("h2", { text: "Writer Tools" });
+    this.toolsContainer = container.createDiv({ cls: "writer-tools-container" });
+    this.renderPlaceholder();
+  }
+  renderPlaceholder() {
+    this.toolsContainer.empty();
+    const placeholder = this.toolsContainer.createDiv({ cls: "writer-tools-placeholder" });
+    placeholder.createEl("p", {
+      text: "Herramientas de escritura carg\xE1ndose...",
+      cls: "writer-tools-placeholder-text"
+    });
+  }
+  async onClose() {
+  }
+};
+
+// src/views/novelistSettingTab.js
+var import_obsidian5 = require("obsidian");
+var NovelistSettingTab = class extends import_obsidian5.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -2522,7 +2561,7 @@ var NovelistSettingTab = class extends import_obsidian4.PluginSettingTab {
     const el = this.containerEl;
     el.empty();
     el.createEl("h2", { text: "Novelist Settings" });
-    new import_obsidian4.Setting(el).setName("Books base path").setDesc("Folder where all books are stored").addText(
+    new import_obsidian5.Setting(el).setName("Books base path").setDesc("Folder where all books are stored").addText(
       (text) => text.setValue(this.plugin.settings.basePath).onChange(async (value) => {
         this.plugin.settings.basePath = value.trim() || "projects";
         await this.plugin.saveSettings();
@@ -2544,7 +2583,7 @@ var {
   Plugin,
   PluginSettingTab: PluginSettingTab2,
   Setting: Setting2,
-  ItemView: ItemView2,
+  ItemView: ItemView3,
   TFile: TFile6,
   TFolder: TFolder4,
   Modal: Modal8,
@@ -2578,8 +2617,12 @@ module.exports = class NovelistPlugin extends Plugin {
       VIEW_TYPE,
       (leaf) => new NovelistView(leaf, this)
     );
-    this.addRibbonIcon("book-open", "Open Novelist", () => {
-      this.activateView();
+    this.registerView(
+      WRITER_TOOLS_VIEW_TYPE,
+      (leaf) => new WriterToolsView(leaf, this)
+    );
+    this.addRibbonIcon("book", "Open Novelist", () => {
+      this.activateNovelist();
     });
     this.addSettingTab(new NovelistSettingTab(this.app, this));
     this.registerEvent(
@@ -2974,22 +3017,42 @@ module.exports = class NovelistPlugin extends Plugin {
     });
     modal.open();
   }
+  /* Activate both views: Novelist (left) + Writer Tools (right) */
+  async activateNovelist() {
+    await this.activateView();
+    await this.openWriterTools();
+  }
   /* Reusable activator: always reuse the same leaf (singleton view) */
   async activateView() {
-    if (this.novelistLeaf) {
-      try {
-        this.app.workspace.revealLeaf(this.novelistLeaf);
-        return;
-      } catch (e) {
-        this.novelistLeaf = null;
-      }
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(VIEW_TYPE);
+    if (existing.length > 0) {
+      workspace.revealLeaf(existing[0]);
+      this.novelistLeaf = existing[0];
+      return;
     }
-    const leaf = this.app.workspace.getLeaf(false);
-    await leaf.setViewState({
+    const leftLeaf = workspace.getLeftLeaf(false);
+    await leftLeaf.setViewState({
       type: VIEW_TYPE,
       active: true
     });
-    this.novelistLeaf = leaf;
+    this.novelistLeaf = leftLeaf;
+    workspace.revealLeaf(leftLeaf);
+  }
+  /* Open Writer Tools in right sidebar */
+  async openWriterTools() {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(WRITER_TOOLS_VIEW_TYPE);
+    if (existing.length > 0) {
+      workspace.revealLeaf(existing[0]);
+      return;
+    }
+    const rightLeaf = workspace.getRightLeaf(false);
+    await rightLeaf.setViewState({
+      type: WRITER_TOOLS_VIEW_TYPE,
+      active: true
+    });
+    workspace.revealLeaf(rightLeaf);
   }
   async refresh() {
     await this.scanBooks();

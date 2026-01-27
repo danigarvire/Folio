@@ -3,6 +3,7 @@
  */
 
 export const VIEW_TYPE = "novelist-view";
+export const WRITER_TOOLS_VIEW_TYPE = "novelist-writer-tools";
 
 export const DEFAULT_SETTINGS = {
   booksPath: "projects",

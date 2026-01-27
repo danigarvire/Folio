@@ -20,10 +20,11 @@ import { ConfigService } from './services/configService.js';
 import { TreeService } from './services/treeService.js';
 import { StatsService } from './services/statsService.js';
 import { BookService } from './services/bookService.js';
-import { VIEW_TYPE, DEFAULT_SETTINGS } from './constants/index.js';
+import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, DEFAULT_SETTINGS } from './constants/index.js';
 
 // Import views
 import { NovelistView } from './views/novelistView.js';
+import { WriterToolsView } from './views/writerToolsView.js';
 import { NovelistSettingTab } from './views/novelistSettingTab.js';
 
 // Import modals
@@ -75,8 +76,13 @@ module.exports = class NovelistPlugin extends Plugin {
       (leaf) => new NovelistView(leaf, this)
     );
 
-    this.addRibbonIcon("book-open", "Open Novelist", () => {
-      this.activateView();
+    this.registerView(
+      WRITER_TOOLS_VIEW_TYPE,
+      (leaf) => new WriterToolsView(leaf, this)
+    );
+
+    this.addRibbonIcon("book", "Open Novelist", () => {
+      this.activateNovelist();
     });
 
     this.addSettingTab(new NovelistSettingTab(this.app, this));
@@ -523,24 +529,56 @@ module.exports = class NovelistPlugin extends Plugin {
   }
   
 
+  /* Activate both views: Novelist (left) + Writer Tools (right) */
+  async activateNovelist() {
+    // Open Novelist View on the left
+    await this.activateView();
+    
+    // Open Writer Tools on the right
+    await this.openWriterTools();
+  }
+
   /* Reusable activator: always reuse the same leaf (singleton view) */
   async activateView() {
-    if (this.novelistLeaf) {
-      try {
-        this.app.workspace.revealLeaf(this.novelistLeaf);
-        return;
-      } catch {
-        // fallback to creating a new leaf if reveal fails
-        this.novelistLeaf = null;
-      }
+    const { workspace } = this.app;
+    
+    // Check if already open
+    const existing = workspace.getLeavesOfType(VIEW_TYPE);
+    if (existing.length > 0) {
+      workspace.revealLeaf(existing[0]);
+      this.novelistLeaf = existing[0];
+      return;
     }
 
-    const leaf = this.app.workspace.getLeaf(false);
-    await leaf.setViewState({
+    // Open in left sidebar
+    const leftLeaf = workspace.getLeftLeaf(false);
+    await leftLeaf.setViewState({
       type: VIEW_TYPE,
       active: true,
     });
-    this.novelistLeaf = leaf;
+    this.novelistLeaf = leftLeaf;
+    workspace.revealLeaf(leftLeaf);
+  }
+
+  /* Open Writer Tools in right sidebar */
+  async openWriterTools() {
+    const { workspace } = this.app;
+    
+    // Check if already open
+    const existing = workspace.getLeavesOfType(WRITER_TOOLS_VIEW_TYPE);
+    if (existing.length > 0) {
+      workspace.revealLeaf(existing[0]);
+      return;
+    }
+
+    // Open in right sidebar
+    const rightLeaf = workspace.getRightLeaf(false);
+    await rightLeaf.setViewState({
+      type: WRITER_TOOLS_VIEW_TYPE,
+      active: true
+    });
+    
+    workspace.revealLeaf(rightLeaf);
   }
 
   async refresh() {
