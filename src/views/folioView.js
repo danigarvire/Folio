@@ -12,7 +12,7 @@ function getProjectTypeIcon(plugin, projectType) {
   if (template?.icon) return template.icon;
   // Fallback to defaults
   if (projectType === PROJECT_TYPES.BOOK) return 'book';
-  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv-minimal-play';
+  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv';
   if (projectType === PROJECT_TYPES.FILM) return 'clapperboard';
   if (projectType === PROJECT_TYPES.ESSAY) return 'newspaper';
   return 'book';
@@ -63,15 +63,31 @@ export class FolioView extends ItemView {
   getCustomIcon(title, isExpanded = false) {
     const lowerTitle = title.toLowerCase();
     
-    // Custom folder icons
-    if (lowerTitle === 'show dossier') return 'book-marked';
-    if (lowerTitle === 'film dossier') return 'book-marked';
+    // File-specific icons
+    if (lowerTitle === 'outline') return 'list';
+    if (lowerTitle === 'moodboard') return 'layout-dashboard';
+    if (lowerTitle === 'manuscript') return 'scroll-text';
+    if (lowerTitle === 'preface' || lowerTitle === 'afterword') return 'file';
+    if (lowerTitle === 'logline' || lowerTitle === 'synopsis' || lowerTitle === 'beat sheet') return 'file';
+    if (lowerTitle === 'document 1' || lowerTitle.startsWith('document ')) return 'file';
+    
+    // TV Show template folders
+    if (lowerTitle === 'show dossier') return 'folder-open';
+    if (lowerTitle === 'episode 1' || lowerTitle.startsWith('episode ')) return 'clapperboard';
+    
+    // Film template folders
+    if (lowerTitle === 'sequence 1' || lowerTitle.startsWith('sequence ')) return 'film';
+    
+    // Book template folders
+    if (lowerTitle === 'volume 1' || lowerTitle.startsWith('volume ')) return 'folder-open';
+    
+    // Common folders across templates
     if (lowerTitle === 'concept') return 'lightbulb';
-    if (lowerTitle === 'faces') return 'drama';
+    if (lowerTitle === 'faces') return 'users';
     if (lowerTitle === 'places') return 'map-pin';
     if (lowerTitle === 'objects') return 'box';
-    if (lowerTitle === 'structure') return 'map';
-    if (lowerTitle === 'documentation') return 'scroll-text';
+    if (lowerTitle === 'structure') return 'list-tree';
+    if (lowerTitle === 'documentation' || lowerTitle === 'research') return 'archive';
     
     // Default folder icons
     return isExpanded ? 'folder-open' : 'folder';
@@ -302,8 +318,8 @@ export class FolioView extends ItemView {
         
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try { 
-          // Use custom icon if defined, otherwise default based on type
-          const defaultIcon = node.type === 'canvas' ? 'layout-dashboard' : 'file';
+          // Use custom icon if defined, otherwise use getCustomIcon for name-based icons
+          const defaultIcon = node.type === 'canvas' ? 'layout-dashboard' : this.getCustomIcon(node.title, false);
           setIcon(icon, node.icon || defaultIcon); 
         } catch {}
         
@@ -483,10 +499,8 @@ export class FolioView extends ItemView {
         const headerEl = el.createDiv("folio-book-header");
         const coverCol = headerEl.createDiv("folio-book-cover-col");
         const coverEl = coverCol.createDiv("folio-book-cover");
-        coverEl.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))';
-        // ensure placeholder styling is applied when no cover image exists
+        coverEl.addClass('folio-book-cover-placeholder');
         try {
-          coverEl.addClass('folio-book-cover-placeholder');
           const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
           setIcon(iconEl, 'square-plus');
         } catch {}
@@ -534,9 +548,8 @@ export class FolioView extends ItemView {
         const headerEl = el.createDiv("folio-book-header");
         const coverCol = headerEl.createDiv("folio-book-cover-col");
         const coverEl = coverCol.createDiv("folio-book-cover");
-        coverEl.style.background = 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))';
+        coverEl.addClass('folio-book-cover-placeholder');
         try {
-          coverEl.addClass('folio-book-cover-placeholder');
           const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
           setIcon(iconEl, 'square-plus');
         } catch {}

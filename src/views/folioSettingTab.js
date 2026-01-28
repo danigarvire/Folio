@@ -2,8 +2,9 @@
  * Folio Settings Tab
  */
 
-import { PluginSettingTab, Setting, setIcon } from 'obsidian';
+import { PluginSettingTab, Setting, setIcon, Notice } from 'obsidian';
 import { IconPickerModal } from '../modals/iconPickerModal';
+import { DEFAULT_SETTINGS } from '../constants/index';
 
 export class FolioSettingTab extends PluginSettingTab {
   constructor(app, plugin) {
@@ -46,7 +47,7 @@ export class FolioSettingTab extends PluginSettingTab {
     new Setting(basicContent)
       .setName("Project storage path")
       .setDesc("Default storage path for new projects (relative to vault root)")
-      .addText((text) =>
+      .addText((text) => {
         text
           .setPlaceholder("projects")
           .setValue(this.plugin.settings.basePath || "projects")
@@ -55,12 +56,13 @@ export class FolioSettingTab extends PluginSettingTab {
             let normalizedPath = value.trim().replace(/^\/+|\/+$/g, '') || "projects";
             this.plugin.settings.basePath = normalizedPath;
             await this.plugin.saveSettings();
-            // Ensure the base path folder exists
-            await this.plugin.ensureBasePath();
-            // Rescan books from the new path
-            await this.plugin.refresh();
-          })
-      );
+          });
+        // Only create folder and refresh when user finishes typing (on blur)
+        text.inputEl.addEventListener("blur", async () => {
+          await this.plugin.ensureBasePath();
+          await this.plugin.refresh();
+        });
+      });
 
     // ============ TEMPLATE OPTIONS ============
     const templateSection = el.createDiv({ cls: 'folio-settings-section' });
@@ -79,7 +81,7 @@ export class FolioSettingTab extends PluginSettingTab {
     if (!this.plugin.settings.projectTemplates) {
       this.plugin.settings.projectTemplates = [
         { id: "book", name: "Book", icon: "book", order: 1, description: "Novel or written work" },
-        { id: "script", name: "TV Show", icon: "tv-minimal-play", order: 2, description: "Series with episodes and sequences" },
+        { id: "script", name: "TV Show", icon: "tv", order: 2, description: "Series with episodes and sequences" },
         { id: "film", name: "Film", icon: "clapperboard", order: 3, description: "Feature film or short" },
         { id: "essay", name: "Essay", icon: "newspaper", order: 4, description: "Essay or short nonfiction piece" }
       ];
@@ -105,8 +107,22 @@ export class FolioSettingTab extends PluginSettingTab {
           })
       );
 
-    // Project templates header
+    // Project templates header with reset button
     templateContent.createEl("h4", { text: "Project templates", cls: "folio-settings-subheader" });
+    const templatesHeaderRow = templateContent.createDiv({ cls: 'folio-templates-header-row' });
+    const resetBtn = templatesHeaderRow.createEl('button', { cls: 'folio-reset-templates-btn' });
+    setIcon(resetBtn, 'rotate-ccw');
+    resetBtn.title = 'Reset all templates to defaults';
+    resetBtn.onclick = async () => {
+      const confirmed = confirm('Are you sure you want to reset all templates to their default values? This will remove any custom templates and restore the original Book, TV Show, Film, and Essay templates.');
+      if (confirmed) {
+        this.plugin.settings.projectTemplates = JSON.parse(JSON.stringify(DEFAULT_SETTINGS.projectTemplates));
+        await this.plugin.saveSettings();
+        this.renderTemplatesList(templatesListEl);
+        this.plugin.rerenderViews();
+        new Notice('Templates reset to defaults');
+      }
+    };
 
     // Templates list container
     const templatesListEl = templateContent.createDiv({ cls: 'folio-templates-list' });
@@ -327,6 +343,11 @@ export class FolioSettingTab extends PluginSettingTab {
     // Track expanded folders
     const expandedFolders = new Set();
     
+    // Drag and drop state (lifted to outer scope)
+    let draggedNode = null;
+    let draggedIndex = null;
+    let draggedParentArray = null;
+    
     // Render structure tree function
     const renderStructureTree = () => {
       structureTree.innerHTML = '';
@@ -338,6 +359,61 @@ export class FolioSettingTab extends PluginSettingTab {
         const nodeRow = document.createElement('div');
         nodeRow.className = 'folio-template-structure-node';
         nodeRow.style.paddingLeft = `${depth * 20}px`;
+        nodeRow.draggable = true;
+        
+        // Drag handle
+        const dragHandle = document.createElement('span');
+        dragHandle.className = 'folio-template-structure-node-drag-handle';
+        dragHandle.title = 'Drag to reorder';
+        setIcon(dragHandle, 'grip-horizontal');
+        nodeRow.appendChild(dragHandle);
+        
+        // Drag and drop handlers
+        nodeRow.addEventListener('dragstart', (e) => {
+          draggedNode = node;
+          draggedIndex = index;
+          draggedParentArray = parentArray;
+          nodeRow.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+          setTimeout(() => nodeRow.style.opacity = '0.5', 0);
+        });
+        
+        nodeRow.addEventListener('dragend', (e) => {
+          nodeRow.style.opacity = '1';
+          nodeRow.classList.remove('dragging');
+          document.querySelectorAll('.folio-template-structure-node').forEach(n => {
+            n.classList.remove('drag-over');
+          });
+        });
+        
+        nodeRow.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = 'move';
+          nodeRow.classList.add('drag-over');
+        });
+        
+        nodeRow.addEventListener('dragleave', (e) => {
+          nodeRow.classList.remove('drag-over');
+        });
+        
+        nodeRow.addEventListener('drop', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          nodeRow.classList.remove('drag-over');
+          
+          if (draggedNode && draggedParentArray === parentArray && draggedIndex !== index) {
+            // Remove from old position
+            parentArray.splice(draggedIndex, 1);
+            // Insert at new position
+            const newIndex = draggedIndex < index ? index - 1 : index;
+            parentArray.splice(newIndex, 0, draggedNode);
+            renderStructureTree();
+          }
+          // Reset drag state
+          draggedNode = null;
+          draggedIndex = null;
+          draggedParentArray = null;
+        });
         
         // Folder toggle (only for folders)
         if (node.type === 'folder') {
@@ -409,34 +485,6 @@ export class FolioSettingTab extends PluginSettingTab {
         // Node actions
         const nodeActions = document.createElement('div');
         nodeActions.className = 'folio-template-structure-node-actions';
-        
-        // Move up
-        if (index > 0) {
-          const upBtn = document.createElement('button');
-          upBtn.className = 'folio-template-structure-node-btn';
-          upBtn.type = 'button';
-          upBtn.title = 'Move up';
-          setIcon(upBtn, 'chevron-up');
-          upBtn.onclick = () => {
-            [parentArray[index - 1], parentArray[index]] = [parentArray[index], parentArray[index - 1]];
-            renderStructureTree();
-          };
-          nodeActions.appendChild(upBtn);
-        }
-        
-        // Move down
-        if (index < parentArray.length - 1) {
-          const downBtn = document.createElement('button');
-          downBtn.className = 'folio-template-structure-node-btn';
-          downBtn.type = 'button';
-          downBtn.title = 'Move down';
-          setIcon(downBtn, 'chevron-down');
-          downBtn.onclick = () => {
-            [parentArray[index], parentArray[index + 1]] = [parentArray[index + 1], parentArray[index]];
-            renderStructureTree();
-          };
-          nodeActions.appendChild(downBtn);
-        }
         
         // Add child buttons (only for folders)
         if (node.type === 'folder') {

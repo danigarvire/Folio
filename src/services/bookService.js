@@ -298,57 +298,65 @@ export class BookService {
           title: 'Show Dossier', 
           type: 'group', 
           path: 'Show Dossier', 
-          order: 1, 
+          order: 1,
+          icon: 'folder-open',
           default_status: 'draft', 
           is_expanded: false, 
           created_at: now, 
           last_modified: now, 
           children: [
-            { id: 'concept', title: 'Concept', type: 'group', path: 'Show Dossier/Concept', order: 1, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'structure', title: 'Structure', type: 'group', path: 'Show Dossier/Structure', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'faces', title: 'Faces', type: 'group', path: 'Show Dossier/Faces', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'places', title: 'Places', type: 'group', path: 'Show Dossier/Places', order: 4, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'objects', title: 'Objects', type: 'group', path: 'Show Dossier/Objects', order: 5, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: 'documentation', title: 'Documentation', type: 'group', path: 'Show Dossier/Documentation', order: 6, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
+            { id: 'concept', title: 'Concept', type: 'group', path: 'Show Dossier/Concept', order: 1, icon: 'lightbulb', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'structure', title: 'Structure', type: 'group', path: 'Show Dossier/Structure', order: 2, icon: 'list-tree', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'faces', title: 'Faces', type: 'group', path: 'Show Dossier/Faces', order: 3, icon: 'users', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'places', title: 'Places', type: 'group', path: 'Show Dossier/Places', order: 4, icon: 'map-pin', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'objects', title: 'Objects', type: 'group', path: 'Show Dossier/Objects', order: 5, icon: 'box', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: 'documentation', title: 'Documentation', type: 'group', path: 'Show Dossier/Documentation', order: 6, icon: 'archive', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
           ]
         },
-        { id: 'episode1', title: 'Episode 1', type: 'group', path: 'Episode 1', order: 2, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
+        { id: 'episode1', title: 'Episode 1', type: 'group', path: 'Episode 1', order: 2, icon: 'clapperboard', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
+      ];
+    } else if (projectType === PROJECT_TYPES.FILM) {
+      return [
+        { id: 'moodboard', title: 'Moodboard', type: 'canvas', path: 'Moodboard.canvas', order: 1, icon: 'layout-dashboard', default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 2, icon: 'list', default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'sequence1', title: 'Sequence 1', type: 'group', path: 'Sequence 1', order: 3, icon: 'film', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] }
       ];
     } else if (projectType === PROJECT_TYPES.ESSAY) {
       return [
-        { id: 'documentation', title: 'Documentation', type: 'group', path: 'Documentation', order: 1, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [
-            { id: 'document1', title: 'Document 1', type: 'file', path: 'Documentation/Document 1.md', order: 1, default_status: 'draft', created_at: now, last_modified: now }
+        { id: 'research', title: 'Research', type: 'group', path: 'Research', order: 1, icon: 'archive', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [
+            { id: 'document1', title: 'Document 1', type: 'file', path: 'Research/Document 1.md', order: 1, icon: 'file', default_status: 'draft', created_at: now, last_modified: now }
           ]
         },
-        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 2, default_status: 'draft', created_at: now, last_modified: now },
-        { id: 'manuscript', title: 'Manuscript', type: 'file', path: 'Manuscript.md', order: 3, default_status: 'draft', created_at: now, last_modified: now }
+        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 2, icon: 'list', default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'manuscript', title: 'Manuscript', type: 'file', path: 'Manuscript.md', order: 3, icon: 'scroll-text', default_status: 'draft', created_at: now, last_modified: now }
       ];
     } else {
       // Default book structure
       return [
-        { id: 'preface', title: 'Preface', type: 'file', path: 'Preface.md', order: 1, default_status: 'draft', created_at: now, last_modified: now },
-        { id: 'moodboard', title: 'Moodboard', type: 'canvas', path: 'Moodboard.canvas', order: 2, default_status: 'draft', created_at: now, last_modified: now },
-        { id: 'volume1', title: 'Volume 1', type: 'group', path: 'Volume 1', order: 3, default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
-        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 4, default_status: 'draft', created_at: now, last_modified: now },
-        { id: 'afterword', title: 'Afterword', type: 'file', path: 'Afterword.md', order: 5, default_status: 'draft', created_at: now, last_modified: now }
+        { id: 'moodboard', title: 'Moodboard', type: 'canvas', path: 'Moodboard.canvas', order: 1, icon: 'layout-dashboard', default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'preface', title: 'Preface', type: 'file', path: 'Preface.md', order: 2, icon: 'file', default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'outline', title: 'Outline', type: 'file', path: 'Outline.md', order: 3, icon: 'list', default_status: 'draft', created_at: now, last_modified: now },
+        { id: 'volume1', title: 'Volume 1', type: 'group', path: 'Volume 1', order: 4, icon: 'folder-open', default_status: 'draft', is_expanded: false, created_at: now, last_modified: now, children: [] },
+        { id: 'afterword', title: 'Afterword', type: 'file', path: 'Afterword.md', order: 5, icon: 'file', default_status: 'draft', created_at: now, last_modified: now }
       ];
     }
   }
 
   /**
-   * Ensure essay project has minimal structure: Documentation folder, Document 1.md, Outline.md, Manuscript.md
+   * Ensure essay project has minimal structure: Research folder, Document 1.md, Outline.md, Manuscript.md
    */
   async ensureEssayStructure(bookFolder) {
     const vault = this.app.vault;
 
-    const documentationPath = `${bookFolder.path}/Documentation`;
-    if (!vault.getAbstractFileByPath(documentationPath)) {
-      await vault.createFolder(documentationPath);
+    const researchPath = `${bookFolder.path}/Research`;
+    if (!vault.getAbstractFileByPath(researchPath)) {
+      await vault.createFolder(researchPath);
     }
 
-    const document1Path = `${documentationPath}/Document 1.md`;
+    const document1Path = `${researchPath}/Document 1.md`;
     if (!vault.getAbstractFileByPath(document1Path)) {
       await vault.create(document1Path, `---\nprojectType: essay\n---\n\n`);
+    }
     }
 
     const outlinePath = `${bookFolder.path}/Outline.md`;
@@ -406,57 +414,54 @@ export class BookService {
       await vault.createFolder(documentationPath);
     }
     
-    // Create Concept files in order
-    const conceptFiles = ["Logline.md", "Theme.md", "Premise & Tone.md", "Moodboard.canvas"];
+    // Create Concept files (matching template): Logline, Synopsis
+    const conceptFiles = ["Logline.md", "Synopsis.md"];
     for (const file of conceptFiles) {
       const filePath = `${conceptPath}/${file}`;
-      if (!vault.getAbstractFileByPath(filePath)) {
-        await vault.create(filePath, file.endsWith('.canvas') ? "" : `---\nprojectType: script\n---\n\n`);
-      }
-    }
-    
-    // Create Structure files in order
-    const structureFiles = ["Arcs.md", "Outline.md"];
-    for (const file of structureFiles) {
-      const filePath = `${structurePath}/${file}`;
       if (!vault.getAbstractFileByPath(filePath)) {
         await vault.create(filePath, `---\nprojectType: script\n---\n\n`);
       }
     }
     
-    // Create initial documentation file
-    const document1Path = `${documentationPath}/Document 1.md`;
-    if (!vault.getAbstractFileByPath(document1Path)) {
-      await vault.create(document1Path, `---\nprojectType: script\n---\n\n`);
+    // Create Structure file (matching template): Beat Sheet
+    const beatSheetPath = `${structurePath}/Beat Sheet.md`;
+    if (!vault.getAbstractFileByPath(beatSheetPath)) {
+      await vault.create(beatSheetPath, `---\nprojectType: script\n---\n\n`);
     }
     
-    // Create initial character file
+    // Create Documentation file (matching template): Research
+    const researchPath = `${documentationPath}/Research.md`;
+    if (!vault.getAbstractFileByPath(researchPath)) {
+      await vault.create(researchPath, `---\nprojectType: script\n---\n\n`);
+    }
+    
+    // Create Faces file (matching template): Character 1
     const character1Path = `${facesPath}/Character 1.md`;
     if (!vault.getAbstractFileByPath(character1Path)) {
       await vault.create(character1Path, `---\nprojectType: script\n---\n\n`);
     }
     
-    // Create initial location file
+    // Create Places file (matching template): Location 1
     const location1Path = `${placesPath}/Location 1.md`;
     if (!vault.getAbstractFileByPath(location1Path)) {
       await vault.create(location1Path, `---\nprojectType: script\n---\n\n`);
     }
     
-    // Create initial object file
-    const object1Path = `${objectsPath}/Object 1.md`;
-    if (!vault.getAbstractFileByPath(object1Path)) {
-      await vault.create(object1Path, `---\nprojectType: script\n---\n\n`);
+    // Create Objects file (matching template): Prop 1
+    const prop1Path = `${objectsPath}/Prop 1.md`;
+    if (!vault.getAbstractFileByPath(prop1Path)) {
+      await vault.create(prop1Path, `---\nprojectType: script\n---\n\n`);
     }
     
-    // Create Episode 1 folder and Sequence 1 inside it
+    // Create Episode 1 folder with Scene 1 (matching template)
     const episode1Path = `${bookFolder.path}/Episode 1`;
     if (!vault.getAbstractFileByPath(episode1Path)) {
       await vault.createFolder(episode1Path);
     }
     
-    const sequence1Path = `${episode1Path}/Sequence 1`;
-    if (!vault.getAbstractFileByPath(sequence1Path)) {
-      await vault.createFolder(sequence1Path);
+    const scene1Path = `${episode1Path}/Scene 1.md`;
+    if (!vault.getAbstractFileByPath(scene1Path)) {
+      await vault.create(scene1Path, `---\nprojectType: script\n---\n\n`);
     }
   }
 
@@ -466,35 +471,24 @@ export class BookService {
   async ensureFilmStructure(bookFolder) {
     const vault = this.app.vault;
     
-    // Create Film Dossier folder
-    const dossierPath = `${bookFolder.path}/Film Dossier`;
-    if (!vault.getAbstractFileByPath(dossierPath)) {
-      await vault.createFolder(dossierPath);
-    }
-    
-    // Create files inside Film Dossier
-    const moodboardPath = `${dossierPath}/Moodboard.canvas`;
+    // Moodboard at root (matching template)
+    const moodboardPath = `${bookFolder.path}/Moodboard.canvas`;
     if (!vault.getAbstractFileByPath(moodboardPath)) {
-      await vault.create(moodboardPath, "");
+      await vault.create(moodboardPath, '{"nodes":[],"edges":[]}');
     }
     
-    const outlinePath = `${dossierPath}/Outline.md`;
+    // Outline at root (matching template)
+    const outlinePath = `${bookFolder.path}/Outline.md`;
     if (!vault.getAbstractFileByPath(outlinePath)) {
       await vault.create(outlinePath, `---\nprojectType: film\n---\n\n`);
     }
     
-    const themePath = `${dossierPath}/Theme & Tone.md`;
-    if (!vault.getAbstractFileByPath(themePath)) {
-      await vault.create(themePath, `---\nprojectType: film\n---\n\n`);
-    }
-    
-    // Create Sequence 1 folder
+    // Sequence 1 folder with Scene 1 (matching template)
     const sequence1Path = `${bookFolder.path}/Sequence 1`;
     if (!vault.getAbstractFileByPath(sequence1Path)) {
       await vault.createFolder(sequence1Path);
     }
     
-    // Create Scene 1.md inside Sequence 1
     const scene1Path = `${sequence1Path}/Scene 1.md`;
     if (!vault.getAbstractFileByPath(scene1Path)) {
       await vault.create(scene1Path, `---\nprojectType: film\n---\n\n`);

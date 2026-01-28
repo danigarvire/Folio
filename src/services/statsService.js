@@ -96,7 +96,7 @@ export class StatsService {
    * - Book: Chapters inside Volumes (depth >= 2)
    * - TV Show (script): Scenes inside Sequences inside Episodes (depth >= 3)
    * - Film: Scenes inside Sequences (depth >= 2)
-   * - Essay: Manuscript.md, Outline.md at root + files in Documentation folder
+   * - Essay: Manuscript.md, Outline.md at root + files in Research folder
    * 
    * @param {Array} files - Array of TFile objects
    * @param {string} bookPath - The book's root path
@@ -128,14 +128,14 @@ export class StatsService {
           return parts.length >= 2;
           
         case PROJECT_TYPES.ESSAY:
-          // Essay: Manuscript.md, Outline.md at root + files in Documentation folder
-          // Structure: Manuscript.md, Outline.md, Documentation/Document.md
+          // Essay: Manuscript.md, Outline.md at root + files in Research folder
+          // Structure: Manuscript.md, Outline.md, Research/Document.md
           if (parts.length === 1) {
             // Root level files: Manuscript.md, Outline.md
             return fileName === 'Manuscript.md' || fileName === 'Outline.md';
           }
-          // Documentation folder files
-          if (parts.length >= 2 && parts[0] === 'Documentation') {
+          // Research folder files
+          if (parts.length >= 2 && parts[0] === 'Research') {
             return true;
           }
           return false;

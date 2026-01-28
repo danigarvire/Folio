@@ -43,6 +43,8 @@ import { ConfirmModal } from './modals/confirmModal.js';
 module.exports = class FolioPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
+    console.log("[Folio] onload - basePath after loadSettings:", this.settings.basePath);
+    console.log("[Folio] onload - lastActiveBookPath:", this.settings.lastActiveBookPath);
 
     // Initialize services
     this.configService = new ConfigService(this.app);
@@ -57,15 +59,19 @@ module.exports = class FolioPlugin extends Plugin {
     // track active editor file for UI sync
     this.activeFile = null;
 
+    console.log("[Folio] onload - about to ensureBasePath, getBasePath():", this.getBasePath());
     await this.ensureBasePath();
     await this.scanBooks();
+    console.log("[Folio] onload - after scanBooks, booksIndex:", this.booksIndex.map(b => b.path));
     // restore previously active book if saved in settings
     try {
       if (this.settings && this.settings.lastActiveBookPath) {
         const byPath = this.booksIndex.find((b) => b.path === this.settings.lastActiveBookPath);
+        console.log("[Folio] onload - looking for lastActiveBookPath:", this.settings.lastActiveBookPath, "found:", !!byPath);
         if (byPath) this.activeBook = byPath;
       }
     } catch {}
+    console.log("[Folio] onload - activeBook:", this.activeBook?.path || "none");
     
     // UI state: remember expanded folder paths and currently active file
     this.expandedFolders = new Set();
@@ -741,6 +747,8 @@ module.exports = class FolioPlugin extends Plugin {
 
   async loadSettings() {
     const savedData = await this.loadData() || {};
+    console.log("[Folio] loadSettings - savedData:", JSON.stringify(savedData, null, 2));
+    console.log("[Folio] loadSettings - savedData.basePath:", savedData.basePath);
     
     // Start with defaults
     this.settings = { ...DEFAULT_SETTINGS };
@@ -751,6 +759,7 @@ module.exports = class FolioPlugin extends Plugin {
         this.settings[key] = savedData[key];
       }
     });
+    console.log("[Folio] loadSettings - after merge, this.settings.basePath:", this.settings.basePath);
     
     // Handle projectTemplates specially - saved templates fully override defaults by ID
     if (savedData.projectTemplates && Array.isArray(savedData.projectTemplates)) {

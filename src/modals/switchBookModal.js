@@ -8,7 +8,7 @@ function getProjectTypeIcon(plugin, projectType) {
   if (template?.icon) return template.icon;
   // Fallback to defaults
   if (projectType === PROJECT_TYPES.BOOK) return 'book';
-  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv-minimal-play';
+  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv';
   if (projectType === PROJECT_TYPES.FILM) return 'clapperboard';
   if (projectType === PROJECT_TYPES.ESSAY) return 'newspaper';
   return 'book';
@@ -107,8 +107,15 @@ export class SwitchBookModal extends Modal {
 
         // Select button on the right
         const selectBtn = rightCol.createEl('button', { text: 'Select', cls: 'mod-cta' });
-        selectBtn.onclick = () => {
+        selectBtn.onclick = async () => {
           this.plugin.activeBook = book;
+          // Persist selection across restarts
+          try {
+            this.plugin.settings.lastActiveBookPath = book.path;
+            await this.plugin.saveSettings();
+          } catch (e) {
+            console.warn("Failed to persist lastActiveBookPath", e);
+          }
           this.plugin.rerenderViews();
           this.close();
         };

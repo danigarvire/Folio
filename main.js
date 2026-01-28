@@ -41,33 +41,51 @@ var init_constants = __esm({
           order: 1,
           description: "Novel or written work",
           structure: [
-            { title: "Preface", type: "file" },
-            { title: "Moodboard", type: "canvas" },
-            { title: "Volume 1", type: "folder", children: [] },
-            { title: "Outline", type: "file" },
-            { title: "Afterword", type: "file" }
+            { title: "Moodboard", type: "canvas", icon: "layout-dashboard" },
+            { title: "Preface", type: "file", icon: "file" },
+            { title: "Outline", type: "file", icon: "list" },
+            { title: "Volume 1", type: "folder", icon: "folder-open", children: [
+              { title: "Chapter 1", type: "file", icon: "file" }
+            ] },
+            { title: "Afterword", type: "file", icon: "file" }
           ]
         },
         {
           id: "script",
           name: "TV Show",
-          icon: "tv-minimal-play",
+          icon: "tv",
           order: 2,
           description: "Series with episodes and sequences",
           structure: [
             {
               title: "Show Dossier",
               type: "folder",
+              icon: "folder-open",
               children: [
-                { title: "Concept", type: "folder", children: [] },
-                { title: "Structure", type: "folder", children: [] },
-                { title: "Faces", type: "folder", children: [] },
-                { title: "Places", type: "folder", children: [] },
-                { title: "Objects", type: "folder", children: [] },
-                { title: "Documentation", type: "folder", children: [] }
+                { title: "Concept", type: "folder", icon: "lightbulb", children: [
+                  { title: "Logline", type: "file", icon: "file" },
+                  { title: "Synopsis", type: "file", icon: "file" }
+                ] },
+                { title: "Structure", type: "folder", icon: "list-tree", children: [
+                  { title: "Beat Sheet", type: "file", icon: "file" }
+                ] },
+                { title: "Faces", type: "folder", icon: "users", children: [
+                  { title: "Character 1", type: "file", icon: "file" }
+                ] },
+                { title: "Places", type: "folder", icon: "map-pin", children: [
+                  { title: "Location 1", type: "file", icon: "file" }
+                ] },
+                { title: "Objects", type: "folder", icon: "box", children: [
+                  { title: "Prop 1", type: "file", icon: "file" }
+                ] },
+                { title: "Documentation", type: "folder", icon: "archive", children: [
+                  { title: "Research", type: "file", icon: "file" }
+                ] }
               ]
             },
-            { title: "Episode 1", type: "folder", children: [] }
+            { title: "Episode 1", type: "folder", icon: "clapperboard", children: [
+              { title: "Scene 1", type: "file", icon: "file" }
+            ] }
           ]
         },
         {
@@ -77,9 +95,11 @@ var init_constants = __esm({
           order: 3,
           description: "Feature film or short",
           structure: [
-            { title: "Moodboard", type: "canvas" },
-            { title: "Sequence 1", type: "folder", children: [] },
-            { title: "Outline", type: "file" }
+            { title: "Moodboard", type: "canvas", icon: "layout-dashboard" },
+            { title: "Outline", type: "file", icon: "list" },
+            { title: "Sequence 1", type: "folder", icon: "film", children: [
+              { title: "Scene 1", type: "file", icon: "file" }
+            ] }
           ]
         },
         {
@@ -90,14 +110,15 @@ var init_constants = __esm({
           description: "Essay or short nonfiction piece",
           structure: [
             {
-              title: "Documentation",
+              title: "Research",
               type: "folder",
+              icon: "archive",
               children: [
-                { title: "Document 1", type: "file" }
+                { title: "Document 1", type: "file", icon: "file" }
               ]
             },
-            { title: "Outline", type: "file" },
-            { title: "Manuscript", type: "file" }
+            { title: "Outline", type: "file", icon: "list" },
+            { title: "Manuscript", type: "file", icon: "scroll-text" }
           ]
         }
       ]
@@ -156,7 +177,7 @@ var init_projectTypeSelectorModal = __esm({
         const optionsContainer = contentEl.createDiv({ cls: "folio-project-type-options" });
         const templates = this.templates || [
           { id: "book", name: "Book", icon: "book", order: 1, description: "Novel or written work" },
-          { id: "script", name: "TV Show", icon: "tv-minimal-play", order: 2, description: "Series with episodes and sequences" },
+          { id: "script", name: "TV Show", icon: "tv", order: 2, description: "Series with episodes and sequences" },
           { id: "film", name: "Film", icon: "clapperboard", order: 3, description: "Feature film or short" },
           { id: "essay", name: "Essay", icon: "newspaper", order: 4, description: "Essay or short nonfiction piece" }
         ];
@@ -490,7 +511,7 @@ function getProjectTypeIcon(plugin, projectType) {
   if (projectType === PROJECT_TYPES.BOOK)
     return "book";
   if (projectType === PROJECT_TYPES.SCRIPT)
-    return "tv-minimal-play";
+    return "tv";
   if (projectType === PROJECT_TYPES.FILM)
     return "clapperboard";
   if (projectType === PROJECT_TYPES.ESSAY)
@@ -584,8 +605,15 @@ var init_switchBookModal = __esm({
             leftCol.createDiv({ text: `Author: ${authors || "\u2014"} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: "folio-switch-meta" });
             leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: "folio-switch-meta-second" });
             const selectBtn = rightCol.createEl("button", { text: "Select", cls: "mod-cta" });
-            selectBtn.onclick = () => {
+            selectBtn.onclick = async () => {
               this.plugin.activeBook = book;
+              // Persist selection across restarts
+              try {
+                this.plugin.settings.lastActiveBookPath = book.path;
+                await this.plugin.saveSettings();
+              } catch (e) {
+                console.warn("Failed to persist lastActiveBookPath", e);
+              }
               this.plugin.rerenderViews();
               this.close();
             };
@@ -1001,7 +1029,7 @@ function getProjectTypeIcon2(plugin, projectType) {
   if (projectType === PROJECT_TYPES.BOOK)
     return "book";
   if (projectType === PROJECT_TYPES.SCRIPT)
-    return "tv-minimal-play";
+    return "tv";
   if (projectType === PROJECT_TYPES.FILM)
     return "clapperboard";
   if (projectType === PROJECT_TYPES.ESSAY)
@@ -1454,7 +1482,7 @@ var TreeService = class {
         const relativePath = item.path.replace(bookFolder.path + "/", "");
         const existing = existingMap.get(relativePath);
         if (item instanceof import_obsidian.TFile) {
-          return {
+          const node = {
             id: (existing == null ? void 0 : existing.id) || this.generateNodeId(),
             title: (existing == null ? void 0 : existing.title) || item.basename,
             type: item.extension === "canvas" ? "canvas" : "file",
@@ -1465,17 +1493,36 @@ var TreeService = class {
             created_at: (existing == null ? void 0 : existing.created_at) || new Date().toISOString(),
             last_modified: new Date().toISOString()
           };
+          if (existing == null ? void 0 : existing.icon) node.icon = existing.icon;
+          return node;
         } else if (item instanceof import_obsidian.TFolder) {
           const folderChildren = (item.children || []).filter((child) => !(child instanceof import_obsidian.TFolder && child.name === "misc"));
           const childNodes = folderChildren.map((child) => buildNode(child, 0));
+          // Predefined order for known folder names (matching template order)
+          const knownFolderOrder = {
+            "concept": 1,
+            "structure": 2,
+            "faces": 3,
+            "places": 4,
+            "objects": 5,
+            "documentation": 6,
+            "research": 1,
+            "show dossier": 1,
+            "episode 1": 2
+          };
           childNodes.sort((a, b) => {
             if (a.order && b.order)
               return a.order - b.order;
+            const aKnown = knownFolderOrder[a.title.toLowerCase()];
+            const bKnown = knownFolderOrder[b.title.toLowerCase()];
+            if (aKnown && bKnown) return aKnown - bKnown;
+            if (aKnown) return -1;
+            if (bKnown) return 1;
             return a.title.localeCompare(b.title);
           });
           childNodes.forEach((node, idx) => node.order = idx + 1);
           const children = childNodes;
-          return {
+          const node = {
             id: (existing == null ? void 0 : existing.id) || this.generateNodeId(),
             title: (existing == null ? void 0 : existing.title) || item.name,
             type: "group",
@@ -1486,14 +1533,34 @@ var TreeService = class {
             last_modified: new Date().toISOString(),
             children
           };
+          if (existing == null ? void 0 : existing.icon) node.icon = existing.icon;
+          return node;
         }
       };
       const tree = [];
       const fsChildren = (bookFolder.children || []).filter((child) => !(child instanceof import_obsidian.TFolder && child.name === "misc"));
       const nodes = fsChildren.map((child) => buildNode(child, 0));
+      // Predefined order for known folder names at root level
+      const knownRootOrder = {
+        "show dossier": 1,
+        "episode 1": 2,
+        "moodboard": 1,
+        "preface": 2,
+        "outline": 3,
+        "volume 1": 4,
+        "afterword": 5,
+        "sequence 1": 3,
+        "research": 1,
+        "manuscript": 3
+      };
       nodes.sort((a, b) => {
         if (a.order && b.order)
           return a.order - b.order;
+        const aKnown = knownRootOrder[a.title.toLowerCase()];
+        const bKnown = knownRootOrder[b.title.toLowerCase()];
+        if (aKnown && bKnown) return aKnown - bKnown;
+        if (aKnown) return -1;
+        if (bKnown) return 1;
         return a.title.localeCompare(b.title);
       });
       let nextOrder = Math.max(0, ...nodes.map((n) => n.order || 0)) + 1;
@@ -1742,7 +1809,7 @@ var StatsService = class {
    * - Book: Chapters inside Volumes (depth >= 2)
    * - TV Show (script): Scenes inside Sequences inside Episodes (depth >= 3)
    * - Film: Scenes inside Sequences (depth >= 2)
-   * - Essay: Manuscript.md, Outline.md at root + files in Documentation folder
+   * - Essay: Manuscript.md, Outline.md at root + files in Research folder
    * 
    * @param {Array} files - Array of TFile objects
    * @param {string} bookPath - The book's root path
@@ -1767,7 +1834,7 @@ var StatsService = class {
           if (parts.length === 1) {
             return fileName === "Manuscript.md" || fileName === "Outline.md";
           }
-          if (parts.length >= 2 && parts[0] === "Documentation") {
+          if (parts.length >= 2 && parts[0] === "Research") {
             return true;
           }
           return false;
@@ -2156,60 +2223,68 @@ projectType: ${projectType}
           type: "group",
           path: "Show Dossier",
           order: 1,
+          icon: "folder-open",
           default_status: "draft",
           is_expanded: false,
           created_at: now,
           last_modified: now,
           children: [
-            { id: "concept", title: "Concept", type: "group", path: "Show Dossier/Concept", order: 1, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "structure", title: "Structure", type: "group", path: "Show Dossier/Structure", order: 2, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "faces", title: "Faces", type: "group", path: "Show Dossier/Faces", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "places", title: "Places", type: "group", path: "Show Dossier/Places", order: 4, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "objects", title: "Objects", type: "group", path: "Show Dossier/Objects", order: 5, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-            { id: "documentation", title: "Documentation", type: "group", path: "Show Dossier/Documentation", order: 6, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
+            { id: "concept", title: "Concept", type: "group", path: "Show Dossier/Concept", order: 1, icon: "lightbulb", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "structure", title: "Structure", type: "group", path: "Show Dossier/Structure", order: 2, icon: "list-tree", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "faces", title: "Faces", type: "group", path: "Show Dossier/Faces", order: 3, icon: "users", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "places", title: "Places", type: "group", path: "Show Dossier/Places", order: 4, icon: "map-pin", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "objects", title: "Objects", type: "group", path: "Show Dossier/Objects", order: 5, icon: "box", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+            { id: "documentation", title: "Documentation", type: "group", path: "Show Dossier/Documentation", order: 6, icon: "archive", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
           ]
         },
-        { id: "episode1", title: "Episode 1", type: "group", path: "Episode 1", order: 2, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
+        { id: "episode1", title: "Episode 1", type: "group", path: "Episode 1", order: 2, icon: "clapperboard", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
+      ];
+    } else if (projectType === PROJECT_TYPES.FILM) {
+      return [
+        { id: "moodboard", title: "Moodboard", type: "canvas", path: "Moodboard.canvas", order: 1, icon: "layout-dashboard", default_status: "draft", created_at: now, last_modified: now },
+        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 2, icon: "list", default_status: "draft", created_at: now, last_modified: now },
+        { id: "sequence1", title: "Sequence 1", type: "group", path: "Sequence 1", order: 3, icon: "film", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] }
       ];
     } else if (projectType === PROJECT_TYPES.ESSAY) {
       return [
         {
-          id: "documentation",
-          title: "Documentation",
+          id: "research",
+          title: "Research",
           type: "group",
-          path: "Documentation",
+          path: "Research",
           order: 1,
+          icon: "archive",
           default_status: "draft",
           is_expanded: false,
           created_at: now,
           last_modified: now,
           children: [
-            { id: "document1", title: "Document 1", type: "file", path: "Documentation/Document 1.md", order: 1, default_status: "draft", created_at: now, last_modified: now }
+            { id: "document1", title: "Document 1", type: "file", path: "Research/Document 1.md", order: 1, icon: "file", default_status: "draft", created_at: now, last_modified: now }
           ]
         },
-        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 2, default_status: "draft", created_at: now, last_modified: now },
-        { id: "manuscript", title: "Manuscript", type: "file", path: "Manuscript.md", order: 3, default_status: "draft", created_at: now, last_modified: now }
+        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 2, icon: "list", default_status: "draft", created_at: now, last_modified: now },
+        { id: "manuscript", title: "Manuscript", type: "file", path: "Manuscript.md", order: 3, icon: "scroll-text", default_status: "draft", created_at: now, last_modified: now }
       ];
     } else {
       return [
-        { id: "preface", title: "Preface", type: "file", path: "Preface.md", order: 1, default_status: "draft", created_at: now, last_modified: now },
-        { id: "moodboard", title: "Moodboard", type: "canvas", path: "Moodboard.canvas", order: 2, default_status: "draft", created_at: now, last_modified: now },
-        { id: "volume1", title: "Volume 1", type: "group", path: "Volume 1", order: 3, default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
-        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 4, default_status: "draft", created_at: now, last_modified: now },
-        { id: "afterword", title: "Afterword", type: "file", path: "Afterword.md", order: 5, default_status: "draft", created_at: now, last_modified: now }
+        { id: "moodboard", title: "Moodboard", type: "canvas", path: "Moodboard.canvas", order: 1, icon: "layout-dashboard", default_status: "draft", created_at: now, last_modified: now },
+        { id: "preface", title: "Preface", type: "file", path: "Preface.md", order: 2, icon: "file", default_status: "draft", created_at: now, last_modified: now },
+        { id: "outline", title: "Outline", type: "file", path: "Outline.md", order: 3, icon: "list", default_status: "draft", created_at: now, last_modified: now },
+        { id: "volume1", title: "Volume 1", type: "group", path: "Volume 1", order: 4, icon: "folder-open", default_status: "draft", is_expanded: false, created_at: now, last_modified: now, children: [] },
+        { id: "afterword", title: "Afterword", type: "file", path: "Afterword.md", order: 5, icon: "file", default_status: "draft", created_at: now, last_modified: now }
       ];
     }
   }
   /**
-   * Ensure essay project has minimal structure: Documentation folder, Document 1.md, Outline.md, Manuscript.md
+   * Ensure essay project has minimal structure: Research folder, Document 1.md, Outline.md, Manuscript.md
    */
   async ensureEssayStructure(bookFolder) {
     const vault = this.app.vault;
-    const documentationPath = `${bookFolder.path}/Documentation`;
-    if (!vault.getAbstractFileByPath(documentationPath)) {
-      await vault.createFolder(documentationPath);
+    const researchPath = `${bookFolder.path}/Research`;
+    if (!vault.getAbstractFileByPath(researchPath)) {
+      await vault.createFolder(researchPath);
     }
-    const document1Path = `${documentationPath}/Document 1.md`;
+    const document1Path = `${researchPath}/Document 1.md`;
     if (!vault.getAbstractFileByPath(document1Path)) {
       await vault.create(document1Path, `---
 projectType: essay
@@ -2267,20 +2342,10 @@ projectType: essay
     if (!vault.getAbstractFileByPath(documentationPath)) {
       await vault.createFolder(documentationPath);
     }
-    const conceptFiles = ["Logline.md", "Theme.md", "Premise & Tone.md", "Moodboard.canvas"];
+    // Concept files: Logline, Synopsis (matching template)
+    const conceptFiles = ["Logline.md", "Synopsis.md"];
     for (const file of conceptFiles) {
       const filePath = `${conceptPath}/${file}`;
-      if (!vault.getAbstractFileByPath(filePath)) {
-        await vault.create(filePath, file.endsWith(".canvas") ? "" : `---
-projectType: script
----
-
-`);
-      }
-    }
-    const structureFiles = ["Arcs.md", "Outline.md"];
-    for (const file of structureFiles) {
-      const filePath = `${structurePath}/${file}`;
       if (!vault.getAbstractFileByPath(filePath)) {
         await vault.create(filePath, `---
 projectType: script
@@ -2289,14 +2354,25 @@ projectType: script
 `);
       }
     }
-    const document1Path = `${documentationPath}/Document 1.md`;
-    if (!vault.getAbstractFileByPath(document1Path)) {
-      await vault.create(document1Path, `---
+    // Structure files: Beat Sheet (matching template)
+    const beatSheetPath = `${structurePath}/Beat Sheet.md`;
+    if (!vault.getAbstractFileByPath(beatSheetPath)) {
+      await vault.create(beatSheetPath, `---
 projectType: script
 ---
 
 `);
     }
+    // Documentation: Research (matching template)
+    const researchPath = `${documentationPath}/Research.md`;
+    if (!vault.getAbstractFileByPath(researchPath)) {
+      await vault.create(researchPath, `---
+projectType: script
+---
+
+`);
+    }
+    // Faces: Character 1 (matching template)
     const character1Path = `${facesPath}/Character 1.md`;
     if (!vault.getAbstractFileByPath(character1Path)) {
       await vault.create(character1Path, `---
@@ -2305,6 +2381,7 @@ projectType: script
 
 `);
     }
+    // Places: Location 1 (matching template)
     const location1Path = `${placesPath}/Location 1.md`;
     if (!vault.getAbstractFileByPath(location1Path)) {
       await vault.create(location1Path, `---
@@ -2313,21 +2390,27 @@ projectType: script
 
 `);
     }
-    const object1Path = `${objectsPath}/Object 1.md`;
-    if (!vault.getAbstractFileByPath(object1Path)) {
-      await vault.create(object1Path, `---
+    // Objects: Prop 1 (matching template)
+    const prop1Path = `${objectsPath}/Prop 1.md`;
+    if (!vault.getAbstractFileByPath(prop1Path)) {
+      await vault.create(prop1Path, `---
 projectType: script
 ---
 
 `);
     }
+    // Episode 1 with Scene 1 (matching template)
     const episode1Path = `${bookFolder.path}/Episode 1`;
     if (!vault.getAbstractFileByPath(episode1Path)) {
       await vault.createFolder(episode1Path);
     }
-    const sequence1Path = `${episode1Path}/Sequence 1`;
-    if (!vault.getAbstractFileByPath(sequence1Path)) {
-      await vault.createFolder(sequence1Path);
+    const scene1Path = `${episode1Path}/Scene 1.md`;
+    if (!vault.getAbstractFileByPath(scene1Path)) {
+      await vault.create(scene1Path, `---
+projectType: script
+---
+
+`);
     }
   }
   /**
@@ -2335,15 +2418,13 @@ projectType: script
    */
   async ensureFilmStructure(bookFolder) {
     const vault = this.app.vault;
-    const dossierPath = `${bookFolder.path}/Film Dossier`;
-    if (!vault.getAbstractFileByPath(dossierPath)) {
-      await vault.createFolder(dossierPath);
-    }
-    const moodboardPath = `${dossierPath}/Moodboard.canvas`;
+    // Moodboard at root (matching template)
+    const moodboardPath = `${bookFolder.path}/Moodboard.canvas`;
     if (!vault.getAbstractFileByPath(moodboardPath)) {
-      await vault.create(moodboardPath, "");
+      await vault.create(moodboardPath, '{"nodes":[],"edges":[]}');
     }
-    const outlinePath = `${dossierPath}/Outline.md`;
+    // Outline at root (matching template)
+    const outlinePath = `${bookFolder.path}/Outline.md`;
     if (!vault.getAbstractFileByPath(outlinePath)) {
       await vault.create(outlinePath, `---
 projectType: film
@@ -2351,14 +2432,7 @@ projectType: film
 
 `);
     }
-    const themePath = `${dossierPath}/Theme & Tone.md`;
-    if (!vault.getAbstractFileByPath(themePath)) {
-      await vault.create(themePath, `---
-projectType: film
----
-
-`);
-    }
+    // Sequence 1 folder with Scene 1 (matching template)
     const sequence1Path = `${bookFolder.path}/Sequence 1`;
     if (!vault.getAbstractFileByPath(sequence1Path)) {
       await vault.createFolder(sequence1Path);
@@ -2496,7 +2570,7 @@ function getProjectTypeIcon3(plugin, projectType) {
   if (projectType === PROJECT_TYPES.BOOK)
     return "book";
   if (projectType === PROJECT_TYPES.SCRIPT)
-    return "tv-minimal-play";
+    return "tv";
   if (projectType === PROJECT_TYPES.FILM)
     return "clapperboard";
   if (projectType === PROJECT_TYPES.ESSAY)
@@ -2539,22 +2613,43 @@ var FolioView = class extends import_obsidian4.ItemView {
   // Get custom icon for specific folder/file names
   getCustomIcon(title, isExpanded = false) {
     const lowerTitle = title.toLowerCase();
+    // File-specific icons
+    if (lowerTitle === "outline")
+      return "list";
+    if (lowerTitle === "moodboard")
+      return "layout-dashboard";
+    if (lowerTitle === "manuscript")
+      return "scroll-text";
+    if (lowerTitle === "preface" || lowerTitle === "afterword")
+      return "file";
+    if (lowerTitle === "logline" || lowerTitle === "synopsis" || lowerTitle === "beat sheet")
+      return "file";
+    if (lowerTitle === "document 1" || lowerTitle.startsWith("document "))
+      return "file";
+    // TV Show template folders
     if (lowerTitle === "show dossier")
-      return "book-marked";
-    if (lowerTitle === "film dossier")
-      return "book-marked";
+      return "folder-open";
+    if (lowerTitle === "episode 1" || lowerTitle.startsWith("episode "))
+      return "clapperboard";
+    // Film template folders
+    if (lowerTitle === "sequence 1" || lowerTitle.startsWith("sequence "))
+      return "film";
+    // Book template folders
+    if (lowerTitle === "volume 1" || lowerTitle.startsWith("volume "))
+      return "folder-open";
+    // Common folders across templates
     if (lowerTitle === "concept")
       return "lightbulb";
     if (lowerTitle === "faces")
-      return "drama";
+      return "users";
     if (lowerTitle === "places")
       return "map-pin";
     if (lowerTitle === "objects")
       return "box";
     if (lowerTitle === "structure")
-      return "map";
-    if (lowerTitle === "documentation")
-      return "scroll-text";
+      return "list-tree";
+    if (lowerTitle === "documentation" || lowerTitle === "research")
+      return "archive";
     return isExpanded ? "folder-open" : "folder";
   }
   async renderBookTree(container, bookFolder) {
@@ -2734,7 +2829,7 @@ var FolioView = class extends import_obsidian4.ItemView {
         fileRow.dataset.nodeId = node.id;
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
-          const defaultIcon = node.type === "canvas" ? "layout-dashboard" : "file";
+          const defaultIcon = node.type === "canvas" ? "layout-dashboard" : this.getCustomIcon(node.title, false);
           (0, import_obsidian4.setIcon)(icon, node.icon || defaultIcon);
         } catch (e) {
         }
@@ -2910,9 +3005,8 @@ var FolioView = class extends import_obsidian4.ItemView {
         const headerEl2 = el.createDiv("folio-book-header");
         const coverCol2 = headerEl2.createDiv("folio-book-cover-col");
         const coverEl2 = coverCol2.createDiv("folio-book-cover");
-        coverEl2.style.background = "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))";
+        coverEl2.addClass("folio-book-cover-placeholder");
         try {
-          coverEl2.addClass("folio-book-cover-placeholder");
           const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
           (0, import_obsidian4.setIcon)(iconEl, "square-plus");
         } catch (e) {
@@ -2952,9 +3046,8 @@ var FolioView = class extends import_obsidian4.ItemView {
         const headerEl2 = el.createDiv("folio-book-header");
         const coverCol2 = headerEl2.createDiv("folio-book-cover-col");
         const coverEl2 = coverCol2.createDiv("folio-book-cover");
-        coverEl2.style.background = "linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01))";
+        coverEl2.addClass("folio-book-cover-placeholder");
         try {
-          coverEl2.addClass("folio-book-cover-placeholder");
           const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
           (0, import_obsidian4.setIcon)(iconEl, "square-plus");
         } catch (e) {
@@ -3287,159 +3380,142 @@ var import_obsidian7 = require("obsidian");
 // src/modals/iconPickerModal.js
 var import_obsidian6 = require("obsidian");
 var COMMON_ICONS = [
-  "book",
-  "book-open",
-  "book-text",
-  "library",
-  "newspaper",
-  "file-text",
-  "scroll",
-  "scroll-text",
-  "tv",
-  "tv-minimal-play",
-  "clapperboard",
-  "film",
-  "video",
-  "pen",
-  "pen-tool",
-  "pencil",
-  "feather",
-  "folder",
-  "folder-open",
-  "file",
-  "files",
-  "notebook",
-  "clipboard",
-  "sticky-note",
-  "bookmark",
-  "graduation-cap",
-  "school",
-  "brain",
-  "lightbulb",
-  "music",
-  "mic",
-  "headphones",
-  "radio",
-  "camera",
-  "image",
-  "palette",
-  "brush",
-  "code",
-  "terminal",
-  "database",
-  "server",
-  "globe",
-  "map",
-  "compass",
-  "navigation",
-  "heart",
-  "star",
-  "trophy",
-  "medal",
-  "rocket",
-  "plane",
-  "car",
-  "ship",
-  "crown",
-  "gem",
-  "diamond",
-  "sparkles",
-  "sun",
-  "moon",
-  "cloud",
-  "umbrella",
-  "tree",
-  "flower",
-  "leaf",
-  "mountain",
-  "home",
-  "building",
-  "castle",
-  "tent",
-  "gift",
-  "shopping-bag",
-  "package",
-  "box",
-  "clock",
-  "calendar",
-  "alarm-clock",
-  "timer",
-  "mail",
-  "message-circle",
-  "message-square",
-  "send",
-  "phone",
-  "smartphone",
-  "tablet",
-  "monitor",
-  "wifi",
-  "bluetooth",
-  "battery",
-  "plug",
-  "key",
-  "lock",
-  "unlock",
-  "shield",
-  "user",
-  "users",
-  "user-circle",
-  "contact",
-  "settings",
-  "sliders",
-  "tool",
-  "wrench",
-  "search",
-  "zoom-in",
-  "zoom-out",
-  "filter",
-  "link",
-  "external-link",
-  "share",
-  "download",
-  "upload",
-  "save",
-  "copy",
-  "clipboard-copy",
-  "trash",
-  "archive",
-  "inbox",
-  "outbox",
-  "check",
-  "check-circle",
-  "x",
-  "x-circle",
-  "alert-circle",
-  "alert-triangle",
-  "info",
-  "help-circle",
-  "play",
-  "pause",
-  "stop",
-  "skip-forward",
-  "volume",
-  "volume-2",
-  "speaker",
-  "bell",
-  "eye",
-  "eye-off",
-  "glasses",
-  "scan",
-  "printer",
-  "scanner",
-  "fax",
-  "projector",
-  "cpu",
-  "hard-drive",
-  "memory-stick",
-  "usb",
-  "git-branch",
-  "git-commit",
-  "git-merge",
-  "git-pull-request",
-  "layout-dashboard",
-  "layout-grid",
-  "layout-list",
-  "kanban"
+  // Books & Documents
+  "book", "book-open", "book-text", "book-copy", "book-marked", "book-open-check", "book-open-text",
+  "library", "library-big", "notebook", "notebook-pen", "notebook-tabs",
+  "newspaper", "file-text", "file", "files", "file-check", "file-edit", "file-plus", "file-minus",
+  "scroll", "scroll-text", "sticky-note", "clipboard", "clipboard-list", "clipboard-check",
+  "bookmark", "bookmark-plus", "bookmarks", "bookmark-check",
+  // Writing & Creativity
+  "pen", "pen-tool", "pen-line", "pencil", "pencil-line", "pencil-ruler",
+  "feather", "highlighter", "eraser", "type", "text", "text-cursor", "text-cursor-input",
+  "signature", "quote", "pilcrow", "baseline", "subscript", "superscript",
+  "spell-check", "spell-check-2", "whole-word", "case-sensitive",
+  // Media & Entertainment
+  "tv", "tv-minimal", "tv-minimal-play", "monitor-play",
+  "clapperboard", "film", "video", "videotape", "camera", "camera-off",
+  "projector", "theater", "popcorn", "ticket", "drama",
+  "music", "music-2", "music-3", "music-4", "mic", "mic-2", "mic-off",
+  "headphones", "headset", "radio", "podcast", "audio-lines", "audio-waveform",
+  "play", "play-circle", "pause", "pause-circle", "stop-circle", "skip-forward", "skip-back",
+  "rewind", "fast-forward", "repeat", "repeat-1", "shuffle", "list-music",
+  // Visual & Art
+  "image", "image-plus", "images", "gallery-horizontal", "gallery-vertical",
+  "palette", "paintbrush", "paintbrush-2", "brush", "paint-bucket", "paint-roller",
+  "pipette", "droplet", "droplets", "blend", "contrast", "sun-dim",
+  "aperture", "focus", "scan", "crop", "flip-horizontal", "flip-vertical",
+  "rotate-ccw", "rotate-cw", "move", "maximize", "minimize",
+  "frame", "picture-in-picture", "picture-in-picture-2",
+  // Folders & Organization
+  "folder", "folder-open", "folder-closed", "folder-plus", "folder-minus",
+  "folder-check", "folder-x", "folder-search", "folder-heart", "folder-input", "folder-output",
+  "folder-archive", "folder-cog", "folder-dot", "folder-git", "folder-git-2",
+  "folder-kanban", "folder-key", "folder-lock", "folder-symlink", "folder-sync", "folder-tree",
+  "folders", "package", "package-open", "box", "boxes", "archive", "archive-restore",
+  // Education & Learning
+  "graduation-cap", "school", "school-2", "backpack",
+  "brain", "brain-circuit", "brain-cog", "lightbulb", "lightbulb-off",
+  "lamp", "lamp-desk", "lamp-floor", "lamp-ceiling", "lamp-wall-down", "lamp-wall-up",
+  "presentation", "flip-chart", "clipboard-pen", "clipboard-type",
+  "calculator", "ruler", "triangle-ruler", "drafting-compass",
+  "beaker", "flask-conical", "flask-round", "microscope", "telescope", "atom",
+  // Technology
+  "code", "code-2", "terminal", "terminal-square", "braces", "brackets",
+  "database", "server", "hard-drive", "cpu", "memory-stick", "usb",
+  "monitor", "laptop", "laptop-2", "tablet", "smartphone", "phone",
+  "keyboard", "mouse", "mouse-pointer", "mouse-pointer-2", "touchpad",
+  "wifi", "wifi-off", "bluetooth", "nfc", "signal", "antenna",
+  "battery", "battery-charging", "battery-full", "battery-low", "battery-medium", "battery-warning",
+  "plug", "plug-2", "plug-zap", "power", "power-off",
+  "git-branch", "git-commit", "git-merge", "git-pull-request", "git-fork", "git-compare",
+  "github", "gitlab", "chrome", "firefox",
+  // Navigation & Location
+  "globe", "globe-2", "earth", "map", "map-pin", "map-pinned",
+  "compass", "navigation", "navigation-2", "locate", "locate-fixed", "locate-off",
+  "route", "signpost", "signpost-big", "milestone", "flag", "flag-triangle-right",
+  "home", "house", "house-plus", "building", "building-2", "factory", "warehouse", "store",
+  "castle", "church", "landmark", "tent", "tent-tree", "mountain", "mountain-snow", "trees",
+  // People & Social
+  "user", "user-2", "user-circle", "user-circle-2", "user-check", "user-plus", "user-minus", "user-x",
+  "users", "users-2", "users-round", "contact", "contact-2", "contacts",
+  "person-standing", "accessibility", "baby", "hand", "hand-metal", "handshake",
+  "heart", "heart-handshake", "heart-pulse", "activity", "heart-crack", "heart-off",
+  "thumbs-up", "thumbs-down", "smile", "smile-plus", "frown", "meh", "laugh", "angry",
+  // Communication
+  "mail", "mail-open", "mail-plus", "mail-check", "mail-x", "mail-warning", "mail-search",
+  "inbox", "send", "send-horizontal", "forward", "reply", "reply-all",
+  "message-circle", "message-square", "message-square-plus", "messages-square",
+  "at-sign", "hash", "phone", "phone-call", "phone-incoming", "phone-outgoing",
+  "voicemail", "megaphone", "volume", "volume-1", "volume-2", "volume-x",
+  "bell", "bell-ring", "bell-plus", "bell-minus", "bell-off",
+  // Weather & Nature
+  "sun", "sun-dim", "sun-medium", "sun-moon", "sunrise", "sunset",
+  "moon", "moon-star", "cloud", "cloud-sun", "cloud-rain", "cloud-snow", "cloud-lightning",
+  "snowflake", "wind", "tornado", "rainbow", "thermometer", "thermometer-sun", "thermometer-snowflake",
+  "umbrella", "umbrella-off", "droplet", "droplets", "waves",
+  "tree", "tree-deciduous", "tree-pine", "trees", "palm-tree", "sprout", "leaf", "clover",
+  "flower", "flower-2", "cherry", "apple", "banana", "grape", "citrus",
+  "bird", "bug", "cat", "dog", "fish", "rabbit", "snail", "squirrel", "turtle",
+  // Objects & Tools
+  "wrench", "hammer", "axe", "pickaxe", "shovel", "scissors", "knife",
+  "screwdriver", "nut", "cog", "settings", "settings-2", "sliders", "sliders-horizontal",
+  "key", "key-round", "key-square", "lock", "lock-keyhole", "unlock", "unlock-keyhole",
+  "shield", "shield-check", "shield-alert", "shield-off", "shield-question",
+  "glasses", "binoculars", "eye", "eye-off", "scan-eye", "scan-face",
+  "magnet", "flashlight", "flashlight-off", "lighter", "flame", "fire-extinguisher",
+  "trash", "trash-2", "recycle", "archive", "archive-restore", "archive-x",
+  // Shapes & Symbols
+  "circle", "square", "triangle", "diamond", "pentagon", "hexagon", "octagon",
+  "star", "stars", "sparkle", "sparkles", "zap", "zap-off", "bolt",
+  "crown", "gem", "award", "badge", "badge-check", "medal", "trophy",
+  "ribbon", "gift", "party-popper", "cake", "cake-slice", "candy", "candy-cane", "cookie", "ice-cream",
+  "check", "check-circle", "check-square", "x", "x-circle", "x-square",
+  "plus", "plus-circle", "plus-square", "minus", "minus-circle", "minus-square",
+  "equal", "divide", "percent", "infinity", "sigma", "pi", "omega",
+  // Arrows & Direction
+  "arrow-up", "arrow-down", "arrow-left", "arrow-right",
+  "arrow-up-right", "arrow-up-left", "arrow-down-right", "arrow-down-left",
+  "chevron-up", "chevron-down", "chevron-left", "chevron-right",
+  "chevrons-up", "chevrons-down", "chevrons-left", "chevrons-right",
+  "move-up", "move-down", "move-left", "move-right",
+  "corner-up-left", "corner-up-right", "corner-down-left", "corner-down-right",
+  "undo", "undo-2", "redo", "redo-2", "refresh-cw", "refresh-ccw",
+  // Time & Calendar
+  "clock", "clock-1", "clock-2", "clock-3", "clock-4", "clock-5", "clock-6",
+  "alarm-clock", "alarm-clock-check", "alarm-clock-minus", "alarm-clock-off", "alarm-clock-plus",
+  "timer", "timer-off", "timer-reset", "stopwatch", "hourglass", "history",
+  "calendar", "calendar-days", "calendar-check", "calendar-plus", "calendar-minus", "calendar-x",
+  "calendar-heart", "calendar-clock", "calendar-range", "calendar-search",
+  // Layout & UI
+  "layout-dashboard", "layout-grid", "layout-list", "layout-template", "layout-panel-left", "layout-panel-top",
+  "kanban", "kanban-square", "trello", "columns", "rows", "table", "table-2",
+  "grid-2x2", "grid-3x3", "align-left", "align-center", "align-right", "align-justify",
+  "list", "list-checks", "list-ordered", "list-todo", "list-tree", "list-filter",
+  "sidebar", "panel-left", "panel-right", "panel-top", "panel-bottom",
+  "split", "split-square-horizontal", "split-square-vertical",
+  "maximize-2", "minimize-2", "expand", "shrink", "fullscreen",
+  // Actions & Status
+  "search", "zoom-in", "zoom-out", "filter", "filter-x", "sort-asc", "sort-desc",
+  "save", "save-all", "download", "upload", "import", "share", "share-2",
+  "link", "link-2", "unlink", "external-link", "qr-code", "scan-barcode",
+  "copy", "clipboard-copy", "clipboard-paste", "cut", "edit", "edit-2", "edit-3",
+  "info", "circle-help", "help-circle", "alert-circle", "alert-triangle", "alert-octagon",
+  "ban", "slash", "loader", "loader-2", "refresh-cw", "rotate-ccw",
+  "grip-horizontal", "grip-vertical", "more-horizontal", "more-vertical", "menu",
+  // Commerce & Finance
+  "dollar-sign", "euro", "pound-sterling", "bitcoin", "coins", "piggy-bank", "wallet", "wallet-2",
+  "credit-card", "banknote", "receipt", "ticket", "tags", "tag", "percent",
+  "shopping-cart", "shopping-bag", "shopping-basket", "store", "storefront",
+  "scale", "scale-3d", "weight", "barcode", "scan-line",
+  // Travel & Transport
+  "plane", "plane-takeoff", "plane-landing", "rocket", "satellite", "satellite-dish",
+  "car", "car-front", "bus", "train", "train-front", "tram-front",
+  "bike", "ship", "sailboat", "anchor", "fuel", "parking-meter", "traffic-cone",
+  "luggage", "briefcase", "suitcase", "suitcase-rolling",
+  // Sports & Games
+  "dumbbell", "trophy", "medal", "target", "crosshair", "goal",
+  "gamepad", "gamepad-2", "joystick", "dice-1", "dice-2", "dice-3", "dice-4", "dice-5", "dice-6",
+  "puzzle", "swords", "sword", "wand", "wand-2", "crown"
 ];
 var IconPickerModal = class extends import_obsidian6.Modal {
   constructor(app, { title, currentIcon, onSelect }) {
@@ -3535,13 +3611,17 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
       })
     );
     new import_obsidian7.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText(
-      (text) => text.setPlaceholder("projects").setValue(this.plugin.settings.basePath || "projects").onChange(async (value) => {
-        let normalizedPath = value.trim().replace(/^\/+|\/+$/g, "") || "projects";
-        this.plugin.settings.basePath = normalizedPath;
-        await this.plugin.saveSettings();
-        await this.plugin.ensureBasePath();
-        await this.plugin.refresh();
-      })
+      (text) => {
+        text.setPlaceholder("projects").setValue(this.plugin.settings.basePath || "projects").onChange(async (value) => {
+          let normalizedPath = value.trim().replace(/^\/+|\/+$/g, "") || "projects";
+          this.plugin.settings.basePath = normalizedPath;
+          await this.plugin.saveSettings();
+        });
+        text.inputEl.addEventListener("blur", async () => {
+          await this.plugin.ensureBasePath();
+          await this.plugin.refresh();
+        });
+      }
     );
     const templateSection = el.createDiv({ cls: "folio-settings-section" });
     const templateHeader = templateSection.createDiv({ cls: "folio-settings-section-header" });
@@ -3556,7 +3636,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     if (!this.plugin.settings.projectTemplates) {
       this.plugin.settings.projectTemplates = [
         { id: "book", name: "Book", icon: "book", order: 1, description: "Novel or written work" },
-        { id: "script", name: "TV Show", icon: "tv-minimal-play", order: 2, description: "Series with episodes and sequences" },
+        { id: "script", name: "TV Show", icon: "tv", order: 2, description: "Series with episodes and sequences" },
         { id: "film", name: "Film", icon: "clapperboard", order: 3, description: "Feature film or short" },
         { id: "essay", name: "Essay", icon: "newspaper", order: 4, description: "Essay or short nonfiction piece" }
       ];
@@ -3573,6 +3653,20 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
       })
     );
     templateContent.createEl("h4", { text: "Project templates", cls: "folio-settings-subheader" });
+    const templatesHeaderRow = templateContent.createDiv({ cls: "folio-templates-header-row" });
+    const resetBtn = templatesHeaderRow.createEl("button", { cls: "folio-reset-templates-btn" });
+    (0, import_obsidian7.setIcon)(resetBtn, "rotate-ccw");
+    resetBtn.title = "Reset all templates to defaults";
+    resetBtn.onclick = async () => {
+      const confirmed = confirm("Are you sure you want to reset all templates to their default values? This will remove any custom templates and restore the original Book, TV Show, Film, and Essay templates.");
+      if (confirmed) {
+        this.plugin.settings.projectTemplates = JSON.parse(JSON.stringify(DEFAULT_SETTINGS.projectTemplates));
+        await this.plugin.saveSettings();
+        this.renderTemplatesList(templatesListEl);
+        this.plugin.rerenderViews();
+        new import_obsidian7.Notice("Templates reset to defaults");
+      }
+    };
     const templatesListEl = templateContent.createDiv({ cls: "folio-templates-list" });
     this.renderTemplatesList(templatesListEl);
     const addBtnContainer = templateContent.createDiv({ cls: "folio-settings-add-btn-container" });
@@ -3743,6 +3837,9 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     structureTree.className = "folio-template-structure-tree";
     structureSection.appendChild(structureTree);
     const expandedFolders = /* @__PURE__ */ new Set();
+    let draggedNode = null;
+    let draggedIndex = null;
+    let draggedParentArray = null;
     const renderStructureTree = () => {
       structureTree.innerHTML = "";
       const renderNode = (node, parentArray, index, depth = 0) => {
@@ -3751,6 +3848,47 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
         const nodeRow = document.createElement("div");
         nodeRow.className = "folio-template-structure-node";
         nodeRow.style.paddingLeft = `${depth * 20}px`;
+        nodeRow.draggable = true;
+        const dragHandle = document.createElement("span");
+        dragHandle.className = "folio-template-structure-node-drag-handle";
+        dragHandle.title = "Drag to reorder";
+        (0, import_obsidian7.setIcon)(dragHandle, "grip-horizontal");
+        nodeRow.appendChild(dragHandle);
+        nodeRow.addEventListener("dragstart", (e) => {
+          draggedNode = node;
+          draggedIndex = index;
+          draggedParentArray = parentArray;
+          nodeRow.classList.add("dragging");
+          e.dataTransfer.effectAllowed = "move";
+          setTimeout(() => nodeRow.style.opacity = "0.5", 0);
+        });
+        nodeRow.addEventListener("dragend", (e) => {
+          nodeRow.style.opacity = "1";
+          nodeRow.classList.remove("dragging");
+          document.querySelectorAll(".folio-template-structure-node").forEach((n) => n.classList.remove("drag-over"));
+        });
+        nodeRow.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
+          nodeRow.classList.add("drag-over");
+        });
+        nodeRow.addEventListener("dragleave", (e) => {
+          nodeRow.classList.remove("drag-over");
+        });
+        nodeRow.addEventListener("drop", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          nodeRow.classList.remove("drag-over");
+          if (draggedNode && draggedParentArray === parentArray && draggedIndex !== index) {
+            parentArray.splice(draggedIndex, 1);
+            const toIndex = draggedIndex < index ? index - 1 : index;
+            parentArray.splice(toIndex, 0, draggedNode);
+            renderStructureTree();
+          }
+          draggedNode = null;
+          draggedIndex = null;
+          draggedParentArray = null;
+        });
         if (node.type === "folder") {
           const toggleBtn = document.createElement("span");
           toggleBtn.className = "folio-template-structure-node-toggle";
@@ -3809,30 +3947,6 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
         nodeRow.appendChild(typeBadge);
         const nodeActions = document.createElement("div");
         nodeActions.className = "folio-template-structure-node-actions";
-        if (index > 0) {
-          const upBtn = document.createElement("button");
-          upBtn.className = "folio-template-structure-node-btn";
-          upBtn.type = "button";
-          upBtn.title = "Move up";
-          (0, import_obsidian7.setIcon)(upBtn, "chevron-up");
-          upBtn.onclick = () => {
-            [parentArray[index - 1], parentArray[index]] = [parentArray[index], parentArray[index - 1]];
-            renderStructureTree();
-          };
-          nodeActions.appendChild(upBtn);
-        }
-        if (index < parentArray.length - 1) {
-          const downBtn = document.createElement("button");
-          downBtn.className = "folio-template-structure-node-btn";
-          downBtn.type = "button";
-          downBtn.title = "Move down";
-          (0, import_obsidian7.setIcon)(downBtn, "chevron-down");
-          downBtn.onclick = () => {
-            [parentArray[index], parentArray[index + 1]] = [parentArray[index + 1], parentArray[index]];
-            renderStructureTree();
-          };
-          nodeActions.appendChild(downBtn);
-        }
         if (node.type === "folder") {
           const addFileBtn2 = document.createElement("button");
           addFileBtn2.className = "folio-template-structure-node-btn";
@@ -3980,6 +4094,8 @@ var {
 module.exports = class FolioPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
+    console.log("[Folio] onload - basePath after loadSettings:", this.settings.basePath);
+    console.log("[Folio] onload - lastActiveBookPath:", this.settings.lastActiveBookPath);
     this.configService = new ConfigService(this.app);
     this.treeService = new TreeService(this.app, this.configService);
     this.statsService = new StatsService(this.app, this.configService);
@@ -3988,16 +4104,20 @@ module.exports = class FolioPlugin extends Plugin {
     this.activeBook = null;
     this.folioLeaf = null;
     this.activeFile = null;
+    console.log("[Folio] onload - about to ensureBasePath, getBasePath():", this.getBasePath());
     await this.ensureBasePath();
     await this.scanBooks();
+    console.log("[Folio] onload - after scanBooks, booksIndex:", this.booksIndex.map(b => b.path));
     try {
       if (this.settings && this.settings.lastActiveBookPath) {
         const byPath = this.booksIndex.find((b) => b.path === this.settings.lastActiveBookPath);
+        console.log("[Folio] onload - looking for lastActiveBookPath:", this.settings.lastActiveBookPath, "found:", !!byPath);
         if (byPath)
           this.activeBook = byPath;
       }
     } catch (e) {
     }
+    console.log("[Folio] onload - activeBook:", this.activeBook?.path || "none");
     this.expandedFolders = /* @__PURE__ */ new Set();
     this.activeFilePath = null;
     this.registerView(
@@ -4582,12 +4702,15 @@ module.exports = class FolioPlugin extends Plugin {
   }
   async loadSettings() {
     const savedData = await this.loadData() || {};
+    console.log("[Folio] loadSettings - savedData:", JSON.stringify(savedData, null, 2));
+    console.log("[Folio] loadSettings - savedData.basePath:", savedData.basePath);
     this.settings = { ...DEFAULT_SETTINGS };
     Object.keys(savedData).forEach((key) => {
       if (key !== "projectTemplates") {
         this.settings[key] = savedData[key];
       }
     });
+    console.log("[Folio] loadSettings - after merge, this.settings.basePath:", this.settings.basePath);
     if (savedData.projectTemplates && Array.isArray(savedData.projectTemplates)) {
       const defaultTemplatesMap = new Map(
         DEFAULT_SETTINGS.projectTemplates.map((t) => [t.id, t])

@@ -193,33 +193,21 @@
   border-radius: 4px;
 }
 
-/* Placeholder styling for cover when no image exists. Ensure a visible
-   black tile in light/day mode, and a subtle neutral in dark mode. */
+/* Placeholder styling for cover when no image exists. */
 .folio-book-cover-placeholder,
 .folio-manage-cover-placeholder {
-  background-color: rgba(0,0,0,0.9); /* default strong black fallback */
-  background-image: none !important;
-  border: 1px solid rgba(0,0,0,0.6);
-  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-@media (prefers-color-scheme: dark) {
-  .folio-book-cover-placeholder,
-  .folio-manage-cover-placeholder {
-    /* in dark mode prefer a softer neutral so it doesn't feel 'heavy' */
-    background-color: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.03);
-    color: var(--text-normal);
-  }
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
 }
 
 .folio-book-cover-icon {
+  color: var(--text-muted) !important;
+  opacity: 0.6;
   width: 48px;
   height: 48px;
-  opacity: 0.3;
 }
 
 .folio-book-cover-icon svg {
@@ -583,7 +571,15 @@
 .folio-manage-cover-icon {
   width: 40px;
   height: 40px;
-  opacity: 0.3;
+  opacity: 0.5;
+}
+
+body.theme-light .folio-manage-cover-icon {
+  color: #fff;
+}
+
+body.theme-dark .folio-manage-cover-icon {
+  color: var(--text-normal);
 }
 
 .folio-manage-cover-icon svg {
@@ -774,10 +770,18 @@ body.theme-dark .modal .folio-modal-row { border-bottom: 1px solid rgba(255,255,
   display: flex !important;
   align-items: center;
   justify-content: center;
-  color: rgba(var(--text-muted-rgb), 0.85);
   font-weight: 600;
   font-size: 14px;
+}
+
+body.theme-light .folio-manage-cover-placeholder {
+  background: rgba(0,0,0,0.85);
+  color: #fff;
+}
+
+body.theme-dark .folio-manage-cover-placeholder {
   background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+  color: rgba(var(--text-muted-rgb), 0.85);
 }
 
 /* Title row: title left, subtitle right */
@@ -1285,8 +1289,16 @@ body.theme-light .folio-tree-children::before {
 /* Use Obsidian's native Lucide icons via setIcon; keep minimal sizing rules for SVGs */
 :root {
   --tree-icon-size: 16px;
-  --tree-icon-color: rgba(255,255,255,0.75);
+  --tree-icon-color: var(--text-muted);
   --tree-icon-color-active: var(--interactive-accent);
+}
+
+body.theme-dark {
+  --tree-icon-color: rgba(255,255,255,0.75);
+}
+
+body.theme-light {
+  --tree-icon-color: rgba(0,0,0,0.55);
 }
 
 .folio-tree-icon,
@@ -1836,6 +1848,38 @@ body.theme-light .folio-tree-children::before {
   color: var(--text-normal);
 }
 
+.folio-templates-header-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.folio-reset-templates-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.folio-reset-templates-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+}
+
+.folio-reset-templates-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
 .folio-templates-list {
   display: flex;
   flex-direction: column;
@@ -2180,6 +2224,16 @@ body.theme-light .folio-tree-children::before {
   background: var(--background-modifier-hover);
 }
 
+.folio-template-structure-node.drag-over {
+  background: var(--interactive-accent);
+  opacity: 0.5;
+  border: 2px dashed var(--interactive-accent);
+}
+
+.folio-template-structure-node.dragging {
+  opacity: 0.5;
+}
+
 .folio-template-structure-node-toggle {
   display: flex;
   align-items: center;
@@ -2206,6 +2260,33 @@ body.theme-light .folio-tree-children::before {
 .folio-template-structure-node-spacer {
   width: 18px;
   flex-shrink: 0;
+}
+
+.folio-template-structure-node-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  cursor: grab;
+  color: var(--text-muted);
+  border-radius: 3px;
+  transition: all 0.15s ease;
+}
+
+.folio-template-structure-node-drag-handle:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.folio-template-structure-node-drag-handle:active {
+  cursor: grabbing;
+}
+
+.folio-template-structure-node-drag-handle svg {
+  width: 16px;
+  height: 16px;
 }
 
 .folio-template-structure-node-icon {

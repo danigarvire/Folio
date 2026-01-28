@@ -23,7 +23,7 @@ export class ProjectTypeSelectorModal extends Modal {
     // Use templates from settings if provided, otherwise use defaults
     const templates = this.templates || [
       { id: 'book', name: 'Book', icon: 'book', order: 1, description: 'Novel or written work' },
-      { id: 'script', name: 'TV Show', icon: 'tv-minimal-play', order: 2, description: 'Series with episodes and sequences' },
+      { id: 'script', name: 'TV Show', icon: 'tv', order: 2, description: 'Series with episodes and sequences' },
       { id: 'film', name: 'Film', icon: 'clapperboard', order: 3, description: 'Feature film or short' },
       { id: 'essay', name: 'Essay', icon: 'newspaper', order: 4, description: 'Essay or short nonfiction piece' }
     ];

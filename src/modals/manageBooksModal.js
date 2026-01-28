@@ -10,7 +10,7 @@ function getProjectTypeIcon(plugin, projectType) {
   if (template?.icon) return template.icon;
   // Fallback to defaults
   if (projectType === PROJECT_TYPES.BOOK) return 'book';
-  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv-minimal-play';
+  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv';
   if (projectType === PROJECT_TYPES.FILM) return 'clapperboard';
   if (projectType === PROJECT_TYPES.ESSAY) return 'newspaper';
   return 'book';

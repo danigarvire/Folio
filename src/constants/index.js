@@ -27,33 +27,51 @@ export const DEFAULT_SETTINGS = {
       order: 1, 
       description: "Novel or written work",
       structure: [
-        { title: "Preface", type: "file" },
-        { title: "Moodboard", type: "canvas" },
-        { title: "Volume 1", type: "folder", children: [] },
-        { title: "Outline", type: "file" },
-        { title: "Afterword", type: "file" }
+        { title: "Moodboard", type: "canvas", icon: "layout-dashboard" },
+        { title: "Preface", type: "file", icon: "file" },
+        { title: "Outline", type: "file", icon: "list" },
+        { title: "Volume 1", type: "folder", icon: "folder-open", children: [
+          { title: "Chapter 1", type: "file", icon: "file" }
+        ] },
+        { title: "Afterword", type: "file", icon: "file" }
       ]
     },
     { 
       id: "script", 
       name: "TV Show", 
-      icon: "tv-minimal-play", 
+      icon: "tv", 
       order: 2, 
       description: "Series with episodes and sequences",
       structure: [
         { 
           title: "Show Dossier", 
-          type: "folder", 
+          type: "folder",
+          icon: "folder-open",
           children: [
-            { title: "Concept", type: "folder", children: [] },
-            { title: "Structure", type: "folder", children: [] },
-            { title: "Faces", type: "folder", children: [] },
-            { title: "Places", type: "folder", children: [] },
-            { title: "Objects", type: "folder", children: [] },
-            { title: "Documentation", type: "folder", children: [] }
+            { title: "Concept", type: "folder", icon: "lightbulb", children: [
+              { title: "Logline", type: "file", icon: "file" },
+              { title: "Synopsis", type: "file", icon: "file" }
+            ] },
+            { title: "Structure", type: "folder", icon: "list-tree", children: [
+              { title: "Beat Sheet", type: "file", icon: "file" }
+            ] },
+            { title: "Faces", type: "folder", icon: "users", children: [
+              { title: "Character 1", type: "file", icon: "file" }
+            ] },
+            { title: "Places", type: "folder", icon: "map-pin", children: [
+              { title: "Location 1", type: "file", icon: "file" }
+            ] },
+            { title: "Objects", type: "folder", icon: "box", children: [
+              { title: "Prop 1", type: "file", icon: "file" }
+            ] },
+            { title: "Documentation", type: "folder", icon: "archive", children: [
+              { title: "Research", type: "file", icon: "file" }
+            ] }
           ]
         },
-        { title: "Episode 1", type: "folder", children: [] }
+        { title: "Episode 1", type: "folder", icon: "clapperboard", children: [
+          { title: "Scene 1", type: "file", icon: "file" }
+        ] }
       ]
     },
     { 
@@ -63,9 +81,11 @@ export const DEFAULT_SETTINGS = {
       order: 3, 
       description: "Feature film or short",
       structure: [
-        { title: "Moodboard", type: "canvas" },
-        { title: "Sequence 1", type: "folder", children: [] },
-        { title: "Outline", type: "file" }
+        { title: "Moodboard", type: "canvas", icon: "layout-dashboard" },
+        { title: "Outline", type: "file", icon: "list" },
+        { title: "Sequence 1", type: "folder", icon: "film", children: [
+          { title: "Scene 1", type: "file", icon: "file" }
+        ] }
       ]
     },
     { 
@@ -75,12 +95,12 @@ export const DEFAULT_SETTINGS = {
       order: 4, 
       description: "Essay or short nonfiction piece",
       structure: [
-        { title: "Documentation", type: "folder", children: [
-            { title: "Document 1", type: "file" }
+        { title: "Research", type: "folder", icon: "archive", children: [
+            { title: "Document 1", type: "file", icon: "file" }
           ]
         },
-        { title: "Outline", type: "file" },
-        { title: "Manuscript", type: "file" }
+        { title: "Outline", type: "file", icon: "list" },
+        { title: "Manuscript", type: "file", icon: "scroll-text" }
       ]
     }
   ]

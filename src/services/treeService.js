@@ -41,7 +41,7 @@ export class TreeService {
         const existing = existingMap.get(relativePath);
         
         if (item instanceof TFile) {
-          return {
+          const node = {
             id: existing?.id || this.generateNodeId(),
             title: existing?.title || item.basename,
             type: item.extension === 'canvas' ? 'canvas' : 'file',
@@ -52,14 +52,33 @@ export class TreeService {
             created_at: existing?.created_at || new Date().toISOString(),
             last_modified: new Date().toISOString()
           };
+          if (existing?.icon) node.icon = existing.icon;
+          return node;
         } else if (item instanceof TFolder) {
           const folderChildren = (item.children || [])
             .filter(child => !(child instanceof TFolder && child.name === 'misc'));
           
-          // Sort by existing order if available, otherwise alphabetically
+          // Sort by existing order if available, otherwise by known folder order, then alphabetically
           const childNodes = folderChildren.map(child => buildNode(child, 0));
+          // Predefined order for known folder names
+          const knownFolderOrder = {
+            "concept": 1,
+            "structure": 2,
+            "faces": 3,
+            "places": 4,
+            "objects": 5,
+            "documentation": 6,
+            "research": 1,
+            "show dossier": 1,
+            "episode 1": 2
+          };
           childNodes.sort((a, b) => {
             if (a.order && b.order) return a.order - b.order;
+            const aKnown = knownFolderOrder[a.title.toLowerCase()];
+            const bKnown = knownFolderOrder[b.title.toLowerCase()];
+            if (aKnown && bKnown) return aKnown - bKnown;
+            if (aKnown) return -1;
+            if (bKnown) return 1;
             return a.title.localeCompare(b.title);
           });
           // Reassign sequential order numbers
@@ -67,7 +86,7 @@ export class TreeService {
           
           const children = childNodes;
           
-          return {
+          const node = {
             id: existing?.id || this.generateNodeId(),
             title: existing?.title || item.name,
             type: 'group',
@@ -78,6 +97,8 @@ export class TreeService {
             last_modified: new Date().toISOString(),
             children
           };
+          if (existing?.icon) node.icon = existing.icon;
+          return node;
         }
       };
 
@@ -88,9 +109,27 @@ export class TreeService {
       // Build nodes first
       const nodes = fsChildren.map(child => buildNode(child, 0));
       
-      // Sort by existing order if available, otherwise alphabetically
+      // Predefined order for known folder names at root level
+      const knownRootOrder = {
+        "show dossier": 1,
+        "episode 1": 2,
+        "moodboard": 1,
+        "preface": 2,
+        "outline": 3,
+        "volume 1": 4,
+        "afterword": 5,
+        "sequence 1": 3,
+        "research": 1,
+        "manuscript": 3
+      };
+      // Sort by existing order if available, otherwise by known folder order, then alphabetically
       nodes.sort((a, b) => {
         if (a.order && b.order) return a.order - b.order;
+        const aKnown = knownRootOrder[a.title.toLowerCase()];
+        const bKnown = knownRootOrder[b.title.toLowerCase()];
+        if (aKnown && bKnown) return aKnown - bKnown;
+        if (aKnown) return -1;
+        if (bKnown) return 1;
         return a.title.localeCompare(b.title);
       });
       
