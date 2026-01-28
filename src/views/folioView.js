@@ -60,7 +60,7 @@ export class FolioView extends ItemView {
   // Render a filesystem-backed editorial tree for a book folder (Obsidian-safe)
   // Now with Book-Smith style drag & drop support
   // Get custom icon for specific folder/file names
-  getCustomIcon(title, isExpanded = false) {
+  getCustomIcon(title, isExpanded = false, nodeType = 'file') {
     const lowerTitle = title.toLowerCase();
     
     // File-specific icons
@@ -70,6 +70,8 @@ export class FolioView extends ItemView {
     if (lowerTitle === 'preface' || lowerTitle === 'afterword') return 'file';
     if (lowerTitle === 'logline' || lowerTitle === 'synopsis' || lowerTitle === 'beat sheet') return 'file';
     if (lowerTitle === 'document 1' || lowerTitle.startsWith('document ')) return 'file';
+    if (lowerTitle === 'chapter 1' || lowerTitle.startsWith('chapter ')) return 'file';
+    if (lowerTitle === 'scene 1' || lowerTitle.startsWith('scene ')) return 'file';
     
     // TV Show template folders
     if (lowerTitle === 'show dossier') return 'folder-open';
@@ -89,7 +91,8 @@ export class FolioView extends ItemView {
     if (lowerTitle === 'structure') return 'list-tree';
     if (lowerTitle === 'documentation' || lowerTitle === 'research') return 'archive';
     
-    // Default folder icons
+    // Default icons based on node type
+    if (nodeType === 'file') return 'file';
     return isExpanded ? 'folder-open' : 'folder';
   }
 
@@ -264,7 +267,7 @@ export class FolioView extends ItemView {
         try { 
           const isExpanded = this.plugin.expandedFolders.has(fullPath);
           // Use custom icon if defined, otherwise use getCustomIcon for special folders
-          const iconName = node.icon || this.getCustomIcon(node.title, isExpanded);
+          const iconName = node.icon || this.getCustomIcon(node.title, isExpanded, 'folder');
           setIcon(folderIcon, iconName); 
           setIcon(collapse, isExpanded ? "chevron-down" : "chevron-right"); 
         } catch {}
@@ -299,7 +302,7 @@ export class FolioView extends ItemView {
           else this.plugin.expandedFolders.delete(fullPath);
           try { 
             // Use custom icon if defined, otherwise use getCustomIcon
-            const iconName = node.icon || this.getCustomIcon(node.title, isHidden);
+            const iconName = node.icon || this.getCustomIcon(node.title, isHidden, 'folder');
             setIcon(folderIcon, iconName); 
             setIcon(collapse, isHidden ? "chevron-down" : "chevron-right"); 
           } catch {}
@@ -319,7 +322,7 @@ export class FolioView extends ItemView {
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try { 
           // Use custom icon if defined, otherwise use getCustomIcon for name-based icons
-          const defaultIcon = node.type === 'canvas' ? 'layout-dashboard' : this.getCustomIcon(node.title, false);
+          const defaultIcon = node.type === 'canvas' ? 'layout-dashboard' : this.getCustomIcon(node.title, false, 'file');
           setIcon(icon, node.icon || defaultIcon); 
         } catch {}
         

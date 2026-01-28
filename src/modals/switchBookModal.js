@@ -96,13 +96,19 @@ export class SwitchBookModal extends Modal {
 
         // compute progress and last modified
         const progressPct = (targetWords > 0) ? Math.round((Number(totalWords) / Number(targetWords)) * 100) : '—';
+        let createdDate = '—';
         let lastMod = '—';
+        try {
+          const created = cfg?.stats?.created_at || cfg?.basic?.created_at || '';
+          if (created) createdDate = (new Date(created)).toLocaleString();
+        } catch {}
         try {
           const lm = cfg?.stats?.last_modified || cfg?.stats?.lastModified || '';
           if (lm) lastMod = (new Date(lm)).toLocaleString();
         } catch {}
 
         leftCol.createDiv({ text: `Author: ${authors || '—'} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: 'folio-switch-meta' });
+        leftCol.createDiv({ text: `Created: ${createdDate}`, cls: 'folio-switch-meta-second' });
         leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: 'folio-switch-meta-second' });
 
         // Select button on the right

@@ -124,9 +124,9 @@ export class BookService {
     await this.app.vault.createFolder(miscPath);
     await this.app.vault.createFolder(coverPath);
 
-    // Create canonical book config file
+    // Create canonical project config file
     try {
-      const bookConfigPath = `${path}/misc/book-config.json`;
+      const bookConfigPath = `${path}/misc/project-config.json`;
       const now = new Date().toISOString();
       
       // Build tree from template structure or use fallback
@@ -169,7 +169,7 @@ export class BookService {
         await this.app.vault.create(bookConfigPath, JSON.stringify(defaultConfig, null, 2));
       }
     } catch (e) {
-      console.warn('createBook: failed to create book-config.json in misc', e);
+      console.warn('createBook: failed to create project-config.json in misc', e);
     }
 
     // Create actual files and folders from template structure
@@ -520,10 +520,14 @@ export class BookService {
       await vault.createFolder(coverPath);
     }
 
-    // Ensure canonical book-config.json exists
+    // Ensure canonical project-config.json exists
     try {
-      const bmPath = `${bookFolder.path}/misc/book-config.json`;
-      if (!vault.getAbstractFileByPath(bmPath)) {
+      const bmPath = `${bookFolder.path}/misc/project-config.json`;
+      // Also check for legacy file
+      const legacyPath = `${bookFolder.path}/misc/book-config.json`;
+      const hasNew = vault.getAbstractFileByPath(bmPath);
+      const hasLegacy = vault.getAbstractFileByPath(legacyPath);
+      if (!hasNew && !hasLegacy) {
         const now = new Date().toISOString();
         const defaultConfig = {
           basic: {
@@ -555,7 +559,7 @@ export class BookService {
         await vault.create(bmPath, JSON.stringify(defaultConfig, null, 2));
       }
     } catch (e) {
-      console.warn('ensureBookBaseStructure: failed to create book-config.json in misc', e);
+      console.warn('ensureBookBaseStructure: failed to create project-config.json in misc', e);
     }
   }
 

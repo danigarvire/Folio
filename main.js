@@ -549,7 +549,7 @@ var init_switchBookModal = __esm({
           return String(num);
         };
         const renderList = async (filter) => {
-          var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
+          var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m;
           list.empty();
           const seen = /* @__PURE__ */ new Set();
           for (const book of this.plugin.booksIndex) {
@@ -595,14 +595,22 @@ var init_switchBookModal = __esm({
               titleRow.createSpan({ text: subtitle, cls: "folio-switch-subtitle" });
             }
             const progressPct = targetWords > 0 ? Math.round(Number(totalWords) / Number(targetWords) * 100) : "\u2014";
+            let createdDate = "\u2014";
             let lastMod = "\u2014";
             try {
-              const lm = ((_j = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _j.last_modified) || ((_k = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _k.lastModified) || "";
+              const created = ((_j = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _j.created_at) || ((_k = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _k.created_at) || "";
+              if (created)
+                createdDate = new Date(created).toLocaleString();
+            } catch (e) {
+            }
+            try {
+              const lm = ((_l = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _l.last_modified) || ((_m = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _m.lastModified) || "";
               if (lm)
                 lastMod = new Date(lm).toLocaleString();
             } catch (e) {
             }
             leftCol.createDiv({ text: `Author: ${authors || "\u2014"} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: "folio-switch-meta" });
+            leftCol.createDiv({ text: `Created: ${createdDate}`, cls: "folio-switch-meta-second" });
             leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: "folio-switch-meta-second" });
             const selectBtn = rightCol.createEl("button", { text: "Select", cls: "mod-cta" });
             selectBtn.onclick = async () => {
@@ -1287,12 +1295,19 @@ var ConfigService = class {
     this.app = app;
   }
   /**
-   * Load full book config from book-config.json inside misc folder
+   * Load full project config from project-config.json inside misc folder
+   * (Alias: loadBookConfig for backwards compatibility)
    */
-  async loadBookConfig(book) {
+  async loadProjectConfig(project) {
     try {
-      const filePath = `${book.path}/misc/book-config.json`;
-      const f = this.app.vault.getAbstractFileByPath(filePath);
+      // Try new filename first, then fall back to legacy
+      let filePath = `${project.path}/misc/project-config.json`;
+      let f = this.app.vault.getAbstractFileByPath(filePath);
+      if (!f) {
+        // Fall back to legacy filename
+        filePath = `${project.path}/misc/book-config.json`;
+        f = this.app.vault.getAbstractFileByPath(filePath);
+      }
       if (!f)
         return null;
       const content = await this.app.vault.read(f);
@@ -1300,18 +1315,33 @@ var ConfigService = class {
     } catch (e) {
       if (!e || e.code === "ENOENT")
         return null;
-      console.warn("loadBookConfig failed", e);
+      console.warn("loadProjectConfig failed", e);
       return null;
     }
   }
+  async loadBookConfig(book) {
+    return this.loadProjectConfig(book);
+  }
   /**
-   * Save full book config to book-config.json inside misc folder
+   * Save full project config to project-config.json inside misc folder
    * Performs intelligent merge with existing config to avoid data loss
+   * (Alias: saveBookConfig for backwards compatibility)
    */
-  async saveBookConfig(book, config) {
+  async saveProjectConfig(project, config) {
     try {
-      const filePath = `${book.path}/misc/book-config.json`;
-      const miscDir = `${book.path}/misc`;
+      const filePath = `${project.path}/misc/project-config.json`;
+      const miscDir = `${project.path}/misc`;
+      
+      // Migrate legacy file if it exists
+      const legacyPath = `${project.path}/misc/book-config.json`;
+      const legacyFile = this.app.vault.getAbstractFileByPath(legacyPath);
+      if (legacyFile) {
+        const newFile = this.app.vault.getAbstractFileByPath(filePath);
+        if (!newFile) {
+          await this.app.vault.rename(legacyFile, filePath);
+        }
+      }
+      
       try {
         const existingMisc = this.app.vault.getAbstractFileByPath(miscDir);
         if (!existingMisc) {
@@ -1371,9 +1401,12 @@ var ConfigService = class {
       }
       return true;
     } catch (e) {
-      console.warn("saveBookConfig failed", e);
+      console.warn("saveProjectConfig failed", e);
       return false;
     }
+  }
+  async saveBookConfig(book, config) {
+    return this.saveProjectConfig(book, config);
   }
   /**
    * Load book metadata (simplified view of config)
@@ -1845,7 +1878,7 @@ var StatsService = class {
     });
   }
   /**
-   * Compute basic stats for a book and persist into book-config.json.stats
+   * Compute basic stats for a book and persist into project-config.json.stats
    */
   async computeAndSaveStatsForBook(book) {
     var _a, _b;
@@ -2063,7 +2096,7 @@ var BookService = class {
     await this.app.vault.createFolder(miscPath);
     await this.app.vault.createFolder(coverPath);
     try {
-      const bookConfigPath = `${path}/misc/book-config.json`;
+      const bookConfigPath = `${path}/misc/project-config.json`;
       const now = new Date().toISOString();
       const defaultTree = templateStructure ? this.buildTreeFromTemplateStructure(templateStructure, "", now) : this.getDefaultTreeForProjectType(projectType, now);
       const defaultConfig = {
@@ -2101,7 +2134,7 @@ var BookService = class {
         await this.app.vault.create(bookConfigPath, JSON.stringify(defaultConfig, null, 2));
       }
     } catch (e) {
-      console.warn("createBook: failed to create book-config.json in misc", e);
+      console.warn("createBook: failed to create project-config.json in misc", e);
     }
     const bookFolder = this.app.vault.getAbstractFileByPath(path);
     if (bookFolder instanceof import_obsidian2.TFolder) {
@@ -2467,8 +2500,12 @@ projectType: film
       await vault.createFolder(coverPath);
     }
     try {
-      const bmPath = `${bookFolder.path}/misc/book-config.json`;
-      if (!vault.getAbstractFileByPath(bmPath)) {
+      const bmPath = `${bookFolder.path}/misc/project-config.json`;
+      // Also check for legacy file
+      const legacyPath = `${bookFolder.path}/misc/book-config.json`;
+      const hasNew = vault.getAbstractFileByPath(bmPath);
+      const hasLegacy = vault.getAbstractFileByPath(legacyPath);
+      if (!hasNew && !hasLegacy) {
         const now = new Date().toISOString();
         const defaultConfig = {
           basic: {
@@ -2500,7 +2537,7 @@ projectType: film
         await vault.create(bmPath, JSON.stringify(defaultConfig, null, 2));
       }
     } catch (e) {
-      console.warn("ensureBookBaseStructure: failed to create book-config.json in misc", e);
+      console.warn("ensureBookBaseStructure: failed to create project-config.json in misc", e);
     }
   }
   /**
@@ -2611,7 +2648,7 @@ var FolioView = class extends import_obsidian4.ItemView {
   // Render a filesystem-backed editorial tree for a book folder (Obsidian-safe)
   // Now with Book-Smith style drag & drop support
   // Get custom icon for specific folder/file names
-  getCustomIcon(title, isExpanded = false) {
+  getCustomIcon(title, isExpanded = false, nodeType = 'file') {
     const lowerTitle = title.toLowerCase();
     // File-specific icons
     if (lowerTitle === "outline")
@@ -2625,6 +2662,10 @@ var FolioView = class extends import_obsidian4.ItemView {
     if (lowerTitle === "logline" || lowerTitle === "synopsis" || lowerTitle === "beat sheet")
       return "file";
     if (lowerTitle === "document 1" || lowerTitle.startsWith("document "))
+      return "file";
+    if (lowerTitle === "chapter 1" || lowerTitle.startsWith("chapter "))
+      return "file";
+    if (lowerTitle === "scene 1" || lowerTitle.startsWith("scene "))
       return "file";
     // TV Show template folders
     if (lowerTitle === "show dossier")
@@ -2650,6 +2691,9 @@ var FolioView = class extends import_obsidian4.ItemView {
       return "list-tree";
     if (lowerTitle === "documentation" || lowerTitle === "research")
       return "archive";
+    // Default based on node type
+    if (nodeType === 'file')
+      return "file";
     return isExpanded ? "folder-open" : "folder";
   }
   async renderBookTree(container, bookFolder) {
@@ -2781,7 +2825,7 @@ var FolioView = class extends import_obsidian4.ItemView {
         const folderIcon = folderRow.createSpan({ cls: "folio-tree-icon folder-icon" });
         try {
           const isExpanded = this.plugin.expandedFolders.has(fullPath);
-          const iconName = node.icon || this.getCustomIcon(node.title, isExpanded);
+          const iconName = node.icon || this.getCustomIcon(node.title, isExpanded, 'folder');
           (0, import_obsidian4.setIcon)(folderIcon, iconName);
           (0, import_obsidian4.setIcon)(collapse, isExpanded ? "chevron-down" : "chevron-right");
         } catch (e) {
@@ -2813,7 +2857,7 @@ var FolioView = class extends import_obsidian4.ItemView {
           else
             this.plugin.expandedFolders.delete(fullPath);
           try {
-            const iconName = node.icon || this.getCustomIcon(node.title, isHidden);
+            const iconName = node.icon || this.getCustomIcon(node.title, isHidden, 'folder');
             (0, import_obsidian4.setIcon)(folderIcon, iconName);
             (0, import_obsidian4.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
           } catch (e2) {
@@ -2829,7 +2873,7 @@ var FolioView = class extends import_obsidian4.ItemView {
         fileRow.dataset.nodeId = node.id;
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
-          const defaultIcon = node.type === "canvas" ? "layout-dashboard" : this.getCustomIcon(node.title, false);
+          const defaultIcon = node.type === "canvas" ? "layout-dashboard" : this.getCustomIcon(node.title, false, 'file');
           (0, import_obsidian4.setIcon)(icon, node.icon || defaultIcon);
         } catch (e) {
         }
@@ -3343,6 +3387,18 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
+    this.focusModeActive = false;
+    this.timerSeconds = 25 * 60; // 25 minutes
+    this.timerRunning = false;
+    this.timerInterval = null;
+    this.sessionStartWords = 0;
+    this.focusStats = {
+      sessions: 0,
+      interruptions: 0,
+      currentWords: 0,
+      wordGoal: 500,
+      totalTimeSpent: 0 // in seconds
+    };
   }
   getViewType() {
     return WRITER_TOOLS_VIEW_TYPE2;
@@ -3357,17 +3413,300 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
     const container = this.containerEl.children[1];
     container.empty();
     container.addClass("folio-writer-tools");
+
+    // Header (no icon)
     const header = container.createDiv({ cls: "writer-tools-header" });
-    header.createEl("h2", { text: "Writer Tools" });
+    const headerTitle = header.createDiv({ cls: "writer-tools-title" });
+    headerTitle.createSpan({ text: "Writer tools" });
+
+    // Divider
+    container.createDiv({ cls: "writer-tools-divider" });
+
+    // Tools container
     this.toolsContainer = container.createDiv({ cls: "writer-tools-container" });
-    this.renderPlaceholder();
+
+    // Render sections
+    this.renderFocusModeSection();
+    this.renderExportSection();
+    this.renderResourcesSection();
+    this.renderAboutSection();
   }
-  renderPlaceholder() {
-    this.toolsContainer.empty();
-    const placeholder = this.toolsContainer.createDiv({ cls: "writer-tools-placeholder" });
-    placeholder.createEl("p", {
-      text: "Herramientas de escritura carg\xE1ndose...",
-      cls: "writer-tools-placeholder-text"
+  renderFocusModeSection() {
+    const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
+    section.createDiv({ cls: "writer-tools-section-title", text: "FOCUS MODE" });
+
+    const focusItem = section.createDiv({ cls: "writer-tools-item" });
+    const iconSpan = focusItem.createSpan({ cls: "writer-tools-item-icon" });
+    (0, import_obsidian5.setIcon)(iconSpan, "circle-dot");
+    focusItem.createSpan({ cls: "writer-tools-item-text", text: "Enter focus mode" });
+
+    focusItem.addEventListener("click", () => {
+      this.showFocusMode();
+    });
+  }
+  showFocusMode() {
+    this.focusModeActive = true;
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-focus-mode");
+
+    // Get current project
+    const project = this.plugin.activeProject;
+    if (!project) {
+      container.createDiv({ cls: "focus-mode-no-project", text: "No project selected. Please select a project first." });
+      const backBtn = container.createEl("button", { cls: "focus-mode-btn-secondary", text: "Back" });
+      backBtn.addEventListener("click", () => this.exitFocusMode());
+      return;
+    }
+
+    // Load focus stats from project config
+    this.loadFocusStats(project).then(() => {
+      this.renderFocusModeUI(container, project);
+    });
+  }
+  async loadFocusStats(project) {
+    try {
+      const cfg = await this.plugin.configService.loadProjectConfig(project);
+      if (cfg && cfg.focusMode) {
+        this.focusStats = {
+          sessions: cfg.focusMode.sessions || 0,
+          interruptions: cfg.focusMode.interruptions || 0,
+          currentWords: 0, // reset per session
+          wordGoal: cfg.focusMode.wordGoal || 500,
+          totalTimeSpent: cfg.focusMode.totalTimeSpent || 0
+        };
+      }
+    } catch (e) {
+      console.warn("Failed to load focus stats", e);
+    }
+  }
+  async saveFocusStats(project) {
+    try {
+      const cfg = await this.plugin.configService.loadProjectConfig(project) || {};
+      cfg.focusMode = {
+        sessions: this.focusStats.sessions,
+        interruptions: this.focusStats.interruptions,
+        wordGoal: this.focusStats.wordGoal,
+        totalTimeSpent: this.focusStats.totalTimeSpent,
+        lastSession: new Date().toISOString()
+      };
+      await this.plugin.configService.saveProjectConfig(project, cfg);
+    } catch (e) {
+      console.warn("Failed to save focus stats", e);
+    }
+  }
+  renderFocusModeUI(container, project) {
+    // Header
+    const header = container.createDiv({ cls: "focus-mode-header" });
+    const headerIcon = header.createSpan({ cls: "focus-mode-header-icon" });
+    (0, import_obsidian5.setIcon)(headerIcon, "circle-dot");
+    header.createSpan({ cls: "focus-mode-header-title", text: "Focus mode" });
+
+    // Project name
+    const projectLabel = container.createDiv({ cls: "focus-mode-project-name" });
+    projectLabel.createSpan({ text: "Project: ", cls: "focus-mode-project-label" });
+    projectLabel.createSpan({ text: project.name, cls: "focus-mode-project-value" });
+
+    // Timer container
+    const timerContainer = container.createDiv({ cls: "focus-mode-timer-container" });
+    
+    // Timer circle
+    const timerCircle = timerContainer.createDiv({ cls: "focus-mode-timer-circle" });
+    this.timerDisplay = timerCircle.createDiv({ cls: "focus-mode-timer-display" });
+    this.updateTimerDisplay();
+
+    // Status text
+    this.statusText = container.createDiv({ cls: "focus-mode-status", text: "Ready to start" });
+
+    // Buttons container
+    const buttonsContainer = container.createDiv({ cls: "focus-mode-buttons" });
+    
+    // Start/Pause button
+    this.startButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-primary", text: "Start focus" });
+    this.startButton.addEventListener("click", () => this.toggleTimer());
+
+    // Exit button
+    const exitButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-secondary", text: "Exit" });
+    exitButton.addEventListener("click", () => this.exitFocusMode());
+
+    // Stats bar
+    const statsBar = container.createDiv({ cls: "focus-mode-stats-bar" });
+    this.renderFocusStats(statsBar);
+  }
+  updateTimerDisplay() {
+    const minutes = Math.floor(this.timerSeconds / 60);
+    const seconds = this.timerSeconds % 60;
+    this.timerDisplay.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
+  toggleTimer() {
+    if (this.timerRunning) {
+      this.pauseTimer();
+    } else {
+      this.startTimer();
+    }
+  }
+  startTimer() {
+    this.timerRunning = true;
+    this.startButton.textContent = "Pause";
+    this.statusText.textContent = "Focus in progress...";
+    this.timerInterval = setInterval(() => {
+      if (this.timerSeconds > 0) {
+        this.timerSeconds--;
+        this.updateTimerDisplay();
+      } else {
+        this.completeSession();
+      }
+    }, 1000);
+  }
+  pauseTimer() {
+    this.timerRunning = false;
+    this.startButton.textContent = "Resume";
+    this.statusText.textContent = "Paused";
+    this.focusStats.interruptions++;
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    // Save interruption
+    const project = this.plugin.activeProject;
+    if (project) this.saveFocusStats(project);
+    this.refreshFocusStats();
+  }
+  completeSession() {
+    this.timerRunning = false;
+    this.focusStats.sessions++;
+    this.focusStats.totalTimeSpent += 25 * 60; // Add 25 minutes
+    this.startButton.textContent = "Start focus";
+    this.statusText.textContent = "Session complete!";
+    this.timerSeconds = 25 * 60;
+    this.updateTimerDisplay();
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    // Save completed session to project config
+    const project = this.plugin.activeProject;
+    if (project) this.saveFocusStats(project);
+    this.refreshFocusStats();
+  }
+  refreshFocusStats() {
+    const statsBar = this.containerEl.querySelector(".focus-mode-stats-bar");
+    if (statsBar) {
+      statsBar.empty();
+      this.renderFocusStats(statsBar);
+    }
+  }
+  renderFocusStats(container) {
+    const formatTime = (seconds) => {
+      const hrs = Math.floor(seconds / 3600);
+      const mins = Math.floor((seconds % 3600) / 60);
+      if (hrs > 0) return `${hrs}h ${mins}m`;
+      return `${mins}m`;
+    };
+    
+    // Create tooltip zone above stats
+    const tooltipZone = container.createDiv({ cls: "focus-mode-tooltip-zone" });
+    
+    const stats = [
+      { label: "Complete sessions", value: this.focusStats.sessions, tooltip: "Number of 25-minute focus sessions completed without exiting" },
+      { label: "Interruptions", value: this.focusStats.interruptions, tooltip: "Number of times you paused during an active focus session" },
+      { label: "Session words", value: this.focusStats.currentWords, tooltip: "Words written during the current focus session" },
+      { label: "Word goal", value: this.focusStats.wordGoal, tooltip: "Target number of words to write per session" }
+    ];
+    
+    const statsRow = container.createDiv({ cls: "focus-mode-stats-row" });
+    
+    stats.forEach(stat => {
+      const statItem = statsRow.createDiv({ cls: "focus-mode-stat-item" });
+      statItem.createDiv({ cls: "focus-mode-stat-label", text: stat.label });
+      statItem.createDiv({ cls: "focus-mode-stat-value", text: stat.value.toString() });
+      
+      // Show tooltip in central zone on click
+      statItem.addEventListener("click", (e) => {
+        e.stopPropagation();
+        tooltipZone.textContent = stat.tooltip;
+        tooltipZone.classList.add("visible");
+        
+        // Hide after 3 seconds or on next click
+        setTimeout(() => {
+          tooltipZone.classList.remove("visible");
+        }, 3000);
+      });
+    });
+    
+    // Click anywhere else to dismiss tooltip
+    container.addEventListener("click", () => {
+      tooltipZone.classList.remove("visible");
+    });
+  }
+  exitFocusMode() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.timerRunning = false;
+    this.timerSeconds = 25 * 60;
+    this.focusModeActive = false;
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-focus-mode");
+    this.onOpen();
+  }
+  renderExportSection() {
+    const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
+    section.createDiv({ cls: "writer-tools-section-title", text: "EXPORT ASSISTANT" });
+
+    const exportItem = section.createDiv({ cls: "writer-tools-item" });
+    const iconSpan = exportItem.createSpan({ cls: "writer-tools-item-icon" });
+    (0, import_obsidian5.setIcon)(iconSpan, "file-stack");
+    exportItem.createSpan({ cls: "writer-tools-item-text", text: "Consolidate document" });
+
+    exportItem.addEventListener("click", () => {
+      console.log("Consolidate document clicked");
+    });
+  }
+  renderResourcesSection() {
+    const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
+    section.createDiv({ cls: "writer-tools-section-title", text: "RESOURCES" });
+
+    const resourcesGrid = section.createDiv({ cls: "writer-tools-resources-grid" });
+
+    const resources = [
+      { icon: "user", label: "Character", tooltip: "Character development resources" },
+      { icon: "bookmark", label: "Narrative", tooltip: "Narrative techniques" },
+      { icon: "layout-grid", label: "Structure", tooltip: "Story structure guides" },
+      { icon: "lightbulb", label: "Tips", tooltip: "Writing tips" }
+    ];
+
+    resources.forEach(resource => {
+      const resourceItem = resourcesGrid.createDiv({ cls: "writer-tools-resource-item" });
+      resourceItem.setAttribute("aria-label", resource.tooltip);
+      
+      const iconWrapper = resourceItem.createDiv({ cls: "writer-tools-resource-icon" });
+      (0, import_obsidian5.setIcon)(iconWrapper, resource.icon);
+      
+      resourceItem.createDiv({ cls: "writer-tools-resource-label", text: resource.label });
+
+      resourceItem.addEventListener("click", () => {
+        console.log(`${resource.label} clicked`);
+      });
+    });
+  }
+  renderAboutSection() {
+    const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
+    section.createDiv({ cls: "writer-tools-section-title", text: "ABOUT" });
+
+    const aboutItems = [
+      { icon: "heart", label: "Donate", action: () => window.open("https://github.com/sponsors", "_blank") },
+      { icon: "mail", label: "Contact", action: () => window.open("mailto:contact@example.com", "_blank") }
+    ];
+
+    aboutItems.forEach(item => {
+      const aboutItem = section.createDiv({ cls: "writer-tools-item" });
+      const iconSpan = aboutItem.createSpan({ cls: "writer-tools-item-icon" });
+      (0, import_obsidian5.setIcon)(iconSpan, item.icon);
+      aboutItem.createSpan({ cls: "writer-tools-item-text", text: item.label });
+
+      aboutItem.addEventListener("click", item.action);
     });
   }
   async onClose() {
@@ -4100,8 +4439,16 @@ module.exports = class FolioPlugin extends Plugin {
     this.treeService = new TreeService(this.app, this.configService);
     this.statsService = new StatsService(this.app, this.configService);
     this.bookService = new BookService(this.app, this.configService);
+    this.projectService = this.bookService; // Alias for backwards compatibility
     this.booksIndex = [];
     this.activeBook = null;
+    // Create activeProject getter/setter that aliases to activeBook
+    Object.defineProperty(this, 'activeProject', {
+      get: function() { return this.activeBook; },
+      set: function(val) { this.activeBook = val; },
+      enumerable: true,
+      configurable: true
+    });
     this.folioLeaf = null;
     this.activeFile = null;
     console.log("[Folio] onload - about to ensureBasePath, getBasePath():", this.getBasePath());

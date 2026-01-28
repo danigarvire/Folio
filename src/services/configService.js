@@ -1,5 +1,5 @@
 /**
- * Config Service - Handles book configuration loading and saving
+ * Config Service - Handles project configuration loading and saving
  */
 
 import { DEFAULT_BOOK_CONFIG } from '../constants/index.js';
@@ -10,31 +10,52 @@ export class ConfigService {
   }
 
   /**
-   * Load full book config from book-config.json inside misc folder
+   * Load full project config from book-config.json inside misc folder
    */
-  async loadBookConfig(book) {
+  async loadProjectConfig(project) {
     try {
-      const filePath = `${book.path}/misc/book-config.json`;
-      const f = this.app.vault.getAbstractFileByPath(filePath);
+      // Try new filename first, then fall back to legacy
+      let filePath = `${project.path}/misc/project-config.json`;
+      let f = this.app.vault.getAbstractFileByPath(filePath);
+      if (!f) {
+        // Fall back to legacy filename
+        filePath = `${project.path}/misc/book-config.json`;
+        f = this.app.vault.getAbstractFileByPath(filePath);
+      }
       if (!f) return null;
       const content = await this.app.vault.read(f);
       return JSON.parse(content);
     } catch (e) {
       // Missing file is expected during deletes; only warn for unexpected errors
       if (!e || e.code === 'ENOENT') return null;
-      console.warn('loadBookConfig failed', e);
+      console.warn('loadProjectConfig failed', e);
       return null;
     }
   }
 
+  // Alias for backwards compatibility
+  async loadBookConfig(book) {
+    return this.loadProjectConfig(book);
+  }
+
   /**
-   * Save full book config to book-config.json inside misc folder
+   * Save full project config to book-config.json inside misc folder
    * Performs intelligent merge with existing config to avoid data loss
    */
-  async saveBookConfig(book, config) {
+  async saveProjectConfig(project, config) {
     try {
-      const filePath = `${book.path}/misc/book-config.json`;
-      const miscDir = `${book.path}/misc`;
+      const filePath = `${project.path}/misc/project-config.json`;
+      const miscDir = `${project.path}/misc`;
+      
+      // Migrate legacy file if it exists
+      const legacyPath = `${project.path}/misc/book-config.json`;
+      const legacyFile = this.app.vault.getAbstractFileByPath(legacyPath);
+      if (legacyFile) {
+        const newFile = this.app.vault.getAbstractFileByPath(filePath);
+        if (!newFile) {
+          await this.app.vault.rename(legacyFile, filePath);
+        }
+      }
       
       // Ensure misc folder exists
       try {
@@ -111,17 +132,22 @@ export class ConfigService {
       
       return true;
     } catch (e) {
-      console.warn('saveBookConfig failed', e);
+      console.warn('saveProjectConfig failed', e);
       return false;
     }
   }
 
+  // Alias for backwards compatibility
+  async saveBookConfig(book, config) {
+    return this.saveProjectConfig(book, config);
+  }
+
   /**
-   * Load book metadata (simplified view of config)
+   * Load project metadata (simplified view of config)
    */
-  async loadBookMeta(book) {
+  async loadProjectMeta(project) {
     try {
-      const cfg = await this.loadBookConfig(book);
+      const cfg = await this.loadProjectConfig(project);
       if (!cfg) return null;
       
       return {
