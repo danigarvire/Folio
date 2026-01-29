@@ -3630,7 +3630,7 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
     return "Writer Tools";
   }
   getIcon() {
-    return "drafting-compass";
+    return "pencil-ruler";
   }
   async onOpen() {
     const container = this.containerEl.children[1];
@@ -3639,22 +3639,27 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
     const header = container.createDiv({ cls: "writer-tools-header" });
     const headerTitle = header.createDiv({ cls: "writer-tools-title" });
     headerTitle.createSpan({ text: "Writer tools" });
+    headerTitle.createSpan({ cls: "writer-tools-build-tag", text: "build: icons-verify" });
     container.createDiv({ cls: "writer-tools-divider" });
     this.toolsContainer = container.createDiv({ cls: "writer-tools-container" });
-    this.renderFocusModeSection();
-    this.renderExportSection();
+    this.renderToolsSection();
     this.renderResourcesSection();
     this.renderAboutSection();
   }
-  renderFocusModeSection() {
+  renderToolsSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
-    section.createDiv({ cls: "writer-tools-section-title", text: "FOCUS MODE" });
+    section.createDiv({ cls: "writer-tools-section-title", text: "TOOLS" });
     const focusItem = section.createDiv({ cls: "writer-tools-item" });
-    const iconSpan = focusItem.createSpan({ cls: "writer-tools-item-icon" });
-    (0, import_obsidian6.setIcon)(iconSpan, "circle-dot");
-    focusItem.createSpan({ cls: "writer-tools-item-text", text: "Enter focus mode" });
-    focusItem.addEventListener("click", () => {
-      this.showFocusMode();
+    const focusIcon = focusItem.createSpan({ cls: "writer-tools-item-icon" });
+    (0, import_obsidian6.setIcon)(focusIcon, "circle-dot");
+    focusItem.createSpan({ cls: "writer-tools-item-text", text: "Focus mode" });
+    focusItem.addEventListener("click", () => this.showFocusMode());
+    const exportItem = section.createDiv({ cls: "writer-tools-item" });
+    const exportIcon = exportItem.createSpan({ cls: "writer-tools-item-icon" });
+    (0, import_obsidian6.setIcon)(exportIcon, "file-stack");
+    exportItem.createSpan({ cls: "writer-tools-item-text", text: "Export assistant" });
+    exportItem.addEventListener("click", () => {
+      console.log("Consolidate document clicked");
     });
   }
   showFocusMode() {
@@ -3902,17 +3907,6 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
     container.removeClass("folio-focus-mode");
     this.onOpen();
   }
-  renderExportSection() {
-    const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
-    section.createDiv({ cls: "writer-tools-section-title", text: "EXPORT ASSISTANT" });
-    const exportItem = section.createDiv({ cls: "writer-tools-item" });
-    const iconSpan = exportItem.createSpan({ cls: "writer-tools-item-icon" });
-    (0, import_obsidian6.setIcon)(iconSpan, "file-stack");
-    exportItem.createSpan({ cls: "writer-tools-item-text", text: "Consolidate document" });
-    exportItem.addEventListener("click", () => {
-      console.log("Consolidate document clicked");
-    });
-  }
   renderResourcesSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "RESOURCES" });
@@ -3973,7 +3967,7 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
       { label: "Moral Ascent", icon: "trending-up" },
       { label: "Moral Descent", icon: "trending-down" },
       { label: "Flat Moral", icon: "minus" },
-      { label: "Moral Transformation", icon: "repeat" }
+      { label: "Moral Transformation", icon: "trending-up-down" }
     ];
     arcs.forEach((arc) => {
       const item = arcsGrid.createDiv({ cls: "character-resources-arc-item" });
@@ -3992,12 +3986,12 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
     const campbellArchetypes = [
       { label: "The Ally", icon: "handshake" },
       { label: "The Herald", icon: "bell" },
-      { label: "The Hero", icon: "sparkles" },
+      { label: "The Hero", icon: "sword" },
       { label: "The Mentor", icon: "graduation-cap" },
       { label: "The Shadow", icon: "moon" },
-      { label: "The Shapeshifter", icon: "shuffle" },
+      { label: "The Shapeshifter", icon: "hat-glasses" },
       { label: "The Threshold Guardian", icon: "shield" },
-      { label: "The Trickster", icon: "dribbble" }
+      { label: "The Trickster", icon: "dice" }
     ];
     campbellArchetypes.forEach((itemData) => {
       const item = campbellGrid.createDiv({ cls: "character-resources-card" });
@@ -4017,11 +4011,11 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
       { label: "The Everyman", icon: "users" },
       { label: "The Explorer", icon: "compass" },
       { label: "The Hero", icon: "sword" },
-      { label: "The Innocent", icon: "sun" },
+      { label: "The Innocent", icon: "baby" },
       { label: "The Jester", icon: "party-popper" },
       { label: "The Lover", icon: "heart" },
       { label: "The Magician", icon: "wand-2" },
-      { label: "The Outlaw", icon: "flame" },
+      { label: "The Outlaw", icon: "flame-kindling" },
       { label: "The Ruler", icon: "crown" },
       { label: "The Sage", icon: "book-open" }
     ];
@@ -4063,7 +4057,7 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         title: "Structural Time Manipulation",
         subtitle: "Techniques that reorganize chronology to control information flow.",
         items: [
-          { label: "Flashback", icon: "history" },
+          { label: "Flashback", icon: "rewind" },
           { label: "Flashforward", icon: "fast-forward" },
           { label: "Foreshadowing", icon: "scan-eye" }
         ],
@@ -4073,9 +4067,9 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         title: "Setup / Payoff Mechanics",
         subtitle: "Techniques about planting and resolving narrative information. They\u2019re all about audience prediction vs outcome.",
         items: [
-          { label: "Chekhov\u2019s Gun", icon: "target" },
+          { label: "Chekhov\u2019s Gun", icon: "bomb" },
           { label: "Red Herring", icon: "fish" },
-          { label: "Plot Twist", icon: "refresh-ccw" }
+          { label: "Plot Twist", icon: "rotate-3d" }
         ],
         note: ""
       },
@@ -4084,7 +4078,7 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         subtitle: "Techniques that control how conflict is concluded. Think of these as ending logic frameworks.",
         items: [
           { label: "Deus Ex Machina", icon: "wand-2" },
-          { label: "Eucatastrophe", icon: "sparkles" },
+          { label: "Eucatastrophe", icon: "mountain" },
           { label: "Poetic Justice", icon: "scale" }
         ],
         note: ""
@@ -4093,7 +4087,7 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         title: "Style & Delivery Techniques",
         subtitle: "These shape how information is expressed rather than plot structure. These affect reader experience, not plot mechanics.",
         items: [
-          { label: "\u201CShow, Don\u2019t Tell\u201D", icon: "pen-line" },
+          { label: "\u201CShow, Don\u2019t Tell\u201D", icon: "eye" },
           { label: "Quibble (Wordplay)", icon: "quote" }
         ],
         note: ""
@@ -4151,7 +4145,7 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         title: "Archetypal Character Journeys",
         subtitle: "Frameworks that model internal transformation and mythic character evolution rather than strict plot beats.",
         items: [
-          { label: "The Hero\u2019s Journey", icon: "sparkles" },
+          { label: "The Hero\u2019s Journey", icon: "map" },
           { label: "Dan Harmon Story Circle", icon: "orbit" }
         ]
       },
@@ -4162,7 +4156,7 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
           { label: "Freytag\u2019s Pyramid", icon: "triangle" },
           { label: "Fichtean Curve", icon: "line-chart" },
           { label: "Three Act Structure", icon: "columns-3" },
-          { label: "Kish\u014Dtenketsu", icon: "split" }
+          { label: "Kish\u014Dtenketsu", icon: "route" }
         ]
       },
       {
@@ -4170,7 +4164,7 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         subtitle: "Prescriptive systems designed for audience engagement, genre expectations, and market-friendly pacing.",
         items: [
           { label: "Save the Cat", icon: "cat" },
-          { label: "Seven Point Structure", icon: "milestone" },
+          { label: "Seven Point Structure", icon: "wheat" },
           { label: "Pulp Formula", icon: "book" },
           { label: "McKee Story paradigm", icon: "book-open" },
           { label: "Into the Woods structure", icon: "trees" }
@@ -4180,10 +4174,10 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         title: "Narrative Geometry / Experimental Structures",
         subtitle: "Architectural choices that shape how perspective, time, or reality are presented.",
         items: [
-          { label: "Frame Narrative", icon: "layout-template" },
-          { label: "Nonlinear Structure", icon: "shuffle" },
-          { label: "Rashomon Structure", icon: "layers" },
-          { label: "In Medias Res", icon: "skip-forward" }
+          { label: "Frame Narrative", icon: "scan" },
+          { label: "Nonlinear Structure", icon: "line-squiggle" },
+          { label: "Rashomon Structure", icon: "shrink" },
+          { label: "In Medias Res", icon: "git-commit-horizontal" }
         ]
       }
     ];

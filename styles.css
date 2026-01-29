@@ -1605,6 +1605,16 @@ body.theme-light {
   color: var(--text-normal);
 }
 
+.writer-tools-build-tag {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border);
+  padding: 2px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
 .writer-tools-title-icon {
   display: flex;
   align-items: center;
@@ -1833,8 +1843,15 @@ body.theme-light {
   justify-content: center;
   text-align: center;
   gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
 }
 
+.character-resources-arc-item:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
 .character-resources-arc-label {
   font-size: 12px;
   color: var(--text-normal);
@@ -1879,8 +1896,13 @@ body.theme-light {
   text-align: center;
   transition: background-color 0.15s ease, border-color 0.15s ease;
   gap: 8px;
+  cursor: pointer;
 }
 
+.character-resources-card:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--text-muted);
+}
 .character-resources-card-icon {
   width: 16px;
   height: 16px;
@@ -2021,8 +2043,15 @@ body.theme-light {
   text-align: center;
   min-height: 52px;
   gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
 }
 
+.narrative-resources-item:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
 .narrative-resources-item-icon {
   width: 16px;
   height: 16px;
@@ -2169,8 +2198,15 @@ body.theme-light {
   text-align: center;
   min-height: 52px;
   gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
 }
 
+.structure-resources-item:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
 .structure-resources-item-icon {
   width: 16px;
   height: 16px;
@@ -2302,8 +2338,15 @@ body.theme-light {
   text-align: center;
   min-height: 52px;
   gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  cursor: pointer;
 }
 
+.tips-resources-item:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--text-muted);
+  transform: translateY(-1px);
+}
 .tips-resources-item-icon {
   width: 16px;
   height: 16px;
