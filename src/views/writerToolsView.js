@@ -3,6 +3,7 @@
  */
 
 import { ItemView, setIcon } from 'obsidian';
+import { FocusModeStatsModal } from '../modals/focusModeStatsModal.js';
 
 export const WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
 
@@ -20,8 +21,10 @@ export class WriterToolsView extends ItemView {
       interruptions: 0,
       currentWords: 0,
       wordGoal: 500,
-      totalTimeSpent: 0 // in seconds
+      totalTimeSpent: 0, // in seconds
+      history: []
     };
+    this.focusStatsModal = null;
   }
 
   getViewType() {
@@ -80,7 +83,7 @@ export class WriterToolsView extends ItemView {
     container.addClass("folio-focus-mode");
 
     // Get current project
-    const project = this.plugin.activeProject;
+    const project = this.plugin.activeProject || this.plugin.activeBook;
     if (!project) {
       container.createDiv({ cls: "focus-mode-no-project", text: "No project selected. Please select a project first." });
       const backBtn = container.createEl("button", { cls: "focus-mode-btn-secondary", text: "Back" });
@@ -103,7 +106,8 @@ export class WriterToolsView extends ItemView {
           interruptions: cfg.focusMode.interruptions || 0,
           currentWords: 0, // reset per session
           wordGoal: cfg.focusMode.wordGoal || 500,
-          totalTimeSpent: cfg.focusMode.totalTimeSpent || 0
+          totalTimeSpent: cfg.focusMode.totalTimeSpent || 0,
+          history: Array.isArray(cfg.focusMode.history) ? cfg.focusMode.history : []
         };
       }
     } catch (e) {
@@ -119,9 +123,14 @@ export class WriterToolsView extends ItemView {
         interruptions: this.focusStats.interruptions,
         wordGoal: this.focusStats.wordGoal,
         totalTimeSpent: this.focusStats.totalTimeSpent,
+        history: this.focusStats.history,
         lastSession: new Date().toISOString()
       };
       await this.plugin.configService.saveProjectConfig(project, cfg);
+      if (this.focusStatsModal) {
+        this.focusStatsModal.setProject(project);
+        this.focusStatsModal.refresh();
+      }
     } catch (e) {
       console.warn("Failed to save focus stats", e);
     }
@@ -199,12 +208,18 @@ export class WriterToolsView extends ItemView {
     this.startButton.textContent = "Resume";
     this.statusText.textContent = "Paused";
     this.focusStats.interruptions++;
+    this.focusStats.history.push({
+      type: 'interrupted',
+      timestamp: new Date().toISOString(),
+      words: this.focusStats.currentWords || 0,
+      target: this.focusStats.wordGoal || 0
+    });
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
     // Save interruption
-    const project = this.plugin.activeProject;
+    const project = this.plugin.activeProject || this.plugin.activeBook;
     if (project) this.saveFocusStats(project);
     this.refreshFocusStats();
   }
@@ -213,6 +228,12 @@ export class WriterToolsView extends ItemView {
     this.timerRunning = false;
     this.focusStats.sessions++;
     this.focusStats.totalTimeSpent += 25 * 60; // Add 25 minutes
+    this.focusStats.history.push({
+      type: 'completed',
+      timestamp: new Date().toISOString(),
+      words: this.focusStats.currentWords || 0,
+      target: this.focusStats.wordGoal || 0
+    });
     this.startButton.textContent = "Start focus";
     this.statusText.textContent = "Session complete!";
     this.timerSeconds = 25 * 60;
@@ -222,7 +243,7 @@ export class WriterToolsView extends ItemView {
       this.timerInterval = null;
     }
     // Save completed session to project config
-    const project = this.plugin.activeProject;
+    const project = this.plugin.activeProject || this.plugin.activeBook;
     if (project) this.saveFocusStats(project);
     this.refreshFocusStats();
   }
@@ -243,20 +264,34 @@ export class WriterToolsView extends ItemView {
       return `${mins}m`;
     };
     
+    const project = this.plugin.activeProject || this.plugin.activeBook;
+    const statsHeader = container.createDiv({ cls: "focus-mode-stats-header" });
+    const statsButton = statsHeader.createEl("button", { cls: "focus-mode-stats-button", text: "Focus mode stats" });
+    statsButton.addEventListener("click", (evt) => {
+      evt.stopPropagation();
+      if (!project) return;
+      if (!this.focusStatsModal) {
+        this.focusStatsModal = new FocusModeStatsModal(this.plugin, project);
+      }
+      this.focusStatsModal.setProject(project);
+      this.focusStatsModal.open();
+      this.focusStatsModal.refresh();
+    });
+
     // Create tooltip zone above stats
     const tooltipZone = container.createDiv({ cls: "focus-mode-tooltip-zone" });
     
     const stats = [
-      { label: "Complete sessions", value: this.focusStats.sessions, tooltip: "Number of 25-minute focus sessions completed without exiting" },
-      { label: "Interruptions", value: this.focusStats.interruptions, tooltip: "Number of times you paused during an active focus session" },
-      { label: "Session words", value: this.focusStats.currentWords, tooltip: "Words written during the current focus session" },
-      { label: "Word goal", value: this.focusStats.wordGoal, tooltip: "Target number of words to write per session" }
+      { label: "Completed sessions", value: this.focusStats.sessions, tooltip: "Number of 25-minute focus sessions completed without exiting", priority: "secondary" },
+      { label: "Interrupted sessions", value: this.focusStats.interruptions, tooltip: "Number of times you paused during an active focus session", priority: "secondary" },
+      { label: "Words in session", value: this.focusStats.currentWords, tooltip: "Words written during the current focus session", priority: "primary" },
+      { label: "Session word target", value: this.focusStats.wordGoal, tooltip: "Target number of words to write per session", priority: "primary" }
     ];
     
     const statsRow = container.createDiv({ cls: "focus-mode-stats-row" });
     
     stats.forEach(stat => {
-      const statItem = statsRow.createDiv({ cls: "focus-mode-stat-item" });
+      const statItem = statsRow.createDiv({ cls: `focus-mode-stat-item ${stat.priority === 'primary' ? 'is-primary' : 'is-secondary'}` });
       statItem.createDiv({ cls: "focus-mode-stat-label", text: stat.label });
       statItem.createDiv({ cls: "focus-mode-stat-value", text: stat.value.toString() });
       

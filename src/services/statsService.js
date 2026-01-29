@@ -47,28 +47,35 @@ export class StatsService {
   }
 
   /**
-   * Build a set of excluded paths from the config tree
-   * Includes both directly excluded items and children of excluded folders
+   * Build sets of explicit include/exclude paths from the config tree
+   * Includes children when a parent folder is included/excluded
    */
-  buildExcludedPathsSet(configTree) {
+  buildStatsOverrideSets(configTree) {
     const excludedPaths = new Set();
+    const includedPaths = new Set();
     
-    const traverse = (nodes, parentExcluded = false) => {
+    const traverse = (nodes, parentExcluded = false, parentIncluded = false) => {
       for (const node of nodes) {
         const isExcluded = parentExcluded || node.exclude;
+        const isIncluded = parentIncluded || node.include;
         
-        if (isExcluded) {
-          excludedPaths.add(node.path);
+        if (node.type !== 'group') {
+          if (isExcluded) {
+            excludedPaths.add(node.path);
+          }
+          if (isIncluded) {
+            includedPaths.add(node.path);
+          }
         }
         
         if (node.children) {
-          traverse(node.children, isExcluded);
+          traverse(node.children, isExcluded, isIncluded);
         }
       }
     };
     
     traverse(configTree || []);
-    return excludedPaths;
+    return { excludedPaths, includedPaths };
   }
 
   /**
@@ -92,60 +99,65 @@ export class StatsService {
   }
 
   /**
-   * Filter files based on project type structure and exclusions
-   * - Book: Chapters inside Volumes (depth >= 2)
-   * - TV Show (script): Scenes inside Sequences inside Episodes (depth >= 3)
-   * - Film: Scenes inside Sequences (depth >= 2)
-   * - Essay: Manuscript.md, Outline.md at root + files in Research folder
+   * Stats rules for built-in project types
+   * Custom project types default to include-all
+   * @param {string} projectType
+   */
+  getStatsRulesForProjectType(projectType) {
+    const builtInTypes = new Set(Object.values(PROJECT_TYPES));
+    if (!builtInTypes.has(projectType)) {
+      return { includeAllByDefault: true, includePrefixes: [] };
+    }
+
+    switch (projectType) {
+      case PROJECT_TYPES.SCRIPT:
+      case PROJECT_TYPES.FILM:
+        return { includeAllByDefault: false, includePrefixes: ['scene'] };
+      case PROJECT_TYPES.ESSAY:
+        return { includeAllByDefault: false, includePrefixes: ['manuscript'] };
+      case PROJECT_TYPES.BOOK:
+      default:
+        return { includeAllByDefault: false, includePrefixes: ['chapter'] };
+    }
+  }
+
+  /**
+   * Decide if a file should count toward stats
+   * Explicit exclude overrides explicit include; default rules apply last.
+   * @param {TFile} file
+   * @param {string} bookPath
+   * @param {string} projectType
+   * @param {{ includeAllByDefault: boolean, includePrefixes: string[] }} rules
+   * @param {{ excludedPaths: Set<string>, includedPaths: Set<string> }} overrides
+   */
+  shouldCountFileForStats(file, bookPath, projectType, rules, overrides) {
+    const rel = file.path.replace(bookPath + '/', '');
+
+    // Always exclude misc folder
+    if (rel.startsWith('misc/')) return false;
+
+    if (overrides?.excludedPaths?.has(rel)) return false;
+    if (overrides?.includedPaths?.has(rel)) return true;
+
+    if (rules?.includeAllByDefault) return true;
+
+    const name = (file.basename || '').toLowerCase();
+    const prefixes = rules?.includePrefixes || [];
+    return prefixes.some((prefix) => name.startsWith(prefix));
+  }
+
+  /**
+   * Filter files based on project type rules and overrides
    * 
    * @param {Array} files - Array of TFile objects
    * @param {string} bookPath - The book's root path
    * @param {string} projectType - The project type
-   * @param {Set} excludedPaths - Set of relative paths to exclude
+   * @param {{ excludedPaths: Set<string>, includedPaths: Set<string> }} overrides
    */
-  filterFilesByProjectType(files, bookPath, projectType, excludedPaths = new Set()) {
+  filterFilesByProjectType(files, bookPath, projectType, overrides) {
+    const rules = this.getStatsRulesForProjectType(projectType);
     return files.filter((f) => {
-      const rel = f.path.replace(bookPath + '/', '');
-      
-      // Check if file is excluded
-      if (excludedPaths.has(rel)) return false;
-      
-      // Always exclude misc folder
-      if (rel.startsWith('misc/')) return false;
-      
-      const parts = rel.split('/');
-      const fileName = parts[parts.length - 1];
-      
-      switch (projectType) {
-        case PROJECT_TYPES.SCRIPT:
-          // TV Show: Scenes inside Sequences inside Episodes (depth >= 3)
-          // Structure: Episode/Sequence/Scene.md
-          return parts.length >= 3;
-          
-        case PROJECT_TYPES.FILM:
-          // Film: Scenes inside Sequences (depth >= 2)
-          // Structure: Sequence/Scene.md
-          return parts.length >= 2;
-          
-        case PROJECT_TYPES.ESSAY:
-          // Essay: Manuscript.md, Outline.md at root + files in Research folder
-          // Structure: Manuscript.md, Outline.md, Research/Document.md
-          if (parts.length === 1) {
-            // Root level files: Manuscript.md, Outline.md
-            return fileName === 'Manuscript.md' || fileName === 'Outline.md';
-          }
-          // Research folder files
-          if (parts.length >= 2 && parts[0] === 'Research') {
-            return true;
-          }
-          return false;
-          
-        case PROJECT_TYPES.BOOK:
-        default:
-          // Book: Chapters inside Volumes (depth >= 2)
-          // Structure: Volume/Chapter.md
-          return parts.length >= 2;
-      }
+      return this.shouldCountFileForStats(f, bookPath, projectType, rules, overrides);
     });
   }
 
@@ -161,11 +173,11 @@ export class StatsService {
       let cfg = (await this.configService.loadBookConfig(book)) || {};
       const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
       
-      // Build set of excluded paths from config tree
-      const excludedPaths = this.buildExcludedPathsSet(cfg.structure?.tree || []);
+      // Build explicit include/exclude overrides from config tree
+      const overrides = this.buildStatsOverrideSets(cfg.structure?.tree || []);
       
       const allMdFiles = this.collectMarkdownFiles(folder);
-      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, excludedPaths);
+      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, overrides);
       
       const perChapter = {};
       let total = 0;
@@ -249,14 +261,14 @@ export class StatsService {
 
       const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
       
-      // Build set of excluded paths from config tree
-      const excludedPaths = this.buildExcludedPathsSet(cfg.structure?.tree || []);
+      // Build explicit include/exclude overrides from config tree
+      const overrides = this.buildStatsOverrideSets(cfg.structure?.tree || []);
 
       const folder = this.app.vault.getAbstractFileByPath(book.path);
       if (!folder) return;
 
       const allMdFiles = this.collectMarkdownFiles(folder);
-      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, excludedPaths);
+      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, overrides);
       
       const currentPaths = new Set(mdFiles.map((f) => f.path.replace(book.path + '/', '')));
 
