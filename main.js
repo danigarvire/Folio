@@ -3980,6 +3980,9 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
       const icon = item.createSpan({ cls: "character-resources-card-icon" });
       applyIcon(icon, arc.icon);
       item.createDiv({ cls: "character-resources-arc-label", text: arc.label });
+      item.addEventListener("click", () => {
+        this.showResourceDetail(arc.label, () => this.showCharacterResources());
+      });
     });
     const archetypesSection = container.createDiv({ cls: "character-resources-section is-separated" });
     archetypesSection.createDiv({ cls: "character-resources-section-title", text: "Character archetypes" });
@@ -4001,6 +4004,9 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
       const icon = item.createSpan({ cls: "character-resources-card-icon" });
       applyIcon(icon, itemData.icon);
       item.createDiv({ cls: "character-resources-card-label", text: itemData.label });
+      item.addEventListener("click", () => {
+        this.showResourceDetail(itemData.label, () => this.showCharacterResources());
+      });
     });
     const jungSection = archetypesSection.createDiv({ cls: "character-resources-subsection" });
     jungSection.createDiv({ cls: "character-resources-subtitle", text: "Jung archetypes" });
@@ -4024,6 +4030,9 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
       const icon = item.createSpan({ cls: "character-resources-card-icon" });
       applyIcon(icon, itemData.icon);
       item.createDiv({ cls: "character-resources-card-label", text: itemData.label });
+      item.addEventListener("click", () => {
+        this.showResourceDetail(itemData.label, () => this.showCharacterResources());
+      });
     });
   }
   exitCharacterResources() {
@@ -4100,6 +4109,9 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         const icon = item.createSpan({ cls: "narrative-resources-item-icon" });
         applyIcon(icon, label.icon);
         item.createSpan({ cls: "narrative-resources-item-text", text: label.label });
+        item.addEventListener("click", () => {
+          this.showResourceDetail(label.label, () => this.showNarrativeResources());
+        });
       });
       if (group.note) {
         const note = card.createDiv({ cls: "narrative-resources-note" });
@@ -4185,6 +4197,9 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
         const icon = item.createSpan({ cls: "structure-resources-item-icon" });
         applyIcon(icon, itemData.icon);
         item.createSpan({ cls: "structure-resources-item-text", text: itemData.label });
+        item.addEventListener("click", () => {
+          this.showResourceDetail(itemData.label, () => this.showStructureResources());
+        });
       });
     });
   }
@@ -4230,12 +4245,31 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
       const icon = item.createSpan({ cls: "tips-resources-item-icon" });
       applyIcon(icon, tip.icon);
       item.createSpan({ cls: "tips-resources-item-text", text: tip.label });
+      item.addEventListener("click", () => {
+        this.showResourceDetail(tip.label, () => this.showTipsResources());
+      });
     });
   }
   exitTipsResources() {
     const container = this.containerEl.children[1];
     container.removeClass("folio-tips-resources");
     this.onOpen();
+  }
+  showResourceDetail(title, onBack) {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-resource-detail");
+    const header = container.createDiv({ cls: "resource-detail-header" });
+    header.createSpan({ cls: "resource-detail-title", text: title });
+    const backButton = header.createEl("button", { cls: "resource-detail-back", text: "Back" });
+    backButton.addEventListener("click", () => {
+      container.removeClass("folio-resource-detail");
+      onBack();
+    });
+    container.createDiv({
+      cls: "resource-detail-placeholder",
+      text: "Content coming soon."
+    });
   }
   renderAboutSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
