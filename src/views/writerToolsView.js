@@ -768,9 +768,106 @@ export class WriterToolsView extends ItemView {
       onBack();
     });
 
-    container.createDiv({
-      cls: "resource-detail-placeholder",
-      text: "Content coming soon."
+    if (title === "The Hero") {
+      this.renderHeroDetail(container);
+      return;
+    }
+
+    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+  }
+
+  renderHeroDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    content.createDiv({ cls: "resource-detail-heading", text: "THE HERO ARCHETYPE" });
+
+    content.createDiv({ cls: "resource-detail-subheading", text: "Who is the Hero?" });
+    content.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Hero is the transforming protagonist. They represent the struggle for personal growth, the confrontation of fear, and the overcoming of obstacles. The Hero symbolizes the human drive to transcend limits, improve, and give meaning to adversity."
+    });
+    content.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This is a universal archetype found in myth, classical stories, and modern narratives. The Hero’s journey forms the backbone of many plots."
+    });
+
+    content.createDiv({ cls: "resource-detail-divider" });
+
+    content.createDiv({ cls: "resource-detail-subheading", text: "Core traits" });
+    const traits = content.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Courage in the face of danger",
+      "Inner and outer strength",
+      "Empathy and leadership",
+      "Strong sense of justice",
+      "Human flaws and vulnerability"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    content.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Hero is not perfect. They fall, struggle, and rise transformed."
+    });
+
+    content.createDiv({ cls: "resource-detail-divider" });
+
+    content.createDiv({ cls: "resource-detail-subheading", text: "Relationships with other archetypes" });
+    const relationships = content.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Mentor → guidance and wisdom",
+      "Ally → shared mission",
+      "Threshold Guardian → trial or blockage",
+      "Shadow → antagonist or repressed self",
+      "Trickster → chaos and disruption",
+      "Shapeshifter → uncertainty and tension",
+      "Herald → announces change"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+
+    content.createDiv({ cls: "resource-detail-divider" });
+
+    content.createDiv({ cls: "resource-detail-subheading", text: "Writing a strong Hero" });
+    const writing = content.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Clear motivation",
+      "Internal conflict",
+      "Meaningful backstory",
+      "Unique skills",
+      "Emotional relationships",
+      "Balance of strength and fragility",
+      "Strong contrast between ordinary life and transformation"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+
+    content.createDiv({ cls: "resource-detail-divider" });
+
+    content.createDiv({ cls: "resource-detail-subheading", text: "Why this archetype works" });
+    content.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Because it mirrors the human experience: struggle, fall, learning, and transformation."
+    });
+
+    content.createDiv({ cls: "resource-detail-divider" });
+
+    const examplesHeader = content.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "club");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Hero Examples" });
+
+    const examplesGrid = content.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Harry Potter",
+      "Frodo Baggins",
+      "Katniss Everdeen",
+      "Mulan",
+      "Luke Skywalker",
+      "Simba",
+      "Elizabeth Bennet"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
     });
   }
 

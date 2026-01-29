@@ -2431,9 +2431,96 @@ body.theme-light {
   background-color: var(--background-secondary);
 }
 
+.resource-detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.resource-detail-heading {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-normal);
+}
+
+.resource-detail-subheading {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.resource-detail-paragraph {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-normal);
+}
+
+.resource-detail-divider {
+  height: 1px;
+  background-color: var(--background-modifier-border);
+  margin: 6px 0;
+}
+
+.resource-detail-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-normal);
+  line-height: 1.45;
+}
+
+.resource-detail-examples-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resource-detail-examples-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resource-detail-examples-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  display: block;
+}
+
+.resource-detail-examples-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.resource-detail-example-card {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  font-size: 12px;
+  text-align: center;
+  color: var(--text-normal);
+}
+
+@media (max-width: 700px) {
+  .resource-detail-examples-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* ===============================================================
    FOCUS MODE VIEW
-=============================================================== */
+ =============================================================== */
 
 .folio-focus-mode {
   padding: 20px;
