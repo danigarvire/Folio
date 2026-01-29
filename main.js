@@ -3930,9 +3930,312 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
       (0, import_obsidian6.setIcon)(iconWrapper, resource.icon);
       resourceItem.createDiv({ cls: "writer-tools-resource-label", text: resource.label });
       resourceItem.addEventListener("click", () => {
+        if (resource.label === "Character") {
+          this.showCharacterResources();
+          return;
+        }
+        if (resource.label === "Narrative") {
+          this.showNarrativeResources();
+          return;
+        }
+        if (resource.label === "Structure") {
+          this.showStructureResources();
+          return;
+        }
+        if (resource.label === "Tips") {
+          this.showTipsResources();
+          return;
+        }
         console.log(`${resource.label} clicked`);
       });
     });
+  }
+  showCharacterResources() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-character-resources");
+    const applyIcon = (el, iconName) => {
+      (0, import_obsidian6.setIcon)(el, iconName);
+      if (!el.querySelector("svg")) {
+        (0, import_obsidian6.setIcon)(el, "circle-dot");
+      }
+    };
+    const header = container.createDiv({ cls: "character-resources-header" });
+    const headerIcon = header.createSpan({ cls: "character-resources-header-icon" });
+    applyIcon(headerIcon, "user");
+    header.createSpan({ cls: "character-resources-header-title", text: "Character resources" });
+    const backButton = header.createEl("button", { cls: "character-resources-back", text: "Back" });
+    backButton.addEventListener("click", () => this.exitCharacterResources());
+    const arcsSection = container.createDiv({ cls: "character-resources-section" });
+    arcsSection.createDiv({ cls: "character-resources-section-title", text: "Character arcs" });
+    const arcsGrid = arcsSection.createDiv({ cls: "character-resources-arc-grid" });
+    const arcs = [
+      { label: "Moral Ascent", icon: "trending-up" },
+      { label: "Moral Descent", icon: "trending-down" },
+      { label: "Flat Moral", icon: "minus" },
+      { label: "Moral Transformation", icon: "repeat" }
+    ];
+    arcs.forEach((arc) => {
+      const item = arcsGrid.createDiv({ cls: "character-resources-arc-item" });
+      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+      applyIcon(icon, arc.icon);
+      item.createDiv({ cls: "character-resources-arc-label", text: arc.label });
+    });
+    const archetypesSection = container.createDiv({ cls: "character-resources-section is-separated" });
+    archetypesSection.createDiv({ cls: "character-resources-section-title", text: "Character archetypes" });
+    const campbellSection = archetypesSection.createDiv({ cls: "character-resources-subsection" });
+    campbellSection.createDiv({ cls: "character-resources-subtitle", text: "Campbell archetypes" });
+    const campbellGrid = campbellSection.createDiv({ cls: "character-resources-grid" });
+    const campbellArchetypes = [
+      { label: "The Ally", icon: "handshake" },
+      { label: "The Herald", icon: "bell" },
+      { label: "The Hero", icon: "sparkles" },
+      { label: "The Mentor", icon: "graduation-cap" },
+      { label: "The Shadow", icon: "moon" },
+      { label: "The Shapeshifter", icon: "shuffle" },
+      { label: "The Threshold Guardian", icon: "shield" },
+      { label: "The Trickster", icon: "dribbble" }
+    ];
+    campbellArchetypes.forEach((itemData) => {
+      const item = campbellGrid.createDiv({ cls: "character-resources-card" });
+      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+      applyIcon(icon, itemData.icon);
+      item.createDiv({ cls: "character-resources-card-label", text: itemData.label });
+    });
+    const jungSection = archetypesSection.createDiv({ cls: "character-resources-subsection" });
+    jungSection.createDiv({ cls: "character-resources-subtitle", text: "Jung archetypes" });
+    const jungGrid = jungSection.createDiv({ cls: "character-resources-grid" });
+    const jungArchetypes = [
+      { label: "The Caregiver", icon: "heart-handshake" },
+      { label: "The Creator", icon: "paintbrush" },
+      { label: "The Everyman", icon: "users" },
+      { label: "The Explorer", icon: "compass" },
+      { label: "The Hero", icon: "sword" },
+      { label: "The Innocent", icon: "sun" },
+      { label: "The Jester", icon: "party-popper" },
+      { label: "The Lover", icon: "heart" },
+      { label: "The Magician", icon: "wand-2" },
+      { label: "The Outlaw", icon: "flame" },
+      { label: "The Ruler", icon: "crown" },
+      { label: "The Sage", icon: "book-open" }
+    ];
+    jungArchetypes.forEach((itemData) => {
+      const item = jungGrid.createDiv({ cls: "character-resources-card" });
+      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+      applyIcon(icon, itemData.icon);
+      item.createDiv({ cls: "character-resources-card-label", text: itemData.label });
+    });
+  }
+  exitCharacterResources() {
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-character-resources");
+    this.onOpen();
+  }
+  showNarrativeResources() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-narrative-resources");
+    const applyIcon = (el, iconName) => {
+      (0, import_obsidian6.setIcon)(el, iconName);
+      if (!el.querySelector("svg")) {
+        (0, import_obsidian6.setIcon)(el, "circle-dot");
+      }
+    };
+    const header = container.createDiv({ cls: "narrative-resources-header" });
+    const headerIcon = header.createSpan({ cls: "narrative-resources-header-icon" });
+    applyIcon(headerIcon, "bookmark");
+    header.createSpan({ cls: "narrative-resources-header-title", text: "Narrative resources" });
+    const backButton = header.createEl("button", { cls: "narrative-resources-back", text: "Back" });
+    backButton.addEventListener("click", () => this.exitNarrativeResources());
+    const intro = container.createDiv({ cls: "narrative-resources-intro" });
+    intro.createSpan({ text: "Narrative techniques" });
+    const groups = [
+      {
+        title: "Structural Time Manipulation",
+        subtitle: "Techniques that reorganize chronology to control information flow.",
+        items: [
+          { label: "Flashback", icon: "history" },
+          { label: "Flashforward", icon: "fast-forward" },
+          { label: "Foreshadowing", icon: "scan-eye" }
+        ],
+        note: "These operate on the temporal axis of the narrative. They don\u2019t change events \u2014 they change when the audience receives them."
+      },
+      {
+        title: "Setup / Payoff Mechanics",
+        subtitle: "Techniques about planting and resolving narrative information. They\u2019re all about audience prediction vs outcome.",
+        items: [
+          { label: "Chekhov\u2019s Gun", icon: "target" },
+          { label: "Red Herring", icon: "fish" },
+          { label: "Plot Twist", icon: "refresh-ccw" }
+        ],
+        note: ""
+      },
+      {
+        title: "Resolution Devices",
+        subtitle: "Techniques that control how conflict is concluded. Think of these as ending logic frameworks.",
+        items: [
+          { label: "Deus Ex Machina", icon: "wand-2" },
+          { label: "Eucatastrophe", icon: "sparkles" },
+          { label: "Poetic Justice", icon: "scale" }
+        ],
+        note: ""
+      },
+      {
+        title: "Style & Delivery Techniques",
+        subtitle: "These shape how information is expressed rather than plot structure. These affect reader experience, not plot mechanics.",
+        items: [
+          { label: "\u201CShow, Don\u2019t Tell\u201D", icon: "pen-line" },
+          { label: "Quibble (Wordplay)", icon: "quote" }
+        ],
+        note: ""
+      }
+    ];
+    groups.forEach((group) => {
+      const card = container.createDiv({ cls: "narrative-resources-card" });
+      card.createDiv({ cls: "narrative-resources-card-title", text: group.title });
+      card.createDiv({ cls: "narrative-resources-card-subtitle", text: group.subtitle });
+      const grid = card.createDiv({ cls: "narrative-resources-grid" });
+      group.items.forEach((label) => {
+        const item = grid.createDiv({ cls: "narrative-resources-item" });
+        const icon = item.createSpan({ cls: "narrative-resources-item-icon" });
+        applyIcon(icon, label.icon);
+        item.createSpan({ cls: "narrative-resources-item-text", text: label.label });
+      });
+      if (group.note) {
+        const note = card.createDiv({ cls: "narrative-resources-note" });
+        group.note.split("\n").forEach((line, index) => {
+          if (index > 0)
+            note.createEl("br");
+          note.createSpan({ text: line });
+        });
+      }
+    });
+  }
+  exitNarrativeResources() {
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-narrative-resources");
+    this.onOpen();
+  }
+  showStructureResources() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-structure-resources");
+    const applyIcon = (el, iconName) => {
+      (0, import_obsidian6.setIcon)(el, iconName);
+      if (!el.querySelector("svg")) {
+        (0, import_obsidian6.setIcon)(el, "circle-dot");
+      }
+    };
+    const header = container.createDiv({ cls: "structure-resources-header" });
+    const headerIcon = header.createSpan({ cls: "structure-resources-header-icon" });
+    applyIcon(headerIcon, "layout-grid");
+    header.createSpan({ cls: "structure-resources-header-title", text: "Structure resources" });
+    const backButton = header.createEl("button", { cls: "structure-resources-back", text: "Back" });
+    backButton.addEventListener("click", () => this.exitStructureResources());
+    const intro = container.createDiv({ cls: "structure-resources-intro" });
+    intro.createSpan({ text: "Story architecture" });
+    const groups = [
+      {
+        title: "Archetypal Character Journeys",
+        subtitle: "Frameworks that model internal transformation and mythic character evolution rather than strict plot beats.",
+        items: [
+          { label: "The Hero\u2019s Journey", icon: "sparkles" },
+          { label: "Dan Harmon Story Circle", icon: "orbit" }
+        ]
+      },
+      {
+        title: "Dramatic Tension Architectures",
+        subtitle: "Models that describe how narrative pressure rises and falls across the story.",
+        items: [
+          { label: "Freytag\u2019s Pyramid", icon: "triangle" },
+          { label: "Fichtean Curve", icon: "line-chart" },
+          { label: "Three Act Structure", icon: "columns-3" },
+          { label: "Kish\u014Dtenketsu", icon: "split" }
+        ]
+      },
+      {
+        title: "Commercial Beat Frameworks",
+        subtitle: "Prescriptive systems designed for audience engagement, genre expectations, and market-friendly pacing.",
+        items: [
+          { label: "Save the Cat", icon: "cat" },
+          { label: "Seven Point Structure", icon: "milestone" },
+          { label: "Pulp Formula", icon: "book" },
+          { label: "McKee Story paradigm", icon: "book-open" },
+          { label: "Into the Woods structure", icon: "trees" }
+        ]
+      },
+      {
+        title: "Narrative Geometry / Experimental Structures",
+        subtitle: "Architectural choices that shape how perspective, time, or reality are presented.",
+        items: [
+          { label: "Frame Narrative", icon: "layout-template" },
+          { label: "Nonlinear Structure", icon: "shuffle" },
+          { label: "Rashomon Structure", icon: "layers" },
+          { label: "In Medias Res", icon: "skip-forward" }
+        ]
+      }
+    ];
+    groups.forEach((group) => {
+      const card = container.createDiv({ cls: "structure-resources-card" });
+      card.createDiv({ cls: "structure-resources-card-title", text: group.title });
+      card.createDiv({ cls: "structure-resources-card-subtitle", text: group.subtitle });
+      const grid = card.createDiv({ cls: "structure-resources-grid" });
+      group.items.forEach((itemData) => {
+        const item = grid.createDiv({ cls: "structure-resources-item" });
+        const icon = item.createSpan({ cls: "structure-resources-item-icon" });
+        applyIcon(icon, itemData.icon);
+        item.createSpan({ cls: "structure-resources-item-text", text: itemData.label });
+      });
+    });
+  }
+  exitStructureResources() {
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-structure-resources");
+    this.onOpen();
+  }
+  showTipsResources() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-tips-resources");
+    const applyIcon = (el, iconName) => {
+      (0, import_obsidian6.setIcon)(el, iconName);
+      if (!el.querySelector("svg")) {
+        (0, import_obsidian6.setIcon)(el, "circle-dot");
+      }
+    };
+    const header = container.createDiv({ cls: "tips-resources-header" });
+    const headerIcon = header.createSpan({ cls: "tips-resources-header-icon" });
+    applyIcon(headerIcon, "lightbulb");
+    header.createSpan({ cls: "tips-resources-header-title", text: "Writing tips" });
+    const backButton = header.createEl("button", { cls: "tips-resources-back", text: "Back" });
+    backButton.addEventListener("click", () => this.exitTipsResources());
+    const intro = container.createDiv({ cls: "tips-resources-intro" });
+    intro.createSpan({ text: "Writing tips" });
+    const description = container.createDiv({ cls: "tips-resources-description" });
+    description.createSpan({
+      text: "Practical craft guidance focused on sentence-level execution, clarity of communication, and reader impact. Unlike structural frameworks, this category deals with how language operates moment to moment \u2014 voice, rhythm, precision, and rhetorical control. These tips refine technique inside paragraphs rather than shaping the macro architecture of a story."
+    });
+    const gridCard = container.createDiv({ cls: "tips-resources-card" });
+    const grid = gridCard.createDiv({ cls: "tips-resources-grid" });
+    const tips = [
+      { label: "Argumentation (tips)", icon: "scale" },
+      { label: "Description (tips)", icon: "image" },
+      { label: "Dialogue (tips)", icon: "message-circle" },
+      { label: "Exposition (tips)", icon: "file-text" },
+      { label: "Narration (tips)", icon: "book-open" },
+      { label: "Persuasion (tips)", icon: "megaphone" }
+    ];
+    tips.forEach((tip) => {
+      const item = grid.createDiv({ cls: "tips-resources-item" });
+      const icon = item.createSpan({ cls: "tips-resources-item-icon" });
+      applyIcon(icon, tip.icon);
+      item.createSpan({ cls: "tips-resources-item-text", text: tip.label });
+    });
+  }
+  exitTipsResources() {
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-tips-resources");
+    this.onOpen();
   }
   renderAboutSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
