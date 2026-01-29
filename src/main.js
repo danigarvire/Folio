@@ -20,7 +20,7 @@ import { ConfigService } from './services/configService.js';
 import { TreeService } from './services/treeService.js';
 import { StatsService } from './services/statsService.js';
 import { BookService } from './services/bookService.js';
-import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, DEFAULT_SETTINGS } from './constants/index.js';
+import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, DEFAULT_SETTINGS, PROJECT_TYPES } from './constants/index.js';
 
 // Import views
 import { FolioView } from './views/folioView.js';
@@ -163,10 +163,29 @@ module.exports = class FolioPlugin extends Plugin {
   }
 
   // Minimal chapter context menu (Open in new tab/pane, Exclude toggle, Create copy, Rename, Delete)
-  openChapterContextMenu(evt, file, node = null) {
+  async openChapterContextMenu(evt, file, node = null) {
     try {
       evt.preventDefault?.();
       const menu = new Menu(this.app);
+      let shouldCount = !(node?.exclude);
+      try {
+        const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
+        if (book) {
+          const cfg = (await this.loadBookConfig(book)) || {};
+          const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
+          const overrides = this.statsService.buildStatsOverrideSets(cfg.structure?.tree || []);
+          const rules = this.statsService.getStatsRulesForProjectType(projectType);
+          shouldCount = this.statsService.shouldCountFileForStats(
+            file,
+            book.path,
+            projectType,
+            rules,
+            overrides
+          );
+        }
+      } catch (e) {
+        console.warn('Failed to load stats inclusion state', e);
+      }
 
       // Open in new tab
       menu.addItem((it) =>
@@ -213,12 +232,11 @@ module.exports = class FolioPlugin extends Plugin {
       menu.addSeparator();
 
       // Exclude from stats toggle - show current state
-      const isExcluded = node?.exclude || false;
       menu.addItem((it) =>
-        it.setTitle(isExcluded ? "Include in stats" : "Exclude from stats")
-          .setIcon(isExcluded ? "eye" : "eye-off")
+        it.setTitle(shouldCount ? "Exclude from stats" : "Include in stats")
+          .setIcon(shouldCount ? "eye-off" : "eye")
           .onClick(() => {
-            this.toggleExcludeFromStats(file, !isExcluded);
+            this.setStatsOverride(file, shouldCount ? "exclude" : "include");
           })
       );
 
@@ -741,6 +759,23 @@ module.exports = class FolioPlugin extends Plugin {
       return;
     }
     await this.treeService.toggleExcludeFromStats(book, file, exclude);
+    await this.computeAndSaveStatsForBook(book);
+    await this.refresh();
+    this.rerenderViews();
+  }
+
+  async setStatsOverride(file, action) {
+    const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
+    if (!book) {
+      console.warn('Could not find book for file:', file.path);
+      return;
+    }
+    if (action === 'include') {
+      await this.treeService.setStatsOverride(book, file, { include: true, exclude: false });
+    } else if (action === 'exclude') {
+      await this.treeService.setStatsOverride(book, file, { include: false, exclude: true });
+    }
+    await this.computeAndSaveStatsForBook(book);
     await this.refresh();
     this.rerenderViews();
   }
@@ -988,4 +1023,3 @@ module.exports = class FolioPlugin extends Plugin {
 /* ===============================================================
  * END OF MAIN.JS
 =============================================================== */
-

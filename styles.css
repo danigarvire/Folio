@@ -1886,6 +1886,28 @@ body.theme-light {
   border-radius: 8px;
 }
 
+.focus-mode-stats-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.focus-mode-stats-button {
+  border: 1px solid var(--background-modifier-border);
+  background-color: transparent;
+  color: var(--text-muted);
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.focus-mode-stats-button:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--text-muted);
+  color: var(--text-normal);
+}
+
 /* Central tooltip zone */
 .focus-mode-tooltip-zone {
   min-height: 48px;
@@ -1914,6 +1936,7 @@ body.theme-light {
 /* Stats row */
 .focus-mode-stats-row {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
 }
@@ -1925,11 +1948,19 @@ body.theme-light {
   justify-content: flex-start;
   gap: 6px;
   flex: 1;
-  min-width: 0;
+  min-width: 140px;
   padding: 8px 4px;
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.focus-mode-stat-item.is-primary {
+  order: 0;
+}
+
+.focus-mode-stat-item.is-secondary {
+  order: 1;
 }
 
 .focus-mode-stat-item:hover {
@@ -1953,6 +1984,107 @@ body.theme-light {
   font-weight: 600;
   color: var(--text-normal);
   font-variant-numeric: tabular-nums;
+}
+
+/* ===============================================================
+   FOCUS MODE STATS MODAL
+=============================================================== */
+
+.focus-mode-stats-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.focus-mode-stats-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.focus-mode-stats-section {
+  margin-bottom: 20px;
+}
+
+.focus-mode-stats-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.focus-mode-info-grid {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) minmax(140px, 2fr);
+  gap: 8px 16px;
+}
+
+.focus-mode-info-row {
+  display: contents;
+}
+
+.focus-mode-info-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.focus-mode-info-value {
+  font-size: 13px;
+  color: var(--text-normal);
+  word-break: break-word;
+}
+
+.focus-mode-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.focus-mode-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background-color: var(--background-primary);
+}
+
+.focus-mode-chart-title {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.focus-mode-chart-empty {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.focus-mode-chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.focus-mode-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.focus-mode-chart-legend-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 /* ===============================================================

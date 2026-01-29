@@ -48,6 +48,7 @@ export class TreeService {
             path: relativePath,
             order: existing?.order ?? order,
             exclude: existing?.exclude || false,
+            include: existing?.include || false,
             completed: existing?.completed || false,
             created_at: existing?.created_at || new Date().toISOString(),
             last_modified: new Date().toISOString()
@@ -264,17 +265,29 @@ export class TreeService {
    * For folders, recursively updates all children
    */
   async toggleExcludeFromStats(book, file, exclude) {
+    return this.setStatsOverride(book, file, { exclude });
+  }
+
+  /**
+   * Set explicit include/exclude overrides for stats
+   * include/exclude are explicit overrides (exclude wins at compute time)
+   */
+  async setStatsOverride(book, file, { include, exclude } = {}) {
     try {
       const isFolder = file.children !== undefined;
       
       if (isFolder) {
         // For folders, recursively exclude all children
-        await this.excludeFolderFromStats(book, file, exclude);
+        if (typeof exclude === 'boolean') {
+          await this.excludeFolderFromStats(book, file, exclude);
+        }
       } else {
         // For files, update frontmatter and config tree
-        await this.app.fileManager.processFrontMatter(file, (fm) => {
-          fm.exclude_from_stats = exclude;
-        });
+        if (typeof exclude === 'boolean') {
+          await this.app.fileManager.processFrontMatter(file, (fm) => {
+            fm.exclude_from_stats = exclude;
+          });
+        }
       }
 
       // Update config tree
@@ -286,11 +299,20 @@ export class TreeService {
       const updateNode = (nodes) => {
         for (const node of nodes) {
           if (node.path === relativePath) {
-            node.exclude = exclude;
+            if (typeof exclude === 'boolean') {
+              node.exclude = exclude;
+              if (exclude) node.include = false;
+            }
+            if (typeof include === 'boolean') {
+              node.include = include;
+              if (include) node.exclude = false;
+            }
             node.last_modified = new Date().toISOString();
             // For folders, also mark all children
             if (isFolder && node.children) {
-              this.markAllChildrenExcluded(node.children, exclude);
+              if (typeof exclude === 'boolean') {
+                this.markAllChildrenExcluded(node.children, exclude);
+              }
             }
             return true;
           }
@@ -305,7 +327,7 @@ export class TreeService {
         await this.configService.saveBookConfig(book, cfg);
       }
     } catch (e) {
-      console.warn('toggleExcludeFromStats failed', e);
+      console.warn('setStatsOverride failed', e);
     }
   }
 
