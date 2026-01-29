@@ -112,9 +112,9 @@ export class StatsService {
     switch (projectType) {
       case PROJECT_TYPES.SCRIPT:
       case PROJECT_TYPES.FILM:
-        return { includeAllByDefault: false, includePrefixes: ['scene'] };
+        return { includeAllByDefault: true, includePrefixes: ['scene'] };
       case PROJECT_TYPES.ESSAY:
-        return { includeAllByDefault: false, includePrefixes: ['manuscript'] };
+        return { includeAllByDefault: true, includePrefixes: ['manuscript'] };
       case PROJECT_TYPES.BOOK:
       default:
         return { includeAllByDefault: false, includePrefixes: ['chapter'] };

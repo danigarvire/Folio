@@ -357,7 +357,6 @@ export class BookService {
     if (!vault.getAbstractFileByPath(document1Path)) {
       await vault.create(document1Path, `---\nprojectType: essay\n---\n\n`);
     }
-    }
 
     const outlinePath = `${bookFolder.path}/Outline.md`;
     if (!vault.getAbstractFileByPath(outlinePath)) {

@@ -104,7 +104,7 @@ export class WriterToolsView extends ItemView {
         this.focusStats = {
           sessions: cfg.focusMode.sessions || 0,
           interruptions: cfg.focusMode.interruptions || 0,
-          currentWords: 0, // reset per session
+          currentWords: Number(cfg.focusMode.currentWords || 0),
           wordGoal: cfg.focusMode.wordGoal || 500,
           totalTimeSpent: cfg.focusMode.totalTimeSpent || 0,
           history: Array.isArray(cfg.focusMode.history) ? cfg.focusMode.history : []
@@ -121,6 +121,7 @@ export class WriterToolsView extends ItemView {
       cfg.focusMode = {
         sessions: this.focusStats.sessions,
         interruptions: this.focusStats.interruptions,
+        currentWords: this.focusStats.currentWords || 0,
         wordGoal: this.focusStats.wordGoal,
         totalTimeSpent: this.focusStats.totalTimeSpent,
         history: this.focusStats.history,
@@ -137,6 +138,7 @@ export class WriterToolsView extends ItemView {
   }
 
   renderFocusModeUI(container, project) {
+    this.focusModeProject = project;
     // Header
     const header = container.createDiv({ cls: "focus-mode-header" });
     const headerIcon = header.createSpan({ cls: "focus-mode-header-icon" });
@@ -193,6 +195,11 @@ export class WriterToolsView extends ItemView {
     this.timerRunning = true;
     this.startButton.textContent = "Pause";
     this.statusText.textContent = "Focus in progress...";
+    if (this.timerSeconds === 25 * 60) {
+      this.sessionStartWords = this.getActiveEditorWordCount();
+      this.focusStats.currentWords = 0;
+      this.refreshFocusStats();
+    }
     this.timerInterval = setInterval(() => {
       if (this.timerSeconds > 0) {
         this.timerSeconds--;
@@ -222,6 +229,8 @@ export class WriterToolsView extends ItemView {
     const project = this.plugin.activeProject || this.plugin.activeBook;
     if (project) this.saveFocusStats(project);
     this.refreshFocusStats();
+    this.sessionStartWords = 0;
+    this.focusStats.currentWords = 0;
   }
 
   completeSession() {
@@ -264,18 +273,18 @@ export class WriterToolsView extends ItemView {
       return `${mins}m`;
     };
     
-    const project = this.plugin.activeProject || this.plugin.activeBook;
+    const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
     const statsHeader = container.createDiv({ cls: "focus-mode-stats-header" });
     const statsButton = statsHeader.createEl("button", { cls: "focus-mode-stats-button", text: "Focus mode stats" });
-    statsButton.addEventListener("click", (evt) => {
+    statsButton.addEventListener("click", async (evt) => {
       evt.stopPropagation();
       if (!project) return;
+      await this.saveFocusStats(project);
       if (!this.focusStatsModal) {
         this.focusStatsModal = new FocusModeStatsModal(this.plugin, project);
       }
       this.focusStatsModal.setProject(project);
       this.focusStatsModal.open();
-      this.focusStatsModal.refresh();
     });
 
     // Create tooltip zone above stats
@@ -312,6 +321,32 @@ export class WriterToolsView extends ItemView {
     container.addEventListener("click", () => {
       tooltipZone.classList.remove("visible");
     });
+  }
+
+  getActiveEditorWordCount() {
+    try {
+      const leaf = this.plugin.app.workspace.getMostRecentLeaf();
+      const editor = leaf?.view?.editor;
+      if (!editor || typeof editor.getValue !== "function") return 0;
+      return this.plugin.statsService.countWords(editor.getValue());
+    } catch (e) {
+      return 0;
+    }
+  }
+
+  updateFocusSessionWordsFromEditor(text, file) {
+    if (!this.focusModeActive) return;
+    const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
+    if (!project || !file?.path || !file.path.startsWith(project.path + "/")) return;
+    const total = this.plugin.statsService.countWords(text);
+    if (this.sessionStartWords === undefined || this.sessionStartWords === null) {
+      this.sessionStartWords = total;
+    }
+    const current = Math.max(0, total - this.sessionStartWords);
+    if (current !== this.focusStats.currentWords) {
+      this.focusStats.currentWords = current;
+      this.refreshFocusStats();
+    }
   }
 
   exitFocusMode() {

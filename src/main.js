@@ -137,6 +137,16 @@ module.exports = class FolioPlugin extends Plugin {
           try {
             const f = view?.file;
             if (f) this.onFileModified(f);
+            if (editor && typeof editor.getValue === "function") {
+              const text = editor.getValue();
+              const leaves = this.app.workspace.getLeavesOfType(WRITER_TOOLS_VIEW_TYPE);
+              for (const leaf of leaves) {
+                const wtView = leaf.view;
+                if (wtView && typeof wtView.updateFocusSessionWordsFromEditor === "function") {
+                  wtView.updateFocusSessionWordsFromEditor(text, f);
+                }
+              }
+            }
           } catch (e) {
             console.warn('editor-change handler failed', e);
           }
@@ -849,7 +859,7 @@ module.exports = class FolioPlugin extends Plugin {
 
   // Delegate to ConfigService
   async loadBookMeta(book) {
-    return this.configService.loadBookMeta(book);
+    return this.configService.loadProjectMeta(book);
   }
 
   async waitForFolderSync(path, retries = 20) {

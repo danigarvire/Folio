@@ -615,7 +615,6 @@ var init_switchBookModal = __esm({
             const selectBtn = rightCol.createEl("button", { text: "Select", cls: "mod-cta" });
             selectBtn.onclick = async () => {
               this.plugin.activeBook = book;
-              // Persist selection across restarts
               try {
                 this.plugin.settings.lastActiveBookPath = book.path;
                 await this.plugin.saveSettings();
@@ -1295,16 +1294,13 @@ var ConfigService = class {
     this.app = app;
   }
   /**
-   * Load full project config from project-config.json inside misc folder
-   * (Alias: loadBookConfig for backwards compatibility)
+   * Load full project config from book-config.json inside misc folder
    */
   async loadProjectConfig(project) {
     try {
-      // Try new filename first, then fall back to legacy
       let filePath = `${project.path}/misc/project-config.json`;
       let f = this.app.vault.getAbstractFileByPath(filePath);
       if (!f) {
-        // Fall back to legacy filename
         filePath = `${project.path}/misc/book-config.json`;
         f = this.app.vault.getAbstractFileByPath(filePath);
       }
@@ -1319,20 +1315,18 @@ var ConfigService = class {
       return null;
     }
   }
+  // Alias for backwards compatibility
   async loadBookConfig(book) {
     return this.loadProjectConfig(book);
   }
   /**
-   * Save full project config to project-config.json inside misc folder
+   * Save full project config to book-config.json inside misc folder
    * Performs intelligent merge with existing config to avoid data loss
-   * (Alias: saveBookConfig for backwards compatibility)
    */
   async saveProjectConfig(project, config) {
     try {
       const filePath = `${project.path}/misc/project-config.json`;
       const miscDir = `${project.path}/misc`;
-      
-      // Migrate legacy file if it exists
       const legacyPath = `${project.path}/misc/book-config.json`;
       const legacyFile = this.app.vault.getAbstractFileByPath(legacyPath);
       if (legacyFile) {
@@ -1341,7 +1335,6 @@ var ConfigService = class {
           await this.app.vault.rename(legacyFile, filePath);
         }
       }
-      
       try {
         const existingMisc = this.app.vault.getAbstractFileByPath(miscDir);
         if (!existingMisc) {
@@ -1405,16 +1398,17 @@ var ConfigService = class {
       return false;
     }
   }
+  // Alias for backwards compatibility
   async saveBookConfig(book, config) {
     return this.saveProjectConfig(book, config);
   }
   /**
-   * Load book metadata (simplified view of config)
+   * Load project metadata (simplified view of config)
    */
-  async loadBookMeta(book) {
+  async loadProjectMeta(project) {
     var _a, _b, _c, _d, _e, _f, _g, _h;
     try {
-      const cfg = await this.loadBookConfig(book);
+      const cfg = await this.loadProjectConfig(project);
       if (!cfg)
         return null;
       return {
@@ -1522,16 +1516,17 @@ var TreeService = class {
             path: relativePath,
             order: (_a2 = existing == null ? void 0 : existing.order) != null ? _a2 : order,
             exclude: (existing == null ? void 0 : existing.exclude) || false,
+            include: (existing == null ? void 0 : existing.include) || false,
             completed: (existing == null ? void 0 : existing.completed) || false,
             created_at: (existing == null ? void 0 : existing.created_at) || new Date().toISOString(),
             last_modified: new Date().toISOString()
           };
-          if (existing == null ? void 0 : existing.icon) node.icon = existing.icon;
+          if (existing == null ? void 0 : existing.icon)
+            node.icon = existing.icon;
           return node;
         } else if (item instanceof import_obsidian.TFolder) {
           const folderChildren = (item.children || []).filter((child) => !(child instanceof import_obsidian.TFolder && child.name === "misc"));
           const childNodes = folderChildren.map((child) => buildNode(child, 0));
-          // Predefined order for known folder names (matching template order)
           const knownFolderOrder = {
             "concept": 1,
             "structure": 2,
@@ -1548,12 +1543,15 @@ var TreeService = class {
               return a.order - b.order;
             const aKnown = knownFolderOrder[a.title.toLowerCase()];
             const bKnown = knownFolderOrder[b.title.toLowerCase()];
-            if (aKnown && bKnown) return aKnown - bKnown;
-            if (aKnown) return -1;
-            if (bKnown) return 1;
+            if (aKnown && bKnown)
+              return aKnown - bKnown;
+            if (aKnown)
+              return -1;
+            if (bKnown)
+              return 1;
             return a.title.localeCompare(b.title);
           });
-          childNodes.forEach((node, idx) => node.order = idx + 1);
+          childNodes.forEach((node2, idx) => node2.order = idx + 1);
           const children = childNodes;
           const node = {
             id: (existing == null ? void 0 : existing.id) || this.generateNodeId(),
@@ -1566,14 +1564,14 @@ var TreeService = class {
             last_modified: new Date().toISOString(),
             children
           };
-          if (existing == null ? void 0 : existing.icon) node.icon = existing.icon;
+          if (existing == null ? void 0 : existing.icon)
+            node.icon = existing.icon;
           return node;
         }
       };
       const tree = [];
       const fsChildren = (bookFolder.children || []).filter((child) => !(child instanceof import_obsidian.TFolder && child.name === "misc"));
       const nodes = fsChildren.map((child) => buildNode(child, 0));
-      // Predefined order for known folder names at root level
       const knownRootOrder = {
         "show dossier": 1,
         "episode 1": 2,
@@ -1591,9 +1589,12 @@ var TreeService = class {
           return a.order - b.order;
         const aKnown = knownRootOrder[a.title.toLowerCase()];
         const bKnown = knownRootOrder[b.title.toLowerCase()];
-        if (aKnown && bKnown) return aKnown - bKnown;
-        if (aKnown) return -1;
-        if (bKnown) return 1;
+        if (aKnown && bKnown)
+          return aKnown - bKnown;
+        if (aKnown)
+          return -1;
+        if (bKnown)
+          return 1;
         return a.title.localeCompare(b.title);
       });
       let nextOrder = Math.max(0, ...nodes.map((n) => n.order || 0)) + 1;
@@ -1705,15 +1706,26 @@ var TreeService = class {
    * For folders, recursively updates all children
    */
   async toggleExcludeFromStats(book, file, exclude) {
+    return this.setStatsOverride(book, file, { exclude });
+  }
+  /**
+   * Set explicit include/exclude overrides for stats
+   * include/exclude are explicit overrides (exclude wins at compute time)
+   */
+  async setStatsOverride(book, file, { include, exclude } = {}) {
     var _a;
     try {
       const isFolder = file.children !== void 0;
       if (isFolder) {
-        await this.excludeFolderFromStats(book, file, exclude);
+        if (typeof exclude === "boolean") {
+          await this.excludeFolderFromStats(book, file, exclude);
+        }
       } else {
-        await this.app.fileManager.processFrontMatter(file, (fm) => {
-          fm.exclude_from_stats = exclude;
-        });
+        if (typeof exclude === "boolean") {
+          await this.app.fileManager.processFrontMatter(file, (fm) => {
+            fm.exclude_from_stats = exclude;
+          });
+        }
       }
       const cfg = await this.configService.loadBookConfig(book) || {};
       if (!((_a = cfg.structure) == null ? void 0 : _a.tree))
@@ -1722,10 +1734,21 @@ var TreeService = class {
       const updateNode = (nodes) => {
         for (const node of nodes) {
           if (node.path === relativePath) {
-            node.exclude = exclude;
+            if (typeof exclude === "boolean") {
+              node.exclude = exclude;
+              if (exclude)
+                node.include = false;
+            }
+            if (typeof include === "boolean") {
+              node.include = include;
+              if (include)
+                node.exclude = false;
+            }
             node.last_modified = new Date().toISOString();
             if (isFolder && node.children) {
-              this.markAllChildrenExcluded(node.children, exclude);
+              if (typeof exclude === "boolean") {
+                this.markAllChildrenExcluded(node.children, exclude);
+              }
             }
             return true;
           }
@@ -1739,7 +1762,7 @@ var TreeService = class {
         await this.configService.saveBookConfig(book, cfg);
       }
     } catch (e) {
-      console.warn("toggleExcludeFromStats failed", e);
+      console.warn("setStatsOverride failed", e);
     }
   }
   /**
@@ -1801,24 +1824,31 @@ var StatsService = class {
     return new Date().toISOString().slice(0, 10);
   }
   /**
-   * Build a set of excluded paths from the config tree
-   * Includes both directly excluded items and children of excluded folders
+   * Build sets of explicit include/exclude paths from the config tree
+   * Includes children when a parent folder is included/excluded
    */
-  buildExcludedPathsSet(configTree) {
+  buildStatsOverrideSets(configTree) {
     const excludedPaths = /* @__PURE__ */ new Set();
-    const traverse = (nodes, parentExcluded = false) => {
+    const includedPaths = /* @__PURE__ */ new Set();
+    const traverse = (nodes, parentExcluded = false, parentIncluded = false) => {
       for (const node of nodes) {
         const isExcluded = parentExcluded || node.exclude;
-        if (isExcluded) {
-          excludedPaths.add(node.path);
+        const isIncluded = parentIncluded || node.include;
+        if (node.type !== "group") {
+          if (isExcluded) {
+            excludedPaths.add(node.path);
+          }
+          if (isIncluded) {
+            includedPaths.add(node.path);
+          }
         }
         if (node.children) {
-          traverse(node.children, isExcluded);
+          traverse(node.children, isExcluded, isIncluded);
         }
       }
     };
     traverse(configTree || []);
-    return excludedPaths;
+    return { excludedPaths, includedPaths };
   }
   /**
    * Collect all markdown files recursively from a folder
@@ -1838,47 +1868,66 @@ var StatsService = class {
     return files;
   }
   /**
-   * Filter files based on project type structure and exclusions
-   * - Book: Chapters inside Volumes (depth >= 2)
-   * - TV Show (script): Scenes inside Sequences inside Episodes (depth >= 3)
-   * - Film: Scenes inside Sequences (depth >= 2)
-   * - Essay: Manuscript.md, Outline.md at root + files in Research folder
+   * Stats rules for built-in project types
+   * Custom project types default to include-all
+   * @param {string} projectType
+   */
+  getStatsRulesForProjectType(projectType) {
+    const builtInTypes = new Set(Object.values(PROJECT_TYPES));
+    if (!builtInTypes.has(projectType)) {
+      return { includeAllByDefault: true, includePrefixes: [] };
+    }
+    switch (projectType) {
+      case PROJECT_TYPES.SCRIPT:
+      case PROJECT_TYPES.FILM:
+        return { includeAllByDefault: true, includePrefixes: ["scene"] };
+      case PROJECT_TYPES.ESSAY:
+        return { includeAllByDefault: true, includePrefixes: ["manuscript"] };
+      case PROJECT_TYPES.BOOK:
+      default:
+        return { includeAllByDefault: false, includePrefixes: ["chapter"] };
+    }
+  }
+  /**
+   * Decide if a file should count toward stats
+   * Explicit exclude overrides explicit include; default rules apply last.
+   * @param {TFile} file
+   * @param {string} bookPath
+   * @param {string} projectType
+   * @param {{ includeAllByDefault: boolean, includePrefixes: string[] }} rules
+   * @param {{ excludedPaths: Set<string>, includedPaths: Set<string> }} overrides
+   */
+  shouldCountFileForStats(file, bookPath, projectType, rules, overrides) {
+    var _a, _b;
+    const rel = file.path.replace(bookPath + "/", "");
+    if (rel.startsWith("misc/"))
+      return false;
+    if ((_a = overrides == null ? void 0 : overrides.excludedPaths) == null ? void 0 : _a.has(rel))
+      return false;
+    if ((_b = overrides == null ? void 0 : overrides.includedPaths) == null ? void 0 : _b.has(rel))
+      return true;
+    if (rules == null ? void 0 : rules.includeAllByDefault)
+      return true;
+    const name = (file.basename || "").toLowerCase();
+    const prefixes = (rules == null ? void 0 : rules.includePrefixes) || [];
+    return prefixes.some((prefix) => name.startsWith(prefix));
+  }
+  /**
+   * Filter files based on project type rules and overrides
    * 
    * @param {Array} files - Array of TFile objects
    * @param {string} bookPath - The book's root path
    * @param {string} projectType - The project type
-   * @param {Set} excludedPaths - Set of relative paths to exclude
+   * @param {{ excludedPaths: Set<string>, includedPaths: Set<string> }} overrides
    */
-  filterFilesByProjectType(files, bookPath, projectType, excludedPaths = /* @__PURE__ */ new Set()) {
+  filterFilesByProjectType(files, bookPath, projectType, overrides) {
+    const rules = this.getStatsRulesForProjectType(projectType);
     return files.filter((f) => {
-      const rel = f.path.replace(bookPath + "/", "");
-      if (excludedPaths.has(rel))
-        return false;
-      if (rel.startsWith("misc/"))
-        return false;
-      const parts = rel.split("/");
-      const fileName = parts[parts.length - 1];
-      switch (projectType) {
-        case PROJECT_TYPES.SCRIPT:
-          return parts.length >= 3;
-        case PROJECT_TYPES.FILM:
-          return parts.length >= 2;
-        case PROJECT_TYPES.ESSAY:
-          if (parts.length === 1) {
-            return fileName === "Manuscript.md" || fileName === "Outline.md";
-          }
-          if (parts.length >= 2 && parts[0] === "Research") {
-            return true;
-          }
-          return false;
-        case PROJECT_TYPES.BOOK:
-        default:
-          return parts.length >= 2;
-      }
+      return this.shouldCountFileForStats(f, bookPath, projectType, rules, overrides);
     });
   }
   /**
-   * Compute basic stats for a book and persist into project-config.json.stats
+   * Compute basic stats for a book and persist into book-config.json.stats
    */
   async computeAndSaveStatsForBook(book) {
     var _a, _b;
@@ -1888,9 +1937,9 @@ var StatsService = class {
         return;
       let cfg = await this.configService.loadBookConfig(book) || {};
       const projectType = ((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
-      const excludedPaths = this.buildExcludedPathsSet(((_b = cfg.structure) == null ? void 0 : _b.tree) || []);
+      const overrides = this.buildStatsOverrideSets(((_b = cfg.structure) == null ? void 0 : _b.tree) || []);
       const allMdFiles = this.collectMarkdownFiles(folder);
-      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, excludedPaths);
+      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, overrides);
       const perChapter = {};
       let total = 0;
       for (const f of mdFiles) {
@@ -1948,12 +1997,12 @@ var StatsService = class {
       cfg.stats = cfg.stats || {};
       cfg.stats.per_chapter = cfg.stats.per_chapter || {};
       const projectType = ((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
-      const excludedPaths = this.buildExcludedPathsSet(((_b = cfg.structure) == null ? void 0 : _b.tree) || []);
+      const overrides = this.buildStatsOverrideSets(((_b = cfg.structure) == null ? void 0 : _b.tree) || []);
       const folder = this.app.vault.getAbstractFileByPath(book.path);
       if (!folder)
         return;
       const allMdFiles = this.collectMarkdownFiles(folder);
-      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, excludedPaths);
+      const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, overrides);
       const currentPaths = new Set(mdFiles.map((f) => f.path.replace(book.path + "/", "")));
       for (const relPath of currentPaths) {
         if (!(relPath in cfg.stats.per_chapter)) {
@@ -2375,7 +2424,6 @@ projectType: essay
     if (!vault.getAbstractFileByPath(documentationPath)) {
       await vault.createFolder(documentationPath);
     }
-    // Concept files: Logline, Synopsis (matching template)
     const conceptFiles = ["Logline.md", "Synopsis.md"];
     for (const file of conceptFiles) {
       const filePath = `${conceptPath}/${file}`;
@@ -2387,7 +2435,6 @@ projectType: script
 `);
       }
     }
-    // Structure files: Beat Sheet (matching template)
     const beatSheetPath = `${structurePath}/Beat Sheet.md`;
     if (!vault.getAbstractFileByPath(beatSheetPath)) {
       await vault.create(beatSheetPath, `---
@@ -2396,7 +2443,6 @@ projectType: script
 
 `);
     }
-    // Documentation: Research (matching template)
     const researchPath = `${documentationPath}/Research.md`;
     if (!vault.getAbstractFileByPath(researchPath)) {
       await vault.create(researchPath, `---
@@ -2405,7 +2451,6 @@ projectType: script
 
 `);
     }
-    // Faces: Character 1 (matching template)
     const character1Path = `${facesPath}/Character 1.md`;
     if (!vault.getAbstractFileByPath(character1Path)) {
       await vault.create(character1Path, `---
@@ -2414,7 +2459,6 @@ projectType: script
 
 `);
     }
-    // Places: Location 1 (matching template)
     const location1Path = `${placesPath}/Location 1.md`;
     if (!vault.getAbstractFileByPath(location1Path)) {
       await vault.create(location1Path, `---
@@ -2423,7 +2467,6 @@ projectType: script
 
 `);
     }
-    // Objects: Prop 1 (matching template)
     const prop1Path = `${objectsPath}/Prop 1.md`;
     if (!vault.getAbstractFileByPath(prop1Path)) {
       await vault.create(prop1Path, `---
@@ -2432,7 +2475,6 @@ projectType: script
 
 `);
     }
-    // Episode 1 with Scene 1 (matching template)
     const episode1Path = `${bookFolder.path}/Episode 1`;
     if (!vault.getAbstractFileByPath(episode1Path)) {
       await vault.createFolder(episode1Path);
@@ -2451,12 +2493,10 @@ projectType: script
    */
   async ensureFilmStructure(bookFolder) {
     const vault = this.app.vault;
-    // Moodboard at root (matching template)
     const moodboardPath = `${bookFolder.path}/Moodboard.canvas`;
     if (!vault.getAbstractFileByPath(moodboardPath)) {
       await vault.create(moodboardPath, '{"nodes":[],"edges":[]}');
     }
-    // Outline at root (matching template)
     const outlinePath = `${bookFolder.path}/Outline.md`;
     if (!vault.getAbstractFileByPath(outlinePath)) {
       await vault.create(outlinePath, `---
@@ -2465,7 +2505,6 @@ projectType: film
 
 `);
     }
-    // Sequence 1 folder with Scene 1 (matching template)
     const sequence1Path = `${bookFolder.path}/Sequence 1`;
     if (!vault.getAbstractFileByPath(sequence1Path)) {
       await vault.createFolder(sequence1Path);
@@ -2501,7 +2540,6 @@ projectType: film
     }
     try {
       const bmPath = `${bookFolder.path}/misc/project-config.json`;
-      // Also check for legacy file
       const legacyPath = `${bookFolder.path}/misc/book-config.json`;
       const hasNew = vault.getAbstractFileByPath(bmPath);
       const hasLegacy = vault.getAbstractFileByPath(legacyPath);
@@ -2648,9 +2686,8 @@ var FolioView = class extends import_obsidian4.ItemView {
   // Render a filesystem-backed editorial tree for a book folder (Obsidian-safe)
   // Now with Book-Smith style drag & drop support
   // Get custom icon for specific folder/file names
-  getCustomIcon(title, isExpanded = false, nodeType = 'file') {
+  getCustomIcon(title, isExpanded = false, nodeType = "file") {
     const lowerTitle = title.toLowerCase();
-    // File-specific icons
     if (lowerTitle === "outline")
       return "list";
     if (lowerTitle === "moodboard")
@@ -2667,18 +2704,14 @@ var FolioView = class extends import_obsidian4.ItemView {
       return "file";
     if (lowerTitle === "scene 1" || lowerTitle.startsWith("scene "))
       return "file";
-    // TV Show template folders
     if (lowerTitle === "show dossier")
       return "folder-open";
     if (lowerTitle === "episode 1" || lowerTitle.startsWith("episode "))
       return "clapperboard";
-    // Film template folders
     if (lowerTitle === "sequence 1" || lowerTitle.startsWith("sequence "))
       return "film";
-    // Book template folders
     if (lowerTitle === "volume 1" || lowerTitle.startsWith("volume "))
       return "folder-open";
-    // Common folders across templates
     if (lowerTitle === "concept")
       return "lightbulb";
     if (lowerTitle === "faces")
@@ -2691,8 +2724,7 @@ var FolioView = class extends import_obsidian4.ItemView {
       return "list-tree";
     if (lowerTitle === "documentation" || lowerTitle === "research")
       return "archive";
-    // Default based on node type
-    if (nodeType === 'file')
+    if (nodeType === "file")
       return "file";
     return isExpanded ? "folder-open" : "folder";
   }
@@ -2825,7 +2857,7 @@ var FolioView = class extends import_obsidian4.ItemView {
         const folderIcon = folderRow.createSpan({ cls: "folio-tree-icon folder-icon" });
         try {
           const isExpanded = this.plugin.expandedFolders.has(fullPath);
-          const iconName = node.icon || this.getCustomIcon(node.title, isExpanded, 'folder');
+          const iconName = node.icon || this.getCustomIcon(node.title, isExpanded, "folder");
           (0, import_obsidian4.setIcon)(folderIcon, iconName);
           (0, import_obsidian4.setIcon)(collapse, isExpanded ? "chevron-down" : "chevron-right");
         } catch (e) {
@@ -2857,7 +2889,7 @@ var FolioView = class extends import_obsidian4.ItemView {
           else
             this.plugin.expandedFolders.delete(fullPath);
           try {
-            const iconName = node.icon || this.getCustomIcon(node.title, isHidden, 'folder');
+            const iconName = node.icon || this.getCustomIcon(node.title, isHidden, "folder");
             (0, import_obsidian4.setIcon)(folderIcon, iconName);
             (0, import_obsidian4.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
           } catch (e2) {
@@ -2873,7 +2905,7 @@ var FolioView = class extends import_obsidian4.ItemView {
         fileRow.dataset.nodeId = node.id;
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
-          const defaultIcon = node.type === "canvas" ? "layout-dashboard" : this.getCustomIcon(node.title, false, 'file');
+          const defaultIcon = node.type === "canvas" ? "layout-dashboard" : this.getCustomIcon(node.title, false, "file");
           (0, import_obsidian4.setIcon)(icon, node.icon || defaultIcon);
         } catch (e) {
         }
@@ -3381,14 +3413,202 @@ var FolioView = class extends import_obsidian4.ItemView {
 };
 
 // src/views/writerToolsView.js
+var import_obsidian6 = require("obsidian");
+
+// src/modals/focusModeStatsModal.js
 var import_obsidian5 = require("obsidian");
+var FocusModeStatsModal = class extends import_obsidian5.Modal {
+  constructor(plugin, project) {
+    super(plugin.app);
+    this.plugin = plugin;
+    this.project = project;
+  }
+  setProject(project) {
+    this.project = project;
+  }
+  async onOpen() {
+    await this.render();
+  }
+  async refresh() {
+    await this.render();
+  }
+  formatDate(value) {
+    if (!value)
+      return "\u2014";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime()))
+      return "\u2014";
+    return date.toLocaleDateString();
+  }
+  formatValue(value) {
+    if (value === void 0 || value === null || value === "")
+      return "\u2014";
+    return value;
+  }
+  buildPieChart(container, title, slices, options = {}) {
+    const size = options.size || 140;
+    const radius = size / 2;
+    const chartWrap = container.createDiv({ cls: "focus-mode-chart" });
+    chartWrap.createDiv({ cls: "focus-mode-chart-title", text: title });
+    const resolveColor = (value) => {
+      if (!value)
+        return value;
+      const match = value.match(/^var\((--[^)]+)\)/);
+      if (!match)
+        return value;
+      const varName = match[1];
+      const computed = getComputedStyle(this.modalEl || document.body).getPropertyValue(varName).trim();
+      return computed || value;
+    };
+    const resolvedSlices = slices.map((slice) => ({
+      ...slice,
+      color: resolveColor(slice.color)
+    }));
+    const borderColor = resolveColor("var(--background-modifier-border)");
+    const total = resolvedSlices.reduce((sum, slice) => sum + slice.value, 0);
+    if (!total) {
+      const empty = chartWrap.createDiv({ cls: "focus-mode-chart-empty", text: "No data to display" });
+      empty.setAttribute("aria-label", `${title}: no data`);
+      return;
+    }
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("class", "focus-mode-chart-svg");
+    svg.setAttribute("width", `${size}`);
+    svg.setAttribute("height", `${size}`);
+    svg.setAttribute("viewBox", `0 0 ${size} ${size}`);
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", `${title} pie chart`);
+    chartWrap.appendChild(svg);
+    const center = radius;
+    let cumulative = 0;
+    const nonZeroSlices = resolvedSlices.filter((slice) => slice.value > 0);
+    if (nonZeroSlices.length === 1) {
+      const circle = document.createElementNS(svgNS, "circle");
+      circle.setAttribute("cx", `${center}`);
+      circle.setAttribute("cy", `${center}`);
+      circle.setAttribute("r", `${center}`);
+      circle.setAttribute("fill", nonZeroSlices[0].color);
+      circle.setAttribute("stroke", borderColor);
+      circle.setAttribute("stroke-width", "1");
+      svg.appendChild(circle);
+      circle.style.fill = nonZeroSlices[0].color;
+    } else {
+      const polarToCartesian = (cx, cy, r, angle) => {
+        const radians = (angle - 90) * (Math.PI / 180);
+        return {
+          x: cx + r * Math.cos(radians),
+          y: cy + r * Math.sin(radians)
+        };
+      };
+      const describeArc = (cx, cy, r, startAngle, endAngle) => {
+        const start = polarToCartesian(cx, cy, r, endAngle);
+        const end = polarToCartesian(cx, cy, r, startAngle);
+        const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+        return [
+          `M ${cx} ${cy}`,
+          `L ${start.x} ${start.y}`,
+          `A ${r} ${r} 0 ${largeArcFlag} 0 ${end.x} ${end.y}`,
+          "Z"
+        ].join(" ");
+      };
+      resolvedSlices.forEach((slice) => {
+        if (slice.value <= 0)
+          return;
+        const startAngle = cumulative;
+        const endAngle = cumulative + slice.value / total * 360;
+        cumulative = endAngle;
+        const path = document.createElementNS(svgNS, "path");
+        path.setAttribute("d", describeArc(center, center, center, startAngle, endAngle));
+        path.setAttribute("fill", slice.color);
+        path.setAttribute("stroke", borderColor);
+        path.setAttribute("stroke-width", "1");
+        svg.appendChild(path);
+        path.style.fill = slice.color;
+        path.setAttribute("aria-label", `${slice.label}: ${slice.value}`);
+      });
+    }
+    const legend = chartWrap.createDiv({ cls: "focus-mode-chart-legend" });
+    slices.forEach((slice) => {
+      const legendItem = legend.createDiv({ cls: "focus-mode-chart-legend-item" });
+      legendItem.createSpan({ cls: "focus-mode-chart-legend-swatch" }).style.backgroundColor = slice.color;
+      legendItem.createSpan({ cls: "focus-mode-chart-legend-label", text: `${slice.label}: ${slice.value}` });
+    });
+  }
+  async render() {
+    var _a;
+    const { contentEl } = this;
+    this._renderToken = (this._renderToken || 0) + 1;
+    const token = this._renderToken;
+    const header = contentEl.createDiv({ cls: "focus-mode-stats-modal-header" });
+    header.createDiv({ cls: "focus-mode-stats-modal-title", text: "Focus mode stats" });
+    const headerActions = header.createDiv({ cls: "focus-mode-stats-modal-actions" });
+    headerActions.createEl("button", { cls: "focus-mode-stats-modal-btn", text: "Older sessions" });
+    if (!this.project) {
+      contentEl.createDiv({ cls: "focus-mode-stats-empty", text: "No active project." });
+      return;
+    }
+    const cfg = await this.plugin.configService.loadProjectConfig(this.project) || {};
+    const meta = await this.plugin.configService.loadProjectMeta(this.project) || {};
+    if (token !== this._renderToken)
+      return;
+    contentEl.empty();
+    const author = Array.isArray(meta.author) ? meta.author.join(", ") : meta.author;
+    const createdAt = this.formatDate(meta.created_at);
+    const lastModified = this.formatDate(((_a = cfg.stats) == null ? void 0 : _a.last_modified) || meta.last_modified);
+    const infoSection = contentEl.createDiv({ cls: "focus-mode-stats-section" });
+    infoSection.createDiv({ cls: "focus-mode-stats-section-title", text: "Project info" });
+    const infoGrid = infoSection.createDiv({ cls: "focus-mode-info-grid" });
+    const addInfoRow = (label, value) => {
+      const row = infoGrid.createDiv({ cls: "focus-mode-info-row" });
+      row.createDiv({ cls: "focus-mode-info-label", text: label });
+      row.createDiv({ cls: "focus-mode-info-value", text: this.formatValue(value) });
+    };
+    addInfoRow("Title", meta.title || this.project.name || "\u2014");
+    addInfoRow("Author", author || "\u2014");
+    addInfoRow("Date of creation", createdAt);
+    addInfoRow("Date of last modification", lastModified);
+    const focusMode = cfg.focusMode || {};
+    const history = Array.isArray(focusMode.history) ? focusMode.history : [];
+    const currentWords = Number(focusMode.currentWords || 0);
+    const currentTarget = Number(focusMode.wordGoal || 0);
+    const statsSection = contentEl.createDiv({ cls: "focus-mode-stats-section" });
+    statsSection.createDiv({ cls: "focus-mode-stats-section-title", text: "Focus sessions" });
+    const statsGrid = statsSection.createDiv({ cls: "focus-mode-info-grid" });
+    const addStatRow = (label, value) => {
+      const row = statsGrid.createDiv({ cls: "focus-mode-info-row" });
+      row.createDiv({ cls: "focus-mode-info-label", text: label });
+      row.createDiv({ cls: "focus-mode-info-value", text: value.toString() });
+    };
+    addStatRow("Total Completed sessions", Number(focusMode.sessions || 0));
+    addStatRow("Total Interrupted sessions", Number(focusMode.interruptions || 0));
+    addStatRow("Total Words in session", currentWords);
+    addStatRow("Total Session word target", currentTarget);
+    const chartsSection = contentEl.createDiv({ cls: "focus-mode-stats-section focus-mode-charts" });
+    chartsSection.createDiv({ cls: "focus-mode-stats-section-title", text: "Charts" });
+    const chartsGrid = chartsSection.createDiv({ cls: "focus-mode-charts-grid" });
+    const completedCount = Number(focusMode.sessions || 0);
+    const interruptedCount = Number(focusMode.interruptions || 0);
+    this.buildPieChart(chartsGrid, "Completed vs Interrupted", [
+      { label: "Completed", value: completedCount, color: "var(--text-accent)" },
+      { label: "Interrupted", value: interruptedCount, color: "var(--text-muted)" }
+    ]);
+    const remaining = Math.max(0, currentTarget - currentWords);
+    this.buildPieChart(chartsGrid, "Words vs Target", [
+      { label: "Words", value: currentWords, color: "var(--text-accent)" },
+      { label: "Remaining", value: remaining, color: "var(--text-normal)" }
+    ]);
+  }
+};
+
+// src/views/writerToolsView.js
 var WRITER_TOOLS_VIEW_TYPE2 = "folio-writer-tools";
-var WriterToolsView = class extends import_obsidian5.ItemView {
+var WriterToolsView = class extends import_obsidian6.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
     this.focusModeActive = false;
-    this.timerSeconds = 25 * 60; // 25 minutes
+    this.timerSeconds = 25 * 60;
     this.timerRunning = false;
     this.timerInterval = null;
     this.sessionStartWords = 0;
@@ -3397,8 +3617,11 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
       interruptions: 0,
       currentWords: 0,
       wordGoal: 500,
-      totalTimeSpent: 0 // in seconds
+      totalTimeSpent: 0,
+      // in seconds
+      history: []
     };
+    this.focusStatsModal = null;
   }
   getViewType() {
     return WRITER_TOOLS_VIEW_TYPE2;
@@ -3413,19 +3636,11 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
     const container = this.containerEl.children[1];
     container.empty();
     container.addClass("folio-writer-tools");
-
-    // Header (no icon)
     const header = container.createDiv({ cls: "writer-tools-header" });
     const headerTitle = header.createDiv({ cls: "writer-tools-title" });
     headerTitle.createSpan({ text: "Writer tools" });
-
-    // Divider
     container.createDiv({ cls: "writer-tools-divider" });
-
-    // Tools container
     this.toolsContainer = container.createDiv({ cls: "writer-tools-container" });
-
-    // Render sections
     this.renderFocusModeSection();
     this.renderExportSection();
     this.renderResourcesSection();
@@ -3434,12 +3649,10 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
   renderFocusModeSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "FOCUS MODE" });
-
     const focusItem = section.createDiv({ cls: "writer-tools-item" });
     const iconSpan = focusItem.createSpan({ cls: "writer-tools-item-icon" });
-    (0, import_obsidian5.setIcon)(iconSpan, "circle-dot");
+    (0, import_obsidian6.setIcon)(iconSpan, "circle-dot");
     focusItem.createSpan({ cls: "writer-tools-item-text", text: "Enter focus mode" });
-
     focusItem.addEventListener("click", () => {
       this.showFocusMode();
     });
@@ -3449,17 +3662,13 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
     const container = this.containerEl.children[1];
     container.empty();
     container.addClass("folio-focus-mode");
-
-    // Get current project
-    const project = this.plugin.activeProject;
+    const project = this.plugin.activeProject || this.plugin.activeBook;
     if (!project) {
       container.createDiv({ cls: "focus-mode-no-project", text: "No project selected. Please select a project first." });
       const backBtn = container.createEl("button", { cls: "focus-mode-btn-secondary", text: "Back" });
       backBtn.addEventListener("click", () => this.exitFocusMode());
       return;
     }
-
-    // Load focus stats from project config
     this.loadFocusStats(project).then(() => {
       this.renderFocusModeUI(container, project);
     });
@@ -3471,9 +3680,10 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
         this.focusStats = {
           sessions: cfg.focusMode.sessions || 0,
           interruptions: cfg.focusMode.interruptions || 0,
-          currentWords: 0, // reset per session
+          currentWords: Number(cfg.focusMode.currentWords || 0),
           wordGoal: cfg.focusMode.wordGoal || 500,
-          totalTimeSpent: cfg.focusMode.totalTimeSpent || 0
+          totalTimeSpent: cfg.focusMode.totalTimeSpent || 0,
+          history: Array.isArray(cfg.focusMode.history) ? cfg.focusMode.history : []
         };
       }
     } catch (e) {
@@ -3486,50 +3696,40 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
       cfg.focusMode = {
         sessions: this.focusStats.sessions,
         interruptions: this.focusStats.interruptions,
+        currentWords: this.focusStats.currentWords || 0,
         wordGoal: this.focusStats.wordGoal,
         totalTimeSpent: this.focusStats.totalTimeSpent,
+        history: this.focusStats.history,
         lastSession: new Date().toISOString()
       };
       await this.plugin.configService.saveProjectConfig(project, cfg);
+      if (this.focusStatsModal) {
+        this.focusStatsModal.setProject(project);
+        this.focusStatsModal.refresh();
+      }
     } catch (e) {
       console.warn("Failed to save focus stats", e);
     }
   }
   renderFocusModeUI(container, project) {
-    // Header
+    this.focusModeProject = project;
     const header = container.createDiv({ cls: "focus-mode-header" });
     const headerIcon = header.createSpan({ cls: "focus-mode-header-icon" });
-    (0, import_obsidian5.setIcon)(headerIcon, "circle-dot");
+    (0, import_obsidian6.setIcon)(headerIcon, "circle-dot");
     header.createSpan({ cls: "focus-mode-header-title", text: "Focus mode" });
-
-    // Project name
     const projectLabel = container.createDiv({ cls: "focus-mode-project-name" });
     projectLabel.createSpan({ text: "Project: ", cls: "focus-mode-project-label" });
     projectLabel.createSpan({ text: project.name, cls: "focus-mode-project-value" });
-
-    // Timer container
     const timerContainer = container.createDiv({ cls: "focus-mode-timer-container" });
-    
-    // Timer circle
     const timerCircle = timerContainer.createDiv({ cls: "focus-mode-timer-circle" });
     this.timerDisplay = timerCircle.createDiv({ cls: "focus-mode-timer-display" });
     this.updateTimerDisplay();
-
-    // Status text
     this.statusText = container.createDiv({ cls: "focus-mode-status", text: "Ready to start" });
-
-    // Buttons container
     const buttonsContainer = container.createDiv({ cls: "focus-mode-buttons" });
-    
-    // Start/Pause button
     this.startButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-primary", text: "Start focus" });
     this.startButton.addEventListener("click", () => this.toggleTimer());
-
-    // Exit button
     const exitButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-secondary", text: "Exit" });
     exitButton.addEventListener("click", () => this.exitFocusMode());
-
-    // Stats bar
     const statsBar = container.createDiv({ cls: "focus-mode-stats-bar" });
     this.renderFocusStats(statsBar);
   }
@@ -3549,6 +3749,11 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
     this.timerRunning = true;
     this.startButton.textContent = "Pause";
     this.statusText.textContent = "Focus in progress...";
+    if (this.timerSeconds === 25 * 60) {
+      this.sessionStartWords = this.getActiveEditorWordCount();
+      this.focusStats.currentWords = 0;
+      this.refreshFocusStats();
+    }
     this.timerInterval = setInterval(() => {
       if (this.timerSeconds > 0) {
         this.timerSeconds--;
@@ -3556,26 +3761,40 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
       } else {
         this.completeSession();
       }
-    }, 1000);
+    }, 1e3);
   }
   pauseTimer() {
     this.timerRunning = false;
     this.startButton.textContent = "Resume";
     this.statusText.textContent = "Paused";
     this.focusStats.interruptions++;
+    this.focusStats.history.push({
+      type: "interrupted",
+      timestamp: new Date().toISOString(),
+      words: this.focusStats.currentWords || 0,
+      target: this.focusStats.wordGoal || 0
+    });
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    // Save interruption
-    const project = this.plugin.activeProject;
-    if (project) this.saveFocusStats(project);
+    const project = this.plugin.activeProject || this.plugin.activeBook;
+    if (project)
+      this.saveFocusStats(project);
     this.refreshFocusStats();
+    this.sessionStartWords = 0;
+    this.focusStats.currentWords = 0;
   }
   completeSession() {
     this.timerRunning = false;
     this.focusStats.sessions++;
-    this.focusStats.totalTimeSpent += 25 * 60; // Add 25 minutes
+    this.focusStats.totalTimeSpent += 25 * 60;
+    this.focusStats.history.push({
+      type: "completed",
+      timestamp: new Date().toISOString(),
+      words: this.focusStats.currentWords || 0,
+      target: this.focusStats.wordGoal || 0
+    });
     this.startButton.textContent = "Start focus";
     this.statusText.textContent = "Session complete!";
     this.timerSeconds = 25 * 60;
@@ -3584,9 +3803,9 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    // Save completed session to project config
-    const project = this.plugin.activeProject;
-    if (project) this.saveFocusStats(project);
+    const project = this.plugin.activeProject || this.plugin.activeBook;
+    if (project)
+      this.saveFocusStats(project);
     this.refreshFocusStats();
   }
   refreshFocusStats() {
@@ -3599,45 +3818,77 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
   renderFocusStats(container) {
     const formatTime = (seconds) => {
       const hrs = Math.floor(seconds / 3600);
-      const mins = Math.floor((seconds % 3600) / 60);
-      if (hrs > 0) return `${hrs}h ${mins}m`;
+      const mins = Math.floor(seconds % 3600 / 60);
+      if (hrs > 0)
+        return `${hrs}h ${mins}m`;
       return `${mins}m`;
     };
-    
-    // Create tooltip zone above stats
+    const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
+    const statsHeader = container.createDiv({ cls: "focus-mode-stats-header" });
+    const statsButton = statsHeader.createEl("button", { cls: "focus-mode-stats-button", text: "Focus mode stats" });
+    statsButton.addEventListener("click", async (evt) => {
+      evt.stopPropagation();
+      if (!project)
+        return;
+      await this.saveFocusStats(project);
+      if (!this.focusStatsModal) {
+        this.focusStatsModal = new FocusModeStatsModal(this.plugin, project);
+      }
+      this.focusStatsModal.setProject(project);
+      this.focusStatsModal.open();
+    });
     const tooltipZone = container.createDiv({ cls: "focus-mode-tooltip-zone" });
-    
     const stats = [
-      { label: "Complete sessions", value: this.focusStats.sessions, tooltip: "Number of 25-minute focus sessions completed without exiting" },
-      { label: "Interruptions", value: this.focusStats.interruptions, tooltip: "Number of times you paused during an active focus session" },
-      { label: "Session words", value: this.focusStats.currentWords, tooltip: "Words written during the current focus session" },
-      { label: "Word goal", value: this.focusStats.wordGoal, tooltip: "Target number of words to write per session" }
+      { label: "Completed sessions", value: this.focusStats.sessions, tooltip: "Number of 25-minute focus sessions completed without exiting", priority: "secondary" },
+      { label: "Interrupted sessions", value: this.focusStats.interruptions, tooltip: "Number of times you paused during an active focus session", priority: "secondary" },
+      { label: "Words in session", value: this.focusStats.currentWords, tooltip: "Words written during the current focus session", priority: "primary" },
+      { label: "Session word target", value: this.focusStats.wordGoal, tooltip: "Target number of words to write per session", priority: "primary" }
     ];
-    
     const statsRow = container.createDiv({ cls: "focus-mode-stats-row" });
-    
-    stats.forEach(stat => {
-      const statItem = statsRow.createDiv({ cls: "focus-mode-stat-item" });
+    stats.forEach((stat) => {
+      const statItem = statsRow.createDiv({ cls: `focus-mode-stat-item ${stat.priority === "primary" ? "is-primary" : "is-secondary"}` });
       statItem.createDiv({ cls: "focus-mode-stat-label", text: stat.label });
       statItem.createDiv({ cls: "focus-mode-stat-value", text: stat.value.toString() });
-      
-      // Show tooltip in central zone on click
       statItem.addEventListener("click", (e) => {
         e.stopPropagation();
         tooltipZone.textContent = stat.tooltip;
         tooltipZone.classList.add("visible");
-        
-        // Hide after 3 seconds or on next click
         setTimeout(() => {
           tooltipZone.classList.remove("visible");
-        }, 3000);
+        }, 3e3);
       });
     });
-    
-    // Click anywhere else to dismiss tooltip
     container.addEventListener("click", () => {
       tooltipZone.classList.remove("visible");
     });
+  }
+  getActiveEditorWordCount() {
+    var _a;
+    try {
+      const leaf = this.plugin.app.workspace.getMostRecentLeaf();
+      const editor = (_a = leaf == null ? void 0 : leaf.view) == null ? void 0 : _a.editor;
+      if (!editor || typeof editor.getValue !== "function")
+        return 0;
+      return this.plugin.statsService.countWords(editor.getValue());
+    } catch (e) {
+      return 0;
+    }
+  }
+  updateFocusSessionWordsFromEditor(text, file) {
+    if (!this.focusModeActive)
+      return;
+    const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
+    if (!project || !(file == null ? void 0 : file.path) || !file.path.startsWith(project.path + "/"))
+      return;
+    const total = this.plugin.statsService.countWords(text);
+    if (this.sessionStartWords === void 0 || this.sessionStartWords === null) {
+      this.sessionStartWords = total;
+    }
+    const current = Math.max(0, total - this.sessionStartWords);
+    if (current !== this.focusStats.currentWords) {
+      this.focusStats.currentWords = current;
+      this.refreshFocusStats();
+    }
   }
   exitFocusMode() {
     if (this.timerInterval) {
@@ -3654,12 +3905,10 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
   renderExportSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "EXPORT ASSISTANT" });
-
     const exportItem = section.createDiv({ cls: "writer-tools-item" });
     const iconSpan = exportItem.createSpan({ cls: "writer-tools-item-icon" });
-    (0, import_obsidian5.setIcon)(iconSpan, "file-stack");
+    (0, import_obsidian6.setIcon)(iconSpan, "file-stack");
     exportItem.createSpan({ cls: "writer-tools-item-text", text: "Consolidate document" });
-
     exportItem.addEventListener("click", () => {
       console.log("Consolidate document clicked");
     });
@@ -3667,25 +3916,19 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
   renderResourcesSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "RESOURCES" });
-
     const resourcesGrid = section.createDiv({ cls: "writer-tools-resources-grid" });
-
     const resources = [
       { icon: "user", label: "Character", tooltip: "Character development resources" },
       { icon: "bookmark", label: "Narrative", tooltip: "Narrative techniques" },
       { icon: "layout-grid", label: "Structure", tooltip: "Story structure guides" },
       { icon: "lightbulb", label: "Tips", tooltip: "Writing tips" }
     ];
-
-    resources.forEach(resource => {
+    resources.forEach((resource) => {
       const resourceItem = resourcesGrid.createDiv({ cls: "writer-tools-resource-item" });
       resourceItem.setAttribute("aria-label", resource.tooltip);
-      
       const iconWrapper = resourceItem.createDiv({ cls: "writer-tools-resource-icon" });
-      (0, import_obsidian5.setIcon)(iconWrapper, resource.icon);
-      
+      (0, import_obsidian6.setIcon)(iconWrapper, resource.icon);
       resourceItem.createDiv({ cls: "writer-tools-resource-label", text: resource.label });
-
       resourceItem.addEventListener("click", () => {
         console.log(`${resource.label} clicked`);
       });
@@ -3694,18 +3937,15 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
   renderAboutSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "ABOUT" });
-
     const aboutItems = [
       { icon: "heart", label: "Donate", action: () => window.open("https://github.com/sponsors", "_blank") },
       { icon: "mail", label: "Contact", action: () => window.open("mailto:contact@example.com", "_blank") }
     ];
-
-    aboutItems.forEach(item => {
+    aboutItems.forEach((item) => {
       const aboutItem = section.createDiv({ cls: "writer-tools-item" });
       const iconSpan = aboutItem.createSpan({ cls: "writer-tools-item-icon" });
-      (0, import_obsidian5.setIcon)(iconSpan, item.icon);
+      (0, import_obsidian6.setIcon)(iconSpan, item.icon);
       aboutItem.createSpan({ cls: "writer-tools-item-text", text: item.label });
-
       aboutItem.addEventListener("click", item.action);
     });
   }
@@ -3714,149 +3954,719 @@ var WriterToolsView = class extends import_obsidian5.ItemView {
 };
 
 // src/views/folioSettingTab.js
-var import_obsidian7 = require("obsidian");
+var import_obsidian8 = require("obsidian");
 
 // src/modals/iconPickerModal.js
-var import_obsidian6 = require("obsidian");
+var import_obsidian7 = require("obsidian");
 var COMMON_ICONS = [
   // Books & Documents
-  "book", "book-open", "book-text", "book-copy", "book-marked", "book-open-check", "book-open-text",
-  "library", "library-big", "notebook", "notebook-pen", "notebook-tabs",
-  "newspaper", "file-text", "file", "files", "file-check", "file-edit", "file-plus", "file-minus",
-  "scroll", "scroll-text", "sticky-note", "clipboard", "clipboard-list", "clipboard-check",
-  "bookmark", "bookmark-plus", "bookmarks", "bookmark-check",
+  "book",
+  "book-open",
+  "book-text",
+  "book-copy",
+  "book-marked",
+  "book-open-check",
+  "book-open-text",
+  "library",
+  "library-big",
+  "notebook",
+  "notebook-pen",
+  "notebook-tabs",
+  "newspaper",
+  "file-text",
+  "file",
+  "files",
+  "file-check",
+  "file-edit",
+  "file-plus",
+  "file-minus",
+  "scroll",
+  "scroll-text",
+  "sticky-note",
+  "clipboard",
+  "clipboard-list",
+  "clipboard-check",
+  "bookmark",
+  "bookmark-plus",
+  "bookmarks",
+  "bookmark-check",
   // Writing & Creativity
-  "pen", "pen-tool", "pen-line", "pencil", "pencil-line", "pencil-ruler",
-  "feather", "highlighter", "eraser", "type", "text", "text-cursor", "text-cursor-input",
-  "signature", "quote", "pilcrow", "baseline", "subscript", "superscript",
-  "spell-check", "spell-check-2", "whole-word", "case-sensitive",
+  "pen",
+  "pen-tool",
+  "pen-line",
+  "pencil",
+  "pencil-line",
+  "pencil-ruler",
+  "feather",
+  "highlighter",
+  "eraser",
+  "type",
+  "text",
+  "text-cursor",
+  "text-cursor-input",
+  "signature",
+  "quote",
+  "pilcrow",
+  "baseline",
+  "subscript",
+  "superscript",
+  "spell-check",
+  "spell-check-2",
+  "whole-word",
+  "case-sensitive",
   // Media & Entertainment
-  "tv", "tv-minimal", "tv-minimal-play", "monitor-play",
-  "clapperboard", "film", "video", "videotape", "camera", "camera-off",
-  "projector", "theater", "popcorn", "ticket", "drama",
-  "music", "music-2", "music-3", "music-4", "mic", "mic-2", "mic-off",
-  "headphones", "headset", "radio", "podcast", "audio-lines", "audio-waveform",
-  "play", "play-circle", "pause", "pause-circle", "stop-circle", "skip-forward", "skip-back",
-  "rewind", "fast-forward", "repeat", "repeat-1", "shuffle", "list-music",
+  "tv",
+  "tv-minimal",
+  "tv-minimal-play",
+  "monitor-play",
+  "clapperboard",
+  "film",
+  "video",
+  "videotape",
+  "camera",
+  "camera-off",
+  "projector",
+  "theater",
+  "popcorn",
+  "ticket",
+  "drama",
+  "music",
+  "music-2",
+  "music-3",
+  "music-4",
+  "mic",
+  "mic-2",
+  "mic-off",
+  "headphones",
+  "headset",
+  "radio",
+  "podcast",
+  "audio-lines",
+  "audio-waveform",
+  "play",
+  "play-circle",
+  "pause",
+  "pause-circle",
+  "stop-circle",
+  "skip-forward",
+  "skip-back",
+  "rewind",
+  "fast-forward",
+  "repeat",
+  "repeat-1",
+  "shuffle",
+  "list-music",
   // Visual & Art
-  "image", "image-plus", "images", "gallery-horizontal", "gallery-vertical",
-  "palette", "paintbrush", "paintbrush-2", "brush", "paint-bucket", "paint-roller",
-  "pipette", "droplet", "droplets", "blend", "contrast", "sun-dim",
-  "aperture", "focus", "scan", "crop", "flip-horizontal", "flip-vertical",
-  "rotate-ccw", "rotate-cw", "move", "maximize", "minimize",
-  "frame", "picture-in-picture", "picture-in-picture-2",
+  "image",
+  "image-plus",
+  "images",
+  "gallery-horizontal",
+  "gallery-vertical",
+  "palette",
+  "paintbrush",
+  "paintbrush-2",
+  "brush",
+  "paint-bucket",
+  "paint-roller",
+  "pipette",
+  "droplet",
+  "droplets",
+  "blend",
+  "contrast",
+  "sun-dim",
+  "aperture",
+  "focus",
+  "scan",
+  "crop",
+  "flip-horizontal",
+  "flip-vertical",
+  "rotate-ccw",
+  "rotate-cw",
+  "move",
+  "maximize",
+  "minimize",
+  "frame",
+  "picture-in-picture",
+  "picture-in-picture-2",
   // Folders & Organization
-  "folder", "folder-open", "folder-closed", "folder-plus", "folder-minus",
-  "folder-check", "folder-x", "folder-search", "folder-heart", "folder-input", "folder-output",
-  "folder-archive", "folder-cog", "folder-dot", "folder-git", "folder-git-2",
-  "folder-kanban", "folder-key", "folder-lock", "folder-symlink", "folder-sync", "folder-tree",
-  "folders", "package", "package-open", "box", "boxes", "archive", "archive-restore",
+  "folder",
+  "folder-open",
+  "folder-closed",
+  "folder-plus",
+  "folder-minus",
+  "folder-check",
+  "folder-x",
+  "folder-search",
+  "folder-heart",
+  "folder-input",
+  "folder-output",
+  "folder-archive",
+  "folder-cog",
+  "folder-dot",
+  "folder-git",
+  "folder-git-2",
+  "folder-kanban",
+  "folder-key",
+  "folder-lock",
+  "folder-symlink",
+  "folder-sync",
+  "folder-tree",
+  "folders",
+  "package",
+  "package-open",
+  "box",
+  "boxes",
+  "archive",
+  "archive-restore",
   // Education & Learning
-  "graduation-cap", "school", "school-2", "backpack",
-  "brain", "brain-circuit", "brain-cog", "lightbulb", "lightbulb-off",
-  "lamp", "lamp-desk", "lamp-floor", "lamp-ceiling", "lamp-wall-down", "lamp-wall-up",
-  "presentation", "flip-chart", "clipboard-pen", "clipboard-type",
-  "calculator", "ruler", "triangle-ruler", "drafting-compass",
-  "beaker", "flask-conical", "flask-round", "microscope", "telescope", "atom",
+  "graduation-cap",
+  "school",
+  "school-2",
+  "backpack",
+  "brain",
+  "brain-circuit",
+  "brain-cog",
+  "lightbulb",
+  "lightbulb-off",
+  "lamp",
+  "lamp-desk",
+  "lamp-floor",
+  "lamp-ceiling",
+  "lamp-wall-down",
+  "lamp-wall-up",
+  "presentation",
+  "flip-chart",
+  "clipboard-pen",
+  "clipboard-type",
+  "calculator",
+  "ruler",
+  "triangle-ruler",
+  "drafting-compass",
+  "beaker",
+  "flask-conical",
+  "flask-round",
+  "microscope",
+  "telescope",
+  "atom",
   // Technology
-  "code", "code-2", "terminal", "terminal-square", "braces", "brackets",
-  "database", "server", "hard-drive", "cpu", "memory-stick", "usb",
-  "monitor", "laptop", "laptop-2", "tablet", "smartphone", "phone",
-  "keyboard", "mouse", "mouse-pointer", "mouse-pointer-2", "touchpad",
-  "wifi", "wifi-off", "bluetooth", "nfc", "signal", "antenna",
-  "battery", "battery-charging", "battery-full", "battery-low", "battery-medium", "battery-warning",
-  "plug", "plug-2", "plug-zap", "power", "power-off",
-  "git-branch", "git-commit", "git-merge", "git-pull-request", "git-fork", "git-compare",
-  "github", "gitlab", "chrome", "firefox",
+  "code",
+  "code-2",
+  "terminal",
+  "terminal-square",
+  "braces",
+  "brackets",
+  "database",
+  "server",
+  "hard-drive",
+  "cpu",
+  "memory-stick",
+  "usb",
+  "monitor",
+  "laptop",
+  "laptop-2",
+  "tablet",
+  "smartphone",
+  "phone",
+  "keyboard",
+  "mouse",
+  "mouse-pointer",
+  "mouse-pointer-2",
+  "touchpad",
+  "wifi",
+  "wifi-off",
+  "bluetooth",
+  "nfc",
+  "signal",
+  "antenna",
+  "battery",
+  "battery-charging",
+  "battery-full",
+  "battery-low",
+  "battery-medium",
+  "battery-warning",
+  "plug",
+  "plug-2",
+  "plug-zap",
+  "power",
+  "power-off",
+  "git-branch",
+  "git-commit",
+  "git-merge",
+  "git-pull-request",
+  "git-fork",
+  "git-compare",
+  "github",
+  "gitlab",
+  "chrome",
+  "firefox",
   // Navigation & Location
-  "globe", "globe-2", "earth", "map", "map-pin", "map-pinned",
-  "compass", "navigation", "navigation-2", "locate", "locate-fixed", "locate-off",
-  "route", "signpost", "signpost-big", "milestone", "flag", "flag-triangle-right",
-  "home", "house", "house-plus", "building", "building-2", "factory", "warehouse", "store",
-  "castle", "church", "landmark", "tent", "tent-tree", "mountain", "mountain-snow", "trees",
+  "globe",
+  "globe-2",
+  "earth",
+  "map",
+  "map-pin",
+  "map-pinned",
+  "compass",
+  "navigation",
+  "navigation-2",
+  "locate",
+  "locate-fixed",
+  "locate-off",
+  "route",
+  "signpost",
+  "signpost-big",
+  "milestone",
+  "flag",
+  "flag-triangle-right",
+  "home",
+  "house",
+  "house-plus",
+  "building",
+  "building-2",
+  "factory",
+  "warehouse",
+  "store",
+  "castle",
+  "church",
+  "landmark",
+  "tent",
+  "tent-tree",
+  "mountain",
+  "mountain-snow",
+  "trees",
   // People & Social
-  "user", "user-2", "user-circle", "user-circle-2", "user-check", "user-plus", "user-minus", "user-x",
-  "users", "users-2", "users-round", "contact", "contact-2", "contacts",
-  "person-standing", "accessibility", "baby", "hand", "hand-metal", "handshake",
-  "heart", "heart-handshake", "heart-pulse", "activity", "heart-crack", "heart-off",
-  "thumbs-up", "thumbs-down", "smile", "smile-plus", "frown", "meh", "laugh", "angry",
+  "user",
+  "user-2",
+  "user-circle",
+  "user-circle-2",
+  "user-check",
+  "user-plus",
+  "user-minus",
+  "user-x",
+  "users",
+  "users-2",
+  "users-round",
+  "contact",
+  "contact-2",
+  "contacts",
+  "person-standing",
+  "accessibility",
+  "baby",
+  "hand",
+  "hand-metal",
+  "handshake",
+  "heart",
+  "heart-handshake",
+  "heart-pulse",
+  "activity",
+  "heart-crack",
+  "heart-off",
+  "thumbs-up",
+  "thumbs-down",
+  "smile",
+  "smile-plus",
+  "frown",
+  "meh",
+  "laugh",
+  "angry",
   // Communication
-  "mail", "mail-open", "mail-plus", "mail-check", "mail-x", "mail-warning", "mail-search",
-  "inbox", "send", "send-horizontal", "forward", "reply", "reply-all",
-  "message-circle", "message-square", "message-square-plus", "messages-square",
-  "at-sign", "hash", "phone", "phone-call", "phone-incoming", "phone-outgoing",
-  "voicemail", "megaphone", "volume", "volume-1", "volume-2", "volume-x",
-  "bell", "bell-ring", "bell-plus", "bell-minus", "bell-off",
+  "mail",
+  "mail-open",
+  "mail-plus",
+  "mail-check",
+  "mail-x",
+  "mail-warning",
+  "mail-search",
+  "inbox",
+  "send",
+  "send-horizontal",
+  "forward",
+  "reply",
+  "reply-all",
+  "message-circle",
+  "message-square",
+  "message-square-plus",
+  "messages-square",
+  "at-sign",
+  "hash",
+  "phone",
+  "phone-call",
+  "phone-incoming",
+  "phone-outgoing",
+  "voicemail",
+  "megaphone",
+  "volume",
+  "volume-1",
+  "volume-2",
+  "volume-x",
+  "bell",
+  "bell-ring",
+  "bell-plus",
+  "bell-minus",
+  "bell-off",
   // Weather & Nature
-  "sun", "sun-dim", "sun-medium", "sun-moon", "sunrise", "sunset",
-  "moon", "moon-star", "cloud", "cloud-sun", "cloud-rain", "cloud-snow", "cloud-lightning",
-  "snowflake", "wind", "tornado", "rainbow", "thermometer", "thermometer-sun", "thermometer-snowflake",
-  "umbrella", "umbrella-off", "droplet", "droplets", "waves",
-  "tree", "tree-deciduous", "tree-pine", "trees", "palm-tree", "sprout", "leaf", "clover",
-  "flower", "flower-2", "cherry", "apple", "banana", "grape", "citrus",
-  "bird", "bug", "cat", "dog", "fish", "rabbit", "snail", "squirrel", "turtle",
+  "sun",
+  "sun-dim",
+  "sun-medium",
+  "sun-moon",
+  "sunrise",
+  "sunset",
+  "moon",
+  "moon-star",
+  "cloud",
+  "cloud-sun",
+  "cloud-rain",
+  "cloud-snow",
+  "cloud-lightning",
+  "snowflake",
+  "wind",
+  "tornado",
+  "rainbow",
+  "thermometer",
+  "thermometer-sun",
+  "thermometer-snowflake",
+  "umbrella",
+  "umbrella-off",
+  "droplet",
+  "droplets",
+  "waves",
+  "tree",
+  "tree-deciduous",
+  "tree-pine",
+  "trees",
+  "palm-tree",
+  "sprout",
+  "leaf",
+  "clover",
+  "flower",
+  "flower-2",
+  "cherry",
+  "apple",
+  "banana",
+  "grape",
+  "citrus",
+  "bird",
+  "bug",
+  "cat",
+  "dog",
+  "fish",
+  "rabbit",
+  "snail",
+  "squirrel",
+  "turtle",
   // Objects & Tools
-  "wrench", "hammer", "axe", "pickaxe", "shovel", "scissors", "knife",
-  "screwdriver", "nut", "cog", "settings", "settings-2", "sliders", "sliders-horizontal",
-  "key", "key-round", "key-square", "lock", "lock-keyhole", "unlock", "unlock-keyhole",
-  "shield", "shield-check", "shield-alert", "shield-off", "shield-question",
-  "glasses", "binoculars", "eye", "eye-off", "scan-eye", "scan-face",
-  "magnet", "flashlight", "flashlight-off", "lighter", "flame", "fire-extinguisher",
-  "trash", "trash-2", "recycle", "archive", "archive-restore", "archive-x",
+  "wrench",
+  "hammer",
+  "axe",
+  "pickaxe",
+  "shovel",
+  "scissors",
+  "knife",
+  "screwdriver",
+  "nut",
+  "cog",
+  "settings",
+  "settings-2",
+  "sliders",
+  "sliders-horizontal",
+  "key",
+  "key-round",
+  "key-square",
+  "lock",
+  "lock-keyhole",
+  "unlock",
+  "unlock-keyhole",
+  "shield",
+  "shield-check",
+  "shield-alert",
+  "shield-off",
+  "shield-question",
+  "glasses",
+  "binoculars",
+  "eye",
+  "eye-off",
+  "scan-eye",
+  "scan-face",
+  "magnet",
+  "flashlight",
+  "flashlight-off",
+  "lighter",
+  "flame",
+  "fire-extinguisher",
+  "trash",
+  "trash-2",
+  "recycle",
+  "archive",
+  "archive-restore",
+  "archive-x",
   // Shapes & Symbols
-  "circle", "square", "triangle", "diamond", "pentagon", "hexagon", "octagon",
-  "star", "stars", "sparkle", "sparkles", "zap", "zap-off", "bolt",
-  "crown", "gem", "award", "badge", "badge-check", "medal", "trophy",
-  "ribbon", "gift", "party-popper", "cake", "cake-slice", "candy", "candy-cane", "cookie", "ice-cream",
-  "check", "check-circle", "check-square", "x", "x-circle", "x-square",
-  "plus", "plus-circle", "plus-square", "minus", "minus-circle", "minus-square",
-  "equal", "divide", "percent", "infinity", "sigma", "pi", "omega",
+  "circle",
+  "square",
+  "triangle",
+  "diamond",
+  "pentagon",
+  "hexagon",
+  "octagon",
+  "star",
+  "stars",
+  "sparkle",
+  "sparkles",
+  "zap",
+  "zap-off",
+  "bolt",
+  "crown",
+  "gem",
+  "award",
+  "badge",
+  "badge-check",
+  "medal",
+  "trophy",
+  "ribbon",
+  "gift",
+  "party-popper",
+  "cake",
+  "cake-slice",
+  "candy",
+  "candy-cane",
+  "cookie",
+  "ice-cream",
+  "check",
+  "check-circle",
+  "check-square",
+  "x",
+  "x-circle",
+  "x-square",
+  "plus",
+  "plus-circle",
+  "plus-square",
+  "minus",
+  "minus-circle",
+  "minus-square",
+  "equal",
+  "divide",
+  "percent",
+  "infinity",
+  "sigma",
+  "pi",
+  "omega",
   // Arrows & Direction
-  "arrow-up", "arrow-down", "arrow-left", "arrow-right",
-  "arrow-up-right", "arrow-up-left", "arrow-down-right", "arrow-down-left",
-  "chevron-up", "chevron-down", "chevron-left", "chevron-right",
-  "chevrons-up", "chevrons-down", "chevrons-left", "chevrons-right",
-  "move-up", "move-down", "move-left", "move-right",
-  "corner-up-left", "corner-up-right", "corner-down-left", "corner-down-right",
-  "undo", "undo-2", "redo", "redo-2", "refresh-cw", "refresh-ccw",
+  "arrow-up",
+  "arrow-down",
+  "arrow-left",
+  "arrow-right",
+  "arrow-up-right",
+  "arrow-up-left",
+  "arrow-down-right",
+  "arrow-down-left",
+  "chevron-up",
+  "chevron-down",
+  "chevron-left",
+  "chevron-right",
+  "chevrons-up",
+  "chevrons-down",
+  "chevrons-left",
+  "chevrons-right",
+  "move-up",
+  "move-down",
+  "move-left",
+  "move-right",
+  "corner-up-left",
+  "corner-up-right",
+  "corner-down-left",
+  "corner-down-right",
+  "undo",
+  "undo-2",
+  "redo",
+  "redo-2",
+  "refresh-cw",
+  "refresh-ccw",
   // Time & Calendar
-  "clock", "clock-1", "clock-2", "clock-3", "clock-4", "clock-5", "clock-6",
-  "alarm-clock", "alarm-clock-check", "alarm-clock-minus", "alarm-clock-off", "alarm-clock-plus",
-  "timer", "timer-off", "timer-reset", "stopwatch", "hourglass", "history",
-  "calendar", "calendar-days", "calendar-check", "calendar-plus", "calendar-minus", "calendar-x",
-  "calendar-heart", "calendar-clock", "calendar-range", "calendar-search",
+  "clock",
+  "clock-1",
+  "clock-2",
+  "clock-3",
+  "clock-4",
+  "clock-5",
+  "clock-6",
+  "alarm-clock",
+  "alarm-clock-check",
+  "alarm-clock-minus",
+  "alarm-clock-off",
+  "alarm-clock-plus",
+  "timer",
+  "timer-off",
+  "timer-reset",
+  "stopwatch",
+  "hourglass",
+  "history",
+  "calendar",
+  "calendar-days",
+  "calendar-check",
+  "calendar-plus",
+  "calendar-minus",
+  "calendar-x",
+  "calendar-heart",
+  "calendar-clock",
+  "calendar-range",
+  "calendar-search",
   // Layout & UI
-  "layout-dashboard", "layout-grid", "layout-list", "layout-template", "layout-panel-left", "layout-panel-top",
-  "kanban", "kanban-square", "trello", "columns", "rows", "table", "table-2",
-  "grid-2x2", "grid-3x3", "align-left", "align-center", "align-right", "align-justify",
-  "list", "list-checks", "list-ordered", "list-todo", "list-tree", "list-filter",
-  "sidebar", "panel-left", "panel-right", "panel-top", "panel-bottom",
-  "split", "split-square-horizontal", "split-square-vertical",
-  "maximize-2", "minimize-2", "expand", "shrink", "fullscreen",
+  "layout-dashboard",
+  "layout-grid",
+  "layout-list",
+  "layout-template",
+  "layout-panel-left",
+  "layout-panel-top",
+  "kanban",
+  "kanban-square",
+  "trello",
+  "columns",
+  "rows",
+  "table",
+  "table-2",
+  "grid-2x2",
+  "grid-3x3",
+  "align-left",
+  "align-center",
+  "align-right",
+  "align-justify",
+  "list",
+  "list-checks",
+  "list-ordered",
+  "list-todo",
+  "list-tree",
+  "list-filter",
+  "sidebar",
+  "panel-left",
+  "panel-right",
+  "panel-top",
+  "panel-bottom",
+  "split",
+  "split-square-horizontal",
+  "split-square-vertical",
+  "maximize-2",
+  "minimize-2",
+  "expand",
+  "shrink",
+  "fullscreen",
   // Actions & Status
-  "search", "zoom-in", "zoom-out", "filter", "filter-x", "sort-asc", "sort-desc",
-  "save", "save-all", "download", "upload", "import", "share", "share-2",
-  "link", "link-2", "unlink", "external-link", "qr-code", "scan-barcode",
-  "copy", "clipboard-copy", "clipboard-paste", "cut", "edit", "edit-2", "edit-3",
-  "info", "circle-help", "help-circle", "alert-circle", "alert-triangle", "alert-octagon",
-  "ban", "slash", "loader", "loader-2", "refresh-cw", "rotate-ccw",
-  "grip-horizontal", "grip-vertical", "more-horizontal", "more-vertical", "menu",
+  "search",
+  "zoom-in",
+  "zoom-out",
+  "filter",
+  "filter-x",
+  "sort-asc",
+  "sort-desc",
+  "save",
+  "save-all",
+  "download",
+  "upload",
+  "import",
+  "share",
+  "share-2",
+  "link",
+  "link-2",
+  "unlink",
+  "external-link",
+  "qr-code",
+  "scan-barcode",
+  "copy",
+  "clipboard-copy",
+  "clipboard-paste",
+  "cut",
+  "edit",
+  "edit-2",
+  "edit-3",
+  "info",
+  "circle-help",
+  "help-circle",
+  "alert-circle",
+  "alert-triangle",
+  "alert-octagon",
+  "ban",
+  "slash",
+  "loader",
+  "loader-2",
+  "refresh-cw",
+  "rotate-ccw",
+  "grip-horizontal",
+  "grip-vertical",
+  "more-horizontal",
+  "more-vertical",
+  "menu",
   // Commerce & Finance
-  "dollar-sign", "euro", "pound-sterling", "bitcoin", "coins", "piggy-bank", "wallet", "wallet-2",
-  "credit-card", "banknote", "receipt", "ticket", "tags", "tag", "percent",
-  "shopping-cart", "shopping-bag", "shopping-basket", "store", "storefront",
-  "scale", "scale-3d", "weight", "barcode", "scan-line",
+  "dollar-sign",
+  "euro",
+  "pound-sterling",
+  "bitcoin",
+  "coins",
+  "piggy-bank",
+  "wallet",
+  "wallet-2",
+  "credit-card",
+  "banknote",
+  "receipt",
+  "ticket",
+  "tags",
+  "tag",
+  "percent",
+  "shopping-cart",
+  "shopping-bag",
+  "shopping-basket",
+  "store",
+  "storefront",
+  "scale",
+  "scale-3d",
+  "weight",
+  "barcode",
+  "scan-line",
   // Travel & Transport
-  "plane", "plane-takeoff", "plane-landing", "rocket", "satellite", "satellite-dish",
-  "car", "car-front", "bus", "train", "train-front", "tram-front",
-  "bike", "ship", "sailboat", "anchor", "fuel", "parking-meter", "traffic-cone",
-  "luggage", "briefcase", "suitcase", "suitcase-rolling",
+  "plane",
+  "plane-takeoff",
+  "plane-landing",
+  "rocket",
+  "satellite",
+  "satellite-dish",
+  "car",
+  "car-front",
+  "bus",
+  "train",
+  "train-front",
+  "tram-front",
+  "bike",
+  "ship",
+  "sailboat",
+  "anchor",
+  "fuel",
+  "parking-meter",
+  "traffic-cone",
+  "luggage",
+  "briefcase",
+  "suitcase",
+  "suitcase-rolling",
   // Sports & Games
-  "dumbbell", "trophy", "medal", "target", "crosshair", "goal",
-  "gamepad", "gamepad-2", "joystick", "dice-1", "dice-2", "dice-3", "dice-4", "dice-5", "dice-6",
-  "puzzle", "swords", "sword", "wand", "wand-2", "crown"
+  "dumbbell",
+  "trophy",
+  "medal",
+  "target",
+  "crosshair",
+  "goal",
+  "gamepad",
+  "gamepad-2",
+  "joystick",
+  "dice-1",
+  "dice-2",
+  "dice-3",
+  "dice-4",
+  "dice-5",
+  "dice-6",
+  "puzzle",
+  "swords",
+  "sword",
+  "wand",
+  "wand-2",
+  "crown"
 ];
-var IconPickerModal = class extends import_obsidian6.Modal {
+var IconPickerModal = class extends import_obsidian7.Modal {
   constructor(app, { title, currentIcon, onSelect }) {
     super(app);
     this.title = title || "Select Icon";
@@ -3908,7 +4718,7 @@ var IconPickerModal = class extends import_obsidian6.Modal {
         cls: "folio-icon-picker-option" + (iconName === this.currentIcon ? " is-selected" : "")
       });
       iconOption.title = iconName;
-      (0, import_obsidian6.setIcon)(iconOption, iconName);
+      (0, import_obsidian7.setIcon)(iconOption, iconName);
       const label = iconOption.createSpan({ cls: "folio-icon-picker-label" });
       label.textContent = iconName;
       iconOption.onclick = () => {
@@ -3924,7 +4734,8 @@ var IconPickerModal = class extends import_obsidian6.Modal {
 };
 
 // src/views/folioSettingTab.js
-var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
+init_constants();
+var FolioSettingTab = class extends import_obsidian8.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -3936,41 +4747,39 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     const basicSection = el.createDiv({ cls: "folio-settings-section" });
     const basicHeader = basicSection.createDiv({ cls: "folio-settings-section-header" });
     const basicToggle = basicHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian7.setIcon)(basicToggle, "chevron-right");
+    (0, import_obsidian8.setIcon)(basicToggle, "chevron-right");
     basicHeader.createSpan({ text: "Basic options", cls: "folio-settings-section-title" });
     const basicContent = basicSection.createDiv({ cls: "folio-settings-section-content collapsed" });
     basicHeader.onclick = () => {
       basicContent.classList.toggle("collapsed");
-      (0, import_obsidian7.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
+      (0, import_obsidian8.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
     };
-    new import_obsidian7.Setting(basicContent).setName("Default author").setDesc("Default author name for new projects").addText(
+    new import_obsidian8.Setting(basicContent).setName("Default author").setDesc("Default author name for new projects").addText(
       (text) => text.setPlaceholder("Author name").setValue(this.plugin.settings.defaultAuthor || "").onChange(async (value) => {
         this.plugin.settings.defaultAuthor = value.trim();
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian7.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText(
-      (text) => {
-        text.setPlaceholder("projects").setValue(this.plugin.settings.basePath || "projects").onChange(async (value) => {
-          let normalizedPath = value.trim().replace(/^\/+|\/+$/g, "") || "projects";
-          this.plugin.settings.basePath = normalizedPath;
-          await this.plugin.saveSettings();
-        });
-        text.inputEl.addEventListener("blur", async () => {
-          await this.plugin.ensureBasePath();
-          await this.plugin.refresh();
-        });
-      }
-    );
+    new import_obsidian8.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText((text) => {
+      text.setPlaceholder("projects").setValue(this.plugin.settings.basePath || "projects").onChange(async (value) => {
+        let normalizedPath = value.trim().replace(/^\/+|\/+$/g, "") || "projects";
+        this.plugin.settings.basePath = normalizedPath;
+        await this.plugin.saveSettings();
+      });
+      text.inputEl.addEventListener("blur", async () => {
+        await this.plugin.ensureBasePath();
+        await this.plugin.refresh();
+      });
+    });
     const templateSection = el.createDiv({ cls: "folio-settings-section" });
     const templateHeader = templateSection.createDiv({ cls: "folio-settings-section-header" });
     const templateToggle = templateHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian7.setIcon)(templateToggle, "chevron-right");
+    (0, import_obsidian8.setIcon)(templateToggle, "chevron-right");
     templateHeader.createSpan({ text: "Template options", cls: "folio-settings-section-title" });
     const templateContent = templateSection.createDiv({ cls: "folio-settings-section-content collapsed" });
     templateHeader.onclick = () => {
       templateContent.classList.toggle("collapsed");
-      (0, import_obsidian7.setIcon)(templateToggle, templateContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
+      (0, import_obsidian8.setIcon)(templateToggle, templateContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
     };
     if (!this.plugin.settings.projectTemplates) {
       this.plugin.settings.projectTemplates = [
@@ -3985,7 +4794,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     templates.sort((a, b) => a.order - b.order).forEach((t) => {
       defaultOptions[t.id] = t.name;
     });
-    new import_obsidian7.Setting(templateContent).setName("Default template").setDesc("Default template used when creating new projects").addDropdown(
+    new import_obsidian8.Setting(templateContent).setName("Default template").setDesc("Default template used when creating new projects").addDropdown(
       (dropdown) => dropdown.addOptions(defaultOptions).setValue(this.plugin.settings.defaultProjectType || "book").onChange(async (value) => {
         this.plugin.settings.defaultProjectType = value;
         await this.plugin.saveSettings();
@@ -3994,7 +4803,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     templateContent.createEl("h4", { text: "Project templates", cls: "folio-settings-subheader" });
     const templatesHeaderRow = templateContent.createDiv({ cls: "folio-templates-header-row" });
     const resetBtn = templatesHeaderRow.createEl("button", { cls: "folio-reset-templates-btn" });
-    (0, import_obsidian7.setIcon)(resetBtn, "rotate-ccw");
+    (0, import_obsidian8.setIcon)(resetBtn, "rotate-ccw");
     resetBtn.title = "Reset all templates to defaults";
     resetBtn.onclick = async () => {
       const confirmed = confirm("Are you sure you want to reset all templates to their default values? This will remove any custom templates and restore the original Book, TV Show, Film, and Essay templates.");
@@ -4003,7 +4812,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
         await this.plugin.saveSettings();
         this.renderTemplatesList(templatesListEl);
         this.plugin.rerenderViews();
-        new import_obsidian7.Notice("Templates reset to defaults");
+        new import_obsidian8.Notice("Templates reset to defaults");
       }
     };
     const templatesListEl = templateContent.createDiv({ cls: "folio-templates-list" });
@@ -4020,20 +4829,20 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     templates.forEach((template, index) => {
       const row = container.createDiv({ cls: "folio-template-row" });
       const iconEl = row.createDiv({ cls: "folio-template-icon" });
-      (0, import_obsidian7.setIcon)(iconEl, template.icon || "file");
+      (0, import_obsidian8.setIcon)(iconEl, template.icon || "file");
       const infoEl = row.createDiv({ cls: "folio-template-info" });
       infoEl.createDiv({ text: template.name, cls: "folio-template-name" });
       infoEl.createDiv({ text: template.description || "", cls: "folio-template-desc" });
       const actionsEl = row.createDiv({ cls: "folio-template-actions" });
       const editBtn = actionsEl.createEl("button", { cls: "folio-template-action-btn" });
-      (0, import_obsidian7.setIcon)(editBtn, "pencil");
+      (0, import_obsidian8.setIcon)(editBtn, "pencil");
       editBtn.title = "Edit template";
       editBtn.onclick = () => {
         this.openTemplateEditor(template, container);
       };
       if (templates.length > 1) {
         const deleteBtn = actionsEl.createEl("button", { cls: "folio-template-action-btn mod-danger" });
-        (0, import_obsidian7.setIcon)(deleteBtn, "trash");
+        (0, import_obsidian8.setIcon)(deleteBtn, "trash");
         deleteBtn.title = "Delete template";
         deleteBtn.onclick = async () => {
           this.plugin.settings.projectTemplates = templates.filter((t) => t.id !== template.id);
@@ -4101,9 +4910,9 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     const updateIconPreview = () => {
       iconPreview.innerHTML = "";
       try {
-        (0, import_obsidian7.setIcon)(iconPreview, iconInput.value || "file");
+        (0, import_obsidian8.setIcon)(iconPreview, iconInput.value || "file");
       } catch (e) {
-        (0, import_obsidian7.setIcon)(iconPreview, "file");
+        (0, import_obsidian8.setIcon)(iconPreview, "file");
       }
     };
     updateIconPreview();
@@ -4143,7 +4952,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     const addFileBtn = document.createElement("button");
     addFileBtn.className = "folio-template-structure-add-btn";
     addFileBtn.type = "button";
-    (0, import_obsidian7.setIcon)(addFileBtn, "file-plus");
+    (0, import_obsidian8.setIcon)(addFileBtn, "file-plus");
     addFileBtn.appendChild(document.createTextNode(" File"));
     addFileBtn.onclick = () => {
       editData.structure.push({ title: "New File", type: "file" });
@@ -4152,7 +4961,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     const addFolderBtn = document.createElement("button");
     addFolderBtn.className = "folio-template-structure-add-btn";
     addFolderBtn.type = "button";
-    (0, import_obsidian7.setIcon)(addFolderBtn, "folder-plus");
+    (0, import_obsidian8.setIcon)(addFolderBtn, "folder-plus");
     addFolderBtn.appendChild(document.createTextNode(" Folder"));
     addFolderBtn.onclick = () => {
       editData.structure.push({ title: "New Folder", type: "folder", children: [] });
@@ -4161,7 +4970,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
     const addCanvasBtn = document.createElement("button");
     addCanvasBtn.className = "folio-template-structure-add-btn";
     addCanvasBtn.type = "button";
-    (0, import_obsidian7.setIcon)(addCanvasBtn, "layout-dashboard");
+    (0, import_obsidian8.setIcon)(addCanvasBtn, "layout-dashboard");
     addCanvasBtn.appendChild(document.createTextNode(" Canvas"));
     addCanvasBtn.onclick = () => {
       editData.structure.push({ title: "New Canvas", type: "canvas" });
@@ -4191,7 +5000,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
         const dragHandle = document.createElement("span");
         dragHandle.className = "folio-template-structure-node-drag-handle";
         dragHandle.title = "Drag to reorder";
-        (0, import_obsidian7.setIcon)(dragHandle, "grip-horizontal");
+        (0, import_obsidian8.setIcon)(dragHandle, "grip-horizontal");
         nodeRow.appendChild(dragHandle);
         nodeRow.addEventListener("dragstart", (e) => {
           draggedNode = node;
@@ -4204,7 +5013,9 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
         nodeRow.addEventListener("dragend", (e) => {
           nodeRow.style.opacity = "1";
           nodeRow.classList.remove("dragging");
-          document.querySelectorAll(".folio-template-structure-node").forEach((n) => n.classList.remove("drag-over"));
+          document.querySelectorAll(".folio-template-structure-node").forEach((n) => {
+            n.classList.remove("drag-over");
+          });
         });
         nodeRow.addEventListener("dragover", (e) => {
           e.preventDefault();
@@ -4220,8 +5031,8 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
           nodeRow.classList.remove("drag-over");
           if (draggedNode && draggedParentArray === parentArray && draggedIndex !== index) {
             parentArray.splice(draggedIndex, 1);
-            const toIndex = draggedIndex < index ? index - 1 : index;
-            parentArray.splice(toIndex, 0, draggedNode);
+            const newIndex = draggedIndex < index ? index - 1 : index;
+            parentArray.splice(newIndex, 0, draggedNode);
             renderStructureTree();
           }
           draggedNode = null;
@@ -4232,7 +5043,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
           const toggleBtn = document.createElement("span");
           toggleBtn.className = "folio-template-structure-node-toggle";
           const isExpanded = expandedFolders.has(node);
-          (0, import_obsidian7.setIcon)(toggleBtn, isExpanded ? "chevron-down" : "chevron-right");
+          (0, import_obsidian8.setIcon)(toggleBtn, isExpanded ? "chevron-down" : "chevron-right");
           toggleBtn.onclick = () => {
             if (expandedFolders.has(node)) {
               expandedFolders.delete(node);
@@ -4251,7 +5062,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
         nodeIcon.className = "folio-template-structure-node-icon folio-icon-clickable";
         nodeIcon.title = "Click to change icon";
         const defaultIcon = node.type === "folder" ? "folder" : node.type === "canvas" ? "layout-dashboard" : "file";
-        (0, import_obsidian7.setIcon)(nodeIcon, node.icon || defaultIcon);
+        (0, import_obsidian8.setIcon)(nodeIcon, node.icon || defaultIcon);
         nodeIcon.onclick = (e) => {
           e.stopPropagation();
           new IconPickerModal(this.app, {
@@ -4291,7 +5102,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
           addFileBtn2.className = "folio-template-structure-node-btn";
           addFileBtn2.type = "button";
           addFileBtn2.title = "Add file";
-          (0, import_obsidian7.setIcon)(addFileBtn2, "file-plus");
+          (0, import_obsidian8.setIcon)(addFileBtn2, "file-plus");
           addFileBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -4304,7 +5115,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
           addFolderBtn2.className = "folio-template-structure-node-btn";
           addFolderBtn2.type = "button";
           addFolderBtn2.title = "Add folder";
-          (0, import_obsidian7.setIcon)(addFolderBtn2, "folder-plus");
+          (0, import_obsidian8.setIcon)(addFolderBtn2, "folder-plus");
           addFolderBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -4317,7 +5128,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
           addCanvasBtn2.className = "folio-template-structure-node-btn";
           addCanvasBtn2.type = "button";
           addCanvasBtn2.title = "Add canvas";
-          (0, import_obsidian7.setIcon)(addCanvasBtn2, "layout-dashboard");
+          (0, import_obsidian8.setIcon)(addCanvasBtn2, "layout-dashboard");
           addCanvasBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -4331,7 +5142,7 @@ var FolioSettingTab = class extends import_obsidian7.PluginSettingTab {
         deleteBtn.className = "folio-template-structure-node-btn mod-danger";
         deleteBtn.type = "button";
         deleteBtn.title = "Delete";
-        (0, import_obsidian7.setIcon)(deleteBtn, "trash");
+        (0, import_obsidian8.setIcon)(deleteBtn, "trash");
         deleteBtn.onclick = () => {
           parentArray.splice(index, 1);
           renderStructureTree();
@@ -4426,12 +5237,13 @@ var {
   ItemView: ItemView3,
   TFile: TFile6,
   TFolder: TFolder4,
-  Modal: Modal10,
+  Modal: Modal11,
   Menu: Menu2,
-  setIcon: setIcon7
+  setIcon: setIcon8
 } = require("obsidian");
 module.exports = class FolioPlugin extends Plugin {
   async onload() {
+    var _a;
     await this.loadSettings();
     console.log("[Folio] onload - basePath after loadSettings:", this.settings.basePath);
     console.log("[Folio] onload - lastActiveBookPath:", this.settings.lastActiveBookPath);
@@ -4439,22 +5251,14 @@ module.exports = class FolioPlugin extends Plugin {
     this.treeService = new TreeService(this.app, this.configService);
     this.statsService = new StatsService(this.app, this.configService);
     this.bookService = new BookService(this.app, this.configService);
-    this.projectService = this.bookService; // Alias for backwards compatibility
     this.booksIndex = [];
     this.activeBook = null;
-    // Create activeProject getter/setter that aliases to activeBook
-    Object.defineProperty(this, 'activeProject', {
-      get: function() { return this.activeBook; },
-      set: function(val) { this.activeBook = val; },
-      enumerable: true,
-      configurable: true
-    });
     this.folioLeaf = null;
     this.activeFile = null;
     console.log("[Folio] onload - about to ensureBasePath, getBasePath():", this.getBasePath());
     await this.ensureBasePath();
     await this.scanBooks();
-    console.log("[Folio] onload - after scanBooks, booksIndex:", this.booksIndex.map(b => b.path));
+    console.log("[Folio] onload - after scanBooks, booksIndex:", this.booksIndex.map((b) => b.path));
     try {
       if (this.settings && this.settings.lastActiveBookPath) {
         const byPath = this.booksIndex.find((b) => b.path === this.settings.lastActiveBookPath);
@@ -4464,7 +5268,7 @@ module.exports = class FolioPlugin extends Plugin {
       }
     } catch (e) {
     }
-    console.log("[Folio] onload - activeBook:", this.activeBook?.path || "none");
+    console.log("[Folio] onload - activeBook:", ((_a = this.activeBook) == null ? void 0 : _a.path) || "none");
     this.expandedFolders = /* @__PURE__ */ new Set();
     this.activeFilePath = null;
     this.registerView(
@@ -4487,8 +5291,8 @@ module.exports = class FolioPlugin extends Plugin {
     );
     this.registerEvent(
       this.app.vault.on("rename", async () => {
-        var _a;
-        const activePath = (_a = this.activeBook) == null ? void 0 : _a.path;
+        var _a2;
+        const activePath = (_a2 = this.activeBook) == null ? void 0 : _a2.path;
         await this.refresh();
         if (activePath) {
           const book = this.booksIndex.find((b) => b.path === activePath);
@@ -4520,6 +5324,16 @@ module.exports = class FolioPlugin extends Plugin {
             const f = view == null ? void 0 : view.file;
             if (f)
               this.onFileModified(f);
+            if (editor && typeof editor.getValue === "function") {
+              const text = editor.getValue();
+              const leaves = this.app.workspace.getLeavesOfType(WRITER_TOOLS_VIEW_TYPE);
+              for (const leaf of leaves) {
+                const wtView = leaf.view;
+                if (wtView && typeof wtView.updateFocusSessionWordsFromEditor === "function") {
+                  wtView.updateFocusSessionWordsFromEditor(text, f);
+                }
+              }
+            }
           } catch (e) {
             console.warn("editor-change handler failed", e);
           }
@@ -4540,11 +5354,30 @@ module.exports = class FolioPlugin extends Plugin {
     );
   }
   // Minimal chapter context menu (Open in new tab/pane, Exclude toggle, Create copy, Rename, Delete)
-  openChapterContextMenu(evt, file, node = null) {
-    var _a;
+  async openChapterContextMenu(evt, file, node = null) {
+    var _a, _b, _c;
     try {
       (_a = evt.preventDefault) == null ? void 0 : _a.call(evt);
       const menu = new Menu2(this.app);
+      let shouldCount = !(node == null ? void 0 : node.exclude);
+      try {
+        const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
+        if (book) {
+          const cfg = await this.loadBookConfig(book) || {};
+          const projectType = ((_b = cfg.basic) == null ? void 0 : _b.projectType) || PROJECT_TYPES.BOOK;
+          const overrides = this.statsService.buildStatsOverrideSets(((_c = cfg.structure) == null ? void 0 : _c.tree) || []);
+          const rules = this.statsService.getStatsRulesForProjectType(projectType);
+          shouldCount = this.statsService.shouldCountFileForStats(
+            file,
+            book.path,
+            projectType,
+            rules,
+            overrides
+          );
+        }
+      } catch (e) {
+        console.warn("Failed to load stats inclusion state", e);
+      }
       menu.addItem(
         (it) => it.setTitle("Open in new tab").setIcon("file").onClick(() => {
           (async () => {
@@ -4586,10 +5419,9 @@ module.exports = class FolioPlugin extends Plugin {
         })
       );
       menu.addSeparator();
-      const isExcluded = (node == null ? void 0 : node.exclude) || false;
       menu.addItem(
-        (it) => it.setTitle(isExcluded ? "Include in stats" : "Exclude from stats").setIcon(isExcluded ? "eye" : "eye-off").onClick(() => {
-          this.toggleExcludeFromStats(file, !isExcluded);
+        (it) => it.setTitle(shouldCount ? "Exclude from stats" : "Include in stats").setIcon(shouldCount ? "eye-off" : "eye").onClick(() => {
+          this.setStatsOverride(file, shouldCount ? "exclude" : "include");
         })
       );
       menu.addSeparator();
@@ -5044,6 +5876,22 @@ module.exports = class FolioPlugin extends Plugin {
       return;
     }
     await this.treeService.toggleExcludeFromStats(book, file, exclude);
+    await this.computeAndSaveStatsForBook(book);
+    await this.refresh();
+    this.rerenderViews();
+  }
+  async setStatsOverride(file, action) {
+    const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
+    if (!book) {
+      console.warn("Could not find book for file:", file.path);
+      return;
+    }
+    if (action === "include") {
+      await this.treeService.setStatsOverride(book, file, { include: true, exclude: false });
+    } else if (action === "exclude") {
+      await this.treeService.setStatsOverride(book, file, { include: false, exclude: true });
+    }
+    await this.computeAndSaveStatsForBook(book);
     await this.refresh();
     this.rerenderViews();
   }
@@ -5097,7 +5945,7 @@ module.exports = class FolioPlugin extends Plugin {
   }
   // Delegate to ConfigService
   async loadBookMeta(book) {
-    return this.configService.loadBookMeta(book);
+    return this.configService.loadProjectMeta(book);
   }
   async waitForFolderSync(path, retries = 20) {
     const delay = (ms) => new Promise((r) => setTimeout(r, ms));

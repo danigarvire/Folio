@@ -1888,24 +1888,27 @@ body.theme-light {
 
 .focus-mode-stats-header {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
 }
 
 .focus-mode-stats-button {
-  border: 1px solid var(--background-modifier-border);
-  background-color: transparent;
-  color: var(--text-muted);
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 12px;
+  min-width: 160px;
+  padding: 12px 32px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-on-accent);
+  background-color: var(--text-muted);
+  border: none;
+  border-radius: 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .focus-mode-stats-button:hover {
-  background-color: var(--background-modifier-hover);
-  border-color: var(--text-muted);
-  color: var(--text-normal);
+  background-color: var(--text-normal);
 }
 
 /* Central tooltip zone */
@@ -1935,9 +1938,8 @@ body.theme-light {
 
 /* Stats row */
 .focus-mode-stats-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -1947,8 +1949,7 @@ body.theme-light {
   align-items: center;
   justify-content: flex-start;
   gap: 6px;
-  flex: 1;
-  min-width: 140px;
+  min-width: 0;
   padding: 8px 4px;
   border-radius: 6px;
   cursor: pointer;
@@ -1995,6 +1996,31 @@ body.theme-light {
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
+}
+
+.focus-mode-stats-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.focus-mode-stats-modal-btn {
+  min-width: 140px;
+  padding: 8px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--background-modifier-border);
+  background-color: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.focus-mode-stats-modal-btn:hover {
+  background-color: var(--background-modifier-hover);
+  border-color: var(--text-muted);
+  color: var(--text-normal);
 }
 
 .focus-mode-stats-modal-title {
@@ -2052,6 +2078,12 @@ body.theme-light {
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   background-color: var(--background-primary);
+}
+
+.focus-mode-chart-svg {
+  width: 140px;
+  height: 140px;
+  display: block;
 }
 
 .focus-mode-chart-title {
