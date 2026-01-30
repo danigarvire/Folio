@@ -48,7 +48,6 @@ export class WriterToolsView extends ItemView {
     const header = container.createDiv({ cls: "writer-tools-header" });
     const headerTitle = header.createDiv({ cls: "writer-tools-title" });
     headerTitle.createSpan({ text: "Writer tools" });
-    headerTitle.createSpan({ cls: "writer-tools-build-tag", text: "build: icons-verify" });
 
     // Divider
     container.createDiv({ cls: "writer-tools-divider" });
@@ -461,7 +460,7 @@ export class WriterToolsView extends ItemView {
     const campbellArchetypes = [
       { label: "The Ally", icon: "handshake" },
       { label: "The Herald", icon: "bell" },
-      { label: "The Hero", icon: "sword" },
+      { label: "The Hero (Jung)", icon: "sword" },
       { label: "The Mentor", icon: "graduation-cap" },
       { label: "The Shadow", icon: "moon" },
       { label: "The Shapeshifter", icon: "hat-glasses" },
@@ -747,6 +746,29 @@ export class WriterToolsView extends ItemView {
         this.showResourceDetail(tip.label, () => this.showTipsResources());
       });
     });
+
+    container.createDiv({ cls: "tips-resources-divider" });
+    container.createDiv({ cls: "tips-resources-subtitle", text: "Common pitfalls" });
+
+    const pitfallsCard = container.createDiv({ cls: "tips-resources-card" });
+    const pitfallsGrid = pitfallsCard.createDiv({ cls: "tips-resources-grid" });
+    const pitfalls = [
+      { label: "Character Pitfalls", icon: "user" },
+      { label: "Character Arc Pitfalls", icon: "route" },
+      { label: "Narrative Technique Pitfalls", icon: "book-open" },
+      { label: "Structure Pitfalls", icon: "layout-grid" },
+      { label: "Writing-Level Pitfalls", icon: "pen-line" }
+    ];
+
+    pitfalls.forEach((pitfall) => {
+      const item = pitfallsGrid.createDiv({ cls: "tips-resources-item" });
+      const icon = item.createSpan({ cls: "tips-resources-item-icon" });
+      applyIcon(icon, pitfall.icon);
+      item.createSpan({ cls: "tips-resources-item-text", text: pitfall.label });
+      item.addEventListener("click", () => {
+        this.showResourceDetail(pitfall.label, () => this.showTipsResources());
+      });
+    });
   }
 
   exitTipsResources() {
@@ -761,7 +783,7 @@ export class WriterToolsView extends ItemView {
     container.addClass("folio-resource-detail");
 
     const header = container.createDiv({ cls: "resource-detail-header" });
-    const headingText = `${title.toUpperCase()} ARCHETYPE`;
+    const headingText = this.getResourceHeading(title);
     const headingIcon = header.createSpan({ cls: "resource-detail-heading-icon" });
     setIcon(headingIcon, this.getResourceIcon(title));
     header.createSpan({ cls: "resource-detail-heading", text: headingText });
@@ -773,6 +795,1132 @@ export class WriterToolsView extends ItemView {
 
     if (title === "The Hero") {
       this.renderHeroDetail(container);
+      return;
+    }
+    if (title === "The Caregiver") {
+      this.renderCaregiverDetail(container);
+      return;
+    }
+    if (title === "The Creator") {
+      this.renderCreatorDetail(container);
+      return;
+    }
+    if (title === "The Everyman") {
+      this.renderEverymanDetail(container);
+      return;
+    }
+    if (title === "The Explorer") {
+      this.renderExplorerDetail(container);
+      return;
+    }
+    if (title === "The Hero (Jung)") {
+      this.renderHeroJungDetail(container);
+      return;
+    }
+    if (title === "The Innocent") {
+      this.renderInnocentDetail(container);
+      return;
+    }
+    if (title === "The Jester") {
+      this.renderJesterDetail(container);
+      return;
+    }
+    if (title === "The Lover") {
+      this.renderLoverDetail(container);
+      return;
+    }
+    if (title === "The Magician") {
+      this.renderMagicianDetail(container);
+      return;
+    }
+    if (title === "The Outlaw") {
+      this.renderOutlawDetail(container);
+      return;
+    }
+    if (title === "The Ruler") {
+      this.renderRulerDetail(container);
+      return;
+    }
+    if (title === "The Sage") {
+      this.renderSageDetail(container);
+      return;
+    }
+    if (title === "Moral Ascent") {
+      this.renderMoralAscentDetail(container);
+      return;
+    }
+    if (title === "Moral Descent") {
+      this.renderMoralDescentDetail(container);
+      return;
+    }
+    if (title === "Flat Moral") {
+      this.renderFlatMoralDetail(container);
+      return;
+    }
+    if (title === "Moral Transformation") {
+      this.renderMoralTransformationDetail(container);
+      return;
+    }
+    if (title === "Character Pitfalls") {
+      this.renderPitfallsDetail(container, "Character Pitfalls", [
+        "Flat characters",
+        "Inconsistent motivation",
+        "Unearned redemption",
+        "Passive protagonists",
+        "Villain without agency",
+        "Archetype clichés"
+      ]);
+      return;
+    }
+    if (title === "Character Arc Pitfalls") {
+      this.renderPitfallsDetail(container, "Character Arc Pitfalls", [
+        "No real change",
+        "Change without cause",
+        "Moral whiplash",
+        "Transformation too late",
+        "Arc contradicts theme"
+      ]);
+      return;
+    }
+    if (title === "Narrative Technique Pitfalls") {
+      this.renderPitfallsDetail(container, "Narrative Technique Pitfalls", [
+        "Foreshadowing too obvious",
+        "Plot twists without setup",
+        "Red herrings that waste time",
+        "Deus ex machina abuse",
+        "Flashbacks killing momentum"
+      ]);
+      return;
+    }
+    if (title === "Structure Pitfalls") {
+      this.renderPitfallsDetail(container, "Structure Pitfalls", [
+        "Act breaks without tension",
+        "Sagging middle",
+        "Climax too early / too late",
+        "Resolution without consequence",
+        "Structure fighting the story"
+      ]);
+      return;
+    }
+    if (title === "Writing-Level Pitfalls") {
+      this.renderPitfallsDetail(container, "Writing-Level Pitfalls", [
+        "Over-exposition",
+        "On-the-nose dialogue",
+        "Telling instead of showing",
+        "Purple prose",
+        "Inconsistent tone"
+      ]);
+      return;
+    }
+    if (title === "Argumentation (tips)") {
+      this.renderTipsDetail(container, {
+        introTitle: "What is argumentative writing?",
+        intro: [
+          "Argumentative writing focuses on presenting, supporting, and defending a position with the goal of persuading the reader through reasoned discourse.",
+          "It is essential for essays, opinion pieces, critical analysis, and persuasive nonfiction."
+        ],
+        techniques: [
+          "Logical reasoning — Use deductive, inductive, or analogical reasoning to support claims and conclusions.",
+          "Evidence and examples — Support arguments with facts, data, statistics, real-world examples, or credible sources.",
+          "Counterarguments and refutation — Anticipate opposing views and address them directly to strengthen overall credibility.",
+          "Emotional appeal — Engage the reader’s emotions, values, or beliefs to reinforce logical points.",
+          "Rhetorical strategies — Apply ethos (credibility), pathos (emotion), and logos (logic) strategically.",
+          "Clear structure and organization — Present arguments in a coherent order with clear topic sentences and conclusions.",
+          "Clarity and concision — Avoid unnecessary complexity; express ideas precisely and directly.",
+          "Ethical responsibility — Ground arguments in honesty and respect for the audience’s values and intelligence."
+        ]
+      });
+      return;
+    }
+    if (title === "Description (tips)") {
+      this.renderTipsDetail(container, {
+        introTitle: "What is descriptive writing?",
+        intro: [
+          "Descriptive writing creates vivid mental images by engaging the reader’s senses, emotions, and imagination. Its purpose is immersion rather than explanation."
+        ],
+        techniques: [
+          "Sensory imagery — Appeal to sight, sound, touch, taste, and smell to create a multidimensional experience.",
+          "Figurative language — Use metaphor, simile, personification, and imagery to enrich atmosphere and tone.",
+          "Specificity and detail — Favor precise, concrete details over generic or abstract descriptions.",
+          "Show, don’t tell — Convey meaning through action, sensory detail, and implication rather than direct explanation.",
+          "Point of view awareness — Filter description through the narrator’s perspective, biases, and limitations.",
+          "Emotional resonance — Connect description to characters’ internal reactions and emotional states.",
+          "Narrative pacing — Balance descriptive passages with action and dialogue to maintain momentum.",
+          "Symbolism and motifs — Use recurring imagery to reinforce theme and meaning."
+        ]
+      });
+      return;
+    }
+    if (title === "Dialogue (tips)") {
+      this.renderTipsDetail(container, {
+        introTitle: "What is effective dialogue?",
+        intro: [
+          "Effective dialogue creates believable conversations that reveal character, advance plot, and convey subtext without sounding artificial or expository."
+        ],
+        techniques: [
+          "Distinct character voice — Give each character unique speech patterns, vocabulary, and tone.",
+          "Subtext — Allow meaning to exist beneath the spoken words through implication and tension.",
+          "Natural flow — Imitate real conversational rhythm without reproducing real speech verbatim.",
+          "Rhythm and cadence — Vary sentence length and pacing to reflect emotional intensity.",
+          "Conflict and tension — Use disagreement, power imbalance, or competing goals to energize exchanges.",
+          "Show, don’t tell — Reveal emotion and motivation through what is said — and what is avoided.",
+          "Subtle exposition — Embed necessary information naturally within conversation.",
+          "Authenticity and realism — Reflect cultural, social, and contextual speech patterns appropriately."
+        ]
+      });
+      return;
+    }
+    if (title === "Exposition (tips)") {
+      this.renderTipsDetail(container, {
+        introTitle: "What is exposition?",
+        intro: [
+          "Exposition provides essential background information, context, or history needed for the audience to understand the story world without disrupting narrative flow."
+        ],
+        techniques: [
+          "Narrative summary — Compress complex information into concise overviews.",
+          "Flashbacks — Reveal past events that directly inform present actions or motivations.",
+          "Dialogue-based exposition — Deliver information through natural conversation rather than narration.",
+          "Descriptive context — Use sensory detail to establish setting, culture, or historical background.",
+          "Prologues or introductory sections — Present foundational information before the main narrative begins.",
+          "Gradual information release — Distribute exposition strategically to avoid overload.",
+          "Integrated backstory — Weave background details into character thoughts or actions.",
+          "Worldbuilding — Establish social, political, cultural, or historical frameworks that support the story."
+        ]
+      });
+      return;
+    }
+    if (title === "Narration (tips)") {
+      this.renderTipsDetail(container, {
+        introTitle: "What is narration?",
+        intro: [
+          "Narration refers to how a story is told: the voice, perspective, structure, and style that shape how the reader experiences events."
+        ],
+        techniques: [
+          "Point of view — Choose first person, second person, or third person (limited or omniscient) deliberately.",
+          "Narrative structure — Organize events using linear, nonlinear, framed, or experimental sequencing.",
+          "Tone and atmosphere — Establish emotional mood through diction, imagery, and rhythm.",
+          "Characterization — Reveal character through actions, internal thought, and reaction.",
+          "Foreshadowing and suspense — Plant hints and manage anticipation to sustain engagement.",
+          "Symbolism and imagery — Use recurring symbols to convey deeper meaning.",
+          "Voice and style — Develop a distinctive narrative presence consistent with theme and perspective.",
+          "Narrative pacing — Control speed and tension through sentence structure, scene length, and transitions."
+        ]
+      });
+      return;
+    }
+    if (title === "Persuasion (tips)") {
+      this.renderTipsDetail(container, {
+        introTitle: "What is persuasive writing?",
+        intro: [
+          "Persuasive writing aims to influence beliefs, attitudes, or actions by combining logic, emotion, credibility, and narrative clarity."
+        ],
+        techniques: [
+          "Emotional appeal — Engage feelings such as empathy, fear, hope, or desire.",
+          "Storytelling — Use anecdotes or narratives to humanize abstract ideas.",
+          "Social proof — Reference collective agreement, trends, or testimonials.",
+          "Authority — Establish credibility through expertise or reputable sources.",
+          "Repetition — Reinforce key ideas to increase memorability.",
+          "Persuasive language — Choose words that convey urgency, clarity, and emotional weight.",
+          "Call to action — Direct the reader toward a specific response or behavior.",
+          "Addressing counterarguments — Acknowledge and refute opposing views to strengthen trust."
+        ]
+      });
+      return;
+    }
+    if (title === "Flashback") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is a Flashback?",
+        intro: [
+          "A flashback interrupts the present narrative to show events from the past. It provides context, emotional depth, or critical information that reshapes how the audience understands current events."
+        ],
+        core: [
+          "Temporal shift to the past",
+          "Reveals backstory",
+          "Adds emotional or thematic weight",
+          "Recontextualizes present actions"
+        ],
+        coreNote: "Flashbacks change understanding, not events.",
+        narrativeFunction: [
+          "Reveal motivation",
+          "Explain relationships",
+          "Deepen character psychology",
+          "Withhold and release information strategically"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Interrupting narrative momentum",
+          "Overexplaining",
+          "Redundancy with present action"
+        ],
+        examplesTitle: "Flashback Examples",
+        examples: [
+          "Lost",
+          "The Godfather Part II",
+          "Citizen Kane",
+          "Arrow",
+          "Eternal Sunshine of the Spotless Mind"
+        ]
+      });
+      return;
+    }
+    if (title === "Flashforward") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is a Flashforward?",
+        intro: [
+          "A flashforward reveals events that will occur later in the story. It creates anticipation, tension, or dramatic irony by showing consequences before causes."
+        ],
+        core: [
+          "Temporal jump to the future",
+          "Creates suspense",
+          "Reframes current decisions",
+          "Often partial or ambiguous"
+        ],
+        narrativeFunction: [
+          "Build anticipation",
+          "Signal inevitability",
+          "Create dramatic irony",
+          "Frame the narrative outcome"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Spoiling tension",
+          "Removing mystery",
+          "Confusing chronology"
+        ],
+        examplesTitle: "Flashforward Examples",
+        examples: [
+          "Breaking Bad (cold opens)",
+          "How to Get Away with Murder",
+          "Arrival",
+          "Six Feet Under",
+          "The Book Thief"
+        ]
+      });
+      return;
+    }
+    if (title === "Foreshadowing") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is Foreshadowing?",
+        intro: [
+          "Foreshadowing plants subtle hints about future events. These clues may be symbolic, visual, verbal, or thematic.",
+          "The goal is preparation, not prediction."
+        ],
+        core: [
+          "Early setup",
+          "Subtlety",
+          "Payoff later in the story",
+          "Often unnoticed on first read"
+        ],
+        narrativeFunction: [
+          "Create cohesion",
+          "Make twists feel earned",
+          "Build subconscious anticipation",
+          "Reinforce themes"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Being too obvious",
+          "Making outcomes predictable",
+          "Heavy-handed symbolism"
+        ],
+        examplesTitle: "Foreshadowing Examples",
+        examples: [
+          "Romeo and Juliet",
+          "Jaws (early warnings)",
+          "Breaking Bad (visual cues)",
+          "Of Mice and Men",
+          "The Sixth Sense"
+        ]
+      });
+      return;
+    }
+    if (title === "Chekhov’s Gun") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is Chekhov’s Gun?",
+        intro: [
+          "Chekhov’s Gun states that every significant element introduced in a story should have a purpose. If a detail is highlighted, it must eventually matter."
+        ],
+        core: [
+          "Meaningful setup",
+          "Inevitable payoff",
+          "Narrative economy",
+          "Focused attention"
+        ],
+        narrativeFunction: [
+          "Eliminate filler",
+          "Create satisfying resolutions",
+          "Train audience attention",
+          "Strengthen narrative cohesion"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Over-signaling importance",
+          "Forced payoff",
+          "Red herrings mistaken for setup"
+        ],
+        examplesTitle: "Chekhov’s Gun Examples",
+        examples: [
+          "The rifle in Chekhov’s plays",
+          "The ring in Lord of the Rings",
+          "The knife in Psycho",
+          "The coin in No Country for Old Men"
+        ]
+      });
+      return;
+    }
+    if (title === "Red Herring") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is a Red Herring?",
+        intro: [
+          "A red herring is a deliberate misdirection that leads the audience to form false assumptions. It distracts from the true narrative outcome."
+        ],
+        core: [
+          "False emphasis",
+          "Misdirection",
+          "Plausibility",
+          "Temporary relevance"
+        ],
+        narrativeFunction: [
+          "Create mystery",
+          "Increase suspense",
+          "Hide twists",
+          "Manipulate expectations"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Feeling unfair",
+          "Wasting narrative time",
+          "Breaking trust with the audience"
+        ],
+        examplesTitle: "Red Herring Examples",
+        examples: [
+          "Murder mystery suspects",
+          "Knives Out",
+          "Sherlock Holmes stories",
+          "Gone Girl",
+          "The Girl with the Dragon Tattoo"
+        ]
+      });
+      return;
+    }
+    if (title === "Plot Twist") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is a Plot Twist?",
+        intro: [
+          "A plot twist is an unexpected development that recontextualizes the story. It surprises the audience while remaining logically consistent."
+        ],
+        core: [
+          "Surprise",
+          "Retrospective logic",
+          "Setup and payoff",
+          "Shift in perspective"
+        ],
+        narrativeFunction: [
+          "Reframe the story",
+          "Shock the audience",
+          "Elevate stakes",
+          "Reveal hidden truth"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Twist for shock only",
+          "Lack of setup",
+          "Undermining character logic"
+        ],
+        examplesTitle: "Plot Twist Examples",
+        examples: [
+          "The Sixth Sense",
+          "Fight Club",
+          "The Others",
+          "Oldboy",
+          "Shutter Island"
+        ]
+      });
+      return;
+    }
+    if (title === "Deus Ex Machina") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is Deus Ex Machina?",
+        intro: [
+          "Deus ex Machina resolves conflict through an external, unexpected intervention that is not properly set up within the story."
+        ],
+        core: [
+          "Sudden resolution",
+          "External force",
+          "Minimal foreshadowing",
+          "Breaks causality"
+        ],
+        narrativeFunction: [
+          "Resolve unsolvable conflicts",
+          "Deliver moral or divine judgment"
+        ],
+        narrativeNote: "In modern storytelling, it is often discouraged.",
+        risksTitle: "Common risks",
+        risks: [
+          "Undermining stakes",
+          "Invalidating character effort",
+          "Breaking narrative credibility"
+        ],
+        examplesTitle: "Deus Ex Machina Examples",
+        examples: [
+          "Ancient Greek theater",
+          "War of the Worlds (original ending)",
+          "Certain superhero rescues",
+          "Mythological interventions"
+        ]
+      });
+      return;
+    }
+    if (title === "Eucatastrophe") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is Eucatastrophe?",
+        intro: [
+          "Eucatastrophe is a sudden positive reversal at the story’s darkest moment. Unlike Deus ex Machina, it feels meaningful and earned.",
+          "The term was coined by J.R.R. Tolkien."
+        ],
+        core: [
+          "Sudden hope",
+          "Emotional release",
+          "Moral or thematic payoff",
+          "Earned resolution"
+        ],
+        narrativeFunction: [
+          "Affirm hope",
+          "Deliver catharsis",
+          "Reinforce moral order",
+          "Reward endurance"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Confusing it with Deus ex Machina",
+          "Insufficient setup",
+          "Over-sentimentality"
+        ],
+        examplesTitle: "Eucatastrophe Examples",
+        examples: [
+          "The Lord of the Rings",
+          "The Lion, the Witch and the Wardrobe",
+          "It’s a Wonderful Life",
+          "Harry Potter finales"
+        ]
+      });
+      return;
+    }
+    if (title === "Poetic Justice") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is Poetic Justice?",
+        intro: [
+          "Poetic Justice ensures that characters receive outcomes that fittingly reflect their actions, values, or flaws."
+        ],
+        core: [
+          "Moral symmetry",
+          "Cause-and-effect resolution",
+          "Thematic reinforcement",
+          "Emotional satisfaction"
+        ],
+        narrativeFunction: [
+          "Reinforce theme",
+          "Deliver moral closure",
+          "Satisfy audience expectations",
+          "Balance narrative consequences"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Predictability",
+          "Moral simplification",
+          "Heavy-handed messaging"
+        ],
+        examplesTitle: "Poetic Justice Examples",
+        examples: [
+          "Villains undone by their own schemes",
+          "Fables and fairy tales",
+          "Crime fiction endings",
+          "Shakespearean punishment arcs"
+        ]
+      });
+      return;
+    }
+    if (title === "“Show, Don’t Tell”") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What does “Show, Don’t Tell” mean?",
+        intro: [
+          "This principle encourages conveying information through action, dialogue, and sensory detail rather than direct explanation."
+        ],
+        core: [
+          "Implicit storytelling",
+          "Sensory detail",
+          "Active scenes",
+          "Reader inference"
+        ],
+        narrativeFunction: [
+          "Increase immersion",
+          "Engage the reader",
+          "Strengthen emotional impact",
+          "Avoid exposition overload"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Obscuring clarity",
+          "Over-description",
+          "Avoiding necessary exposition"
+        ],
+        examplesTitle: "Show, Don’t Tell Examples",
+        examples: [
+          "Character emotion shown through action",
+          "Visual storytelling in film",
+          "Minimalist prose styles",
+          "Hemingway’s writing"
+        ]
+      });
+      return;
+    }
+    if (title === "Quibble (Wordplay)") {
+      this.renderTechniqueDetail(container, {
+        introTitle: "What is a Quibble?",
+        intro: [
+          "A quibble is playful or clever use of language, often relying on ambiguity, double meanings, or rhetorical tricks."
+        ],
+        core: [
+          "Linguistic play",
+          "Humor or irony",
+          "Verbal agility",
+          "Ambiguity"
+        ],
+        narrativeFunction: [
+          "Add wit",
+          "Reveal character intelligence",
+          "Create tonal contrast",
+          "Engage the audience linguistically"
+        ],
+        risksTitle: "Common risks",
+        risks: [
+          "Overuse",
+          "Breaking tone",
+          "Confusing meaning"
+        ],
+        examplesTitle: "Quibble Examples",
+        examples: [
+          "Shakespearean wordplay",
+          "Oscar Wilde",
+          "Legal or political dialogue",
+          "Screwball comedies"
+        ]
+      });
+      return;
+    }
+    if (title === "The Hero’s Journey") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is the Hero’s Journey?",
+        intro: [
+          "The Hero’s Journey is a mythic structure that frames story as transformation: a character leaves the familiar, faces trials, dies symbolically, and returns changed. It’s less a rigid formula than a map for meaning and growth."
+        ],
+        core: [
+          "A movement from comfort to challenge to return",
+          "External trials that force internal change",
+          "Symbolic death and rebirth",
+          "A concluding “gift” brought back to the world"
+        ],
+        stepsTitle: "Steps (classic model)",
+        stepGroups: [
+          {
+            title: "ACT I",
+            items: [
+              {
+                title: "Ordinary World",
+                body: "Establish the Hero’s baseline life, limitations, and unmet need.",
+                icon: "earth"
+              },
+              {
+                title: "Call to Adventure",
+                body: "A disruption offers a mission, opportunity, or threat that demands response.",
+                icon: "phone-incoming"
+              },
+              {
+                title: "Refusal of the Call",
+                body: "Fear, duty, or doubt causes hesitation; the Hero resists change.",
+                icon: "phone-off"
+              },
+              {
+                title: "Meeting the Mentor",
+                body: "Guidance appears: training, tools, wisdom, or encouragement.",
+                icon: "graduation-cap"
+              },
+              {
+                title: "Crossing the First Threshold",
+                body: "The Hero commits and enters the “special world,” leaving the old life behind.",
+                icon: "brick-wall"
+              }
+            ]
+          },
+          {
+            title: "ACT II",
+            items: [
+              {
+                title: "Tests, Allies, Enemies",
+                body: "The rules of the new world are learned; relationships and rivalries form.",
+                icon: "line-squiggle"
+              },
+              {
+                title: "Approach to the Inmost Cave",
+                body: "Preparation for the central crisis; tensions tighten and stakes clarify.",
+                icon: "mountain"
+              },
+              {
+                title: "Ordeal",
+                body: "A major confrontation with death, failure, or the deepest fear.",
+                icon: "swords"
+              },
+              {
+                title: "Reward (Seizing the Sword)",
+                body: "The Hero gains something: knowledge, power, object, love, or self-belief.",
+                icon: "trophy"
+              }
+            ]
+          },
+          {
+            title: "ACT III",
+            items: [
+              {
+                title: "The Road Back",
+                body: "Consequences arrive; the Hero must return with the reward under pressure.",
+                icon: "arrow-big-left"
+              },
+              {
+                title: "Resurrection",
+                body: "A final test proves transformation. The Hero confronts the core flaw one last time.",
+                icon: "user-round-plus"
+              },
+              {
+                title: "Return with the Elixir",
+                body: "The Hero returns changed, bringing value to others: healing, truth, freedom, hope.",
+                icon: "gem"
+              }
+            ]
+          }
+        ],
+        whyTitle: "Why this works",
+        why: "These steps externalize inner change: the world forces the Hero to become someone new.",
+        examplesTitle: "Hero’s Journey Examples",
+        examples: [
+          "Star Wars",
+          "The Matrix",
+          "The Lord of the Rings",
+          "Moana",
+          "Harry Potter"
+        ]
+      });
+      return;
+    }
+    if (title === "Dan Harmon Story Circle") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is the Story Circle?",
+        intro: [
+          "The Story Circle compresses transformation into a repeatable loop: a character wants something, leaves comfort, pays a price, and returns changed. It’s designed to be practical for episodes as well as features."
+        ],
+        core: [
+          "Motivation-driven steps",
+          "Clear cause-and-effect",
+          "Repeatable structure (especially for TV)",
+          "Emphasis on change and cost"
+        ],
+        stepsTitle: "Steps (8-step circle)",
+        steps: [
+          { title: "YOU (COMFORT)", body: "Establish the character’s normal world and identity.", icon: "fish" },
+          { title: "NEED (DESIRE)", body: "The character wants or needs something that disrupts balance.", icon: "candy" },
+          { title: "GO (ENTER UNFAMILIAR)", body: "The character leaves comfort and enters a new situation.", icon: "log-in" },
+          { title: "SEARCH (ADAPT)", body: "The character explores the new world and tries strategies that may fail.", icon: "map" },
+          { title: "FIND (GET WHAT THEY WANTED)", body: "The character achieves the goal—or seems to.", icon: "search-check" },
+          { title: "TAKE (PAY A PRICE)", body: "There is a cost: sacrifice, loss, compromise, or consequence.", icon: "hand-coins" },
+          { title: "RETURN (BACK TO FAMILIAR)", body: "The character returns to a version of their old world.", icon: "arrow-big-left" },
+          { title: "CHANGE (TRANSFORMED)", body: "The character is different: wiser, broken, empowered, humbled, etc.", icon: "user-pen" }
+        ],
+        examplesTitle: "Story Circle Examples",
+        examples: [
+          "Episodic TV arcs",
+          "Community",
+          "Rick and Morty",
+          "Character-centered short stories"
+        ]
+      });
+      return;
+    }
+    if (title === "Three Act Structure") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is the Three Act Structure?",
+        intro: [
+          "A story divided into Setup, Confrontation, and Resolution. It’s the most common modern narrative skeleton because it aligns with audience attention and escalating stakes."
+        ],
+        stepsTitle: "Steps (typical beats)",
+        numberedSteps: true,
+        steps: [
+          "ACT I — Setup",
+          "1. Opening / Status Quo — Introduce the protagonist, their world, and the core problem-space.",
+          "2. Inciting Incident — A disruption creates a new problem or opportunity.",
+          "3. Debate / Refusal — The protagonist hesitates, resists, or explores alternatives.",
+          "4. Act I Break (Commitment) — The protagonist commits and can’t go back.",
+          "ACT II — Confrontation",
+          "5. Rising Complications — Obstacles escalate; stakes increase; plans fail.",
+          "6. Midpoint Shift — A major reveal or reversal changes the story’s direction and intensity.",
+          "7. Bad Guys Close In / Pressure Peaks — Consequences compound; resources thin; relationships strain.",
+          "8. All Is Lost — The lowest point; apparent defeat or devastating cost.",
+          "9. Dark Night of the Soul — Reflection and decision: who will the protagonist become?",
+          "ACT III — Resolution",
+          "10. Act III Break (New plan) — The protagonist acts with new clarity, courage, or strategy.",
+          "11. Climax — The decisive confrontation that resolves the central conflict.",
+          "12. Denouement — Aftermath: new equilibrium; consequences; thematic closure."
+        ],
+        examplesTitle: "Three Act Examples",
+        examples: [
+          "Most Hollywood films",
+          "Contemporary commercial novels",
+          "Studio-driven storytelling"
+        ]
+      });
+      return;
+    }
+    if (title === "Freytag’s Pyramid") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is Freytag’s Pyramid?",
+        intro: [
+          "A classical five-part model of dramatic tension, often associated with tragedy. It formalizes a rise to climax followed by a decline into resolution."
+        ],
+        stepsTitle: "Steps (5-part model)",
+        steps: [
+          "1. Exposition — Introduce setting, characters, and the initial balance.",
+          "2. Rising Action — Complications build; conflict intensifies; choices narrow.",
+          "3. Climax — The turning point—the peak tension where fate changes direction.",
+          "4. Falling Action — Consequences unfold; momentum turns toward inevitable outcome.",
+          "5. Denouement / Catastrophe — Final resolution, often with moral or tragic closure."
+        ],
+        examplesTitle: "Freytag Examples",
+        examples: [
+          "Classical tragedies",
+          "Shakespearean drama",
+          "Traditional stage plays"
+        ]
+      });
+      return;
+    }
+    if (title === "Fichtean Curve") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is the Fichtean Curve?",
+        intro: [
+          "A structure built from a chain of escalating crises with minimal exposition. The story begins close to conflict and continues increasing pressure until climax."
+        ],
+        stepsTitle: "Steps (crisis chain)",
+        steps: [
+          "1. Immediate Hook / First Crisis — Start near a problem, not far before it.",
+          "2. Crisis Escalation 1 — The protagonist responds; the response creates new complications.",
+          "3. Crisis Escalation 2 — Stakes rise; setbacks compound; options shrink.",
+          "4. Crisis Escalation 3 — Pressure intensifies; emotional and practical costs deepen.",
+          "5. Major Crisis / Low Point — A near-defeat moment that forces a decisive shift.",
+          "6. Climax — The protagonist commits fully and confronts the core conflict.",
+          "7. Short Resolution — Quick wrap-up; consequences and new stability."
+        ],
+        examplesTitle: "Fichtean Curve Examples",
+        examples: [
+          "Thrillers",
+          "Page-turner genre fiction",
+          "Serialized storytelling"
+        ]
+      });
+      return;
+    }
+    if (title === "Kishōtenketsu") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is Kishōtenketsu?",
+        intro: [
+          "Kishōtenketsu is a four-part structure that emphasizes development and contrast rather than conflict. It’s common in East Asian storytelling and works well for narratives driven by discovery, theme, or perspective."
+        ],
+        stepsTitle: "Steps (4-part model)",
+        steps: [
+          "1. Ki (Introduction) — Establish the situation, characters, and core idea.",
+          "2. Shō (Development) — Expand the situation; deepen detail and context without major disruption.",
+          "3. Ten (Turn / Twist) — Introduce a surprising contrast or shift: a new angle, reveal, or reframing event.",
+          "4. Ketsu (Conclusion) — Synthesize: show how the contrast changes meaning; resolve by integration rather than victory."
+        ],
+        examplesTitle: "Kishōtenketsu Examples",
+        examples: [
+          "Many slice-of-life stories",
+          "Certain anime and manga arcs",
+          "Essays or thematic short fiction",
+          "Some puzzle-like narratives"
+        ]
+      });
+      return;
+    }
+    if (title === "Save the Cat") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is Save the Cat?",
+        intro: [
+          "Save the Cat is a commercial beat sheet designed to maximize audience engagement. It focuses on emotional timing, clarity, and likeability, especially for film and genre fiction."
+        ],
+        core: [
+          "Strong emotional beats",
+          "Clear pacing",
+          "Audience empathy",
+          "Market-tested structure"
+        ],
+        stepsTitle: "Steps (15-beat model)",
+        steps: [
+          "1. Opening Image — A snapshot of the protagonist’s world before change.",
+          "2. Theme Stated — A line or moment hints at the story’s central lesson.",
+          "3. Setup — Introduce characters, flaws, relationships, and stakes.",
+          "4. Catalyst — The inciting incident that disrupts normal life.",
+          "5. Debate — The protagonist hesitates and weighs options.",
+          "6. Break into Act II — Commitment to the journey.",
+          "7. B Story — A secondary plot, often emotional or relational.",
+          "8. Fun and Games — The “promise of the premise”; the story delivers on genre.",
+          "9. Midpoint — A major reversal: false victory or false defeat.",
+          "10. Bad Guys Close In — Pressure increases; plans unravel.",
+          "11. All Is Lost — Apparent defeat; emotional or literal low point.",
+          "12. Dark Night of the Soul — Reflection and internal reckoning.",
+          "13. Break into Act III — New insight leads to decisive action.",
+          "14. Finale — The protagonist applies what they’ve learned to win or lose meaningfully.",
+          "15. Final Image — A mirror of the opening image, showing change."
+        ],
+        examplesTitle: "Save the Cat Examples",
+        examples: [
+          "Most studio films",
+          "Romantic comedies",
+          "High-concept genre movies",
+          "Animated features"
+        ]
+      });
+      return;
+    }
+    if (title === "Seven Point Structure") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is the Seven Point Structure?",
+        intro: [
+          "A clean, flexible structure focused on cause-and-effect turning points. It emphasizes clarity and momentum."
+        ],
+        core: [
+          "Fewer beats, higher impact",
+          "Clear reversals",
+          "Strong midpoint logic"
+        ],
+        stepsTitle: "Steps (7-point model)",
+        numberedSteps: true,
+        steps: [
+          "1. Hook — Introduce the protagonist and the central problem.",
+          "2. Plot Turn 1 — An event pushes the protagonist into action.",
+          "3. Pinch Point 1 — Pressure reveals the antagonist’s power.",
+          "4. Midpoint — The protagonist shifts from reactive to proactive.",
+          "5. Pinch Point 2 — Stakes intensify; consequences loom.",
+          "6. Plot Turn 2 — Final commitment toward resolution.",
+          "7. Resolution — Conflict concludes; new status quo established."
+        ],
+        examplesTitle: "Seven Point Examples",
+        examples: [
+          "Fantasy and sci-fi novels",
+          "Plot-driven fiction",
+          "Serialized narratives"
+        ]
+      });
+      return;
+    }
+    if (title === "Pulp Formula") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is the Pulp Formula?",
+        intro: [
+          "A fast-paced structure designed for entertainment, clarity, and momentum. It prioritizes action, stakes, and accessibility over thematic subtlety."
+        ],
+        core: [
+          "Immediate engagement",
+          "Clear heroes and villains",
+          "Escalating danger",
+          "High momentum"
+        ],
+        stepsTitle: "Steps (common pulp rhythm)",
+        steps: [
+          "1. Immediate Hook — Start with action or danger.",
+          "2. Clear Goal — The protagonist knows what must be done.",
+          "3. Obstacle Chain — Continuous challenges and reversals.",
+          "4. Escalation — Stakes increase rapidly.",
+          "5. Cliffhanger or Crisis — A major setback or revelation.",
+          "6. Final Confrontation — Direct clash with the antagonist.",
+          "7. Swift Resolution — Loose ends tied quickly."
+        ],
+        examplesTitle: "Pulp Examples",
+        examples: [
+          "Adventure serials",
+          "Noir fiction",
+          "Action thrillers",
+          "Comic storytelling"
+        ]
+      });
+      return;
+    }
+    if (title === "McKee Story paradigm") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is the McKee Paradigm?",
+        intro: [
+          "Robert McKee’s model emphasizes story as a sequence of value changes driven by conflict and choice. It focuses on scene design and narrative causality."
+        ],
+        core: [
+          "Value shifts",
+          "Progressive complications",
+          "Scene-level causality",
+          "Strong climax logic"
+        ],
+        stepsTitle: "Structural principles",
+        steps: [
+          "1. Inciting Incident — A radical change disrupts balance.",
+          "2. Progressive Complications — Each action leads to greater difficulty.",
+          "3. Crisis — A decision between irreconcilable values.",
+          "4. Climax — Action that resolves the crisis.",
+          "5. Resolution — The world stabilizes in a new form."
+        ],
+        examplesTitle: "McKee Examples",
+        examples: [
+          "Prestige drama",
+          "Character-driven films",
+          "Serious literary narratives"
+        ]
+      });
+      return;
+    }
+    if (title === "Into the Woods structure") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is the Into the Woods structure?",
+        intro: [
+          "John Yorke’s model views story as a five-act, fractal pattern: order, disorder, repair, collapse, and transformation. It emphasizes repetition at multiple scales."
+        ],
+        core: [
+          "Five-part rhythm",
+          "Fractal repetition",
+          "Moral consequence",
+          "Thematic depth"
+        ],
+        stepsTitle: "Steps (5-act pattern)",
+        steps: [
+          "1. Order — Establish a flawed equilibrium.",
+          "2. Disruption — A desire or problem breaks order.",
+          "3. Attempted Repair — Characters try to fix things.",
+          "4. Collapse — Efforts fail; chaos peaks.",
+          "5. New Order — A transformed equilibrium emerges."
+        ],
+        examplesTitle: "Into the Woods Examples",
+        examples: [
+          "British television drama",
+          "Prestige serialized storytelling",
+          "Thematic narratives"
+        ]
+      });
+      return;
+    }
+    if (title === "Frame Narrative") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is a Frame Narrative?",
+        intro: [
+          "A story within a story. An outer narrative contextualizes or reframes an inner narrative."
+        ],
+        core: [
+          "Nested storytelling",
+          "Perspective mediation",
+          "Interpretive distance"
+        ],
+        stepsTitle: "Structural layers",
+        steps: [
+          "1. Outer Frame — Establish the narrator or context.",
+          "2. Inner Story — The primary narrative is told.",
+          "3. Interruption or Commentary — The frame reacts or reframes meaning.",
+          "4. Return to Frame — The story closes with new understanding."
+        ],
+        examplesTitle: "Frame Narrative Examples",
+        examples: [
+          "Frankenstein",
+          "The Princess Bride",
+          "Heart of Darkness",
+          "Arabian Nights"
+        ]
+      });
+      return;
+    }
+    if (title === "Nonlinear Structure") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is a Nonlinear Structure?",
+        intro: [
+          "A narrative told out of chronological order. Meaning emerges from juxtaposition rather than sequence."
+        ],
+        core: [
+          "Fragmented timeline",
+          "Pattern recognition",
+          "Active audience participation"
+        ],
+        stepsTitle: "Common nonlinear patterns",
+        steps: [
+          "Reverse chronology",
+          "Interwoven timelines",
+          "Fragmented memory",
+          "Circular narratives"
+        ],
+        examplesTitle: "Nonlinear Examples",
+        examples: [
+          "Memento",
+          "Pulp Fiction",
+          "Westworld",
+          "Slaughterhouse-Five"
+        ]
+      });
+      return;
+    }
+    if (title === "Rashomon Structure") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is a Rashomon Structure?",
+        intro: [
+          "A narrative that presents multiple, conflicting perspectives of the same event, emphasizing subjectivity and truth ambiguity."
+        ],
+        core: [
+          "Multiple narrators",
+          "Contradictory accounts",
+          "Truth as unstable"
+        ],
+        stepsTitle: "Structural pattern",
+        steps: [
+          "1. Single event",
+          "2. Multiple retellings",
+          "3. Contradictions revealed",
+          "4. Ambiguity preserved"
+        ],
+        examplesTitle: "Rashomon Examples",
+        examples: [
+          "Rashomon",
+          "Hero",
+          "The Affair",
+          "Gone Girl (partial)"
+        ]
+      });
+      return;
+    }
+    if (title === "In Medias Res") {
+      this.renderStructureDetail(container, {
+        introTitle: "What is In Medias Res?",
+        intro: [
+          "A narrative that begins in the middle of action, then later provides context for how events reached that point."
+        ],
+        core: [
+          "Immediate engagement",
+          "Delayed exposition",
+          "Momentum-first storytelling"
+        ],
+        stepsTitle: "Structural pattern",
+        steps: [
+          "1. Mid-action opening",
+          "2. Audience confusion",
+          "3. Gradual backfill",
+          "4. Recontextualization",
+          "5. Continuation to resolution"
+        ],
+        examplesTitle: "In Medias Res Examples",
+        examples: [
+          "The Odyssey",
+          "Breaking Bad (cold opens)",
+          "Mad Max: Fury Road",
+          "Fight Club"
+        ]
+      });
       return;
     }
     if (title === "The Mentor") {
@@ -803,6 +1951,10 @@ export class WriterToolsView extends ItemView {
       this.renderThresholdGuardianDetail(container);
       return;
     }
+    if (title === "The Caregiver") {
+      this.renderCaregiverDetail(container);
+      return;
+    }
 
     container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
   }
@@ -816,9 +1968,97 @@ export class WriterToolsView extends ItemView {
       "The Trickster": "dice",
       "The Ally": "handshake",
       "The Shapeshifter": "hat-glasses",
-      "The Threshold Guardian": "shield"
+      "The Threshold Guardian": "shield",
+      "The Caregiver": "heart-handshake",
+      "The Creator": "paintbrush",
+      "The Everyman": "users",
+      "The Explorer": "compass",
+      "The Hero (Jung)": "sword",
+      "The Innocent": "baby",
+      "The Jester": "party-popper",
+      "The Lover": "heart",
+      "The Magician": "wand-2",
+      "The Outlaw": "flame-kindling",
+      "The Ruler": "crown",
+      "The Sage": "book-open",
+      "Moral Ascent": "trending-up",
+      "Moral Descent": "trending-down",
+      "Flat Moral": "minus",
+      "Moral Transformation": "trending-up-down",
+      "Character Pitfalls": "user",
+      "Character Arc Pitfalls": "route",
+      "Narrative Technique Pitfalls": "book-open",
+      "Structure Pitfalls": "layout-grid",
+      "Writing-Level Pitfalls": "pen-line",
+      "Flashback": "rewind",
+      "Flashforward": "fast-forward",
+      "Foreshadowing": "scan-eye",
+      "Chekhov’s Gun": "bomb",
+      "Red Herring": "fish",
+      "Plot Twist": "rotate-3d",
+      "Deus Ex Machina": "wand-2",
+      "Eucatastrophe": "mountain",
+      "Poetic Justice": "scale",
+      "“Show, Don’t Tell”": "eye",
+      "Quibble (Wordplay)": "quote",
+      "The Hero’s Journey": "map",
+      "Dan Harmon Story Circle": "orbit",
+      "Freytag’s Pyramid": "triangle",
+      "Fichtean Curve": "line-chart",
+      "Three Act Structure": "columns-3",
+      "Kishōtenketsu": "route",
+      "Save the Cat": "cat",
+      "Seven Point Structure": "wheat",
+      "Pulp Formula": "book",
+      "McKee Story paradigm": "book-open",
+      "Into the Woods structure": "trees",
+      "Frame Narrative": "scan",
+      "Nonlinear Structure": "line-squiggle",
+      "Rashomon Structure": "shrink",
+      "In Medias Res": "git-commit-horizontal",
+      "Argumentation (tips)": "scale",
+      "Description (tips)": "image",
+      "Dialogue (tips)": "message-circle",
+      "Exposition (tips)": "file-text",
+      "Narration (tips)": "book-open",
+      "Persuasion (tips)": "megaphone"
     };
     return iconMap[title] || "book";
+  }
+
+  getResourceHeading(title) {
+    const archetypeTitles = new Set([
+      "The Hero",
+      "The Mentor",
+      "The Herald",
+      "The Shadow",
+      "The Trickster",
+      "The Ally",
+      "The Shapeshifter",
+      "The Threshold Guardian",
+      "The Caregiver",
+      "The Creator",
+      "The Everyman",
+      "The Explorer",
+      "The Hero (Jung)",
+      "The Innocent",
+      "The Jester",
+      "The Lover",
+      "The Magician",
+      "The Outlaw",
+      "The Ruler",
+      "The Sage"
+    ]);
+
+    if (archetypeTitles.has(title)) {
+      return `${title.toUpperCase()} ARCHETYPE`;
+    }
+
+    if (title.endsWith("(tips)")) {
+      return title.replace(" (tips)", "").toUpperCase();
+    }
+
+    return title.toUpperCase();
   }
 
   createResourceSubheading(parent, iconName, text) {
@@ -899,7 +2139,7 @@ export class WriterToolsView extends ItemView {
     const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
     const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
     const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-    setIcon(examplesIcon, "user-round");
+    setIcon(examplesIcon, "bookmark");
     examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Hero Examples" });
 
     const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
@@ -1004,7 +2244,7 @@ export class WriterToolsView extends ItemView {
     const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
     const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
     const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-    setIcon(examplesIcon, "user-round");
+    setIcon(examplesIcon, "layout-grid");
     examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Mentor Examples" });
 
     const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
@@ -1604,6 +2844,1419 @@ export class WriterToolsView extends ItemView {
       "Dragons",
       "The First Boss"
     ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderCaregiverDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Caregiver?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Caregiver is driven by compassion, responsibility, and the desire to protect others. They exist to nurture, support, and sustain, often putting others’ needs before their own."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This archetype represents altruism, sacrifice, and unconditional care."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Empathy and compassion",
+      "Selflessness",
+      "Responsibility",
+      "Emotional strength",
+      "Protective instinct"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Caregiver’s weakness is often self-neglect."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Protects vulnerable characters",
+      "Provides emotional stability",
+      "Represents moral goodness",
+      "Motivates sacrifice",
+      "Creates emotional stakes"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They often anchor the story’s heart."
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Helping others vs. self-preservation",
+      "Love vs. burnout",
+      "Responsibility vs. freedom"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Caregiver Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Marmee (Little Women)",
+      "Samwise Gamgee",
+      "Aunt May",
+      "Molly Weasley",
+      "Baymax",
+      "Marlin (Finding Nemo)"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderCreatorDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Creator?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Creator is driven by imagination and the urge to build something meaningful. They seek originality, self-expression, and lasting impact through creation."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This archetype fears mediocrity and unrealized potential."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Creativity",
+      "Vision",
+      "Innovation",
+      "Sensitivity",
+      "Perfectionism"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They are often torn between inspiration and self-doubt."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Brings new ideas into the world",
+      "Challenges existing systems",
+      "Embodies artistic struggle",
+      "Explores identity through creation"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Fear of failure",
+      "Obsession with perfection",
+      "Isolation",
+      "The cost of creation"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Creator Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Victor Frankenstein",
+      "Tony Stark",
+      "Walt Disney (fictionalized)",
+      "Dr. Emmett Brown",
+      "Jo March",
+      "Da Vinci–type characters"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderEverymanDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Everyman?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Everyman represents normalcy, relatability, and belonging. They are not exceptional by skill or destiny, but by humanity."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This archetype allows the audience to see themselves in the story."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Humility",
+      "Honesty",
+      "Reliability",
+      "Relatability",
+      "Desire for connection"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They succeed through perseverance, not greatness."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Grounds the story",
+      "Reflects audience values",
+      "Humanizes extraordinary events",
+      "Emphasizes community and belonging"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Feeling insignificant",
+      "Fear of standing out",
+      "Desire to belong vs. desire to matter"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Everyman Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Arthur Dent",
+      "Bilbo Baggins (early)",
+      "Jim Halpert",
+      "Forrest Gump",
+      "Frodo (initially)"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderExplorerDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Explorer?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Explorer seeks freedom, discovery, and self-definition. They reject confinement and pursue meaning through experience."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This archetype values independence above all else."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Curiosity",
+      "Independence",
+      "Courage",
+      "Restlessness",
+      "Self-reliance"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They fear conformity and stagnation."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Drives journeys and quests",
+      "Expands the world of the story",
+      "Challenges limits and borders",
+      "Represents personal freedom"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Commitment",
+      "Loneliness",
+      "Rootlessness",
+      "The cost of freedom"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Explorer Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Indiana Jones",
+      "Lara Croft",
+      "Moana",
+      "Huck Finn",
+      "The Doctor (Doctor Who)"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderHeroJungDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Hero?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Jungian Hero represents courage, willpower, and the drive to prove worth through action. Unlike the mythic Hero’s Journey, this archetype focuses on strength and achievement."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Bravery",
+      "Determination",
+      "Discipline",
+      "Moral clarity",
+      "Endurance"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They define themselves through struggle."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Confronts danger directly",
+      "Overcomes adversity",
+      "Protects others",
+      "Embodies action and resolve"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Pride",
+      "Fear of weakness",
+      "Burnout",
+      "Identity tied solely to victory"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Hero Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Wonder Woman",
+      "Captain America",
+      "Achilles",
+      "Beowulf",
+      "Maximus"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderInnocentDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Innocent?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Innocent seeks happiness, safety, and goodness. They believe in a just world and trust others easily."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This archetype represents hope and moral purity."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Optimism",
+      "Trust",
+      "Faith",
+      "Simplicity",
+      "Moral clarity"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Their weakness is naivety."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Highlights corruption or cruelty",
+      "Inspires protection",
+      "Restores hope",
+      "Contrasts darker characters"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Loss of faith",
+      "Disillusionment",
+      "Exposure to harsh reality"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Innocent Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Dorothy Gale",
+      "Paddington",
+      "Buddy (Elf)",
+      "Bambi",
+      "Amélie"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderJesterDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Jester?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Jester lives in the moment, embracing humor, chaos, and joy. They expose truth through laughter and subversion."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Humor",
+      "Irreverence",
+      "Playfulness",
+      "Chaos",
+      "Social critique"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They fear boredom and oppression."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Relieves tension",
+      "Exposes hypocrisy",
+      "Challenges authority",
+      "Brings levity"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Being taken seriously",
+      "Hiding pain behind humor"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Jester Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Jack Sparrow",
+      "The Genie",
+      "Tyrion Lannister",
+      "Bugs Bunny",
+      "Puck"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderLoverDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Lover?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Lover is driven by passion, intimacy, and connection. They seek union — romantic, emotional, or aesthetic."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Passion",
+      "Devotion",
+      "Sensuality",
+      "Emotional depth",
+      "Vulnerability"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They fear abandonment and loss."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Raises emotional stakes",
+      "Motivates sacrifice",
+      "Explores intimacy",
+      "Drives relational conflict"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Obsession",
+      "Dependency",
+      "Loss of identity"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Lover Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Romeo & Juliet",
+      "Rose (Titanic)",
+      "Westley",
+      "Scarlett O’Hara",
+      "Jack Dawson"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderMagicianDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Magician?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Magician seeks transformation — of self, others, or reality itself. They understand hidden systems and use knowledge to enact change."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Insight",
+      "Vision",
+      "Power",
+      "Charisma",
+      "Transformation"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They fear unintended consequences."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Enables change",
+      "Transforms situations",
+      "Reveals hidden truths",
+      "Alters reality"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Control vs. ethics",
+      "Power misuse",
+      "Hubris"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Magician Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Gandalf",
+      "Doctor Strange",
+      "Merlin",
+      "Neo",
+      "Dumbledore"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderOutlawDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Outlaw?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Outlaw rejects rules, authority, and conformity. They seek freedom through rebellion and disruption."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Defiance",
+      "Independence",
+      "Anger or idealism",
+      "Courage",
+      "Anti-authoritarianism"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They fear powerlessness."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Challenges systems",
+      "Sparks revolution",
+      "Represents resistance",
+      "Breaks unjust rules"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Destruction vs. change",
+      "Isolation",
+      "Moral ambiguity"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Outlaw Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "V",
+      "Robin Hood",
+      "Han Solo",
+      "Tyler Durden",
+      "Katniss Everdeen"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderRulerDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Ruler?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Ruler seeks order, control, and stability. They value leadership, responsibility, and structure."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Authority",
+      "Control",
+      "Responsibility",
+      "Vision",
+      "Discipline"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They fear chaos and loss of power."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Establishes order",
+      "Sets laws and norms",
+      "Represents power",
+      "Creates political stakes"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Tyranny vs. justice",
+      "Control vs. trust"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Ruler Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Mufasa",
+      "Aragorn",
+      "Queen Elizabeth–type figures",
+      "Tywin Lannister",
+      "Odin"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderSageDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Sage?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Sage seeks truth through knowledge and understanding. They value wisdom over action."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Intelligence",
+      "Objectivity",
+      "Insight",
+      "Reflection",
+      "Patience"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They fear ignorance and deception."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Provides truth",
+      "Explains systems",
+      "Guides decisions",
+      "Offers perspective"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Detachment",
+      "Inaction",
+      "Emotional distance"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Sage Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Obi-Wan Kenobi",
+      "Socrates–type figures",
+      "Professor X",
+      "Dumbledore (as Sage)",
+      "Spock"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderMoralAscentDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "What is a Moral Ascent?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "A Moral Ascent arc follows a character who grows ethically over the course of the story. The character starts with flaws, ignorance, or selfishness and gradually learns to act with greater integrity, empathy, or responsibility."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This is the classic arc of becoming better."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core characteristics");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Ethical growth",
+      "Increased empathy",
+      "Personal responsibility",
+      "Learning from mistakes",
+      "Sacrifice for others"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The character ends the story morally stronger than they began."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Inspire the audience",
+      "Reinforce ethical values",
+      "Reward self-reflection and growth",
+      "Create emotional catharsis"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "It often aligns with hopeful or redemptive stories."
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Common internal conflicts");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Fear vs. courage",
+      "Self-interest vs. responsibility",
+      "Ignorance vs. awareness",
+      "Comfort vs. change"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Moral Ascent Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Ebenezer Scrooge",
+      "Zuko",
+      "Jean Valjean",
+      "Tony Stark",
+      "Shrek",
+      "Mulan"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderMoralDescentDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "What is a Moral Descent?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "A Moral Descent arc follows a character who deteriorates ethically over time. They begin with good intentions or neutrality but gradually compromise their values, often due to fear, ambition, pride, or trauma."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This is the arc of corruption."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core characteristics");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Ethical erosion",
+      "Rationalization of wrongdoing",
+      "Increasing selfishness or cruelty",
+      "Loss of empathy",
+      "Escalating consequences"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The character becomes morally worse by the end."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Explore the cost of power",
+      "Examine temptation and corruption",
+      "Create tragedy or cautionary tales",
+      "Critique ambition or hubris"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Common internal conflicts");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Power vs. morality",
+      "Control vs. restraint",
+      "Fear vs. conscience",
+      "Justification vs. accountability"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Moral Descent Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Walter White",
+      "Anakin Skywalker",
+      "Michael Corleone",
+      "Macbeth",
+      "Gollum",
+      "Light Yagami"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderFlatMoralDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "What is a Flat Moral Arc?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "In a Flat Moral Arc, the character does not significantly change their moral beliefs. Instead, the character’s values remain constant while the world around them is challenged or transformed."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The character changes others, not themselves."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core characteristics");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Stable moral compass",
+      "Strong convictions",
+      "Resistance to pressure",
+      "Consistency under stress",
+      "Influence on others"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The arc is external rather than internal."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Represent ideal values",
+      "Challenge a flawed world",
+      "Serve as moral anchors",
+      "Highlight societal change"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Common internal tensions");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Isolation due to integrity",
+      "Conflict with changing norms",
+      "Burden of being right",
+      "Moral fatigue"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Flat Moral Arc Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Captain America",
+      "Paddington",
+      "Atticus Finch",
+      "Superman",
+      "Wonder Woman",
+      "Marge Gunderson"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderMoralTransformationDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "What is a Moral Transformation?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "A Moral Transformation arc depicts a character who undergoes a fundamental ethical shift. Unlike gradual ascent or descent, this change is often abrupt, intense, and tied to a defining moment or revelation."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The character becomes morally different — not just better or worse."
+    });
+
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core characteristics");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Pivotal turning point",
+      "Identity redefinition",
+      "Value realignment",
+      "Emotional shock or revelation",
+      "Clear “before and after”"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Transformation is often irreversible."
+    });
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Mark decisive moments",
+      "Reinvent characters",
+      "Shock or reframe audience perception",
+      "Signal thematic shifts"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(conflictZone, "alert-triangle", "Common internal conflicts");
+    const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Guilt vs. denial",
+      "Old identity vs. new self",
+      "Fear of change",
+      "Consequences of awakening"
+    ].forEach((item) => {
+      conflictList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Moral Transformation Examples" });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Darth Vader (redemption moment)",
+      "Neo (awakening)",
+      "Clarice Starling",
+      "Jaime Lannister",
+      "Elsa (acceptance)",
+      "Andy Dufresne"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderPitfallsDetail(container, title, items) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const pitfallsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(pitfallsZone, "alert-triangle", title);
+    const list = pitfallsZone.createEl("ul", { cls: "resource-detail-list" });
+    items.forEach((item) => {
+      list.createEl("li", { text: item });
+    });
+  }
+
+  renderTipsDetail(container, config) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
+    config.intro.forEach((paragraph) => {
+      introZone.createDiv({ cls: "resource-detail-paragraph", text: paragraph });
+    });
+
+    const techniquesZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(techniquesZone, "heart", "Core techniques");
+    const techniquesList = techniquesZone.createDiv({ cls: "resource-detail-callout-list" });
+    config.techniques.forEach((item) => {
+      this.renderCalloutItem(techniquesList, item);
+    });
+  }
+
+  renderCalloutItem(container, item) {
+    const cleanText = typeof item === "string" ? item.replace(/^\d+\.\s*/, "") : "";
+    const parts = cleanText ? cleanText.split(" — ") : [];
+    const title = typeof item === "string" ? parts[0]?.trim() : item?.title?.trim();
+    const body = typeof item === "string" ? parts.slice(1).join(" — ").trim() : item?.body?.trim();
+    const stepIconMap = {
+      "EXPOSITION": "scroll-text",
+      "RISING ACTION": "trending-up",
+      "CLIMAX": "triangle",
+      "FALLING ACTION": "trending-down",
+      "DENOUEMENT / CATASTROPHE": "skull",
+      "IMMEDIATE HOOK / FIRST CRISIS": "flame",
+      "CRISIS ESCALATION 1": "move-up-right",
+      "CRISIS ESCALATION 2": "trending-up",
+      "CRISIS ESCALATION 3": "corner-right-up",
+      "MAJOR CRISIS / LOW POINT": "triangle-alert",
+      "SHORT RESOLUTION": "flag",
+      "OPENING / STATUS QUO": "home",
+      "INCITING INCIDENT": "zap",
+      "DEBATE / REFUSAL": "message-circle-x",
+      "ACT I BREAK (COMMITMENT)": "thumbs-up",
+      "RISING COMPLICATIONS": "trending-up",
+      "MIDPOINT SHIFT": "refresh-ccw-dot",
+      "BAD GUYS CLOSE IN / PRESSURE PEAKS": "alert-triangle",
+      "ALL IS LOST": "bone",
+      "DARK NIGHT OF THE SOUL": "skull",
+      "ACT III BREAK (NEW PLAN)": "notepad-text",
+      "DENOUEMENT": "flag",
+      "KI (INTRODUCTION)": "circle-play",
+      "SHÔ (DEVELOPMENT)": "trending-up",
+      "TEN (TURN / TWIST)": "rotate-cw",
+      "KETSU (CONCLUSSION)": "flag",
+      "OPENING IMAGE": "image",
+      "THEME STATED": "quote",
+      "SETUP": "list",
+      "CATALYST": "sparkles",
+      "DEBATE": "message-circle-x",
+      "BREAK INTO ACT II": "log-in",
+      "B STORY": "users",
+      "FUN AND GAMES": "sparkles",
+      "MIDPOINT": "refresh-ccw-dot",
+      "BAD GUYS CLOSE IN": "alert-triangle",
+      "BREAK INTO ACT III": "notepad-text",
+      "FINALE": "flag",
+      "FINAL IMAGE": "image",
+      "HOOK": "sparkles",
+      "PLOT TURN 1": "log-in",
+      "PINCH POINT 1": "grip",
+      "PINCH POINT 2": "grip",
+      "PLOT TURN 2": "log-in",
+      "RESOLUTION": "flag",
+      "IMMEDIATE HOOK": "flame",
+      "CLEAR GOAL": "target",
+      "OBSTACLE CHAIN": "link-2",
+      "ESCALATION": "trending-up",
+      "CLIFFHANGER OR CRISIS": "siren",
+      "FINAL CONFRONTATION": "swords",
+      "SWIFT RESOLUTION": "flag",
+      "PROGRESSIVE COMPLICATIONS": "trending-up",
+      "CRISIS": "circle-alert",
+      "ORDER": "square",
+      "DISRUPTION": "sparkles",
+      "ATTEMPTED REPAIR": "wrench",
+      "COLLAPSE": "triangle-alert",
+      "NEW ORDER": "flag",
+      "OUTER FRAME": "frame",
+      "INNER STORY": "book-open",
+      "INTERRUPTION OR COMMENTARY": "message-square",
+      "RETURN TO FRAME": "corner-up-left",
+      "REVERSE CHRONOLOGY": "rotate-ccw",
+      "INTERWOVEN TIMELINES": "split",
+      "FRAGMENTED MEMORY": "brain",
+      "CIRCULAR NARRATIVES": "repeat",
+      "SINGLE EVENT": "dot",
+      "MULTIPLE RETELLINGS": "repeat-2",
+      "CONTRADICTIONS REVEALED": "alert-triangle",
+      "AMBIGUITY PRESERVED": "help-circle",
+      "MID-ACTION OPENING": "zap",
+      "AUDIENCE CONFUSION": "help-circle",
+      "GRADUAL BACKFILL": "clock-4",
+      "RECONTEXTUALIZATION": "refresh-ccw-dot",
+      "CONTINUATION TO RESOLUTION": "arrow-right"
+    };
+    const iconName = typeof item === "object" ? item?.icon : (title ? stepIconMap[title.toUpperCase()] : null);
+    if (!title) {
+      return;
+    }
+    const callout = container.createDiv({ cls: "resource-detail-callout" });
+    if (iconName) {
+      const icon = callout.createSpan({ cls: "resource-detail-callout-icon" });
+      setIcon(icon, iconName);
+    }
+    callout.createSpan({ cls: "resource-detail-callout-title", text: title });
+    if (body) {
+      callout.createDiv({ cls: "resource-detail-callout-body", text: body });
+    }
+  }
+
+  renderTechniqueDetail(container, config) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
+    config.intro.forEach((paragraph) => {
+      introZone.createDiv({ cls: "resource-detail-paragraph", text: paragraph });
+    });
+
+    const coreZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(coreZone, "heart", "Core characteristics");
+    const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
+    config.core.forEach((item) => {
+      coreList.createEl("li", { text: item });
+    });
+    if (config.coreNote) {
+      coreZone.createDiv({ cls: "resource-detail-paragraph", text: config.coreNote });
+    }
+
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    config.narrativeFunction.forEach((item) => {
+      functionList.createEl("li", { text: item });
+    });
+    if (config.narrativeNote) {
+      functionZone.createDiv({ cls: "resource-detail-paragraph", text: config.narrativeNote });
+    }
+
+    const risksZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(risksZone, "alert-triangle", config.risksTitle || "Common risks");
+    const risksList = risksZone.createEl("ul", { cls: "resource-detail-list" });
+    config.risks.forEach((item) => {
+      risksList.createEl("li", { text: item });
+    });
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "bookmark");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    config.examples.forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+
+  renderStructureDetail(container, config) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
+    config.intro.forEach((paragraph) => {
+      introZone.createDiv({ cls: "resource-detail-paragraph", text: paragraph });
+    });
+
+    if (config.core?.length) {
+      const coreZone = content.createDiv({ cls: "resource-detail-zone" });
+      this.createResourceSubheading(coreZone, "heart", "Core characteristics");
+      const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
+      config.core.forEach((item) => {
+        coreList.createEl("li", { text: item });
+      });
+      if (config.coreNote) {
+        coreZone.createDiv({ cls: "resource-detail-paragraph", text: config.coreNote });
+      }
+    }
+
+    const stepsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(stepsZone, "list-ordered", config.stepsTitle || "Steps");
+
+    if (config.stepGroups?.length) {
+      const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
+      config.stepGroups.forEach((group) => {
+        const headingClass = /^ACT\\s+/i.test(group.title)
+          ? "resource-detail-step-heading-plain"
+          : "resource-detail-step-heading";
+        const heading = stepsList.createDiv({ cls: headingClass });
+        heading.createSpan({ text: group.title });
+        const groupBox = stepsList.createDiv({ cls: "resource-detail-step-group" });
+        group.items.forEach((item) => {
+          this.renderCalloutItem(groupBox, item);
+        });
+      });
+    } else if (config.numberedSteps) {
+      const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
+      let currentGroup = null;
+      config.steps.forEach((item) => {
+        if (/^ACT\s+[IVX]+\s+—\s+/i.test(item)) {
+          const heading = stepsList.createDiv({ cls: "resource-detail-step-heading" });
+          heading.createSpan({ text: item });
+          currentGroup = stepsList.createDiv({ cls: "resource-detail-step-group" });
+          return;
+        }
+        if (!currentGroup) {
+          currentGroup = stepsList.createDiv({ cls: "resource-detail-step-group" });
+        }
+        this.renderCalloutItem(currentGroup, item);
+      });
+    } else {
+      const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
+      config.steps.forEach((item) => {
+        this.renderCalloutItem(stepsList, item);
+      });
+    }
+
+    if (config.why) {
+      const whyZone = content.createDiv({ cls: "resource-detail-zone" });
+      this.createResourceSubheading(whyZone, "chart-spline", config.whyTitle || "Why this works");
+      whyZone.createDiv({ cls: "resource-detail-paragraph", text: config.why });
+    }
+
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    setIcon(examplesIcon, "layout-grid");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
+
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    config.examples.forEach((example) => {
       const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
       card.createSpan({ text: example });
     });

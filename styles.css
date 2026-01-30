@@ -2313,6 +2313,19 @@ body.theme-light {
   padding: 12px 14px;
 }
 
+.tips-resources-subtitle {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.tips-resources-divider {
+  height: 1px;
+  background-color: var(--background-modifier-border);
+  margin: 4px 0;
+}
+
 .tips-resources-card {
   padding: 12px;
   border-radius: 12px;
@@ -2517,10 +2530,124 @@ body.theme-light {
   margin: 0;
   padding-left: 18px;
   display: grid;
-  gap: 6px;
+  gap: 12px;
   font-size: 13px;
   color: var(--text-normal);
   line-height: 1.45;
+}
+
+.resource-detail-step-list {
+  display: grid;
+  gap: 14px;
+}
+
+.resource-detail-numbered-steps {
+  display: grid;
+  gap: 12px;
+}
+
+.resource-detail-step-item {
+  font-size: 13px;
+  color: var(--text-normal);
+  line-height: 1.45;
+}
+
+.resource-detail-step-group {
+  padding: 0 0 0 16px;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  width: 100%;
+}
+
+.resource-detail-step-heading {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background-color: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.resource-detail-step-subitem {
+  padding-left: 14px;
+  position: relative;
+}
+
+.resource-detail-step-subitem::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+}
+
+.resource-detail-step-text {
+  display: inline;
+}
+
+.resource-detail-callout-list {
+  display: grid;
+  gap: 10px;
+}
+
+.resource-detail-callout {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background-color: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-normal);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+}
+
+.resource-detail-callout-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  grid-row: 1 / span 2;
+}
+
+.resource-detail-callout-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  fill: none;
+  display: block;
+}
+
+.resource-detail-callout-title {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.resource-detail-callout-body {
+  margin-top: 8px;
+  grid-column: 2;
+  font-size: 13px;
+  color: var(--text-normal);
+}
+
+.resource-detail-step-heading-plain {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding: 2px 4px 0;
 }
 
 .resource-detail-examples-header {
