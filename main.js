@@ -3696,9 +3696,23 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
     const exportIcon = exportItem.createSpan({ cls: "writer-tools-item-icon" });
     (0, import_obsidian6.setIcon)(exportIcon, "file-stack");
     exportItem.createSpan({ cls: "writer-tools-item-text", text: "Export assistant" });
-    exportItem.addEventListener("click", () => {
-      console.log("Consolidate document clicked");
-    });
+    exportItem.addEventListener("click", () => this.showExportSettingsView());
+  }
+  getProjectTypeIcon(projectType) {
+    var _a;
+    const templates = ((_a = this.plugin.settings) == null ? void 0 : _a.projectTemplates) || [];
+    const template = templates.find((t) => t.id === projectType);
+    if (template == null ? void 0 : template.icon)
+      return template.icon;
+    if (projectType === "book")
+      return "book";
+    if (projectType === "script")
+      return "tv";
+    if (projectType === "film")
+      return "clapperboard";
+    if (projectType === "essay")
+      return "newspaper";
+    return "book";
   }
   showFocusMode() {
     this.focusModeActive = true;
@@ -3715,6 +3729,97 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
     this.loadFocusStats(project).then(() => {
       this.renderFocusModeUI(container, project);
     });
+  }
+  async showExportSettingsView() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-export-settings");
+    const header = container.createDiv({ cls: "export-settings-header" });
+    const headerIcon = header.createSpan({ cls: "export-settings-header-icon" });
+    (0, import_obsidian6.setIcon)(headerIcon, "settings");
+    header.createSpan({ cls: "export-settings-header-title", text: "Export project" });
+    const backButton = header.createEl("button", { cls: "export-settings-back", text: "Back" });
+    backButton.addEventListener("click", () => this.onOpen());
+    const content = container.createDiv({ cls: "export-settings-content" });
+    const project = this.plugin.activeProject || this.plugin.activeBook;
+    const hasActiveProject = !!(project && project.path && (this.plugin.booksIndex || []).some((b) => b.path === project.path));
+    if (!hasActiveProject) {
+      const shell = content.createDiv({ cls: "export-assistant-shell" });
+      shell.createDiv({ cls: "export-assistant-pill", text: "No active projects" });
+      const panel = shell.createDiv({ cls: "export-assistant-panel" });
+      panel.createDiv({ cls: "export-assistant-empty-title", text: "No active projects" });
+      panel.createDiv({ cls: "export-assistant-empty-subtitle", text: "Select or create a project before exporting" });
+      const actions = content.createDiv({ cls: "export-assistant-actions" });
+      actions.createEl("button", { cls: "export-assistant-btn", text: "Cancel" }).addEventListener("click", () => this.onOpen());
+      const primary = actions.createEl("button", { cls: "export-assistant-btn is-primary", text: "Export" });
+      primary.setAttr("disabled", "true");
+      return;
+    }
+    let meta = null;
+    let cfg = null;
+    try {
+      if (project && (this.plugin.configService == null ? void 0 : this.plugin.configService.loadProjectMeta)) {
+        meta = await this.plugin.configService.loadProjectMeta(project);
+      }
+      if (project && (this.plugin.configService == null ? void 0 : this.plugin.configService.loadProjectConfig)) {
+        cfg = await this.plugin.configService.loadProjectConfig(project);
+      }
+    } catch {
+    }
+    const card = content.createDiv({ cls: "export-settings-book-card" });
+    const iconWrap = card.createDiv({ cls: "export-settings-book-icon" });
+    const iconEl = iconWrap.createSpan({ cls: "export-settings-book-icon-svg" });
+    const type = (meta == null ? void 0 : meta.projectType) || (cfg == null ? void 0 : cfg.basic)?.projectType || "book";
+    (0, import_obsidian6.setIcon)(iconEl, this.getProjectTypeIcon(type));
+    const bookInfo = card.createDiv({ cls: "export-settings-book-info" });
+    const displayTitle = (meta == null ? void 0 : meta.title) || (project == null ? void 0 : project.name) || "Untitled";
+    bookInfo.createDiv({ cls: "export-settings-book-title", text: displayTitle });
+    const author = Array.isArray(meta == null ? void 0 : meta.author) ? meta.author.join(", ") : (meta == null ? void 0 : meta.author) || "";
+    bookInfo.createDiv({ cls: "export-settings-book-meta", text: author ? `Author: ${author}` : "Author: \u2014" });
+    const totalWords = Number(((cfg == null ? void 0 : cfg.stats) == null ? void 0 : cfg.stats.total_words) || 0);
+    bookInfo.createDiv({ cls: "export-settings-book-meta", text: `Word count: ${totalWords}` });
+    const formatSection = content.createDiv({ cls: "export-settings-section" });
+    const formatLabel = formatSection.createDiv({ cls: "export-settings-section-label" });
+    formatLabel.createDiv({ cls: "export-settings-section-accent" });
+    formatLabel.createDiv({ cls: "export-settings-section-title", text: "Choose export format" });
+    const formatGrid = formatSection.createDiv({ cls: "export-settings-format-grid" });
+    const formats = [
+      { id: "pdf", title: "PDF", subtitle: "Portable document format", icon: "file-text" },
+      { id: "docx", title: "DOCX", subtitle: "Word document format", icon: "file" }
+    ];
+    const statusRow = content.createDiv({ cls: "export-settings-status" });
+    const statusIcon = statusRow.createSpan({ cls: "export-settings-status-icon" });
+    (0, import_obsidian6.setIcon)(statusIcon, "settings");
+    const statusText = statusRow.createSpan({ cls: "export-settings-status-text" });
+    const actions = content.createDiv({ cls: "export-settings-actions" });
+    const cancelBtn = actions.createEl("button", { cls: "export-settings-btn", text: "Cancel" });
+    cancelBtn.addEventListener("click", () => this.showExportAssistant());
+    const exportBtn = actions.createEl("button", { cls: "export-settings-btn is-primary", text: "Export" });
+    const refreshState = () => {
+      const hasFormat = !!this.exportFormat;
+      statusText.textContent = hasFormat ? `Selected format: ${this.exportFormat.toUpperCase()}` : "Please choose an export format first.";
+      exportBtn.toggleClass("is-disabled", !hasFormat);
+      if (!hasFormat)
+        exportBtn.setAttr("disabled", "true");
+      else
+        exportBtn.removeAttr("disabled");
+    };
+    formats.forEach((format) => {
+      const card2 = formatGrid.createDiv({ cls: "export-settings-format-card" });
+      const icon = card2.createSpan({ cls: "export-settings-format-icon" });
+      (0, import_obsidian6.setIcon)(icon, format.icon);
+      card2.createDiv({ cls: "export-settings-format-title", text: format.title });
+      card2.createDiv({ cls: "export-settings-format-subtitle", text: format.subtitle });
+      card2.addEventListener("click", () => {
+        this.exportFormat = format.id;
+        formatGrid.querySelectorAll(".export-settings-format-card").forEach((node) => node.classList.remove("is-selected"));
+        card2.classList.add("is-selected");
+        refreshState();
+      });
+      if (this.exportFormat === format.id)
+        card2.classList.add("is-selected");
+    });
+    refreshState();
   }
   async loadFocusStats(project) {
     try {

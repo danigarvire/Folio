@@ -25,6 +25,7 @@ export class WriterToolsView extends ItemView {
       history: []
     };
     this.focusStatsModal = null;
+    this.exportFormat = null;
   }
 
   getViewType() {
@@ -75,10 +76,18 @@ export class WriterToolsView extends ItemView {
     const exportIcon = exportItem.createSpan({ cls: "writer-tools-item-icon" });
     setIcon(exportIcon, "file-stack");
     exportItem.createSpan({ cls: "writer-tools-item-text", text: "Export assistant" });
-    exportItem.addEventListener("click", () => {
-      // TODO: Implement consolidate document functionality
-      console.log("Consolidate document clicked");
-    });
+    exportItem.addEventListener("click", () => this.showExportSettingsView());
+  }
+
+  getProjectTypeIcon(projectType) {
+    const templates = this.plugin.settings?.projectTemplates || [];
+    const template = templates.find(t => t.id === projectType);
+    if (template?.icon) return template.icon;
+    if (projectType === 'book') return 'book';
+    if (projectType === 'script') return 'tv';
+    if (projectType === 'film') return 'clapperboard';
+    if (projectType === 'essay') return 'newspaper';
+    return 'book';
   }
 
   showFocusMode() {
@@ -100,6 +109,104 @@ export class WriterToolsView extends ItemView {
     this.loadFocusStats(project).then(() => {
       this.renderFocusModeUI(container, project);
     });
+  }
+
+  async showExportSettingsView() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-export-settings");
+
+    const header = container.createDiv({ cls: "export-settings-header" });
+    const headerIcon = header.createSpan({ cls: "export-settings-header-icon" });
+    setIcon(headerIcon, "settings");
+    header.createSpan({ cls: "export-settings-header-title", text: "Export project" });
+    const backButton = header.createEl("button", { cls: "export-settings-back", text: "Back" });
+    backButton.addEventListener("click", () => this.onOpen());
+
+    const content = container.createDiv({ cls: "export-settings-content" });
+    const project = this.plugin.activeProject || this.plugin.activeBook;
+    const hasActiveProject = !!(project && project.path && (this.plugin.booksIndex || []).some((b) => b.path === project.path));
+    if (!hasActiveProject) {
+      const shell = content.createDiv({ cls: "export-assistant-shell" });
+      shell.createDiv({ cls: "export-assistant-pill", text: "No active projects" });
+      const panel = shell.createDiv({ cls: "export-assistant-panel" });
+      panel.createDiv({ cls: "export-assistant-empty-title", text: "No active projects" });
+      panel.createDiv({ cls: "export-assistant-empty-subtitle", text: "Select or create a project before exporting" });
+      const actions = content.createDiv({ cls: "export-assistant-actions" });
+      actions.createEl("button", { cls: "export-assistant-btn", text: "Cancel" }).addEventListener("click", () => this.onOpen());
+      const primary = actions.createEl("button", { cls: "export-assistant-btn is-primary", text: "Export" });
+      primary.setAttr("disabled", "true");
+      return;
+    }
+    let meta = null;
+    let cfg = null;
+    try {
+      if (project && this.plugin.configService?.loadProjectMeta) {
+        meta = await this.plugin.configService.loadProjectMeta(project);
+      }
+      if (project && this.plugin.configService?.loadProjectConfig) {
+        cfg = await this.plugin.configService.loadProjectConfig(project);
+      }
+    } catch {}
+
+    const card = content.createDiv({ cls: "export-settings-book-card" });
+    const iconWrap = card.createDiv({ cls: "export-settings-book-icon" });
+    const iconEl = iconWrap.createSpan({ cls: "export-settings-book-icon-svg" });
+    const type = meta?.projectType || cfg?.basic?.projectType || "book";
+    setIcon(iconEl, this.getProjectTypeIcon(type));
+    const bookInfo = card.createDiv({ cls: "export-settings-book-info" });
+    const displayTitle = meta?.title || project?.name || "Untitled";
+    bookInfo.createDiv({ cls: "export-settings-book-title", text: displayTitle });
+    const author = Array.isArray(meta?.author) ? meta.author.join(", ") : (meta?.author || "");
+    bookInfo.createDiv({ cls: "export-settings-book-meta", text: author ? `Author: ${author}` : "Author: —" });
+    const totalWords = Number(cfg?.stats?.total_words || 0);
+    bookInfo.createDiv({ cls: "export-settings-book-meta", text: `Word count: ${totalWords}` });
+
+    const formatSection = content.createDiv({ cls: "export-settings-section" });
+    const formatLabel = formatSection.createDiv({ cls: "export-settings-section-label" });
+    formatLabel.createDiv({ cls: "export-settings-section-accent" });
+    formatLabel.createDiv({ cls: "export-settings-section-title", text: "Choose export format" });
+    const formatGrid = formatSection.createDiv({ cls: "export-settings-format-grid" });
+
+    const formats = [
+      { id: "pdf", title: "PDF", subtitle: "Portable document format", icon: "file-text" },
+      { id: "docx", title: "DOCX", subtitle: "Word document format", icon: "file" }
+    ];
+
+    const statusRow = content.createDiv({ cls: "export-settings-status" });
+    const statusIcon = statusRow.createSpan({ cls: "export-settings-status-icon" });
+    setIcon(statusIcon, "settings");
+    const statusText = statusRow.createSpan({ cls: "export-settings-status-text" });
+
+    const actions = content.createDiv({ cls: "export-settings-actions" });
+    const cancelBtn = actions.createEl("button", { cls: "export-settings-btn", text: "Cancel" });
+    cancelBtn.addEventListener("click", () => this.showExportAssistant());
+    const exportBtn = actions.createEl("button", { cls: "export-settings-btn is-primary", text: "Export" });
+
+    const refreshState = () => {
+      const hasFormat = !!this.exportFormat;
+      statusText.textContent = hasFormat ? `Selected format: ${this.exportFormat.toUpperCase()}` : "Please choose an export format first.";
+      exportBtn.toggleClass("is-disabled", !hasFormat);
+      if (!hasFormat) exportBtn.setAttr("disabled", "true");
+      else exportBtn.removeAttr("disabled");
+    };
+
+    formats.forEach((format) => {
+      const card = formatGrid.createDiv({ cls: "export-settings-format-card" });
+      const icon = card.createSpan({ cls: "export-settings-format-icon" });
+      setIcon(icon, format.icon);
+      card.createDiv({ cls: "export-settings-format-title", text: format.title });
+      card.createDiv({ cls: "export-settings-format-subtitle", text: format.subtitle });
+      card.addEventListener("click", () => {
+        this.exportFormat = format.id;
+        formatGrid.querySelectorAll(".export-settings-format-card").forEach((node) => node.classList.remove("is-selected"));
+        card.classList.add("is-selected");
+        refreshState();
+      });
+      if (this.exportFormat === format.id) card.classList.add("is-selected");
+    });
+
+    refreshState();
   }
 
   async loadFocusStats(project) {
