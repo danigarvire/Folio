@@ -4254,15 +4254,783 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
     container.empty();
     container.addClass("folio-resource-detail");
     const header = container.createDiv({ cls: "resource-detail-header" });
-    header.createSpan({ cls: "resource-detail-title", text: title });
+    const headingText = `${title.toUpperCase()} ARCHETYPE`;
+    const headingIcon = header.createSpan({ cls: "resource-detail-heading-icon" });
+    (0, import_obsidian6.setIcon)(headingIcon, this.getResourceIcon(title));
+    header.createSpan({ cls: "resource-detail-heading", text: headingText });
     const backButton = header.createEl("button", { cls: "resource-detail-back", text: "Back" });
     backButton.addEventListener("click", () => {
       container.removeClass("folio-resource-detail");
       onBack();
     });
-    container.createDiv({
-      cls: "resource-detail-placeholder",
-      text: "Content coming soon."
+    if (title === "The Hero") {
+      this.renderHeroDetail(container);
+      return;
+    }
+    if (title === "The Mentor") {
+      this.renderMentorDetail(container);
+      return;
+    }
+    if (title === "The Herald") {
+      this.renderHeraldDetail(container);
+      return;
+    }
+    if (title === "The Shadow") {
+      this.renderShadowDetail(container);
+      return;
+    }
+    if (title === "The Trickster") {
+      this.renderTricksterDetail(container);
+      return;
+    }
+    if (title === "The Ally") {
+      this.renderAllyDetail(container);
+      return;
+    }
+    if (title === "The Shapeshifter") {
+      this.renderShapeshifterDetail(container);
+      return;
+    }
+    if (title === "The Threshold Guardian") {
+      this.renderThresholdGuardianDetail(container);
+      return;
+    }
+    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+  }
+  getResourceIcon(title) {
+    const iconMap = {
+      "The Hero": "sword",
+      "The Mentor": "graduation-cap",
+      "The Herald": "bell",
+      "The Shadow": "moon",
+      "The Trickster": "dice",
+      "The Ally": "handshake",
+      "The Shapeshifter": "hat-glasses",
+      "The Threshold Guardian": "shield"
+    };
+    return iconMap[title] || "book";
+  }
+  createResourceSubheading(parent, iconName, text) {
+    const heading = parent.createDiv({ cls: "resource-detail-subheading-row" });
+    const icon = heading.createSpan({ cls: "resource-detail-subheading-icon" });
+    (0, import_obsidian6.setIcon)(icon, iconName);
+    heading.createSpan({ cls: "resource-detail-subheading", text });
+  }
+  renderHeroDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Hero?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Hero is the transforming protagonist. They represent the struggle for personal growth, the confrontation of fear, and the overcoming of obstacles. The Hero symbolizes the human drive to transcend limits, improve, and give meaning to adversity."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "This is a universal archetype found in myth, classical stories, and modern narratives. The Hero\u2019s journey forms the backbone of many plots."
+    });
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Courage in the face of danger",
+      "Inner and outer strength",
+      "Empathy and leadership",
+      "Strong sense of justice",
+      "Human flaws and vulnerability"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Hero is not perfect. They fall, struggle, and rise transformed."
+    });
+    const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
+    const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Mentor \u2192 guidance and wisdom",
+      "Ally \u2192 shared mission",
+      "Threshold Guardian \u2192 trial or blockage",
+      "Shadow \u2192 antagonist or repressed self",
+      "Trickster \u2192 chaos and disruption",
+      "Shapeshifter \u2192 uncertainty and tension",
+      "Herald \u2192 announces change"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+    const writingZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(writingZone, "square-pen", "Writing a strong Hero");
+    const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Clear motivation",
+      "Internal conflict",
+      "Meaningful backstory",
+      "Unique skills",
+      "Emotional relationships",
+      "Balance of strength and fragility",
+      "Strong contrast between ordinary life and transformation"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+    const whyZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(whyZone, "chart-spline", "Why this archetype works");
+    whyZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Because it mirrors the human experience: struggle, fall, learning, and transformation."
+    });
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian6.setIcon)(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Hero Examples" });
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Harry Potter",
+      "Frodo Baggins",
+      "Katniss Everdeen",
+      "Mulan",
+      "Luke Skywalker",
+      "Simba",
+      "Elizabeth Bennet"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+  renderMentorDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Mentor?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Mentor guides, teaches, and inspires the Hero. They provide wisdom, experience, and emotional support, helping the Hero grow and overcome challenges."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Mentor represents inherited knowledge, tradition, and the possibility of inner transformation."
+    });
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Spiritual and practical guide",
+      "Accumulated wisdom",
+      "Emotional support figure",
+      "Ethical compass",
+      "Connection to tradition",
+      "Catalyst for action"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Often the Mentor sacrifices something, forcing the Hero into independence."
+    });
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Mentor supports the Hero\u2019s growth as:"
+    });
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Trusted advisor",
+      "Trainer or teacher",
+      "Giver of tools or gifts",
+      "Emotional challenger",
+      "Bridge between worlds"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "When the Mentor disappears, the Hero must act alone."
+    });
+    const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
+    const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Hero \u2192 formative bond",
+      "Threshold Guardian \u2192 shared trials",
+      "Shadow \u2192 moral counterpoint",
+      "Ally \u2192 cooperation or tension",
+      "Trickster \u2192 disruption of authority",
+      "Shapeshifter \u2192 ambiguity",
+      "Herald \u2192 signals the need for guidance"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+    const writingZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(writingZone, "square-pen", "Writing a compelling Mentor");
+    const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Strong introduction",
+      "Clear motivation",
+      "Demonstrated expertise",
+      "Unique personality",
+      "Revealing backstory",
+      "Trust with the Hero",
+      "Memorable first lesson",
+      "Symbolic presence"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian6.setIcon)(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Mentor Examples" });
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Gandalf",
+      "Dumbledore",
+      "Mr. Miyagi",
+      "Yoda",
+      "Professor Xavier",
+      "Glinda",
+      "Haymitch",
+      "Rafiki",
+      "Morpheus"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+  renderHeraldDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Herald?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Herald announces change. They disrupt the status quo and deliver the call to adventure, signaling that the current world can no longer remain the same."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Herald does not need to stay in the story long \u2014 their power lies in initiating movement."
+    });
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Messenger of change",
+      "Catalyst for action",
+      "Bringer of information or crisis",
+      "External or internal trigger",
+      "Neutral, positive, or threatening"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Herald forces a decision."
+    });
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Herald appears to:"
+    });
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Deliver news",
+      "Introduce conflict",
+      "Reveal danger or opportunity",
+      "Force the Hero to act",
+      "Break routine"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They are the narrative spark."
+    });
+    const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
+    const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Hero \u2192 awakens purpose",
+      "Mentor \u2192 confirms the call",
+      "Shadow \u2192 escalation of threat",
+      "Ally \u2192 shared urgency",
+      "Shapeshifter \u2192 uncertainty around meaning",
+      "Trickster \u2192 distorted message"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+    const writingZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(writingZone, "square-pen", "Writing an effective Herald");
+    const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Clear message",
+      "Strong timing",
+      "Memorable entrance",
+      "Emotional impact",
+      "Immediate consequences",
+      "No unnecessary exposition"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian6.setIcon)(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Herald Examples" });
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "R2-D2",
+      "The White Rabbit",
+      "Hagrid",
+      "The Letter from Hogwarts",
+      "The Black Spot (Treasure Island)",
+      "Morpheus (first contact)",
+      "Paul Revere"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+  renderShadowDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Shadow?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Shadow represents the Hero\u2019s greatest obstacle. It often embodies the Hero\u2019s repressed fears, flaws, or dark potential."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Shadow can be a villain, antagonist, rival, or internal force."
+    });
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Opposition and threat",
+      "Moral contrast",
+      "Power or temptation",
+      "Psychological mirror",
+      "Fear incarnate"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Shadow tests the Hero\u2019s values."
+    });
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Shadow exists to:"
+    });
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Block progress",
+      "Challenge morality",
+      "Force growth",
+      "Expose weakness",
+      "Represent consequences"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Defeating the Shadow often means internal change."
+    });
+    const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
+    const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Hero \u2192 mirrored opposition",
+      "Mentor \u2192 ideological contrast",
+      "Ally \u2192 collateral conflict",
+      "Trickster \u2192 destabilization",
+      "Shapeshifter \u2192 hidden threat",
+      "Threshold Guardian \u2192 shared function"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+    const writingZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(writingZone, "square-pen", "Writing a powerful Shadow");
+    const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Clear motivation",
+      "Personal connection to Hero",
+      "Symbolic design",
+      "Escalating threat",
+      "Moral complexity",
+      "Consequences beyond defeat"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian6.setIcon)(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Shadow Examples" });
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Darth Vader",
+      "Voldemort",
+      "Sauron",
+      "Joker",
+      "Scar",
+      "Thanos",
+      "Captain Ahab"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+  renderTricksterDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Trickster?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Trickster introduces chaos, humor, and unpredictability. They question authority, expose hypocrisy, and disrupt order."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Trickster is rarely evil \u2014 they destabilize to reveal truth."
+    });
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Humor and wit",
+      "Rule-breaking behavior",
+      "Irony and satire",
+      "Unpredictability",
+      "Social disruption"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They thrive on contradiction."
+    });
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Trickster serves to:"
+    });
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Relieve tension",
+      "Challenge norms",
+      "Reveal hidden truths",
+      "Expose weakness",
+      "Create narrative surprise"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They prevent stagnation."
+    });
+    const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
+    const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Hero \u2192 comic relief or moral test",
+      "Mentor \u2192 challenges authority",
+      "Shadow \u2192 ironic contrast",
+      "Ally \u2192 unreliable support",
+      "Shapeshifter \u2192 shared ambiguity"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+    const writingZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(writingZone, "square-pen", "Writing an effective Trickster");
+    const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Sharp dialogue",
+      "Clear worldview",
+      "Narrative timing",
+      "Purposeful disruption",
+      "Balance humor and impact"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian6.setIcon)(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Trickster Examples" });
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Loki",
+      "Jack Sparrow",
+      "Bugs Bunny",
+      "Deadpool",
+      "The Joker (comic function)",
+      "Puck",
+      "Han Solo"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+  renderAllyDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Ally?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Ally supports the Hero emotionally, strategically, or practically. They represent friendship, loyalty, and shared purpose."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Allies humanize the Hero."
+    });
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Loyalty",
+      "Complementary skills",
+      "Emotional support",
+      "Shared risk",
+      "Personal stake"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Allies often have their own arcs."
+    });
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Ally helps by:"
+    });
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Assisting in conflict",
+      "Providing perspective",
+      "Supporting decisions",
+      "Sharing danger",
+      "Reflecting growth"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They reinforce connection."
+    });
+    const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
+    const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Hero \u2192 partnership",
+      "Mentor \u2192 guidance extension",
+      "Shadow \u2192 vulnerability",
+      "Trickster \u2192 contrast",
+      "Shapeshifter \u2192 trust tension"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+    const writingZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(writingZone, "square-pen", "Writing strong Allies");
+    const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Clear individuality",
+      "Defined strengths",
+      "Emotional bond",
+      "Independent goals",
+      "Potential conflict"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian6.setIcon)(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Ally Examples" });
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Samwise Gamgee",
+      "Ron Weasley",
+      "Hermione Granger",
+      "Chewbacca",
+      "Dr. Watson",
+      "Merry & Pippin",
+      "Peeta Mellark"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+  renderShapeshifterDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Shapeshifter?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Shapeshifter embodies uncertainty. Their allegiance, identity, or intentions are unclear, creating doubt and tension."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They represent change and ambiguity."
+    });
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Duality",
+      "Uncertainty",
+      "Fluid loyalty",
+      "Deception or mystery",
+      "Emotional instability"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They challenge trust."
+    });
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    functionZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Shapeshifter exists to:"
+    });
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Create doubt",
+      "Test perception",
+      "Complicate relationships",
+      "Introduce surprise",
+      "Represent internal conflict"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
+    const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Hero \u2192 trust challenge",
+      "Mentor \u2192 warning or lesson",
+      "Shadow \u2192 secret alliance",
+      "Ally \u2192 betrayal risk",
+      "Trickster \u2192 shared chaos"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+    const writingZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(writingZone, "square-pen", "Writing a compelling Shapeshifter");
+    const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Clear mystery",
+      "Consistent ambiguity",
+      "Emotional stakes",
+      "Gradual revelation",
+      "Meaningful transformation"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian6.setIcon)(examplesIcon, "user-round");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Shapeshifter Examples" });
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "Catwoman",
+      "Severus Snape",
+      "Gollum",
+      "Mystique",
+      "Nick Fury",
+      "Scarlett O\u2019Hara"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+  renderThresholdGuardianDetail(container) {
+    const content = container.createDiv({ cls: "resource-detail-content" });
+    const introZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(introZone, "circle-question-mark", "Who is the Threshold Guardian?");
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "The Threshold Guardian blocks progress and tests readiness. They appear at key moments of transition."
+    });
+    introZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "They are not always villains \u2014 they are gatekeepers."
+    });
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(traitsZone, "heart", "Core traits");
+    const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Obstacle or challenge",
+      "Moral or physical test",
+      "Enforcer of rules",
+      "Neutral opposition",
+      "Trial embodiment"
+    ].forEach((item) => {
+      traits.createEl("li", { text: item });
+    });
+    traitsZone.createDiv({
+      cls: "resource-detail-paragraph",
+      text: "Passing them marks growth."
+    });
+    const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(functionZone, "chart-spline", "Narrative function");
+    const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Tests commitment",
+      "Filters worthiness",
+      "Forces preparation",
+      "Delays progression",
+      "Raises stakes"
+    ].forEach((item) => {
+      functionsList.createEl("li", { text: item });
+    });
+    const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
+    const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Hero \u2192 rite of passage",
+      "Mentor \u2192 preparation source",
+      "Shadow \u2192 structural parallel",
+      "Ally \u2192 shared test",
+      "Trickster \u2192 bypass attempt"
+    ].forEach((item) => {
+      relationships.createEl("li", { text: item });
+    });
+    const writingZone = content.createDiv({ cls: "resource-detail-zone" });
+    this.createResourceSubheading(writingZone, "square-pen", "Writing effective Threshold Guardians");
+    const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
+    [
+      "Clear rules",
+      "Symbolic challenge",
+      "Consequences for failure",
+      "Escalation of difficulty",
+      "Memorable encounter"
+    ].forEach((item) => {
+      writing.createEl("li", { text: item });
+    });
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian6.setIcon)(examplesIcon, "club");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Threshold Guardian Examples" });
+    const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    [
+      "The Sphinx",
+      "Cerberus",
+      "The Bouncer",
+      "Stormtroopers",
+      "Gatekeepers",
+      "Dragons",
+      "The First Boss"
+    ].forEach((example) => {
+      const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
     });
   }
   renderAboutSection() {
