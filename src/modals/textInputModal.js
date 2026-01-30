@@ -1,12 +1,15 @@
 const { Modal } = require("obsidian");
 
 export class TextInputModal extends Modal {
-  constructor(app, { title, placeholder, cta, onSubmit }) {
+  constructor(app, { title, placeholder, cta, onSubmit, toggleLabel = null, toggleDefault = false, toggleKey = "toggle" }) {
     super(app);
     this.title = title;
     this.placeholder = placeholder;
     this.cta = cta;
     this.onSubmit = onSubmit;
+    this.toggleLabel = toggleLabel;
+    this.toggleDefault = toggleDefault;
+    this.toggleKey = toggleKey;
   }
 
   onOpen() {
@@ -19,6 +22,14 @@ export class TextInputModal extends Modal {
       type: "text",
       placeholder: this.placeholder,
     });
+
+    let toggleInput = null;
+    if (this.toggleLabel) {
+      const toggleRow = contentEl.createDiv({ cls: "modal-toggle-row" });
+      toggleInput = toggleRow.createEl("input", { type: "checkbox" });
+      toggleInput.checked = !!this.toggleDefault;
+      toggleRow.createSpan({ text: this.toggleLabel });
+    }
 
     const actions = contentEl.createDiv({ cls: "modal-button-container" });
 
@@ -37,7 +48,8 @@ export class TextInputModal extends Modal {
       const value = input.value.trim();
       if (!value) return;
 
-      this.onSubmit(value);
+      const toggleState = toggleInput ? toggleInput.checked : false;
+      this.onSubmit(value, { [this.toggleKey]: toggleState });
       this.close();
     };
 

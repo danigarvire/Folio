@@ -5,7 +5,8 @@
 export function scriptChapterTemplate({ title }) {
   return `---
 projectType: script
-cssclasses: md-screenplay
+cssclasses:
+  - md-screenplay
 ---
 
 `;
@@ -14,7 +15,8 @@ cssclasses: md-screenplay
 export function scriptFileTemplate({ title }) {
   return `---
 projectType: script
-cssclasses: md-screenplay
+cssclasses:
+  - md-screenplay
 ---
 
 `;

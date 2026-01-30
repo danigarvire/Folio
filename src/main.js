@@ -331,14 +331,17 @@ module.exports = class FolioPlugin extends Plugin {
             title: "New file",
             placeholder: "File name",
             cta: "Create",
-            onSubmit: async (value) => {
+            toggleLabel: "Screenplay formatting",
+            toggleKey: "screenplay",
+            onSubmit: async (value, opts = {}) => {
               const name = (value || "").trim();
               if (!name) return;
               try {
                 const fileName = name.endsWith('.md') ? name : `${name}.md`;
                 const dest = `${folder.path}/${fileName}`;
                 if (!this.app.vault.getAbstractFileByPath(dest)) {
-                  await this.app.vault.create(dest, "");
+                  const frontmatter = await this.getNewFileFrontmatter(dest, fileName, !!opts.screenplay);
+                  await this.app.vault.create(dest, frontmatter);
                   const book = this.booksIndex.find((b) => dest.startsWith(b.path));
                   if (book) await this.syncChapterStatsBaseline(book);
                 }
@@ -860,6 +863,18 @@ module.exports = class FolioPlugin extends Plugin {
   // Delegate to ConfigService
   async loadBookMeta(book) {
     return this.configService.loadProjectMeta(book);
+  }
+
+  async getNewFileFrontmatter(destPath, fileName, explicitScreenplay = false) {
+    let projectType = null;
+    const book = this.booksIndex.find((b) => destPath.startsWith(b.path));
+    if (book) {
+      const cfg = (await this.loadBookConfig(book)) || {};
+      projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
+    }
+    const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, explicitScreenplay);
+    if (!useScreenplay) return "";
+    return this.bookService.buildFrontmatter({ projectType, screenplay: true });
   }
 
   async waitForFolderSync(path, retries = 20) {

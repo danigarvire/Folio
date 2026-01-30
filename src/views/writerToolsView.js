@@ -4267,8 +4267,8 @@ export class WriterToolsView extends ItemView {
     section.createDiv({ cls: "writer-tools-section-title", text: "ABOUT" });
 
     const aboutItems = [
-      { icon: "heart", label: "Donate", action: () => window.open("https://github.com/sponsors", "_blank") },
-      { icon: "mail", label: "Contact", action: () => window.open("mailto:contact@example.com", "_blank") }
+      { icon: "heart", label: "Support", action: () => this.showDonateView() },
+      { icon: "mail", label: "Contact", action: () => this.showContactView() }
     ];
 
     aboutItems.forEach(item => {
@@ -4279,6 +4279,84 @@ export class WriterToolsView extends ItemView {
 
       aboutItem.addEventListener("click", item.action);
     });
+  }
+
+  showDonateView() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-donate-view");
+
+    const header = container.createDiv({ cls: "donate-view-header" });
+    const headerLeft = header.createDiv({ cls: "donate-view-header-left" });
+    const headerHeart = headerLeft.createSpan({ cls: "donate-view-header-heart" });
+    setIcon(headerHeart, "heart");
+    headerLeft.createSpan({ cls: "donate-view-header-title", text: "Support" });
+    const backButton = header.createEl("button", { cls: "donate-view-back", text: "Back" });
+    backButton.addEventListener("click", () => this.exitDonateView());
+
+    const content = container.createDiv({ cls: "donate-view-content" });
+    const card = content.createDiv({ cls: "donate-view-card" });
+    const cardHeader = card.createDiv({ cls: "donate-view-card-header" });
+    const cardIcon = cardHeader.createSpan({ cls: "donate-view-card-icon" });
+    setIcon(cardIcon, "coffee");
+    cardHeader.createSpan({ cls: "donate-view-card-title", text: "Support Folio development" });
+    card.createDiv({
+      cls: "donate-view-card-text",
+      text: "If this plugin saves you time or helps your writing, consider supporting its development."
+    });
+    const donateBtn = card.createEl("button", { cls: "donate-view-button", text: "Buy Me a Coffee" });
+    donateBtn.addEventListener("click", () => {
+      window.open("https://buymeacoffee.com/danielgarvire", "_blank");
+    });
+  }
+
+  exitDonateView() {
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-donate-view");
+    this.onOpen();
+  }
+
+  showContactView() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-contact-view");
+
+    const header = container.createDiv({ cls: "contact-view-header" });
+    const headerIcon = header.createSpan({ cls: "contact-view-header-icon" });
+    setIcon(headerIcon, "mail");
+    header.createSpan({ cls: "contact-view-header-title", text: "Contact" });
+
+    const backButton = header.createEl("button", { cls: "contact-view-back", text: "Back" });
+    backButton.addEventListener("click", () => this.exitContactView());
+
+    const content = container.createDiv({ cls: "contact-view-content" });
+    content.createDiv({
+      cls: "contact-view-text",
+      text: "Follow for updates and writing resources:"
+    });
+
+    const links = [
+      { icon: "github", label: "@danigarvire", url: "https://github.com/danigarvire" },
+      { icon: "youtube", label: "@danielgarvire", url: "https://www.youtube.com/@danielgarvire" },
+      { icon: "instagram", label: "@danigarvire", url: "https://www.instagram.com/danigarvire" }
+    ];
+
+    const list = content.createDiv({ cls: "contact-view-list" });
+    links.forEach((item) => {
+      const row = list.createDiv({ cls: "contact-view-item" });
+      const icon = row.createSpan({ cls: "contact-view-item-icon" });
+      setIcon(icon, item.icon);
+      const text = row.createDiv({ cls: "contact-view-item-text" });
+      text.createDiv({ cls: "contact-view-item-title", text: item.label });
+      text.createDiv({ cls: "contact-view-item-subtext", text: item.url });
+      row.addEventListener("click", () => window.open(item.url, "_blank"));
+    });
+  }
+
+  exitContactView() {
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-contact-view");
+    this.onOpen();
   }
 
   async onClose() {

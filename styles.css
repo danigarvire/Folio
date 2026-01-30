@@ -727,6 +727,27 @@ body.theme-dark .modal .folio-modal-row { border-bottom: 1px solid rgba(255,255,
 }
 .modal .folio-modal-textarea { min-height: 92px; }
 
+/* Toggle row (TextInputModal) */
+.modal .modal-toggle-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.12);
+  background: rgba(255,255,255,0.02);
+}
+.modal .modal-toggle-row input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--interactive-accent);
+}
+.modal .modal-toggle-row span {
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
 /* Cover select button styling inside modal right column */
 .modal .folio-modal-right button {
   align-self: flex-end;
@@ -1690,6 +1711,202 @@ body.theme-light {
 .writer-tools-item-text {
   font-size: 14px;
   color: var(--text-normal);
+}
+
+.folio-donate-view {
+  padding: 10px 0 4px 0;
+}
+
+.donate-view-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px 12px 4px;
+}
+
+.donate-view-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.donate-view-header-heart {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donate-view-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.donate-view-back {
+  background: transparent;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  color: var(--text-normal);
+}
+
+.donate-view-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.donate-view-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.18);
+  background: rgba(255,255,255,0.02);
+}
+
+.donate-view-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.donate-view-card-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donate-view-card-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.donate-view-card-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.donate-view-button {
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.2);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.donate-view-button:hover {
+  filter: brightness(1.05);
+}
+
+.folio-contact-view {
+  padding: 10px 0 4px 0;
+}
+
+.contact-view-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px 12px 4px;
+}
+
+.contact-view-header-icon {
+  display: flex;
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
+.contact-view-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-normal);
+  flex: 1;
+}
+
+.contact-view-back {
+  background: transparent;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.2);
+  border-radius: 8px;
+  padding: 4px 10px;
+  color: var(--text-normal);
+}
+
+.contact-view-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 12px 14px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.18);
+  background: rgba(255,255,255,0.02);
+}
+
+.contact-view-text {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.contact-view-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contact-view-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.16);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+}
+
+.contact-view-item:hover {
+  background: var(--background-modifier-hover);
+}
+
+.contact-view-item-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.contact-view-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.contact-view-item-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.contact-view-item-subtext {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 /* Resources list (vertical) */
@@ -3292,11 +3509,75 @@ body.theme-light {
   height: 14px;
 }
 
+.folio-settings-support {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.2);
+  background: rgba(255,255,255,0.02);
+}
+
+.folio-settings-support-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.folio-settings-support-copy {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+}
+
+.folio-settings-support-link {
+  display: inline-flex;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--background-modifier-border-rgb), 0.2);
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.folio-settings-support-link:hover {
+  filter: brightness(1.05);
+}
+
 .folio-templates-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+/* Empty state (no active project) */
+.folio-empty-state {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  padding: 24px 16px;
+  color: var(--text-muted);
+}
+
+.folio-empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.folio-empty-subtitle {
+  max-width: 360px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
 }
 
 .folio-template-row {

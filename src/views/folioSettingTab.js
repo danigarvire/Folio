@@ -134,6 +134,18 @@ export class FolioSettingTab extends PluginSettingTab {
     addBtn.onclick = () => {
       this.openTemplateEditor(null, templatesListEl);
     };
+
+    // ============ SUPPORT ============
+    const supportSection = el.createDiv({ cls: 'folio-settings-support' });
+    supportSection.createDiv({ cls: 'folio-settings-support-title', text: '☕ Support Folio development' });
+    supportSection.createDiv({
+      cls: 'folio-settings-support-copy',
+      text: 'If this plugin saves you time or helps your writing, consider supporting its development.'
+    });
+    const supportLink = supportSection.createEl('a', { cls: 'folio-settings-support-link', text: 'Buy Me a Coffee' });
+    supportLink.href = 'https://buymeacoffee.com/danielgarvire';
+    supportLink.target = '_blank';
+    supportLink.rel = 'noopener';
   }
 
   renderTemplatesList(container) {

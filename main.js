@@ -1243,12 +1243,15 @@ var init_textInputModal = __esm({
   "src/modals/textInputModal.js"() {
     ({ Modal: Modal8 } = require("obsidian"));
     TextInputModal = class extends Modal8 {
-      constructor(app, { title, placeholder, cta, onSubmit }) {
+      constructor(app, { title, placeholder, cta, onSubmit, toggleLabel = null, toggleDefault = false, toggleKey = "toggle" }) {
         super(app);
         this.title = title;
         this.placeholder = placeholder;
         this.cta = cta;
         this.onSubmit = onSubmit;
+        this.toggleLabel = toggleLabel;
+        this.toggleDefault = toggleDefault;
+        this.toggleKey = toggleKey;
       }
       onOpen() {
         const { contentEl } = this;
@@ -1258,6 +1261,13 @@ var init_textInputModal = __esm({
           type: "text",
           placeholder: this.placeholder
         });
+        let toggleInput = null;
+        if (this.toggleLabel) {
+          const toggleRow = contentEl.createDiv({ cls: "modal-toggle-row" });
+          toggleInput = toggleRow.createEl("input", { type: "checkbox" });
+          toggleInput.checked = !!this.toggleDefault;
+          toggleRow.createSpan({ text: this.toggleLabel });
+        }
         const actions = contentEl.createDiv({ cls: "modal-button-container" });
         const cancelBtn = actions.createEl("button", {
           text: "Cancel"
@@ -1271,7 +1281,8 @@ var init_textInputModal = __esm({
           const value = input.value.trim();
           if (!value)
             return;
-          this.onSubmit(value);
+          const toggleState = toggleInput ? toggleInput.checked : false;
+          this.onSubmit(value, { [this.toggleKey]: toggleState });
           this.close();
         };
         input.addEventListener("keydown", (e) => {
@@ -2039,7 +2050,8 @@ projectType: book
 function scriptChapterTemplate({ title }) {
   return `---
 projectType: script
-cssclasses: md-screenplay
+cssclasses:
+  - md-screenplay
 ---
 
 `;
@@ -2050,6 +2062,31 @@ var BookService = class {
   constructor(app, configService) {
     this.app = app;
     this.configService = configService;
+  }
+  isSceneTitle(title) {
+    const base = (title || "").toLowerCase().replace(/\.md$/, "");
+    return base === "scene" || base.startsWith("scene ");
+  }
+  shouldUseScreenplayClass(projectType, title, explicit = false) {
+    if (explicit)
+      return true;
+    if (!projectType)
+      return false;
+    const isScript = projectType === PROJECT_TYPES.SCRIPT || projectType === PROJECT_TYPES.FILM;
+    return isScript && this.isSceneTitle(title);
+  }
+  buildFrontmatter({ projectType, screenplay = false }) {
+    if (!projectType && !screenplay)
+      return "";
+    const lines = ["---"];
+    if (projectType)
+      lines.push(`projectType: ${projectType}`);
+    if (screenplay) {
+      lines.push("cssclasses:");
+      lines.push("  - md-screenplay");
+    }
+    lines.push("---", "", "");
+    return lines.join("\n");
   }
   /**
    * Scan for all books in the base path
@@ -2281,11 +2318,8 @@ var BookService = class {
         } else {
           const filePath = `${itemPath}.md`;
           if (!vault.getAbstractFileByPath(filePath)) {
-            const frontmatter = `---
-projectType: ${projectType}
----
-
-`;
+            const isScreenplay = this.shouldUseScreenplayClass(projectType, item.title);
+            const frontmatter = this.buildFrontmatter({ projectType, screenplay: isScreenplay });
             await vault.create(filePath, frontmatter);
           }
         }
@@ -2481,11 +2515,8 @@ projectType: script
     }
     const scene1Path = `${episode1Path}/Scene 1.md`;
     if (!vault.getAbstractFileByPath(scene1Path)) {
-      await vault.create(scene1Path, `---
-projectType: script
----
-
-`);
+      const frontmatter = this.buildFrontmatter({ projectType: PROJECT_TYPES.SCRIPT, screenplay: true });
+      await vault.create(scene1Path, frontmatter);
     }
   }
   /**
@@ -2511,11 +2542,8 @@ projectType: film
     }
     const scene1Path = `${sequence1Path}/Scene 1.md`;
     if (!vault.getAbstractFileByPath(scene1Path)) {
-      await vault.create(scene1Path, `---
-projectType: film
----
-
-`);
+      const frontmatter = this.buildFrontmatter({ projectType: PROJECT_TYPES.FILM, screenplay: true });
+      await vault.create(scene1Path, frontmatter);
     }
   }
   /**
@@ -3098,7 +3126,12 @@ var FolioView = class extends import_obsidian4.ItemView {
         descRow2.createEl("div", { text: "Description", cls: "folio-meta-label" });
         descRow2.createEl("div", { text: "\u2014", cls: "folio-meta-value folio-meta-desc" });
         const structureEl2 = el.createDiv("folio-structure");
-        structureEl2.createEl("p", { text: "(No project selected)" });
+        const emptyState = structureEl2.createDiv({ cls: "folio-empty-state" });
+        emptyState.createDiv({ cls: "folio-empty-title", text: "\uD83D\uDC4B Welcome to Folio \uD83D\uDCDC" });
+        emptyState.createDiv({
+          cls: "folio-empty-subtitle",
+          text: 'Click "New Project" above to create a new project. Click "?" above for basic information.'
+        });
         try {
           const statsEl = el.createDiv("folio-stats");
           const makeRow = (label, value) => {
@@ -3258,7 +3291,9 @@ var FolioView = class extends import_obsidian4.ItemView {
                   title: "New root file",
                   placeholder: "File name (without .md)",
                   cta: "Create",
-                  onSubmit: async (value) => {
+                  toggleLabel: "Screenplay formatting",
+                  toggleKey: "screenplay",
+                  onSubmit: async (value, opts = {}) => {
                     try {
                       const name = (value || "").trim();
                       if (!name)
@@ -3266,7 +3301,8 @@ var FolioView = class extends import_obsidian4.ItemView {
                       const fileName = name.endsWith(".md") ? name : `${name}.md`;
                       const path = `${book.path}/${fileName}`;
                       if (!this.plugin.app.vault.getAbstractFileByPath(path)) {
-                        await this.plugin.app.vault.create(path, "");
+                        const frontmatter = await this.plugin.getNewFileFrontmatter(path, fileName, !!opts.screenplay);
+                        await this.plugin.app.vault.create(path, frontmatter);
                       }
                       await this.plugin.refresh();
                       this.plugin.rerenderViews();
@@ -3355,7 +3391,9 @@ var FolioView = class extends import_obsidian4.ItemView {
                     title: "New root file",
                     placeholder: "File name (without .md)",
                     cta: "Create",
-                    onSubmit: async (value) => {
+                    toggleLabel: "Screenplay formatting",
+                    toggleKey: "screenplay",
+                    onSubmit: async (value, opts = {}) => {
                       try {
                         const name = (value || "").trim();
                         if (!name)
@@ -3363,7 +3401,8 @@ var FolioView = class extends import_obsidian4.ItemView {
                         const fileName = name.endsWith(".md") ? name : `${name}.md`;
                         const path = `${book.path}/${fileName}`;
                         if (!this.plugin.app.vault.getAbstractFileByPath(path)) {
-                          await this.plugin.app.vault.create(path, "");
+                          const frontmatter = await this.plugin.getNewFileFrontmatter(path, fileName, !!opts.screenplay);
+                          await this.plugin.app.vault.create(path, frontmatter);
                         }
                         await this.plugin.refresh();
                         this.plugin.rerenderViews();
@@ -7550,8 +7589,8 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "ABOUT" });
     const aboutItems = [
-      { icon: "heart", label: "Donate", action: () => window.open("https://github.com/sponsors", "_blank") },
-      { icon: "mail", label: "Contact", action: () => window.open("mailto:contact@example.com", "_blank") }
+      { icon: "heart", label: "Support", action: () => this.showDonateView() },
+      { icon: "mail", label: "Contact", action: () => this.showContactView() }
     ];
     aboutItems.forEach((item) => {
       const aboutItem = section.createDiv({ cls: "writer-tools-item" });
@@ -7560,6 +7599,73 @@ var WriterToolsView = class extends import_obsidian6.ItemView {
       aboutItem.createSpan({ cls: "writer-tools-item-text", text: item.label });
       aboutItem.addEventListener("click", item.action);
     });
+  }
+  showDonateView() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-donate-view");
+    const header = container.createDiv({ cls: "donate-view-header" });
+    const headerLeft = header.createDiv({ cls: "donate-view-header-left" });
+    const headerHeart = headerLeft.createSpan({ cls: "donate-view-header-heart" });
+    (0, import_obsidian6.setIcon)(headerHeart, "heart");
+    headerLeft.createSpan({ cls: "donate-view-header-title", text: "Support" });
+    const backButton = header.createEl("button", { cls: "donate-view-back", text: "Back" });
+    backButton.addEventListener("click", () => this.exitDonateView());
+    const content = container.createDiv({ cls: "donate-view-content" });
+    const card = content.createDiv({ cls: "donate-view-card" });
+    const cardHeader = card.createDiv({ cls: "donate-view-card-header" });
+    const cardIcon = cardHeader.createSpan({ cls: "donate-view-card-icon" });
+    (0, import_obsidian6.setIcon)(cardIcon, "coffee");
+    cardHeader.createSpan({ cls: "donate-view-card-title", text: "Support Folio development" });
+    card.createDiv({
+      cls: "donate-view-card-text",
+      text: "If this plugin saves you time or helps your writing, consider supporting its development."
+    });
+    const donateBtn = card.createEl("button", { cls: "donate-view-button", text: "Buy Me a Coffee" });
+    donateBtn.addEventListener("click", () => {
+      window.open("https://buymeacoffee.com/danielgarvire", "_blank");
+    });
+  }
+  exitDonateView() {
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-donate-view");
+    this.onOpen();
+  }
+  showContactView() {
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-contact-view");
+    const header = container.createDiv({ cls: "contact-view-header" });
+    const headerIcon = header.createSpan({ cls: "contact-view-header-icon" });
+    (0, import_obsidian6.setIcon)(headerIcon, "mail");
+    header.createSpan({ cls: "contact-view-header-title", text: "Contact" });
+    const backButton = header.createEl("button", { cls: "contact-view-back", text: "Back" });
+    backButton.addEventListener("click", () => this.exitContactView());
+    const content = container.createDiv({ cls: "contact-view-content" });
+    content.createDiv({
+      cls: "contact-view-text",
+      text: "Follow for updates and writing resources:"
+    });
+    const links = [
+      { icon: "github", label: "@danigarvire", url: "https://github.com/danigarvire" },
+      { icon: "youtube", label: "@danielgarvire", url: "https://www.youtube.com/@danielgarvire" },
+      { icon: "instagram", label: "@danigarvire", url: "https://www.instagram.com/danigarvire" }
+    ];
+    const list = content.createDiv({ cls: "contact-view-list" });
+    links.forEach((item) => {
+      const row = list.createDiv({ cls: "contact-view-item" });
+      const icon = row.createSpan({ cls: "contact-view-item-icon" });
+      (0, import_obsidian6.setIcon)(icon, item.icon);
+      const text = row.createDiv({ cls: "contact-view-item-text" });
+      text.createDiv({ cls: "contact-view-item-title", text: item.label });
+      text.createDiv({ cls: "contact-view-item-subtext", text: item.url });
+      row.addEventListener("click", () => window.open(item.url, "_blank"));
+    });
+  }
+  exitContactView() {
+    const container = this.containerEl.children[1];
+    container.removeClass("folio-contact-view");
+    this.onOpen();
   }
   async onClose() {
   }
@@ -8434,6 +8540,16 @@ var FolioSettingTab = class extends import_obsidian8.PluginSettingTab {
     addBtn.onclick = () => {
       this.openTemplateEditor(null, templatesListEl);
     };
+    const supportSection = el.createDiv({ cls: "folio-settings-support" });
+    supportSection.createDiv({ cls: "folio-settings-support-title", text: "\u2615 Support Folio development" });
+    supportSection.createDiv({
+      cls: "folio-settings-support-copy",
+      text: "If this plugin saves you time or helps your writing, consider supporting its development."
+    });
+    const supportLink = supportSection.createEl("a", { cls: "folio-settings-support-link", text: "Buy Me a Coffee" });
+    supportLink.href = "https://buymeacoffee.com/danielgarvire";
+    supportLink.target = "_blank";
+    supportLink.rel = "noopener";
   }
   renderTemplatesList(container) {
     container.empty();
@@ -9103,7 +9219,9 @@ module.exports = class FolioPlugin extends Plugin {
             title: "New file",
             placeholder: "File name",
             cta: "Create",
-            onSubmit: async (value) => {
+            toggleLabel: "Screenplay formatting",
+            toggleKey: "screenplay",
+            onSubmit: async (value, opts = {}) => {
               const name = (value || "").trim();
               if (!name)
                 return;
@@ -9111,7 +9229,8 @@ module.exports = class FolioPlugin extends Plugin {
                 const fileName = name.endsWith(".md") ? name : `${name}.md`;
                 const dest = `${folder.path}/${fileName}`;
                 if (!this.app.vault.getAbstractFileByPath(dest)) {
-                  await this.app.vault.create(dest, "");
+                  const frontmatter = await this.getNewFileFrontmatter(dest, fileName, !!opts.screenplay);
+                  await this.app.vault.create(dest, frontmatter);
                   const book = this.booksIndex.find((b) => dest.startsWith(b.path));
                   if (book)
                     await this.syncChapterStatsBaseline(book);
@@ -9558,6 +9677,18 @@ module.exports = class FolioPlugin extends Plugin {
   // Delegate to ConfigService
   async loadBookMeta(book) {
     return this.configService.loadProjectMeta(book);
+  }
+  async getNewFileFrontmatter(destPath, fileName, explicitScreenplay = false) {
+    let projectType = null;
+    const book = this.booksIndex.find((b) => destPath.startsWith(b.path));
+    if (book) {
+      const cfg = await this.loadBookConfig(book) || {};
+      projectType = (cfg.basic == null ? void 0 : cfg.basic.projectType) || PROJECT_TYPES.BOOK;
+    }
+    const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, explicitScreenplay);
+    if (!useScreenplay)
+      return "";
+    return this.bookService.buildFrontmatter({ projectType, screenplay: true });
   }
   async waitForFolderSync(path, retries = 20) {
     const delay = (ms) => new Promise((r) => setTimeout(r, ms));

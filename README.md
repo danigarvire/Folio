@@ -25,8 +25,13 @@ Implemented
 Planned / Not active yet
 - Export Assistant: "Consolidate document".
 - Resources grid: Character, Narrative, Structure, Tips.
-- About: Donate, Contact (URLs are placeholders).
+- About: Support + Contact.
 - Additional focus‑mode analytics (older sessions / history drill‑down).
+
+## Support
+Folio is free and open-source.
+If you find it useful, you can support development here:
+☕ Buy Me a Coffee: https://buymeacoffee.com/danielgarvire
 
 ## Roadmap (near‑term)
 - Export assistant pipeline (compile to single doc, format presets).

@@ -520,9 +520,14 @@ export class FolioView extends ItemView {
         descRow.createEl('div', { text: 'Description', cls: 'folio-meta-label' });
         descRow.createEl('div', { text: '—', cls: 'folio-meta-value folio-meta-desc' });
 
-        // empty structure area
+        // empty structure area with welcome message
         const structureEl = el.createDiv("folio-structure");
-        structureEl.createEl('p', { text: '(No project selected)' });
+        const emptyState = structureEl.createDiv({ cls: "folio-empty-state" });
+        const emptyTitle = emptyState.createDiv({ cls: "folio-empty-title", text: "👋 Welcome to Folio 📜" });
+        emptyState.createDiv({
+          cls: "folio-empty-subtitle",
+          text: 'Click "New Project" above to create a new project. Click "(?)" above for basic information.'
+        });
 
         // minimal stats placeholder so the header area doesn't look empty
         try {
@@ -720,14 +725,17 @@ export class FolioView extends ItemView {
                   title: 'New root file',
                   placeholder: 'File name (without .md)',
                   cta: 'Create',
-                  onSubmit: async (value) => {
+                  toggleLabel: 'Screenplay formatting',
+                  toggleKey: 'screenplay',
+                  onSubmit: async (value, opts = {}) => {
                     try {
                       const name = (value || '').trim();
                       if (!name) return;
                       const fileName = name.endsWith('.md') ? name : `${name}.md`;
                       const path = `${book.path}/${fileName}`;
                       if (!this.plugin.app.vault.getAbstractFileByPath(path)) {
-                        await this.plugin.app.vault.create(path, '');
+                        const frontmatter = await this.plugin.getNewFileFrontmatter(path, fileName, !!opts.screenplay);
+                        await this.plugin.app.vault.create(path, frontmatter);
                       }
                       await this.plugin.refresh();
                       this.plugin.rerenderViews();
@@ -826,14 +834,17 @@ export class FolioView extends ItemView {
                   title: 'New root file',
                   placeholder: 'File name (without .md)',
                   cta: 'Create',
-                  onSubmit: async (value) => {
+                  toggleLabel: 'Screenplay formatting',
+                  toggleKey: 'screenplay',
+                  onSubmit: async (value, opts = {}) => {
                     try {
                       const name = (value || '').trim();
                       if (!name) return;
                       const fileName = name.endsWith('.md') ? name : `${name}.md`;
                       const path = `${book.path}/${fileName}`;
                       if (!this.plugin.app.vault.getAbstractFileByPath(path)) {
-                        await this.plugin.app.vault.create(path, '');
+                        const frontmatter = await this.plugin.getNewFileFrontmatter(path, fileName, !!opts.screenplay);
+                        await this.plugin.app.vault.create(path, frontmatter);
                       }
                       await this.plugin.refresh();
                       this.plugin.rerenderViews();

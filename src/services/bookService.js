@@ -13,6 +13,30 @@ export class BookService {
     this.configService = configService;
   }
 
+  isSceneTitle(title) {
+    const base = (title || "").toLowerCase().replace(/\.md$/, "");
+    return base === "scene" || base.startsWith("scene ");
+  }
+
+  shouldUseScreenplayClass(projectType, title, explicit = false) {
+    if (explicit) return true;
+    if (!projectType) return false;
+    const isScript = projectType === PROJECT_TYPES.SCRIPT || projectType === PROJECT_TYPES.FILM;
+    return isScript && this.isSceneTitle(title);
+  }
+
+  buildFrontmatter({ projectType, screenplay = false }) {
+    if (!projectType && !screenplay) return "";
+    const lines = ["---"];
+    if (projectType) lines.push(`projectType: ${projectType}`);
+    if (screenplay) {
+      lines.push("cssclasses:");
+      lines.push("  - md-screenplay");
+    }
+    lines.push("---", "", "");
+    return lines.join("\n");
+  }
+
   /**
    * Scan for all books in the base path
    */
@@ -277,7 +301,8 @@ export class BookService {
           // Create markdown file
           const filePath = `${itemPath}.md`;
           if (!vault.getAbstractFileByPath(filePath)) {
-            const frontmatter = `---\nprojectType: ${projectType}\n---\n\n`;
+            const isScreenplay = this.shouldUseScreenplayClass(projectType, item.title);
+            const frontmatter = this.buildFrontmatter({ projectType, screenplay: isScreenplay });
             await vault.create(filePath, frontmatter);
           }
         }
@@ -460,7 +485,8 @@ export class BookService {
     
     const scene1Path = `${episode1Path}/Scene 1.md`;
     if (!vault.getAbstractFileByPath(scene1Path)) {
-      await vault.create(scene1Path, `---\nprojectType: script\n---\n\n`);
+      const frontmatter = this.buildFrontmatter({ projectType: PROJECT_TYPES.SCRIPT, screenplay: true });
+      await vault.create(scene1Path, frontmatter);
     }
   }
 
@@ -490,7 +516,8 @@ export class BookService {
     
     const scene1Path = `${sequence1Path}/Scene 1.md`;
     if (!vault.getAbstractFileByPath(scene1Path)) {
-      await vault.create(scene1Path, `---\nprojectType: film\n---\n\n`);
+      const frontmatter = this.buildFrontmatter({ projectType: PROJECT_TYPES.FILM, screenplay: true });
+      await vault.create(scene1Path, frontmatter);
     }
   }
 
