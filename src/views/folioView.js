@@ -360,6 +360,34 @@ export class FolioView extends ItemView {
       console.warn('No config tree to render, useConfigTree:', useConfigTree, 'length:', configTree.length);
     }
 
+    // Allow drop on empty tree area to move item to root end
+    const getLastRootNodeId = () => {
+      if (!useConfigTree || !configTree.length) return null;
+      const sorted = [...configTree].sort((a, b) => a.order - b.order);
+      const last = sorted[sorted.length - 1];
+      return last?.id || null;
+    };
+
+    container.addEventListener('dragover', (evt) => {
+      if (!draggedNodeId) return;
+      if (evt.target && evt.target.closest && evt.target.closest('.tree-item')) return;
+      evt.preventDefault();
+      evt.dataTransfer.dropEffect = 'move';
+    });
+
+    container.addEventListener('drop', async (evt) => {
+      if (!draggedNodeId) return;
+      if (evt.target && evt.target.closest && evt.target.closest('.tree-item')) return;
+      evt.preventDefault();
+      evt.stopPropagation();
+      const lastRootId = getLastRootNodeId();
+      if (!lastRootId) return;
+      const success = await this.plugin.reorderTreeNodes(book, draggedNodeId, lastRootId, 'after');
+      if (success) {
+        this.plugin.rerenderViews();
+      }
+    });
+
     // Allow right-click on empty tree area
     try {
       container.addEventListener('contextmenu', (evt) => {
