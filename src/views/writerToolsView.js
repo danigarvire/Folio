@@ -225,11 +225,11 @@ export class WriterToolsView extends ItemView {
     const pdfLauncher = content.createDiv({ cls: "export-settings-section" });
     const pdfLauncherLabel = pdfLauncher.createDiv({ cls: "export-settings-section-label" });
     pdfLauncherLabel.createDiv({ cls: "export-settings-section-accent" });
-    pdfLauncherLabel.createDiv({ cls: "export-settings-section-title", text: "PDF Settings" });
+    const pdfLauncherTitle = pdfLauncherLabel.createDiv({ cls: "export-settings-section-title", text: "PDF Settings" });
     const pdfLauncherBody = pdfLauncher.createDiv({ cls: "export-settings-card" });
-    pdfLauncherBody.createDiv({
+    const pdfLauncherText = pdfLauncherBody.createDiv({
       cls: "export-settings-card-text",
-      text: "Open PDF settings to customize layout, cover, header/footer and TOC."
+      text: "Open PDF settings to customize layout, cover and font."
     });
     const pdfLauncherBtn = pdfLauncherBody.createEl("button", { cls: "export-settings-btn", text: "Open Settings" });
     pdfLauncherBtn.addEventListener("click", () => this.openPdfSettingsModal());
@@ -241,10 +241,11 @@ export class WriterToolsView extends ItemView {
 
     const refreshState = () => {
       const hasFormat = !!this.exportFormat;
-      statusText.textContent = hasFormat ? `Selected format: ${this.exportFormat.toUpperCase()}` : "Please choose an export format first.";
+      const formatLabel = hasFormat ? this.exportFormat.toUpperCase() : "PDF";
+      statusText.textContent = hasFormat ? `Selected format: ${formatLabel}` : "Please choose an export format first.";
 
-      const showPdf = this.exportFormat === "pdf";
-      pdfLauncher.toggleClass("is-hidden", !showPdf);
+      pdfLauncherTitle.textContent = `${formatLabel} Settings`;
+      pdfLauncherText.textContent = `Open ${formatLabel} settings to customize layout, cover and font.`;
     };
 
     formats.forEach((format) => {
