@@ -20,6 +20,7 @@ import { ConfigService } from './services/configService.js';
 import { TreeService } from './services/treeService.js';
 import { StatsService } from './services/statsService.js';
 import { BookService } from './services/bookService.js';
+import { PdfExportService } from './services/pdfExportService.js';
 import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, DEFAULT_SETTINGS, PROJECT_TYPES } from './constants/index.js';
 
 // Import views
@@ -51,6 +52,7 @@ module.exports = class FolioPlugin extends Plugin {
     this.treeService = new TreeService(this.app, this.configService);
     this.statsService = new StatsService(this.app, this.configService);
     this.bookService = new BookService(this.app, this.configService);
+    this.pdfExportService = new PdfExportService(this.app, this.configService);
 
     this.booksIndex = [];
     this.activeBook = null;
