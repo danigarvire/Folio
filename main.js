@@ -4513,11 +4513,10 @@ var WriterToolsView = class extends import_obsidian7.ItemView {
     const formatSection = content.createDiv({ cls: "export-settings-section" });
     const formatLabel = formatSection.createDiv({ cls: "export-settings-section-label" });
     formatLabel.createDiv({ cls: "export-settings-section-accent" });
-    formatLabel.createDiv({ cls: "export-settings-section-title", text: "Choose export format" });
+    formatLabel.createDiv({ cls: "export-settings-section-title", text: "Export format" });
     const formatGrid = formatSection.createDiv({ cls: "export-settings-format-grid" });
     const formats = [
-      { id: "pdf", title: "PDF", subtitle: "Portable document format", icon: "file-text" },
-      { id: "docx", title: "DOCX", subtitle: "Word document format", icon: "file" }
+      { id: "pdf", title: "PDF", subtitle: "Portable document format", icon: "file-text" }
     ];
     const pdfLauncher = content.createDiv({ cls: "export-settings-section" });
     const pdfLauncherLabel = pdfLauncher.createDiv({ cls: "export-settings-section-label" });
@@ -4588,7 +4587,10 @@ var WriterToolsView = class extends import_obsidian7.ItemView {
       new import_obsidian7.Notice("PDF export is not wired yet. Settings are saved and preview updates are in place.");
       return;
     }
-    new import_obsidian7.Notice("DOCX export is not wired yet.");
+    if (this.exportFormat === "docx") {
+      this.exportFormat = "pdf";
+      this.queuePdfSettingsSave("export-format-fallback");
+    }
   }
   getDefaultPdfSettings(meta) {
     const author = Array.isArray(meta == null ? void 0 : meta.author) ? meta.author.join(", ") : (meta == null ? void 0 : meta.author) || "";
@@ -9400,16 +9402,24 @@ var PdfSettingsModal = class extends import_obsidian7.Modal {
     modalEl.dataset.prevMargin = modalEl.style.margin || "";
     modalEl.dataset.prevRadius = modalEl.style.borderRadius || "";
     modalEl.dataset.prevTransform = modalEl.style.transform || "";
+    modalEl.dataset.prevResize = modalEl.style.resize || "";
+    modalEl.dataset.prevOverflow = modalEl.style.overflow || "";
+    modalEl.dataset.prevMinWidth = modalEl.style.minWidth || "";
+    modalEl.dataset.prevMinHeight = modalEl.style.minHeight || "";
     modalEl.style.position = "fixed";
     modalEl.style.left = `${rect.left}px`;
     modalEl.style.top = `${rect.top}px`;
     modalEl.style.width = `${rect.width}px`;
     modalEl.style.height = `${rect.height}px`;
-    modalEl.style.maxWidth = `${rect.width}px`;
-    modalEl.style.maxHeight = `${rect.height}px`;
+    modalEl.style.maxWidth = "100vw";
+    modalEl.style.maxHeight = "100vh";
+    modalEl.style.minWidth = "720px";
+    modalEl.style.minHeight = "520px";
     modalEl.style.margin = "0";
     modalEl.style.borderRadius = "0";
     modalEl.style.transform = "none";
+    modalEl.style.resize = "both";
+    modalEl.style.overflow = "hidden";
     this.contentEl.style.height = "100%";
     this.contentEl.style.width = "100%";
     const content = modalEl.querySelector(".modal-content");
@@ -9438,6 +9448,10 @@ var PdfSettingsModal = class extends import_obsidian7.Modal {
     modalEl.style.margin = modalEl.dataset.prevMargin || "";
     modalEl.style.borderRadius = modalEl.dataset.prevRadius || "";
     modalEl.style.transform = modalEl.dataset.prevTransform || "";
+    modalEl.style.resize = modalEl.dataset.prevResize || "";
+    modalEl.style.overflow = modalEl.dataset.prevOverflow || "";
+    modalEl.style.minWidth = modalEl.dataset.prevMinWidth || "";
+    modalEl.style.minHeight = modalEl.dataset.prevMinHeight || "";
     modalEl.dataset.prevPosition = "";
     modalEl.dataset.prevLeft = "";
     modalEl.dataset.prevTop = "";
@@ -9448,6 +9462,10 @@ var PdfSettingsModal = class extends import_obsidian7.Modal {
     modalEl.dataset.prevMargin = "";
     modalEl.dataset.prevRadius = "";
     modalEl.dataset.prevTransform = "";
+    modalEl.dataset.prevResize = "";
+    modalEl.dataset.prevOverflow = "";
+    modalEl.dataset.prevMinWidth = "";
+    modalEl.dataset.prevMinHeight = "";
     this.contentEl.style.height = "";
     this.contentEl.style.width = "";
     const content = modalEl.querySelector(".modal-content");
