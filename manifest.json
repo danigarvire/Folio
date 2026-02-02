@@ -1,7 +1,7 @@
 {
   "id": "folio",
   "name": "Folio",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minAppVersion": "1.7.2",
   "description": "Project-based long-form writing environment for books and scripts.",
   "author": "Daniel Garvire",
