@@ -1,8 +1,19 @@
 # Folio (Obsidian Plugin)
 
 Folio is an Obsidian plugin for long-form writing projects such as books, screenplays, TV series, essays, and films.
+Maintainer: Daniel García-Villaraco Redondo (aka Daniel Garvire).
 
 It introduces a **project-centric writing workflow** that combines structure, drafting tools, and writing reference material—all inside Obsidian.
+
+---
+
+## Quick start
+
+1) Install the plugin (Community Plugins or manual install).  
+   - Manual install: copy `main.js`, `manifest.json`, and `styles.css` into your vault at `.obsidian/plugins/folio/` and reload Obsidian.  
+2) Open Folio from the ribbon (book icon) to create or open a project.  
+3) Use the Folio view to manage your structure and drafts.  
+4) Open Writer Tools for Focus Mode, Export Assistant, and references.
 
 ---
 
@@ -85,6 +96,27 @@ The Writer Tools view is a core part of Folio and provides **writing-focused too
 
 Notes with frontmatter `cssclass: md-screenplay` (or `cssclass: folio-screenplay`) render in screenplay style.  
 Folio bundles a third-party MIT-licensed screenplay CSS snippet for formatting (see Third-party notices).
+
+### Heading mapping (basic)
+The bundled snippet maps markdown headings (`#`) to screenplay elements:
+- `#` → Scene heading
+- `##` → Character
+- `###` → Parenthetical
+- `####` → Transition
+- `#####` → Act / section
+
+Helper labels (e.g., “Scene Heading”) appear when the snippet’s helper classes are enabled.
+
+---
+
+## PDF export
+
+1) Open Writer Tools → Export Assistant.  
+2) Choose your project and format (PDF).  
+3) Open PDF Settings to customize layout (page size, margins, fonts, cover, etc.).  
+4) Click Export to generate the PDF.  
+
+Screenplay CSS is applied automatically in exports when `cssclass: md-screenplay` or `cssclass: folio-screenplay` is set.
 
 Designed to separate **drafting time** from planning and management.
 
