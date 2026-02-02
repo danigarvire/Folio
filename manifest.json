@@ -3,7 +3,8 @@
   "name": "Folio",
   "version": "1.0.0",
   "minAppVersion": "1.7.2",
-  "description": "Long-form writing tool for books and screenplays",
-  "author": "You",
+  "description": "Project-based long-form writing environment for books and scripts",
+  "author": "danigarvire",
+  "authorUrl": "https://github.com/danigarvire",
   "main": "main.js"
 }

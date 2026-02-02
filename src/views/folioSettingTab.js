@@ -138,9 +138,18 @@ export class FolioSettingTab extends PluginSettingTab {
     // ============ SUPPORT ============
     const supportSection = el.createDiv({ cls: 'folio-settings-support' });
     supportSection.createDiv({ cls: 'folio-settings-support-title', text: '☕ Support Folio development' });
-    supportSection.createDiv({
-      cls: 'folio-settings-support-copy',
-      text: 'If this plugin saves you time or helps your writing, consider supporting its development.'
+    const supportCopy = supportSection.createDiv({ cls: 'folio-settings-support-copy' });
+    supportCopy.createSpan({
+      text: 'Folio is free and open-source.'
+    });
+    supportCopy.createEl('br');
+    supportCopy.createEl('br');
+    supportCopy.createSpan({
+      text: 'If you find it useful, you can optionally support its development here'
+    });
+    supportCopy.createEl('br');
+    supportCopy.createSpan({
+      text: 'Support is voluntary and does not unlock features or provide special access.'
     });
     const supportLink = supportSection.createEl('a', { cls: 'folio-settings-support-link', text: 'Buy Me a Coffee' });
     supportLink.href = 'https://buymeacoffee.com/danielgarvire';

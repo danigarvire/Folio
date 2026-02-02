@@ -4767,7 +4767,7 @@ var WriterToolsView = class extends import_obsidian7.ItemView {
           pdfDataUrl = `data:application/pdf;base64,${base64}`;
         }
       }
-      const pdfPreviewUrl = pdfDataUrl ? `${pdfDataUrl}#page=1&zoom=page-fit&navpanes=0` : "";
+      const pdfPreviewUrl = pdfDataUrl ? `${pdfDataUrl}#page=1&zoom=page-width&navpanes=0&scrollMode=0&spreadMode=1` : "";
       const encoded = encodeURIComponent(html);
       const dataUrl = `data:text/html;charset=utf-8,${encoded}`;
       const canUseWebview = typeof document !== "undefined" && typeof document.createElement === "function" && !((_e = this.app) == null ? void 0 : _e.isMobile);
@@ -9258,9 +9258,18 @@ var WriterToolsView = class extends import_obsidian7.ItemView {
     const cardIcon = cardHeader.createSpan({ cls: "donate-view-card-icon" });
     (0, import_obsidian7.setIcon)(cardIcon, "coffee");
     cardHeader.createSpan({ cls: "donate-view-card-title", text: "Support Folio development" });
-    card.createDiv({
-      cls: "donate-view-card-text",
-      text: "If this plugin saves you time or helps your writing, consider supporting its development."
+    const donateCopy = card.createDiv({ cls: "donate-view-card-text" });
+    donateCopy.createSpan({
+      text: "Folio is free and open-source."
+    });
+    donateCopy.createEl("br");
+    donateCopy.createEl("br");
+    donateCopy.createSpan({
+      text: "If you find it useful, you can optionally support its development here"
+    });
+    donateCopy.createEl("br");
+    donateCopy.createSpan({
+      text: "Support is voluntary and does not unlock features or provide special access."
     });
     const donateBtn = card.createEl("button", { cls: "donate-view-button", text: "Buy Me a Coffee" });
     donateBtn.addEventListener("click", () => {
@@ -9288,9 +9297,7 @@ var WriterToolsView = class extends import_obsidian7.ItemView {
       text: "Follow for updates and writing resources:"
     });
     const links = [
-      { icon: "github", label: "@danigarvire", url: "https://github.com/danigarvire" },
-      { icon: "youtube", label: "@danielgarvire", url: "https://www.youtube.com/@danielgarvire" },
-      { icon: "instagram", label: "@danigarvire", url: "https://www.instagram.com/danigarvire" }
+      { icon: "github", label: "@danigarvire", url: "https://github.com/danigarvire" }
     ];
     const list = content.createDiv({ cls: "contact-view-list" });
     links.forEach((item) => {
@@ -10353,9 +10360,18 @@ var FolioSettingTab = class extends import_obsidian9.PluginSettingTab {
     };
     const supportSection = el.createDiv({ cls: "folio-settings-support" });
     supportSection.createDiv({ cls: "folio-settings-support-title", text: "\u2615 Support Folio development" });
-    supportSection.createDiv({
-      cls: "folio-settings-support-copy",
-      text: "If this plugin saves you time or helps your writing, consider supporting its development."
+    const supportCopy = supportSection.createDiv({ cls: "folio-settings-support-copy" });
+    supportCopy.createSpan({
+      text: "Folio is free and open-source."
+    });
+    supportCopy.createEl("br");
+    supportCopy.createEl("br");
+    supportCopy.createSpan({
+      text: "If you find it useful, you can optionally support its development here"
+    });
+    supportCopy.createEl("br");
+    supportCopy.createSpan({
+      text: "Support is voluntary and does not unlock features or provide special access."
     });
     const supportLink = supportSection.createEl("a", { cls: "folio-settings-support-link", text: "Buy Me a Coffee" });
     supportLink.href = "https://buymeacoffee.com/danielgarvire";

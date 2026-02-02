@@ -5272,9 +5272,18 @@ export class WriterToolsView extends ItemView {
     const cardIcon = cardHeader.createSpan({ cls: "donate-view-card-icon" });
     setIcon(cardIcon, "coffee");
     cardHeader.createSpan({ cls: "donate-view-card-title", text: "Support Folio development" });
-    card.createDiv({
-      cls: "donate-view-card-text",
-      text: "If this plugin saves you time or helps your writing, consider supporting its development."
+    const donateCopy = card.createDiv({ cls: "donate-view-card-text" });
+    donateCopy.createSpan({
+      text: "Folio is free and open-source."
+    });
+    donateCopy.createEl("br");
+    donateCopy.createEl("br");
+    donateCopy.createSpan({
+      text: "If you find it useful, you can optionally support its development here"
+    });
+    donateCopy.createEl("br");
+    donateCopy.createSpan({
+      text: "Support is voluntary and does not unlock features or provide special access."
     });
     const donateBtn = card.createEl("button", { cls: "donate-view-button", text: "Buy Me a Coffee" });
     donateBtn.addEventListener("click", () => {
@@ -5308,9 +5317,7 @@ export class WriterToolsView extends ItemView {
     });
 
     const links = [
-      { icon: "github", label: "@danigarvire", url: "https://github.com/danigarvire" },
-      { icon: "youtube", label: "@danielgarvire", url: "https://www.youtube.com/@danielgarvire" },
-      { icon: "instagram", label: "@danigarvire", url: "https://www.instagram.com/danigarvire" }
+      { icon: "github", label: "@danigarvire", url: "https://github.com/danigarvire" }
     ];
 
     const list = content.createDiv({ cls: "contact-view-list" });
