@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { Component, FileSystemAdapter, MarkdownRenderer, Notice } from "obsidian";
+import { SCREENPLAY_SNIPPET_CSS } from "../constants/screenplaySnippet.js";
 
 export class PdfExportService {
   constructor(app, configService) {
@@ -211,10 +212,11 @@ export class PdfExportService {
       .toc-title { font-weight: 700; margin-bottom: 12px; }
       .toc-item { padding: 2px 0; }
       .chapter { margin-bottom: 28px; }
-      .md-screenplay { font-family: ${bodyFontFamily}; font-size: ${fontSize}pt; line-height: ${lineHeight}; max-width: 6.5in; margin: 0 auto; }
-      .md-screenplay p { margin: 0 0 10px; }
-      .md-screenplay h1, .md-screenplay h2, .md-screenplay h3, .md-screenplay h4 { text-transform: ${capitalizeHeadings ? "uppercase" : "none"}; letter-spacing: 0.8px; margin: 18px 0 8px; font-size: ${fontSize}pt; }
-      .md-screenplay blockquote { margin: 0 0 10px 1.2in; }
+      .md-screenplay, .folio-screenplay { font-family: ${bodyFontFamily}; font-size: ${fontSize}pt; line-height: ${lineHeight}; max-width: 6.5in; margin: 0 auto; }
+      .md-screenplay p, .folio-screenplay p { margin: 0 0 10px; }
+      .md-screenplay h1, .md-screenplay h2, .md-screenplay h3, .md-screenplay h4,
+      .folio-screenplay h1, .folio-screenplay h2, .folio-screenplay h3, .folio-screenplay h4 { text-transform: ${capitalizeHeadings ? "uppercase" : "none"}; letter-spacing: 0.8px; margin: 18px 0 8px; font-size: ${fontSize}pt; }
+      .md-screenplay blockquote, .folio-screenplay blockquote { margin: 0 0 10px 1.2in; }
       ${screenplayCss}
     `;
   }
@@ -223,9 +225,8 @@ export class PdfExportService {
     try {
       const basePath = this.getVaultBasePath();
       const candidates = [
-        path.join(__dirname, "PRO Screenwriting Snippet.css"),
-        basePath ? path.join(basePath, ".obsidian", "snippets", "PRO Screenwriting Snippet.css") : null,
-        basePath ? path.join(basePath, "PRO Screenwriting Snippet.css") : null
+        path.join(__dirname, "assets", "third-party", "pro-screenwriting", "PRO Screenwriting Snippet.css"),
+        basePath ? path.join(basePath, ".obsidian", "snippets", "PRO Screenwriting Snippet.css") : null
       ].filter(Boolean);
       for (const snippetPath of candidates) {
         if (fs.existsSync(snippetPath)) {
@@ -235,7 +236,7 @@ export class PdfExportService {
     } catch (error) {
       console.warn("Screenplay CSS snippet not loaded.", error);
     }
-    return "";
+    return SCREENPLAY_SNIPPET_CSS || "";
   }
 
   async renderMarkdownToHtml(markdown, sourcePath) {

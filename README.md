@@ -79,6 +79,13 @@ The Writer Tools view is a core part of Folio and provides **writing-focused too
 - Session-based word count tracking.
 - Focus Mode Stats modal for reviewing session data.
 
+---
+
+## Screenplay formatting
+
+Notes with frontmatter `cssclass: md-screenplay` (or `cssclass: folio-screenplay`) render in screenplay style.  
+Folio bundles a third-party MIT-licensed screenplay CSS snippet for formatting (see Third-party notices).
+
 Designed to separate **drafting time** from planning and management.
 
 ---
@@ -138,6 +145,7 @@ This plugin is an independent project and is not affiliated with, sponsored by, 
 
 ## Third-party notices
 
+- PRO Screenwriting Snippet — Bluemoondragon07 (MIT)
 - Lucide Icons — https://lucide.dev
 
 ---

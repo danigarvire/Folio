@@ -14,6 +14,8 @@ const {
   Menu,
   setIcon,
 } = require("obsidian");
+const fs = require("fs");
+const path = require("path");
 
 // Import services
 import { ConfigService } from './services/configService.js';
@@ -22,6 +24,7 @@ import { StatsService } from './services/statsService.js';
 import { BookService } from './services/bookService.js';
 import { PdfExportService } from './services/pdfExportService.js';
 import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, DEFAULT_SETTINGS, PROJECT_TYPES } from './constants/index.js';
+import { SCREENPLAY_SNIPPET_CSS } from './constants/screenplaySnippet.js';
 
 // Import views
 import { FolioView } from './views/folioView.js';
@@ -53,6 +56,7 @@ module.exports = class FolioPlugin extends Plugin {
     this.statsService = new StatsService(this.app, this.configService);
     this.bookService = new BookService(this.app, this.configService);
     this.pdfExportService = new PdfExportService(this.app, this.configService);
+    this.screenplayStyleEl = null;
 
     this.booksIndex = [];
     this.activeBook = null;
@@ -63,6 +67,7 @@ module.exports = class FolioPlugin extends Plugin {
 
     console.log("[Folio] onload - about to ensureBasePath, getBasePath():", this.getBasePath());
     await this.ensureBasePath();
+    this.injectScreenplaySnippetCss();
     await this.scanBooks();
     console.log("[Folio] onload - after scanBooks, booksIndex:", this.booksIndex.map(b => b.path));
     // restore previously active book if saved in settings
@@ -659,6 +664,39 @@ module.exports = class FolioPlugin extends Plugin {
     // Remove leading/trailing slashes and normalize multiple slashes
     base = base.replace(/^\/+|\/+$/g, '').replace(/\/+/g, '/');
     return base || "projects";
+  }
+
+  loadScreenplaySnippetCss() {
+    try {
+      const basePath = this.app.vault.adapter?.getBasePath?.();
+      const candidates = [
+        this.manifest?.dir ? path.join(this.manifest.dir, "assets", "third-party", "pro-screenwriting", "PRO Screenwriting Snippet.css") : null,
+        basePath ? path.join(basePath, ".obsidian", "snippets", "PRO Screenwriting Snippet.css") : null
+      ].filter(Boolean);
+      for (const snippetPath of candidates) {
+        if (fs.existsSync(snippetPath)) {
+          return fs.readFileSync(snippetPath, "utf8");
+        }
+      }
+    } catch (error) {
+      console.warn("[Folio] Screenplay CSS snippet not loaded.", error);
+    }
+    return SCREENPLAY_SNIPPET_CSS || "";
+  }
+
+  injectScreenplaySnippetCss() {
+    if (typeof document === "undefined") return;
+    if (this.screenplayStyleEl && this.screenplayStyleEl.isConnected) return;
+    const css = this.loadScreenplaySnippetCss();
+    if (!css) return;
+    const styleEl = document.createElement("style");
+    styleEl.setAttribute("data-folio-screenplay", "true");
+    styleEl.textContent = css;
+    document.head.appendChild(styleEl);
+    this.screenplayStyleEl = styleEl;
+    document.body.classList.add("h-syntax", "syntax");
+    this.register(() => styleEl.remove());
+    this.register(() => document.body.classList.remove("h-syntax", "syntax"));
   }
 
   async ensureBasePath() {
