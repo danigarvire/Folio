@@ -3,7 +3,7 @@
   "name": "Folio",
   "version": "1.0.2",
   "minAppVersion": "1.7.2",
-  "description": "Project-based long-form writing environment for books and script.",
+  "description": "Project-based long-form writing environment for books and scripts.",
   "author": "Daniel Garvire",
   "authorUrl": "https://github.com/danigarvire",
   "isDesktopOnly": true,
