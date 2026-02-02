@@ -1921,8 +1921,21 @@ body.theme-light {
   box-shadow: var(--shadow-s);
 }
 
+.help-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.help-card-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--text-muted);
+}
+
 .help-card h3 {
-  margin: 0 0 6px;
+  margin: 0;
   font-size: 1rem;
 }
 

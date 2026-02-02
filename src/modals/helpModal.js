@@ -1,4 +1,4 @@
-const { Modal } = require("obsidian");
+const { Modal, setIcon } = require("obsidian");
 
 export class HelpModal extends Modal {
   constructor(plugin) {
@@ -37,7 +37,10 @@ export class HelpModal extends Modal {
     const basicsGrid = basicsPane.createDiv({ cls: "help-card-grid" });
 
     const card1 = basicsGrid.createDiv({ cls: "help-card" });
-    card1.createEl("h3", { text: "Getting started (first 2 minutes)" });
+    const card1Header = card1.createDiv({ cls: "help-card-header" });
+    const card1Icon = card1Header.createSpan({ cls: "help-card-icon" });
+    setIcon(card1Icon, "rocket");
+    card1Header.createEl("h3", { text: "Getting started (first 2 minutes)" });
     card1.createEl("p", { text: "Create your first project:" });
     const steps = card1.createEl("ol");
     steps.createEl("li", { text: "Open Folio from the left ribbon (book icon)." });
@@ -47,7 +50,10 @@ export class HelpModal extends Modal {
     card1.createEl("p", { text: "You write in normal Markdown files — Folio just organizes them for you." });
 
     const card2 = basicsGrid.createDiv({ cls: "help-card" });
-    card2.createEl("h3", { text: "Folio View (project dashboard)" });
+    const card2Header = card2.createDiv({ cls: "help-card-header" });
+    const card2Icon = card2Header.createSpan({ cls: "help-card-icon" });
+    setIcon(card2Icon, "layout-dashboard");
+    card2Header.createEl("h3", { text: "Folio View (project dashboard)" });
     card2.createEl("p", { text: "The Folio View is your project’s control center:" });
     const dash = card2.createEl("ul");
     dash.createEl("li", { text: "Edit project metadata (title, description, cover)." });
@@ -57,7 +63,10 @@ export class HelpModal extends Modal {
     card2.createEl("p", { text: "Think of this as your project home, not a document." });
 
     const card3 = basicsGrid.createDiv({ cls: "help-card" });
-    card3.createEl("h3", { text: "Outline & structure" });
+    const card3Header = card3.createDiv({ cls: "help-card-header" });
+    const card3Icon = card3Header.createSpan({ cls: "help-card-icon" });
+    setIcon(card3Icon, "list-tree");
+    card3Header.createEl("h3", { text: "Outline & structure" });
     card3.createEl("p", { text: "Projects are organized as a hierarchy:" });
     const outline = card3.createEl("ul");
     outline.createEl("li", { text: "Chapters/scenes appear in a tree." });
@@ -67,7 +76,10 @@ export class HelpModal extends Modal {
     card3.createEl("p", { text: "This helps you focus on structure and flow, not filenames." });
 
     const card4 = basicsGrid.createDiv({ cls: "help-card" });
-    card4.createEl("h3", { text: "Writing & Focus Mode" });
+    const card4Header = card4.createDiv({ cls: "help-card-header" });
+    const card4Icon = card4Header.createSpan({ cls: "help-card-icon" });
+    setIcon(card4Icon, "focus");
+    card4Header.createEl("h3", { text: "Writing & Focus Mode" });
     card4.createEl("p", { text: "Focus Mode is for drafting sessions:" });
     const focus = card4.createEl("ul");
     focus.createEl("li", { text: "Writer Tools → Focus Mode" });
@@ -79,7 +91,10 @@ export class HelpModal extends Modal {
     const advancedGrid = advancedPane.createDiv({ cls: "help-card-grid" });
 
     const card5 = advancedGrid.createDiv({ cls: "help-card" });
-    card5.createEl("h3", { text: "Writer Tools & Export" });
+    const card5Header = card5.createDiv({ cls: "help-card-header" });
+    const card5Icon = card5Header.createSpan({ cls: "help-card-icon" });
+    setIcon(card5Icon, "file-output");
+    card5Header.createEl("h3", { text: "Writer Tools & Export" });
     card5.createEl("p", { text: "Export Assistant:" });
     const exportList = card5.createEl("ul");
     exportList.createEl("li", { text: "Consolidate your project into a single document or PDF." });
@@ -93,7 +108,10 @@ export class HelpModal extends Modal {
     resources.createEl("li", { text: "Tips" });
 
     const card6 = advancedGrid.createDiv({ cls: "help-card" });
-    card6.createEl("h3", { text: "Screenplay mode (Markdown → screenplay)" });
+    const card6Header = card6.createDiv({ cls: "help-card-header" });
+    const card6Icon = card6Header.createSpan({ cls: "help-card-icon" });
+    setIcon(card6Icon, "clapperboard");
+    card6Header.createEl("h3", { text: "Screenplay mode (Markdown → screenplay)" });
     card6.createEl("p", { text: "Enable screenplay formatting by adding this frontmatter to a scene file:" });
     card6.createEl("pre", { cls: "help-code", text: "---\ncssclass: md-screenplay\n---" });
     card6.createEl("p", { text: "(or folio-screenplay)" });
