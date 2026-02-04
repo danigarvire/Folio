@@ -1,7 +1,7 @@
 # Folio (Obsidian Plugin)
 
 Folio is an Obsidian plugin for long-form writing projects such as books, screenplays, TV series, essays, and films.
-Maintainer: Daniel García-Villaraco Redondo (aka Daniel Garvire).
+Maintainer: Daniel Garvire.
 
 It introduces a **project-centric writing workflow** that combines structure, drafting tools, and writing reference material—all inside Obsidian.
 
