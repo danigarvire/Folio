@@ -1,0 +1,18 @@
+# macOS / Finder artifacts
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Local plugin/dev state
+data.json
+*.local.json
+
+# Logs
+*.log

@@ -12761,8 +12761,19 @@ module.exports = class FolioPlugin extends Plugin {
    * CREATE METHODS
    * =============================================================== */
   async createBook(name, projectType = "book", templateStructure = null) {
+    var _a, _b;
     const basePath = this.getBasePath();
-    return this.bookService.createBook(basePath, name, projectType, templateStructure);
+    await this.bookService.createBook(basePath, name, projectType, templateStructure);
+    await this.scanBooks();
+    const expectedPath = `${basePath}/${name}`.replace(/\/+/g, "/");
+    const createdBook = (_b = (_a = this.booksIndex.find((b) => b.path === expectedPath)) != null ? _a : this.booksIndex.find((b) => b.name === name)) != null ? _b : null;
+    if (createdBook) {
+      this.activeBook = createdBook;
+      this.settings = this.settings || {};
+      this.settings.lastActiveBookPath = createdBook.path;
+      await this.saveSettings();
+    }
+    return createdBook;
   }
   async ensureBookBaseStructure(bookFolder) {
     return this.bookService.ensureBookBaseStructure(bookFolder);
@@ -12857,7 +12868,8 @@ module.exports = class FolioPlugin extends Plugin {
     this.rerenderViews();
   }
   async loadSettings() {
-    const savedData = await this.loadData() || {};
+    const loadedData = await this.loadData();
+    const savedData = loadedData && typeof loadedData === "object" ? loadedData : {};
     console.log("[Folio] loadSettings - savedData:", JSON.stringify(savedData, null, 2));
     console.log("[Folio] loadSettings - savedData.basePath:", savedData.basePath);
     this.settings = { ...DEFAULT_SETTINGS };

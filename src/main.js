@@ -730,7 +730,24 @@ module.exports = class FolioPlugin extends Plugin {
 
   async createBook(name, projectType = 'book', templateStructure = null) {
     const basePath = this.getBasePath();
-    return this.bookService.createBook(basePath, name, projectType, templateStructure);
+    await this.bookService.createBook(basePath, name, projectType, templateStructure);
+
+    // Keep in-memory state and persisted settings in sync after creating a project.
+    await this.scanBooks();
+    const expectedPath = `${basePath}/${name}`.replace(/\/+/g, "/");
+    const createdBook =
+      this.booksIndex.find((b) => b.path === expectedPath) ??
+      this.booksIndex.find((b) => b.name === name) ??
+      null;
+
+    if (createdBook) {
+      this.activeBook = createdBook;
+      this.settings = this.settings || {};
+      this.settings.lastActiveBookPath = createdBook.path;
+      await this.saveSettings();
+    }
+
+    return createdBook;
   }
 
   async ensureBookBaseStructure(bookFolder) {
@@ -834,7 +851,8 @@ module.exports = class FolioPlugin extends Plugin {
   }
 
   async loadSettings() {
-    const savedData = await this.loadData() || {};
+    const loadedData = await this.loadData();
+    const savedData = loadedData && typeof loadedData === 'object' ? loadedData : {};
     console.log("[Folio] loadSettings - savedData:", JSON.stringify(savedData, null, 2));
     console.log("[Folio] loadSettings - savedData.basePath:", savedData.basePath);
     
