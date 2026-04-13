@@ -4161,7 +4161,7 @@ body.theme-light {
 
 .resource-detail-examples-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
   gap: 8px;
 }
 
@@ -4171,13 +4171,25 @@ body.theme-light {
   background-color: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   font-size: 12px;
+  line-height: 1.35;
   text-align: center;
   color: var(--text-normal);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resource-detail-example-card > span {
+  min-width: 0;
+  max-width: 100%;
 }
 
 @media (max-width: 700px) {
   .resource-detail-examples-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(120px, 100%), 1fr));
   }
 }
 

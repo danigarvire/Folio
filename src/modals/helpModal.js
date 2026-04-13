@@ -1,4 +1,4 @@
-const { Modal, setIcon } = require("obsidian");
+import { Modal, setIcon } from "obsidian";
 
 export class HelpModal extends Modal {
   constructor(plugin) {
@@ -54,7 +54,7 @@ export class HelpModal extends Modal {
     const card2Icon = card2Header.createSpan({ cls: "help-card-icon" });
     setIcon(card2Icon, "layout-dashboard");
     card2Header.createEl("h3", { text: "Folio View (project dashboard)" });
-    card2.createEl("p", { text: "The Folio View is your project’s control center:" });
+    card2.createEl("p", { text: "The Folio View is your project's control center:" });
     const dash = card2.createEl("ul");
     dash.createEl("li", { text: "Edit project metadata (title, description, cover)." });
     dash.createEl("li", { text: "Track live word-count stats." });

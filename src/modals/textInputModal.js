@@ -1,7 +1,15 @@
-const { Modal } = require("obsidian");
+import { Modal } from "obsidian";
 
 export class TextInputModal extends Modal {
-  constructor(app, { title, placeholder, cta, onSubmit, toggleLabel = null, toggleDefault = false, toggleKey = "toggle" }) {
+  constructor(app, {
+    title,
+    placeholder,
+    cta,
+    onSubmit,
+    toggleLabel = null,
+    toggleDefault = false,
+    toggleKey = "toggle"
+  }) {
     super(app);
     this.title = title;
     this.placeholder = placeholder;
@@ -15,7 +23,6 @@ export class TextInputModal extends Modal {
   onOpen() {
     const { contentEl } = this;
     contentEl.empty();
-
     contentEl.createEl("h2", { text: this.title });
 
     const input = contentEl.createEl("input", {
@@ -32,22 +39,16 @@ export class TextInputModal extends Modal {
     }
 
     const actions = contentEl.createDiv({ cls: "modal-button-container" });
-
-    const cancelBtn = actions.createEl("button", {
-      text: "Cancel",
-    });
-
+    const cancelBtn = actions.createEl("button", { text: "Cancel" });
     const confirmBtn = actions.createEl("button", {
       text: this.cta,
       cls: "mod-cta",
     });
 
     cancelBtn.onclick = () => this.close();
-
     confirmBtn.onclick = () => {
       const value = input.value.trim();
       if (!value) return;
-
       const toggleState = toggleInput ? toggleInput.checked : false;
       this.onSubmit(value, { [this.toggleKey]: toggleState });
       this.close();

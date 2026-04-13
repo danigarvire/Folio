@@ -1,7 +1,3 @@
-/**
- * Stats Service - Handles word count statistics and progress tracking
- */
-
 import { PROJECT_TYPES } from '../constants/index.js';
 
 export class StatsService {
@@ -10,99 +6,72 @@ export class StatsService {
     this.configService = configService;
   }
 
-  /**
-   * Count words in text
-   */
   countWords(text) {
     if (!text) return 0;
-    
-    // Remove frontmatter (content between --- and ---)
+
+    // Remove frontmatter — handle files with or without trailing newline after closing ---
     let content = text;
-    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*\n/;
+    const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*(\n|$)/;
     content = content.replace(frontmatterRegex, '');
-    
-    // Remove markdown syntax
+
     content = content
-      .replace(/^#{1,6}\s+/gm, '')        // Remove headers (# ## ### etc)
-      .replace(/\*\*([^*]+)\*\*/g, '$1')  // Remove bold **text**
-      .replace(/\*([^*]+)\*/g, '$1')      // Remove italic *text*
-      .replace(/\_\_([^_]+)\_\_/g, '$1')  // Remove bold __text__
-      .replace(/\_([^_]+)\_/g, '$1')      // Remove italic _text_
-      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove links [text](url)
-      .replace(/```[\s\S]*?```/g, '')     // Remove code blocks
-      .replace(/`([^`]+)`/g, '$1')        // Remove inline code `text`
-      .replace(/^\s*[-*+]\s+/gm, '')      // Remove list markers
-      .replace(/^\s*\d+\.\s+/gm, '')      // Remove numbered list markers
-      .replace(/^>\s+/gm, '');            // Remove blockquote markers
-    
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/\_\_([^_]+)\_\_/g, '$1')
+      .replace(/\_([^_]+)\_/g, '$1')
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/^\s*[-*+]\s+/gm, '')
+      .replace(/^\s*\d+\.\s+/gm, '')
+      .replace(/^>\s+/gm, '');
+
     const parts = content.replace(/\n/g, ' ').split(/\s+/).filter(Boolean);
     return parts.length;
   }
 
-  /**
-   * Get today's date key (YYYY-MM-DD)
-   */
   getTodayKey() {
     return new Date().toISOString().slice(0, 10);
   }
 
-  /**
-   * Build sets of explicit include/exclude paths from the config tree
-   * Includes children when a parent folder is included/excluded
-   */
   buildStatsOverrideSets(configTree) {
     const excludedPaths = new Set();
     const includedPaths = new Set();
-    
+
     const traverse = (nodes, parentExcluded = false, parentIncluded = false) => {
       for (const node of nodes) {
         const isExcluded = parentExcluded || node.exclude;
         const isIncluded = parentIncluded || node.include;
-        
+
         if (node.type !== 'group') {
-          if (isExcluded) {
-            excludedPaths.add(node.path);
-          }
-          if (isIncluded) {
-            includedPaths.add(node.path);
-          }
+          if (isExcluded) excludedPaths.add(node.path);
+          if (isIncluded) includedPaths.add(node.path);
         }
-        
-        if (node.children) {
-          traverse(node.children, isExcluded, isIncluded);
-        }
+
+        if (node.children) traverse(node.children, isExcluded, isIncluded);
       }
     };
-    
+
     traverse(configTree || []);
     return { excludedPaths, includedPaths };
   }
 
-  /**
-   * Collect all markdown files recursively from a folder
-   */
   collectMarkdownFiles(folder) {
     const files = [];
-    
+
     const collect = (item) => {
       if (item.children) {
-        for (const child of item.children) {
-          collect(child);
-        }
+        for (const child of item.children) collect(child);
       } else if (item.extension === 'md') {
         files.push(item);
       }
     };
-    
+
     collect(folder);
     return files;
   }
 
-  /**
-   * Stats rules for built-in project types
-   * Custom project types default to include-all
-   * @param {string} projectType
-   */
   getStatsRulesForProjectType(projectType) {
     const builtInTypes = new Set(Object.values(PROJECT_TYPES));
     if (!builtInTypes.has(projectType)) {
@@ -117,19 +86,14 @@ export class StatsService {
         return { includeAllByDefault: true, includePrefixes: ['manuscript'] };
       case PROJECT_TYPES.BOOK:
       default:
-        return { includeAllByDefault: false, includePrefixes: ['chapter'] };
+        // FIX: Changed from includeAllByDefault: false to true.
+        // The previous default (false, include only files starting with "chapter") silently
+        // excluded files like "Prologue.md", "Part One.md", etc. from word count.
+        // Users can still explicitly exclude files via the context menu override system.
+        return { includeAllByDefault: true, includePrefixes: [] };
     }
   }
 
-  /**
-   * Decide if a file should count toward stats
-   * Explicit exclude overrides explicit include; default rules apply last.
-   * @param {TFile} file
-   * @param {string} bookPath
-   * @param {string} projectType
-   * @param {{ includeAllByDefault: boolean, includePrefixes: string[] }} rules
-   * @param {{ excludedPaths: Set<string>, includedPaths: Set<string> }} overrides
-   */
   shouldCountFileForStats(file, bookPath, projectType, rules, overrides) {
     const rel = file.path.replace(bookPath + '/', '');
 
@@ -143,45 +107,29 @@ export class StatsService {
 
     const name = (file.basename || '').toLowerCase();
     const prefixes = rules?.includePrefixes || [];
-    return prefixes.some((prefix) => name.startsWith(prefix));
+    return prefixes.some(prefix => name.startsWith(prefix));
   }
 
-  /**
-   * Filter files based on project type rules and overrides
-   * 
-   * @param {Array} files - Array of TFile objects
-   * @param {string} bookPath - The book's root path
-   * @param {string} projectType - The project type
-   * @param {{ excludedPaths: Set<string>, includedPaths: Set<string> }} overrides
-   */
   filterFilesByProjectType(files, bookPath, projectType, overrides) {
     const rules = this.getStatsRulesForProjectType(projectType);
-    return files.filter((f) => {
-      return this.shouldCountFileForStats(f, bookPath, projectType, rules, overrides);
-    });
+    return files.filter(f => this.shouldCountFileForStats(f, bookPath, projectType, rules, overrides));
   }
 
-  /**
-   * Compute basic stats for a book and persist into book-config.json.stats
-   */
   async computeAndSaveStatsForBook(book) {
     try {
       const folder = this.app.vault.getAbstractFileByPath(book.path);
       if (!folder) return;
-      
-      // Load config to get project type and tree structure
+
       let cfg = (await this.configService.loadBookConfig(book)) || {};
       const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
-      
-      // Build explicit include/exclude overrides from config tree
       const overrides = this.buildStatsOverrideSets(cfg.structure?.tree || []);
-      
+
       const allMdFiles = this.collectMarkdownFiles(folder);
       const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, overrides);
-      
+
       const perChapter = {};
       let total = 0;
-      
+
       for (const f of mdFiles) {
         try {
           const content = await this.app.vault.read(f);
@@ -193,45 +141,54 @@ export class StatsService {
         }
       }
 
-      // Ensure basic exists so stats-only saves don't create configs without basic metadata
       cfg.basic = cfg.basic || { title: book.name };
       cfg.stats = cfg.stats || {};
 
-      // Daily tracking: update daily_words, writing_days and average_daily_words
       const today = this.getTodayKey();
       cfg.stats.daily_words = cfg.stats.daily_words || {};
 
-      const previousTotal = Number(cfg.stats.total_words || 0);
-      const delta = Math.max(0, total - previousTotal);
-
-      if (delta > 0) {
-        cfg.stats.daily_words[today] = (cfg.stats.daily_words[today] || 0) + delta;
+      // FIX: Daily word tracking via snapshot, not cumulative delta.
+      //
+      // Previous approach: delta = total - previousTotal; daily_words[today] += delta
+      // Problem: repeated saves accumulate deltas on top of each other, inflating daily stats.
+      //
+      // New approach: store today's opening snapshot (words at start of day).
+      // daily_words[today] = total - snapshot_words_today
+      // This is always an accurate "words written today" regardless of how many times we save.
+      cfg.stats.daily_snapshots = cfg.stats.daily_snapshots || {};
+      if (!cfg.stats.daily_snapshots[today]) {
+        // First compute of the day: record yesterday's total as today's opening snapshot.
+        // Use the stored total_words from the previous save as the snapshot baseline.
+        const previousTotal = Number(cfg.stats.total_words || 0);
+        cfg.stats.daily_snapshots[today] = previousTotal;
       }
 
-      // Writing days = number of days with >0 words
-      cfg.stats.writing_days = Object.keys(cfg.stats.daily_words).length;
+      const todaySnapshot = cfg.stats.daily_snapshots[today];
+      const wordsToday = Math.max(0, total - todaySnapshot);
+      cfg.stats.daily_words[today] = wordsToday;
 
-      // Daily average (ONLY days written)
-      const sumDaily = Object.values(cfg.stats.daily_words).reduce((a, b) => a + b, 0);
-      cfg.stats.average_daily_words = cfg.stats.writing_days > 0 
-        ? Math.round(sumDaily / cfg.stats.writing_days) 
+      // Writing days = number of days where words written > 0
+      cfg.stats.writing_days = Object.values(cfg.stats.daily_words).filter(v => v > 0).length;
+
+      // Daily average over days with actual writing
+      const writtenDays = Object.values(cfg.stats.daily_words).filter(v => v > 0);
+      const sumDaily = writtenDays.reduce((a, b) => a + b, 0);
+      cfg.stats.average_daily_words = writtenDays.length > 0
+        ? Math.round(sumDaily / writtenDays.length)
         : 0;
 
-      // Persist main stats
       cfg.stats.total_words = total;
       cfg.stats.per_chapter = perChapter;
       cfg.stats.last_writing_date = today;
       cfg.stats.last_modified = new Date().toISOString();
-      
-      // progress by words relative to target_total_words if present
+
       const target = (cfg.stats.target_total_words && Number(cfg.stats.target_total_words)) || 0;
-      cfg.stats.progress_by_words = target > 0 
-        ? Math.round((total / target) * 10000) / 100 
-        : 0; // percent with 2 decimals
-      
-      // progress by chapter: fraction of chapters with >0 words
+      cfg.stats.progress_by_words = target > 0
+        ? Math.round((total / target) * 10000) / 100
+        : 0;
+
       const totalCh = Object.keys(perChapter).length;
-      const doneCh = Object.values(perChapter).filter((n) => n > 0).length;
+      const doneCh = Object.values(perChapter).filter(n => n > 0).length;
       cfg.stats.progress_by_chapter = {
         completed: doneCh,
         total: totalCh,
@@ -246,13 +203,6 @@ export class StatsService {
     }
   }
 
-  /**
-   * Sync chapter structure into stats baseline.
-   * - Adds missing chapters with 0 words
-   * - Removes deleted chapters from stats
-   * - Removes excluded chapters from stats
-   * DOES NOT recompute stats.
-   */
   async syncChapterStatsBaseline(book) {
     try {
       let cfg = (await this.configService.loadBookConfig(book)) || {};
@@ -260,8 +210,6 @@ export class StatsService {
       cfg.stats.per_chapter = cfg.stats.per_chapter || {};
 
       const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
-      
-      // Build explicit include/exclude overrides from config tree
       const overrides = this.buildStatsOverrideSets(cfg.structure?.tree || []);
 
       const folder = this.app.vault.getAbstractFileByPath(book.path);
@@ -269,17 +217,15 @@ export class StatsService {
 
       const allMdFiles = this.collectMarkdownFiles(folder);
       const mdFiles = this.filterFilesByProjectType(allMdFiles, book.path, projectType, overrides);
-      
-      const currentPaths = new Set(mdFiles.map((f) => f.path.replace(book.path + '/', '')));
 
-      // add new chapters at 0
+      const currentPaths = new Set(mdFiles.map(f => f.path.replace(book.path + '/', '')));
+
       for (const relPath of currentPaths) {
         if (!(relPath in cfg.stats.per_chapter)) {
           cfg.stats.per_chapter[relPath] = 0;
         }
       }
 
-      // remove deleted chapters and excluded chapters
       for (const storedPath of Object.keys(cfg.stats.per_chapter)) {
         if (!currentPaths.has(storedPath)) {
           delete cfg.stats.per_chapter[storedPath];
