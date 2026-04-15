@@ -252,6 +252,7 @@ export class FolioView extends ItemView {
       // Get the actual file/folder from vault
       const fullPath = `${book.path}/${node.path}`;
       const vaultItem = this.plugin.app.vault.getAbstractFileByPath(fullPath);
+      const activeFilePath = this.plugin.activeFilePath || this.plugin.app.workspace.getActiveFile?.()?.path || null;
       
       // Skip if file/folder doesn't exist in vault
       if (!vaultItem) {
@@ -264,6 +265,7 @@ export class FolioView extends ItemView {
         const folderRow = parentContainer.createDiv("folio-tree-folder tree-item is-folder");
         folderRow.dataset.path = fullPath;
         folderRow.dataset.nodeId = node.id;
+        folderRow.classList.toggle('has-active-descendant', !!activeFilePath && activeFilePath.startsWith(`${fullPath}/`));
         
         const collapse = folderRow.createSpan({ cls: "folio-tree-toggle" });
         collapse.classList.toggle("is-open", this.plugin.expandedFolders.has(fullPath));
@@ -323,6 +325,7 @@ export class FolioView extends ItemView {
         const fileRow = parentContainer.createDiv("folio-tree-file tree-item is-file");
         fileRow.dataset.path = fullPath;
         fileRow.dataset.nodeId = node.id;
+        fileRow.classList.toggle('is-active', fullPath === activeFilePath);
         
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try { 
@@ -342,6 +345,8 @@ export class FolioView extends ItemView {
         
         fileRow.onclick = (e) => {
           e.stopPropagation();
+          this.plugin.activeFilePath = fullPath;
+          this.plugin.updateActiveFileInViews?.();
           this.plugin.app.workspace.openLinkText(fullPath, "", false);
         };
         
@@ -360,6 +365,7 @@ export class FolioView extends ItemView {
     if (useConfigTree && configTree.length > 0) {
       const sortedTree = [...configTree].sort((a, b) => a.order - b.order);
       sortedTree.forEach(node => renderNodeFromConfig(node, container));
+      this.plugin.updateActiveFileInViews?.();
     } else {
     }
 
@@ -417,6 +423,10 @@ export class FolioView extends ItemView {
       if (!stats) return;
 
       const pad = (n) => (typeof n === 'number' ? n : 0);
+      const formatCount = (n) => {
+        const num = Number(n) || 0;
+        return num.toLocaleString();
+      };
       const formatTarget = (n) => {
         if (!n) return '—';
         const num = Number(n) || 0;
@@ -424,7 +434,11 @@ export class FolioView extends ItemView {
           const k = num / 1000;
           return k % 1 === 0 ? `${Math.round(k)}K` : `${Math.round(k * 10) / 10}K`;
         }
-        return String(num);
+        return formatCount(num);
+      };
+      const formatPercent = (n) => {
+        const rounded = Math.round((Number(n) || 0) * 10) / 10;
+        return `${rounded % 1 === 0 ? Math.round(rounded) : rounded}%`;
       };
 
       // derive values with safe fallbacks
@@ -459,13 +473,11 @@ export class FolioView extends ItemView {
         if (extra && typeof extra === 'function') extra(r);
       };
 
-      row('pencil', 'Today', `${todayCount} words`);
-      // Total words: format as "X / Y" where Y may be 20.0K
-      row('file', 'Total words', `${totalWords} / ${formatTarget(targetWords)}`);
-      row('target', 'Completion', `${(Math.round(completionPct * 100) / 100).toFixed(2)}%`);
+      row('pencil', 'Today', `${formatCount(todayCount)} words`);
+      row('file', 'Total', `${formatCount(totalWords)} / ${formatTarget(targetWords)}`);
+      row('target', 'Completion', formatPercent(completionPct));
       row('clock', 'Writing days', `${writingDays} days`);
-      // use lucide calendar-clock for daily average
-      row('calendar-clock', 'Daily average', `${dailyAvg} words`);
+      row('calendar-clock', 'Daily average', `${formatCount(dailyAvg)} words`);
     } catch (e) {
       console.warn('renderStats failed', e);
     }
@@ -575,21 +587,29 @@ export class FolioView extends ItemView {
 
       /* TOP BAR */
       const topBar = el.createDiv("folio-topbar");
-      const newBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const labelButton = (button, label) => {
+        button.title = label;
+        button.setAttribute('aria-label', label);
+      };
+      const newBtn = topBar.createEl("button", { cls: "folio-top-btn folio-top-new" });
+      labelButton(newBtn, "New Project");
       const newIcon = newBtn.createSpan({ cls: "folio-top-icon" });
       try { setIcon(newIcon, 'edit'); } catch {}
       newBtn.createSpan({ text: "New Project", cls: "folio-top-label" });
 
-      const switchBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const switchBtn = topBar.createEl("button", { cls: "folio-top-btn folio-top-switch" });
+      labelButton(switchBtn, "Switch");
       const switchIcon = switchBtn.createSpan({ cls: "folio-top-icon" });
       try { setIcon(switchIcon, "repeat"); } catch {}
       switchBtn.createSpan({ text: "Switch", cls: "folio-top-label" });
 
-      const manageBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const manageBtn = topBar.createEl("button", { cls: "folio-top-btn folio-top-manage" });
+      labelButton(manageBtn, "Manage");
       const manageIcon = manageBtn.createSpan({ cls: "folio-top-icon" });
       try { setIcon(manageIcon, "library"); } catch {}
       manageBtn.createSpan({ text: "Manage", cls: "folio-top-label" });
       const helpBtn = topBar.createEl("button", { cls: "folio-help-btn" });
+      labelButton(helpBtn, "Help");
       const helpIcon = helpBtn.createSpan({ cls: "folio-help-icon" });
       try { setIcon(helpIcon, "help"); } catch {}
 
@@ -619,11 +639,11 @@ export class FolioView extends ItemView {
         coverEl.addClass('folio-book-cover-placeholder');
         try {
           const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
-          setIcon(iconEl, 'square-plus');
+          setIcon(iconEl, 'book-open');
         } catch {}
         const titleBlock = headerEl.createDiv("folio-book-title-block");
         titleBlock.createEl("div", { cls: "folio-book-title", text: "No active project" });
-        titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "(Select or create a project)" });
+        titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "Create or switch to a project" });
 
         // metadata placeholder (empty)
         const metaBlock = el.createDiv("folio-book-meta folio-book-info");
@@ -637,34 +657,21 @@ export class FolioView extends ItemView {
         // empty structure area with welcome message
         const structureEl = el.createDiv("folio-structure");
         const emptyState = structureEl.createDiv({ cls: "folio-empty-state" });
-        const emptyTitle = emptyState.createDiv({ cls: "folio-empty-title", text: "👋 Welcome to Folio 📜" });
+        const emptyIconEl = emptyState.createDiv({ cls: "folio-empty-icon" });
+        try { setIcon(emptyIconEl, 'book-open'); } catch {}
+        emptyState.createDiv({ cls: "folio-empty-title", text: "No active project" });
         emptyState.createDiv({
           cls: "folio-empty-subtitle",
-          text: 'Click "New Project" above to create a new project. Click "(?)" above for basic information.'
+          text: 'Use New Project to begin, or Switch to open an existing project.'
         });
 
-        // minimal stats placeholder so the header area doesn't look empty
-        try {
-          const statsEl = el.createDiv('folio-stats');
-          const makeRow = (label, value) => {
-            const r = statsEl.createDiv('folio-stat-row');
-            const left = r.createDiv({ cls: 'folio-stat-left' });
-            left.createSpan({ cls: 'folio-stat-icon' });
-            left.createSpan({ text: label, cls: 'folio-stat-label' });
-            r.createSpan({ text: value, cls: 'folio-stat-value' });
-          };
-          makeRow('Today', '—');
-          makeRow('Total words', '— / —');
-          makeRow('Completion', '—');
-          makeRow('Writing days', '—');
-          makeRow('Daily average', '—');
-        } catch (e) { /* ignore */ }
+        // minimal stats placeholder — no fake rows, just a quiet footer
+        el.createDiv({ cls: 'folio-stats folio-stats-empty', text: 'Project stats will appear here.' });
 
         return;
       }
 
-      // If the book folder was removed from disk, render a neutral header
-      // rather than a CTA. The main view stays read-only and neutral.
+      // If the book folder was removed from disk, render a neutral header.
       const bookFolderCheck = this.plugin.app.vault.getAbstractFileByPath(book.path);
       if (!bookFolderCheck || !(bookFolderCheck instanceof TFolder)) {
         const headerEl = el.createDiv("folio-book-header");
@@ -673,13 +680,12 @@ export class FolioView extends ItemView {
         coverEl.addClass('folio-book-cover-placeholder');
         try {
           const iconEl = coverEl.createDiv({ cls: 'folio-book-cover-icon' });
-          setIcon(iconEl, 'square-plus');
+          setIcon(iconEl, 'alert-circle');
         } catch {}
         const titleBlock = headerEl.createDiv("folio-book-title-block");
-        titleBlock.createEl("div", { cls: "folio-book-title", text: "No active project" });
-        titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "(Project folder missing)" });
+        titleBlock.createEl("div", { cls: "folio-book-title", text: book.name || "Unknown project" });
+        titleBlock.createEl("div", { cls: "folio-book-subtitle", text: "Project folder not found" });
 
-        // metadata placeholder (empty)
         const metaBlock = el.createDiv("folio-book-meta folio-book-info");
         const authorRow = metaBlock.createDiv('folio-meta-row');
         authorRow.createEl('div', { text: 'Author', cls: 'folio-meta-label' });
@@ -688,27 +694,14 @@ export class FolioView extends ItemView {
         descRow.createEl('div', { text: 'Description', cls: 'folio-meta-label' });
         descRow.createEl('div', { text: '—', cls: 'folio-meta-value folio-meta-desc' });
 
-        // empty structure area
         const structureEl = el.createDiv("folio-structure");
-        structureEl.createEl('p', { text: '(Book folder missing on disk)' });
+        const missingState = structureEl.createDiv({ cls: "folio-empty-state" });
+        const missingIconEl = missingState.createDiv({ cls: "folio-empty-icon" });
+        try { setIcon(missingIconEl, 'folder-x'); } catch {}
+        missingState.createDiv({ cls: "folio-empty-title", text: "Folder not found" });
+        missingState.createDiv({ cls: "folio-empty-subtitle", text: "The project folder could not be found on disk. It may have been moved or deleted." });
 
-        // minimal stats placeholder for missing-folder state
-        try {
-          const statsEl = el.createDiv('folio-stats');
-          const makeRow = (label, value) => {
-            const r = statsEl.createDiv('folio-stat-row');
-            const left = r.createDiv({ cls: 'folio-stat-left' });
-            left.createSpan({ cls: 'folio-stat-icon' });
-            left.createSpan({ text: label, cls: 'folio-stat-label' });
-            r.createSpan({ text: value, cls: 'folio-stat-value' });
-          };
-          makeRow('Today', '—');
-          makeRow('Total words', '— / —');
-          makeRow('Completion', '—');
-          makeRow('Writing days', '—');
-          makeRow('Daily average', '—');
-        } catch (e) { /* ignore */ }
-
+        el.createDiv({ cls: 'folio-stats folio-stats-empty', text: 'Stats unavailable until the project folder is restored.' });
         return;
       }
 

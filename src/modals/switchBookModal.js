@@ -1,16 +1,10 @@
 import { Modal, setIcon } from 'obsidian';
-import { PROJECT_TYPES } from '../constants/index.js';
-
-function getProjectTypeIcon(plugin, projectType) {
-  const templates = plugin.settings?.projectTemplates || [];
-  const template = templates.find(t => t.id === projectType);
-  if (template?.icon) return template.icon;
-  if (projectType === PROJECT_TYPES.BOOK) return 'book';
-  if (projectType === PROJECT_TYPES.SCRIPT) return 'tv';
-  if (projectType === PROJECT_TYPES.FILM) return 'clapperboard';
-  if (projectType === PROJECT_TYPES.ESSAY) return 'newspaper';
-  return 'book';
-}
+import {
+  formatWordTarget,
+  getProjectSummary,
+  getProjectTypeIcon,
+  projectMatchesFilter,
+} from './projectListUtils.js';
 
 export class SwitchBookModal extends Modal {
   constructor(plugin) {
@@ -26,21 +20,11 @@ export class SwitchBookModal extends Modal {
 
     const search = contentEl.createEl("input", {
       type: "text",
-      placeholder: "Search books...",
+      placeholder: "Search projects...",
       cls: 'folio-manage-search'
     });
 
     const list = contentEl.createDiv({ cls: 'folio-manage-list' });
-
-    const formatTarget = (n) => {
-      if (!n) return '—';
-      const num = Number(n) || 0;
-      if (num >= 1000) {
-        const k = num / 1000;
-        return k % 1 === 0 ? `${Math.round(k)}K` : `${Math.round(k * 10) / 10}K`;
-      }
-      return String(num);
-    };
 
     const renderList = async (filter) => {
       list.empty();
@@ -52,24 +36,9 @@ export class SwitchBookModal extends Modal {
 
         let cfg = {};
         try { cfg = (await this.plugin.loadBookConfig(book)) || {}; } catch {}
+        const summary = getProjectSummary(book, cfg);
 
-        const subtitle = cfg?.basic?.subtitle || '';
-        const authors = Array.isArray(cfg?.basic?.author) ? cfg.basic.author.join(', ') : (cfg?.basic?.author || '');
-        const desc = cfg?.basic?.desc || cfg?.basic?.description || '';
-        const totalWords = cfg?.stats?.total_words || 0;
-        const targetWords = Number(cfg?.stats?.target_total_words || cfg?.basic?.targetWordCount || 0) || 0;
-        const displayTitle = (cfg && cfg.basic && cfg.basic.title) ? cfg.basic.title : (book.name || '');
-
-        const q = filter ? String(filter).trim().toLowerCase() : '';
-        if (q) {
-          const fields = [displayTitle || book.name || '', subtitle || '', authors || '', desc || ''];
-          const matches = fields.some(f => {
-            const s = String(f).toLowerCase();
-            if (s.startsWith(q)) return true;
-            return s.split(/\s+/).some(w => w.startsWith(q));
-          });
-          if (!matches) continue;
-        }
+        if (!projectMatchesFilter(summary, filter)) continue;
 
         const row = list.createDiv({ cls: 'folio-switch-book-row' });
         const leftCol = row.createDiv({ cls: 'folio-switch-left' });
@@ -78,16 +47,15 @@ export class SwitchBookModal extends Modal {
         const titleRow = leftCol.createDiv({ cls: 'folio-switch-title-row' });
 
         const iconEl = titleRow.createSpan({ cls: 'folio-switch-icon' });
-        const projectType = cfg?.basic?.projectType || PROJECT_TYPES.BOOK;
-        setIcon(iconEl, getProjectTypeIcon(this.plugin, projectType));
+        setIcon(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
 
-        titleRow.createSpan({ text: displayTitle || book.name || 'Untitled', cls: 'folio-switch-title' });
-        if (subtitle) {
+        titleRow.createSpan({ text: summary.displayTitle || book.name || 'Untitled', cls: 'folio-switch-title' });
+        if (summary.subtitle) {
           titleRow.createSpan({ text: ' - ', cls: 'folio-switch-dash' });
-          titleRow.createSpan({ text: subtitle, cls: 'folio-switch-subtitle' });
+          titleRow.createSpan({ text: summary.subtitle, cls: 'folio-switch-subtitle' });
         }
 
-        const progressPct = (targetWords > 0) ? Math.round((Number(totalWords) / Number(targetWords)) * 100) : '—';
+        const progressText = summary.targetWords > 0 ? `${Math.round((summary.totalWords / summary.targetWords) * 100)}%` : '—';
         let createdDate = '—';
         let lastMod = '—';
         try {
@@ -99,12 +67,13 @@ export class SwitchBookModal extends Modal {
           if (lm) lastMod = (new Date(lm)).toLocaleString();
         } catch {}
 
-        leftCol.createDiv({ text: `Author: ${authors || '—'} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: 'folio-switch-meta' });
+        leftCol.createDiv({ text: `Author: ${summary.authors || '—'} | Progress: ${progressText} | Words: ${formatWordTarget(summary.totalWords)}`, cls: 'folio-switch-meta' });
         leftCol.createDiv({ text: `Created: ${createdDate}`, cls: 'folio-switch-meta-second' });
         leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: 'folio-switch-meta-second' });
 
         const selectBtn = rightCol.createEl('button', { text: 'Select', cls: 'mod-cta' });
-        selectBtn.onclick = async () => {
+        selectBtn.onclick = async (evt) => {
+          evt?.stopPropagation();
           this.plugin.activeBook = book;
           try {
             this.plugin.settings.lastActiveBookPath = book.path;
@@ -116,6 +85,10 @@ export class SwitchBookModal extends Modal {
           this.close();
         };
         row.onclick = () => selectBtn.click();
+      }
+
+      if (!list.children || list.children.length === 0) {
+        list.createDiv({ cls: 'folio-manage-empty' }).createEl('div', { text: 'No projects found' });
       }
     };
 

@@ -185,7 +185,7 @@ var init_projectTypeSelectorModal = __esm({
         const { contentEl } = this;
         contentEl.empty();
         contentEl.addClass("folio-project-type-selector-modal");
-        contentEl.createEl("h2", { text: "Select Project Type" });
+        contentEl.createEl("h2", { text: "Select project type" });
         const optionsContainer = contentEl.createDiv({ cls: "folio-project-type-options" });
         const templates = this.templates || [
           { id: "book", name: "Book", icon: "book", order: 1, description: "Novel or written work" },
@@ -245,28 +245,27 @@ var init_newBookModal = __esm({
         var _a, _b;
         const { contentEl } = this;
         contentEl.empty();
-        contentEl.createEl("h2", { text: "Create new project" });
+        contentEl.createEl("h2", { text: "Create project" });
         const makeDivider = () => contentEl.createDiv({ cls: "folio-modal-divider" });
         makeDivider();
         const typeRow = contentEl.createDiv({ cls: "folio-modal-row" });
         const typeLeft = typeRow.createDiv({ cls: "folio-modal-left" });
-        typeLeft.createEl("div", { text: "Project Type", cls: "folio-modal-row-title" });
-        typeLeft.createEl("div", { text: "Select the type of project", cls: "folio-modal-row-sub" });
+        typeLeft.createEl("div", { text: "Project type", cls: "folio-modal-row-title" });
+        typeLeft.createEl("div", { text: "Choose the structure Folio should create.", cls: "folio-modal-row-sub" });
         const typeRight = typeRow.createDiv({ cls: "folio-modal-right" });
         const templates = ((_a = this.plugin.settings) == null ? void 0 : _a.projectTemplates) || [];
         const typeNames = {};
         templates.forEach((t) => {
-          const emoji = { book: "\u{1F4D8}", script: "\u{1F4FA}", film: "\u{1F3AC}", essay: "\u{1F4F0}" }[t.id] || "\u{1F4C4}";
-          typeNames[t.id] = `${emoji} ${t.name}`;
+          typeNames[t.id] = t.name;
         });
         if (!typeNames[PROJECT_TYPES.BOOK])
-          typeNames[PROJECT_TYPES.BOOK] = "\u{1F4D8} Book";
+          typeNames[PROJECT_TYPES.BOOK] = "Book";
         if (!typeNames[PROJECT_TYPES.SCRIPT])
-          typeNames[PROJECT_TYPES.SCRIPT] = "\u{1F4FA} TV Show";
+          typeNames[PROJECT_TYPES.SCRIPT] = "TV Show";
         if (!typeNames[PROJECT_TYPES.FILM])
-          typeNames[PROJECT_TYPES.FILM] = "\u{1F3AC} Film";
+          typeNames[PROJECT_TYPES.FILM] = "Film";
         if (!typeNames[PROJECT_TYPES.ESSAY])
-          typeNames[PROJECT_TYPES.ESSAY] = "\u{1F4F0} Essay";
+          typeNames[PROJECT_TYPES.ESSAY] = "Essay";
         const typeButton = typeRight.createEl("button", { text: "Select", cls: "folio-project-type-button" });
         const updateButtonText = () => {
           typeButton.textContent = typeNames[this.selectedProjectType] || "Select type";
@@ -283,7 +282,7 @@ var init_newBookModal = __esm({
         const coverRow = contentEl.createDiv({ cls: "folio-modal-row" });
         const coverLeft = coverRow.createDiv({ cls: "folio-modal-left" });
         coverLeft.createEl("div", { text: "Cover", cls: "folio-modal-row-title" });
-        coverLeft.createEl("div", { text: "Select cover image (optional)", cls: "folio-modal-row-sub" });
+        coverLeft.createEl("div", { text: "Optional image for this project.", cls: "folio-modal-row-sub" });
         const coverRight = coverRow.createDiv({ cls: "folio-modal-right" });
         const coverBtn = coverRight.createEl("button", { text: "Select Image" });
         this._selectedCover = null;
@@ -301,8 +300,8 @@ var init_newBookModal = __esm({
               reader.onload = (ev) => {
                 const ab = ev.target.result;
                 this._selectedCover = { name: file.name, data: ab };
-                const label = file.name.length > 24 ? `${file.name.slice(0, 22)}\u2026` : file.name;
-                coverBtn.textContent = `\u2713 ${label}`;
+                const label = file.name.length > 24 ? `${file.name.slice(0, 22)}...` : file.name;
+                coverBtn.textContent = `Selected: ${label}`;
               };
               reader.readAsArrayBuffer(file);
             } catch (err) {
@@ -317,7 +316,7 @@ var init_newBookModal = __esm({
         const titleRow = contentEl.createDiv({ cls: "folio-modal-row" });
         const titleLeft = titleRow.createDiv({ cls: "folio-modal-left" });
         titleLeft.createEl("div", { text: "Title", cls: "folio-modal-row-title" });
-        titleLeft.createEl("div", { text: "Please enter project title", cls: "folio-modal-row-sub" });
+        titleLeft.createEl("div", { text: "Used for the folder and project name.", cls: "folio-modal-row-sub" });
         const titleRight = titleRow.createDiv({ cls: "folio-modal-right" });
         const fieldWidth = "min(320px, 60%)";
         const titleInput = titleRight.createEl("input", { type: "text", placeholder: "Project title", cls: "folio-modal-input" });
@@ -340,9 +339,9 @@ var init_newBookModal = __esm({
         const targetRow = contentEl.createDiv({ cls: "folio-modal-row" });
         const targetLeft = targetRow.createDiv({ cls: "folio-modal-left" });
         targetLeft.createEl("div", { text: "Target word count", cls: "folio-modal-row-title" });
-        targetLeft.createEl("div", { text: "Set estimated total word count (in 1k)", cls: "folio-modal-row-sub" });
+        targetLeft.createEl("div", { text: "Optional total goal. Use 80000 or 80 for 80k.", cls: "folio-modal-row-sub" });
         const targetRight = targetRow.createDiv({ cls: "folio-modal-right" });
-        const targetInput = targetRight.createEl("input", { type: "text", placeholder: "e.g., 20 (20k) or 20000", cls: "folio-modal-input" });
+        const targetInput = targetRight.createEl("input", { type: "text", placeholder: "e.g. 80000 or 80", cls: "folio-modal-input" });
         try {
           targetInput.style.width = fieldWidth;
         } catch (e) {
@@ -351,7 +350,7 @@ var init_newBookModal = __esm({
         const authorRow = contentEl.createDiv({ cls: "folio-modal-row" });
         const authorLeft = authorRow.createDiv({ cls: "folio-modal-left" });
         authorLeft.createEl("div", { text: "Author", cls: "folio-modal-row-title" });
-        authorLeft.createEl("div", { text: "Enter author names, separate multiple authors with commas", cls: "folio-modal-row-sub" });
+        authorLeft.createEl("div", { text: "Separate multiple authors with commas.", cls: "folio-modal-row-sub" });
         const authorRight = authorRow.createDiv({ cls: "folio-modal-right" });
         const authorInput = authorRight.createEl("input", { type: "text", placeholder: "Author", cls: "folio-modal-input" });
         const defaultAuthor = ((_b = this.plugin.settings) == null ? void 0 : _b.defaultAuthor) || "";
@@ -366,7 +365,7 @@ var init_newBookModal = __esm({
         const descRow = contentEl.createDiv({ cls: "folio-modal-row" });
         const descLeft = descRow.createDiv({ cls: "folio-modal-left" });
         descLeft.createEl("div", { text: "Description", cls: "folio-modal-row-title" });
-        descLeft.createEl("div", { text: "Please enter book description", cls: "folio-modal-row-sub" });
+        descLeft.createEl("div", { text: "Optional note for the project overview.", cls: "folio-modal-row-sub" });
         const descRight = descRow.createDiv({ cls: "folio-modal-right" });
         const descInput = descRight.createEl("textarea", { placeholder: "Book description", cls: "folio-modal-textarea" });
         try {
@@ -376,7 +375,9 @@ var init_newBookModal = __esm({
         }
         makeDivider();
         const actions = contentEl.createDiv({ cls: "folio-modal-actions" });
+        const cancelBtn = actions.createEl("button", { text: "Cancel", cls: "folio-modal-cancel" });
         const createBtn = actions.createEl("button", { text: "Create", cls: "mod-cta folio-modal-create" });
+        cancelBtn.onclick = () => this.close();
         createBtn.onclick = async () => {
           var _a2, _b2;
           const title = titleInput.value.trim();
@@ -522,11 +523,7 @@ var init_newBookModal = __esm({
   }
 });
 
-// src/modals/switchBookModal.js
-var switchBookModal_exports = {};
-__export(switchBookModal_exports, {
-  SwitchBookModal: () => SwitchBookModal
-});
+// src/modals/projectListUtils.js
 function getProjectTypeIcon(plugin, projectType) {
   var _a;
   const templates = ((_a = plugin.settings) == null ? void 0 : _a.projectTemplates) || [];
@@ -543,11 +540,90 @@ function getProjectTypeIcon(plugin, projectType) {
     return "newspaper";
   return "book";
 }
+function getProjectTypeLabel(projectType) {
+  if (projectType === PROJECT_TYPES.BOOK)
+    return "Book";
+  if (projectType === PROJECT_TYPES.SCRIPT)
+    return "TV Show";
+  if (projectType === PROJECT_TYPES.FILM)
+    return "Film";
+  if (projectType === PROJECT_TYPES.ESSAY)
+    return "Essay";
+  return "Book";
+}
+function formatWordCount(value) {
+  const num = Number(value) || 0;
+  return num.toLocaleString();
+}
+function formatWordTarget(value) {
+  if (!value)
+    return "\u2014";
+  const num = Number(value) || 0;
+  if (num >= 1e3) {
+    const k = num / 1e3;
+    return k % 1 === 0 ? `${Math.round(k)}K` : `${Math.round(k * 10) / 10}K`;
+  }
+  return formatWordCount(num);
+}
+function truncateToWords(text, wordLimit) {
+  if (!text)
+    return "\u2014";
+  const words = text.trim().split(/\s+/);
+  return words.length <= wordLimit ? text : `${words.slice(0, wordLimit).join(" ")}...`;
+}
+function getProjectSummary(book, cfg = {}) {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+  const subtitle = ((_a = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _a.subtitle) || "";
+  const authors = Array.isArray((_b = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _b.author) ? cfg.basic.author.join(", ") : ((_c = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _c.author) || "";
+  const desc = ((_d = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _d.desc) || ((_e = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _e.description) || "";
+  const totalWords = Number(((_f = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _f.total_words) || 0) || 0;
+  const targetWords = Number(((_g = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _g.target_total_words) || ((_h = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _h.targetWordCount) || 0) || 0;
+  const displayTitle = ((_i = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _i.title) || (book == null ? void 0 : book.name) || "";
+  const projectType = ((_j = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _j.projectType) || PROJECT_TYPES.BOOK;
+  return {
+    authors,
+    desc,
+    displayTitle,
+    projectType,
+    subtitle,
+    targetWords,
+    totalWords,
+    typeLabel: getProjectTypeLabel(projectType)
+  };
+}
+function projectMatchesFilter(summary, filter) {
+  const q = filter ? String(filter).trim().toLowerCase() : "";
+  if (!q)
+    return true;
+  const fields = [
+    summary.displayTitle || "",
+    summary.subtitle || "",
+    summary.authors || "",
+    summary.desc || ""
+  ];
+  return fields.some((field) => {
+    const text = String(field).toLowerCase();
+    if (text.startsWith(q))
+      return true;
+    return text.split(/\s+/).some((word) => word.startsWith(q));
+  });
+}
+var init_projectListUtils = __esm({
+  "src/modals/projectListUtils.js"() {
+    init_constants();
+  }
+});
+
+// src/modals/switchBookModal.js
+var switchBookModal_exports = {};
+__export(switchBookModal_exports, {
+  SwitchBookModal: () => SwitchBookModal
+});
 var import_obsidian6, SwitchBookModal;
 var init_switchBookModal = __esm({
   "src/modals/switchBookModal.js"() {
     import_obsidian6 = require("obsidian");
-    init_constants();
+    init_projectListUtils();
     SwitchBookModal = class extends import_obsidian6.Modal {
       constructor(plugin) {
         super(plugin.app);
@@ -559,22 +635,12 @@ var init_switchBookModal = __esm({
         contentEl.createEl("h2", { text: "Switch project" });
         const search = contentEl.createEl("input", {
           type: "text",
-          placeholder: "Search books...",
+          placeholder: "Search projects...",
           cls: "folio-manage-search"
         });
         const list = contentEl.createDiv({ cls: "folio-manage-list" });
-        const formatTarget = (n) => {
-          if (!n)
-            return "\u2014";
-          const num = Number(n) || 0;
-          if (num >= 1e3) {
-            const k = num / 1e3;
-            return k % 1 === 0 ? `${Math.round(k)}K` : `${Math.round(k * 10) / 10}K`;
-          }
-          return String(num);
-        };
         const renderList = async (filter) => {
-          var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m;
+          var _a, _b, _c, _d;
           list.empty();
           const seen = /* @__PURE__ */ new Set();
           for (const book of this.plugin.booksIndex) {
@@ -588,56 +654,41 @@ var init_switchBookModal = __esm({
               cfg = await this.plugin.loadBookConfig(book) || {};
             } catch (e) {
             }
-            const subtitle = ((_a = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _a.subtitle) || "";
-            const authors = Array.isArray((_b = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _b.author) ? cfg.basic.author.join(", ") : ((_c = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _c.author) || "";
-            const desc = ((_d = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _d.desc) || ((_e = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _e.description) || "";
-            const totalWords = ((_f = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _f.total_words) || 0;
-            const targetWords = Number(((_g = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _g.target_total_words) || ((_h = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _h.targetWordCount) || 0) || 0;
-            const displayTitle = cfg && cfg.basic && cfg.basic.title ? cfg.basic.title : book.name || "";
-            const q = filter ? String(filter).trim().toLowerCase() : "";
-            if (q) {
-              const fields = [displayTitle || book.name || "", subtitle || "", authors || "", desc || ""];
-              const matches = fields.some((f) => {
-                const s = String(f).toLowerCase();
-                if (s.startsWith(q))
-                  return true;
-                return s.split(/\s+/).some((w) => w.startsWith(q));
-              });
-              if (!matches)
-                continue;
-            }
+            const summary = getProjectSummary(book, cfg);
+            if (!projectMatchesFilter(summary, filter))
+              continue;
             const row = list.createDiv({ cls: "folio-switch-book-row" });
             const leftCol = row.createDiv({ cls: "folio-switch-left" });
             const rightCol = row.createDiv({ cls: "folio-switch-right" });
             const titleRow = leftCol.createDiv({ cls: "folio-switch-title-row" });
             const iconEl = titleRow.createSpan({ cls: "folio-switch-icon" });
-            const projectType = ((_i = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _i.projectType) || PROJECT_TYPES.BOOK;
-            (0, import_obsidian6.setIcon)(iconEl, getProjectTypeIcon(this.plugin, projectType));
-            titleRow.createSpan({ text: displayTitle || book.name || "Untitled", cls: "folio-switch-title" });
-            if (subtitle) {
+            (0, import_obsidian6.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
+            titleRow.createSpan({ text: summary.displayTitle || book.name || "Untitled", cls: "folio-switch-title" });
+            if (summary.subtitle) {
               titleRow.createSpan({ text: " - ", cls: "folio-switch-dash" });
-              titleRow.createSpan({ text: subtitle, cls: "folio-switch-subtitle" });
+              titleRow.createSpan({ text: summary.subtitle, cls: "folio-switch-subtitle" });
             }
-            const progressPct = targetWords > 0 ? Math.round(Number(totalWords) / Number(targetWords) * 100) : "\u2014";
+            const progressText = summary.targetWords > 0 ? `${Math.round(summary.totalWords / summary.targetWords * 100)}%` : "\u2014";
             let createdDate = "\u2014";
             let lastMod = "\u2014";
             try {
-              const created = ((_j = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _j.created_at) || ((_k = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _k.created_at) || "";
+              const created = ((_a = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _a.created_at) || ((_b = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _b.created_at) || "";
               if (created)
                 createdDate = new Date(created).toLocaleString();
             } catch (e) {
             }
             try {
-              const lm = ((_l = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _l.last_modified) || ((_m = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _m.lastModified) || "";
+              const lm = ((_c = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _c.last_modified) || ((_d = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _d.lastModified) || "";
               if (lm)
                 lastMod = new Date(lm).toLocaleString();
             } catch (e) {
             }
-            leftCol.createDiv({ text: `Author: ${authors || "\u2014"} | Progress: ${progressPct}% | Words: ${formatTarget(totalWords)}`, cls: "folio-switch-meta" });
+            leftCol.createDiv({ text: `Author: ${summary.authors || "\u2014"} | Progress: ${progressText} | Words: ${formatWordTarget(summary.totalWords)}`, cls: "folio-switch-meta" });
             leftCol.createDiv({ text: `Created: ${createdDate}`, cls: "folio-switch-meta-second" });
             leftCol.createDiv({ text: `Last modified: ${lastMod}`, cls: "folio-switch-meta-second" });
             const selectBtn = rightCol.createEl("button", { text: "Select", cls: "mod-cta" });
-            selectBtn.onclick = async () => {
+            selectBtn.onclick = async (evt) => {
+              evt == null ? void 0 : evt.stopPropagation();
               this.plugin.activeBook = book;
               try {
                 this.plugin.settings.lastActiveBookPath = book.path;
@@ -649,6 +700,9 @@ var init_switchBookModal = __esm({
               this.close();
             };
             row.onclick = () => selectBtn.click();
+          }
+          if (!list.children || list.children.length === 0) {
+            list.createDiv({ cls: "folio-manage-empty" }).createEl("div", { text: "No projects found" });
           }
         };
         search.addEventListener("input", (e) => renderList(e.target.value));
@@ -1029,29 +1083,13 @@ var manageBooksModal_exports = {};
 __export(manageBooksModal_exports, {
   ManageBooksModal: () => ManageBooksModal
 });
-function getProjectTypeIcon2(plugin, projectType) {
-  var _a;
-  const templates = ((_a = plugin.settings) == null ? void 0 : _a.projectTemplates) || [];
-  const template = templates.find((t) => t.id === projectType);
-  if (template == null ? void 0 : template.icon)
-    return template.icon;
-  if (projectType === PROJECT_TYPES.BOOK)
-    return "book";
-  if (projectType === PROJECT_TYPES.SCRIPT)
-    return "tv";
-  if (projectType === PROJECT_TYPES.FILM)
-    return "clapperboard";
-  if (projectType === PROJECT_TYPES.ESSAY)
-    return "newspaper";
-  return "book";
-}
 var import_obsidian9, ManageBooksModal;
 var init_manageBooksModal = __esm({
   "src/modals/manageBooksModal.js"() {
     import_obsidian9 = require("obsidian");
-    init_constants();
     init_confirmModal();
     init_editBookModal();
+    init_projectListUtils();
     ManageBooksModal = class extends import_obsidian9.Modal {
       constructor(plugin) {
         super(plugin.app);
@@ -1065,22 +1103,11 @@ var init_manageBooksModal = __esm({
         contentEl.createEl("h2", { text: "Manage projects" });
         const search = contentEl.createEl("input", {
           type: "text",
-          placeholder: "Search books...",
+          placeholder: "Search projects...",
           cls: "folio-manage-search"
         });
         const list = contentEl.createDiv({ cls: "folio-manage-list" });
-        const formatTarget = (n) => {
-          if (!n)
-            return "\u2014";
-          const num = Number(n) || 0;
-          if (num >= 1e3) {
-            const k = num / 1e3;
-            return k % 1 === 0 ? `${Math.round(k)}K` : `${Math.round(k * 10) / 10}K`;
-          }
-          return String(num);
-        };
         const renderList = async (filter) => {
-          var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
           list.empty();
           const seen = /* @__PURE__ */ new Set();
           for (const book of this.plugin.booksIndex) {
@@ -1094,24 +1121,9 @@ var init_manageBooksModal = __esm({
               cfg = await this.plugin.loadBookConfig(book) || {};
             } catch (e) {
             }
-            const subtitle = ((_a = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _a.subtitle) || "";
-            const authors = Array.isArray((_b = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _b.author) ? cfg.basic.author.join(", ") : ((_c = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _c.author) || "";
-            const desc = ((_d = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _d.desc) || ((_e = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _e.description) || "";
-            const totalWords = ((_f = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _f.total_words) || 0;
-            const targetWords = Number(((_g = cfg == null ? void 0 : cfg.stats) == null ? void 0 : _g.target_total_words) || ((_h = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _h.targetWordCount) || 0) || 0;
-            const displayTitle = cfg && cfg.basic && cfg.basic.title ? cfg.basic.title : book.name || "";
-            const q = filter ? String(filter).trim().toLowerCase() : "";
-            if (q) {
-              const fields = [displayTitle || book.name || "", subtitle || "", authors || "", desc || ""];
-              const matches = fields.some((f) => {
-                const s = String(f).toLowerCase();
-                if (s.startsWith(q))
-                  return true;
-                return s.split(/\s+/).some((w) => w.startsWith(q));
-              });
-              if (!matches)
-                continue;
-            }
+            const summary = getProjectSummary(book, cfg);
+            if (!projectMatchesFilter(summary, filter))
+              continue;
             const card = list.createDiv({ cls: "folio-manage-card" });
             const left = card.createDiv({ cls: "folio-manage-left" });
             const right = card.createDiv({ cls: "folio-manage-right" });
@@ -1129,39 +1141,30 @@ var init_manageBooksModal = __esm({
               if (!(coverFile instanceof import_obsidian9.TFile)) {
                 coverWrap.addClass("folio-manage-cover-placeholder");
                 const iconEl = coverWrap.createDiv({ cls: "folio-manage-cover-icon" });
-                const projectType2 = ((_i = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _i.projectType) || PROJECT_TYPES.BOOK;
-                (0, import_obsidian9.setIcon)(iconEl, getProjectTypeIcon2(this.plugin, projectType2));
+                (0, import_obsidian9.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
               }
             } catch (e) {
             }
             const titleRow = right.createDiv({ cls: "folio-manage-title-row" });
-            titleRow.createDiv({ text: displayTitle || book.name || "Untitled", cls: "folio-manage-title" });
+            titleRow.createDiv({ text: summary.displayTitle || book.name || "Untitled", cls: "folio-manage-title" });
             const actions = titleRow.createDiv({ cls: "folio-manage-actions" });
             const deleteBtn = actions.createEl("button", { text: "Delete", cls: "mod-danger" });
             const editBtn = actions.createEl("button", { text: "Edit" });
             const metaGrid = right.createDiv({ cls: "folio-manage-meta-grid" });
             const labelsCol = metaGrid.createDiv({ cls: "folio-manage-labels" });
             const valuesCol = metaGrid.createDiv({ cls: "folio-manage-values" });
-            const projectType = ((_j = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _j.projectType) || PROJECT_TYPES.BOOK;
-            const typeLabel = projectType === PROJECT_TYPES.BOOK ? "Book" : projectType === PROJECT_TYPES.SCRIPT ? "TV Show" : projectType === PROJECT_TYPES.FILM ? "Film" : projectType === PROJECT_TYPES.ESSAY ? "Essay" : "Book";
             labelsCol.createEl("div", { text: "Type", cls: "folio-manage-label" });
-            valuesCol.createEl("div", { text: typeLabel, cls: "folio-manage-author" });
+            valuesCol.createEl("div", { text: summary.typeLabel, cls: "folio-manage-author" });
             labelsCol.createEl("div", { text: "Author", cls: "folio-manage-label" });
-            valuesCol.createEl("div", { text: authors || "\u2014", cls: "folio-manage-author" });
+            valuesCol.createEl("div", { text: summary.authors || "\u2014", cls: "folio-manage-author" });
             labelsCol.createEl("div", { text: "Description", cls: "folio-manage-label" });
-            const truncateToWords = (text, wordLimit) => {
-              if (!text)
-                return "\u2014";
-              const words = text.trim().split(/\s+/);
-              return words.length <= wordLimit ? text : words.slice(0, wordLimit).join(" ") + "...";
-            };
-            valuesCol.createEl("div", { text: truncateToWords(desc, 5), cls: "folio-manage-desc" });
+            valuesCol.createEl("div", { text: truncateToWords(summary.desc, 5), cls: "folio-manage-desc" });
             labelsCol.createEl("div", { text: "Progress", cls: "folio-manage-label" });
-            valuesCol.createEl("div", { text: `${totalWords} / ${formatTarget(targetWords)}`, cls: "folio-manage-progress" });
+            valuesCol.createEl("div", { text: `${summary.totalWords.toLocaleString()} / ${formatWordTarget(summary.targetWords)}`, cls: "folio-manage-progress" });
             deleteBtn.onclick = async () => {
               const modal = new ConfirmModal(this.plugin.app, {
                 title: `Delete ${book.name}`,
-                message: `Delete book "${book.name}" and all its files? This cannot be undone.`,
+                message: `Delete project "${book.name}" and all its files? This cannot be undone.`,
                 confirmText: "Delete",
                 onConfirm: async () => {
                   try {
@@ -1180,7 +1183,7 @@ var init_manageBooksModal = __esm({
             };
           }
           if (!list.children || list.children.length === 0) {
-            list.createDiv({ cls: "folio-manage-empty" }).createEl("div", { text: "No books found" });
+            list.createDiv({ cls: "folio-manage-empty" }).createEl("div", { text: "No projects found" });
           }
         };
         search.addEventListener("input", (e) => renderList(e.target.value));
@@ -4666,7 +4669,7 @@ init_constants();
 // src/views/folioView.js
 var import_obsidian12 = require("obsidian");
 init_constants();
-function getProjectTypeIcon3(plugin, projectType) {
+function getProjectTypeIcon2(plugin, projectType) {
   var _a;
   const templates = ((_a = plugin.settings) == null ? void 0 : _a.projectTemplates) || [];
   const template = templates.find((t) => t.id === projectType);
@@ -4759,7 +4762,7 @@ var FolioView = class extends import_obsidian12.ItemView {
     return isExpanded ? "folder-open" : "folder";
   }
   async renderBookTree(container, bookFolder) {
-    var _a;
+    var _a, _b, _c;
     container.empty();
     const folder = bookFolder instanceof import_obsidian12.TFolder ? bookFolder : this.plugin.app.vault.getAbstractFileByPath(
       (bookFolder == null ? void 0 : bookFolder.path) || bookFolder
@@ -4877,8 +4880,10 @@ var FolioView = class extends import_obsidian12.ItemView {
       });
     };
     const renderNodeFromConfig = (node, parentContainer) => {
+      var _a2, _b2, _c2;
       const fullPath = `${book.path}/${node.path}`;
       const vaultItem = this.plugin.app.vault.getAbstractFileByPath(fullPath);
+      const activeFilePath = this.plugin.activeFilePath || ((_c2 = (_b2 = (_a2 = this.plugin.app.workspace).getActiveFile) == null ? void 0 : _b2.call(_a2)) == null ? void 0 : _c2.path) || null;
       if (!vaultItem) {
         console.warn("Vault item not found:", fullPath, "for node:", node);
         return;
@@ -4887,6 +4892,7 @@ var FolioView = class extends import_obsidian12.ItemView {
         const folderRow = parentContainer.createDiv("folio-tree-folder tree-item is-folder");
         folderRow.dataset.path = fullPath;
         folderRow.dataset.nodeId = node.id;
+        folderRow.classList.toggle("has-active-descendant", !!activeFilePath && activeFilePath.startsWith(`${fullPath}/`));
         const collapse = folderRow.createSpan({ cls: "folio-tree-toggle" });
         collapse.classList.toggle("is-open", this.plugin.expandedFolders.has(fullPath));
         const folderIcon = folderRow.createSpan({ cls: "folio-tree-icon folder-icon" });
@@ -4938,6 +4944,7 @@ var FolioView = class extends import_obsidian12.ItemView {
         const fileRow = parentContainer.createDiv("folio-tree-file tree-item is-file");
         fileRow.dataset.path = fullPath;
         fileRow.dataset.nodeId = node.id;
+        fileRow.classList.toggle("is-active", fullPath === activeFilePath);
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
           const defaultIcon = node.type === "canvas" ? "layout-dashboard" : this.getCustomIcon(node.title, false, "file");
@@ -4952,7 +4959,10 @@ var FolioView = class extends import_obsidian12.ItemView {
           label.classList.add("is-done");
         }
         fileRow.onclick = (e) => {
+          var _a3, _b3;
           e.stopPropagation();
+          this.plugin.activeFilePath = fullPath;
+          (_b3 = (_a3 = this.plugin).updateActiveFileInViews) == null ? void 0 : _b3.call(_a3);
           this.plugin.app.workspace.openLinkText(fullPath, "", false);
         };
         setupDragEvents(fileRow, node.id, "file");
@@ -4968,6 +4978,7 @@ var FolioView = class extends import_obsidian12.ItemView {
     if (useConfigTree && configTree.length > 0) {
       const sortedTree = [...configTree].sort((a, b) => a.order - b.order);
       sortedTree.forEach((node) => renderNodeFromConfig(node, container));
+      (_c = (_b = this.plugin).updateActiveFileInViews) == null ? void 0 : _c.call(_b);
     } else {
     }
     const getLastRootNodeId = () => {
@@ -5031,6 +5042,10 @@ var FolioView = class extends import_obsidian12.ItemView {
       if (!stats)
         return;
       const pad = (n) => typeof n === "number" ? n : 0;
+      const formatCount = (n) => {
+        const num = Number(n) || 0;
+        return num.toLocaleString();
+      };
       const formatTarget = (n) => {
         if (!n)
           return "\u2014";
@@ -5039,7 +5054,11 @@ var FolioView = class extends import_obsidian12.ItemView {
           const k = num / 1e3;
           return k % 1 === 0 ? `${Math.round(k)}K` : `${Math.round(k * 10) / 10}K`;
         }
-        return String(num);
+        return formatCount(num);
+      };
+      const formatPercent = (n) => {
+        const rounded = Math.round((Number(n) || 0) * 10) / 10;
+        return `${rounded % 1 === 0 ? Math.round(rounded) : rounded}%`;
       };
       const todayKey = new Date().toISOString().slice(0, 10);
       const dailyWords = stats.daily_words || {};
@@ -5076,11 +5095,11 @@ var FolioView = class extends import_obsidian12.ItemView {
         if (extra && typeof extra === "function")
           extra(r);
       };
-      row("pencil", "Today", `${todayCount} words`);
-      row("file", "Total words", `${totalWords} / ${formatTarget(targetWords)}`);
-      row("target", "Completion", `${(Math.round(completionPct * 100) / 100).toFixed(2)}%`);
+      row("pencil", "Today", `${formatCount(todayCount)} words`);
+      row("file", "Total", `${formatCount(totalWords)} / ${formatTarget(targetWords)}`);
+      row("target", "Completion", formatPercent(completionPct));
       row("clock", "Writing days", `${writingDays} days`);
-      row("calendar-clock", "Daily average", `${dailyAvg} words`);
+      row("calendar-clock", "Daily average", `${formatCount(dailyAvg)} words`);
     } catch (e) {
       console.warn("renderStats failed", e);
     }
@@ -5189,21 +5208,28 @@ var FolioView = class extends import_obsidian12.ItemView {
         return;
       el.addClass("folio-view");
       const topBar = el.createDiv("folio-topbar");
-      const newBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const labelButton = (button, label) => {
+        button.title = label;
+        button.setAttribute("aria-label", label);
+      };
+      const newBtn = topBar.createEl("button", { cls: "folio-top-btn folio-top-new" });
+      labelButton(newBtn, "New Project");
       const newIcon = newBtn.createSpan({ cls: "folio-top-icon" });
       try {
         (0, import_obsidian12.setIcon)(newIcon, "edit");
       } catch (e) {
       }
       newBtn.createSpan({ text: "New Project", cls: "folio-top-label" });
-      const switchBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const switchBtn = topBar.createEl("button", { cls: "folio-top-btn folio-top-switch" });
+      labelButton(switchBtn, "Switch");
       const switchIcon = switchBtn.createSpan({ cls: "folio-top-icon" });
       try {
         (0, import_obsidian12.setIcon)(switchIcon, "repeat");
       } catch (e) {
       }
       switchBtn.createSpan({ text: "Switch", cls: "folio-top-label" });
-      const manageBtn = topBar.createEl("button", { cls: "folio-top-btn" });
+      const manageBtn = topBar.createEl("button", { cls: "folio-top-btn folio-top-manage" });
+      labelButton(manageBtn, "Manage");
       const manageIcon = manageBtn.createSpan({ cls: "folio-top-icon" });
       try {
         (0, import_obsidian12.setIcon)(manageIcon, "library");
@@ -5211,6 +5237,7 @@ var FolioView = class extends import_obsidian12.ItemView {
       }
       manageBtn.createSpan({ text: "Manage", cls: "folio-top-label" });
       const helpBtn = topBar.createEl("button", { cls: "folio-help-btn" });
+      labelButton(helpBtn, "Help");
       const helpIcon = helpBtn.createSpan({ cls: "folio-help-icon" });
       try {
         (0, import_obsidian12.setIcon)(helpIcon, "help");
@@ -5236,12 +5263,12 @@ var FolioView = class extends import_obsidian12.ItemView {
         coverEl2.addClass("folio-book-cover-placeholder");
         try {
           const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
-          (0, import_obsidian12.setIcon)(iconEl, "square-plus");
+          (0, import_obsidian12.setIcon)(iconEl, "book-open");
         } catch (e) {
         }
         const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
         titleBlock2.createEl("div", { cls: "folio-book-title", text: "No active project" });
-        titleBlock2.createEl("div", { cls: "folio-book-subtitle", text: "(Select or create a project)" });
+        titleBlock2.createEl("div", { cls: "folio-book-subtitle", text: "Create or switch to a project" });
         const metaBlock2 = el.createDiv("folio-book-meta folio-book-info");
         const authorRow2 = metaBlock2.createDiv("folio-meta-row");
         authorRow2.createEl("div", { text: "Author", cls: "folio-meta-label" });
@@ -5251,27 +5278,17 @@ var FolioView = class extends import_obsidian12.ItemView {
         descRow2.createEl("div", { text: "\u2014", cls: "folio-meta-value folio-meta-desc" });
         const structureEl2 = el.createDiv("folio-structure");
         const emptyState = structureEl2.createDiv({ cls: "folio-empty-state" });
-        const emptyTitle = emptyState.createDiv({ cls: "folio-empty-title", text: "\u{1F44B} Welcome to Folio \u{1F4DC}" });
-        emptyState.createDiv({
-          cls: "folio-empty-subtitle",
-          text: 'Click "New Project" above to create a new project. Click "(?)" above for basic information.'
-        });
+        const emptyIconEl = emptyState.createDiv({ cls: "folio-empty-icon" });
         try {
-          const statsEl = el.createDiv("folio-stats");
-          const makeRow = (label, value) => {
-            const r = statsEl.createDiv("folio-stat-row");
-            const left = r.createDiv({ cls: "folio-stat-left" });
-            left.createSpan({ cls: "folio-stat-icon" });
-            left.createSpan({ text: label, cls: "folio-stat-label" });
-            r.createSpan({ text: value, cls: "folio-stat-value" });
-          };
-          makeRow("Today", "\u2014");
-          makeRow("Total words", "\u2014 / \u2014");
-          makeRow("Completion", "\u2014");
-          makeRow("Writing days", "\u2014");
-          makeRow("Daily average", "\u2014");
+          (0, import_obsidian12.setIcon)(emptyIconEl, "book-open");
         } catch (e) {
         }
+        emptyState.createDiv({ cls: "folio-empty-title", text: "No active project" });
+        emptyState.createDiv({
+          cls: "folio-empty-subtitle",
+          text: "Use New Project to begin, or Switch to open an existing project."
+        });
+        el.createDiv({ cls: "folio-stats folio-stats-empty", text: "Project stats will appear here." });
         return;
       }
       const bookFolderCheck = this.plugin.app.vault.getAbstractFileByPath(book.path);
@@ -5282,12 +5299,12 @@ var FolioView = class extends import_obsidian12.ItemView {
         coverEl2.addClass("folio-book-cover-placeholder");
         try {
           const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
-          (0, import_obsidian12.setIcon)(iconEl, "square-plus");
+          (0, import_obsidian12.setIcon)(iconEl, "alert-circle");
         } catch (e) {
         }
         const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
-        titleBlock2.createEl("div", { cls: "folio-book-title", text: "No active project" });
-        titleBlock2.createEl("div", { cls: "folio-book-subtitle", text: "(Project folder missing)" });
+        titleBlock2.createEl("div", { cls: "folio-book-title", text: book.name || "Unknown project" });
+        titleBlock2.createEl("div", { cls: "folio-book-subtitle", text: "Project folder not found" });
         const metaBlock2 = el.createDiv("folio-book-meta folio-book-info");
         const authorRow2 = metaBlock2.createDiv("folio-meta-row");
         authorRow2.createEl("div", { text: "Author", cls: "folio-meta-label" });
@@ -5296,23 +5313,15 @@ var FolioView = class extends import_obsidian12.ItemView {
         descRow2.createEl("div", { text: "Description", cls: "folio-meta-label" });
         descRow2.createEl("div", { text: "\u2014", cls: "folio-meta-value folio-meta-desc" });
         const structureEl2 = el.createDiv("folio-structure");
-        structureEl2.createEl("p", { text: "(Book folder missing on disk)" });
+        const missingState = structureEl2.createDiv({ cls: "folio-empty-state" });
+        const missingIconEl = missingState.createDiv({ cls: "folio-empty-icon" });
         try {
-          const statsEl = el.createDiv("folio-stats");
-          const makeRow = (label, value) => {
-            const r = statsEl.createDiv("folio-stat-row");
-            const left = r.createDiv({ cls: "folio-stat-left" });
-            left.createSpan({ cls: "folio-stat-icon" });
-            left.createSpan({ text: label, cls: "folio-stat-label" });
-            r.createSpan({ text: value, cls: "folio-stat-value" });
-          };
-          makeRow("Today", "\u2014");
-          makeRow("Total words", "\u2014 / \u2014");
-          makeRow("Completion", "\u2014");
-          makeRow("Writing days", "\u2014");
-          makeRow("Daily average", "\u2014");
+          (0, import_obsidian12.setIcon)(missingIconEl, "folder-x");
         } catch (e) {
         }
+        missingState.createDiv({ cls: "folio-empty-title", text: "Folder not found" });
+        missingState.createDiv({ cls: "folio-empty-subtitle", text: "The project folder could not be found on disk. It may have been moved or deleted." });
+        el.createDiv({ cls: "folio-stats folio-stats-empty", text: "Stats unavailable until the project folder is restored." });
         return;
       }
       let metadata = {};
@@ -5335,7 +5344,7 @@ var FolioView = class extends import_obsidian12.ItemView {
           coverEl.addClass("folio-book-cover-placeholder");
           const iconEl = coverEl.createDiv({ cls: "folio-book-cover-icon" });
           const projectType = (metadata == null ? void 0 : metadata.projectType) || PROJECT_TYPES.BOOK;
-          const iconName = getProjectTypeIcon3(this.plugin, projectType);
+          const iconName = getProjectTypeIcon2(this.plugin, projectType);
           (0, import_obsidian12.setIcon)(iconEl, iconName);
         } catch (e) {
         }
@@ -11530,9 +11539,9 @@ var FolioSettingTab = class extends import_obsidian17.PluginSettingTab {
     const basicSection = el.createDiv({ cls: "folio-settings-section" });
     const basicHeader = basicSection.createDiv({ cls: "folio-settings-section-header" });
     const basicToggle = basicHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian17.setIcon)(basicToggle, "chevron-right");
+    (0, import_obsidian17.setIcon)(basicToggle, "chevron-down");
     basicHeader.createSpan({ text: "Basic options", cls: "folio-settings-section-title" });
-    const basicContent = basicSection.createDiv({ cls: "folio-settings-section-content collapsed" });
+    const basicContent = basicSection.createDiv({ cls: "folio-settings-section-content" });
     basicHeader.onclick = () => {
       basicContent.classList.toggle("collapsed");
       (0, import_obsidian17.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
@@ -11606,7 +11615,7 @@ var FolioSettingTab = class extends import_obsidian17.PluginSettingTab {
       this.openTemplateEditor(null, templatesListEl);
     };
     const supportSection = el.createDiv({ cls: "folio-settings-support" });
-    supportSection.createDiv({ cls: "folio-settings-support-title", text: "\u2615 Support Folio development" });
+    supportSection.createDiv({ cls: "folio-settings-support-title", text: "Support Folio development" });
     const supportCopy = supportSection.createDiv({ cls: "folio-settings-support-copy" });
     supportCopy.createSpan({
       text: "Folio is free and open-source."

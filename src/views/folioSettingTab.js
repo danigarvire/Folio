@@ -22,9 +22,9 @@ export class FolioSettingTab extends PluginSettingTab {
     const basicSection = el.createDiv({ cls: 'folio-settings-section' });
     const basicHeader = basicSection.createDiv({ cls: 'folio-settings-section-header' });
     const basicToggle = basicHeader.createSpan({ cls: 'folio-settings-toggle' });
-    setIcon(basicToggle, 'chevron-right');
+    setIcon(basicToggle, 'chevron-down');
     basicHeader.createSpan({ text: 'Basic options', cls: 'folio-settings-section-title' });
-    const basicContent = basicSection.createDiv({ cls: 'folio-settings-section-content collapsed' });
+    const basicContent = basicSection.createDiv({ cls: 'folio-settings-section-content' });
 
     basicHeader.onclick = () => {
       basicContent.classList.toggle('collapsed');
@@ -137,7 +137,7 @@ export class FolioSettingTab extends PluginSettingTab {
 
     // ============ SUPPORT ============
     const supportSection = el.createDiv({ cls: 'folio-settings-support' });
-    supportSection.createDiv({ cls: 'folio-settings-support-title', text: '☕ Support Folio development' });
+    supportSection.createDiv({ cls: 'folio-settings-support-title', text: 'Support Folio development' });
     const supportCopy = supportSection.createDiv({ cls: 'folio-settings-support-copy' });
     supportCopy.createSpan({
       text: 'Folio is free and open-source.'

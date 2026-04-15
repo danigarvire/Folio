@@ -15,7 +15,7 @@ export class NewBookModal extends Modal {
     const { contentEl } = this;
     contentEl.empty();
 
-    contentEl.createEl("h2", { text: "Create new project" });
+    contentEl.createEl("h2", { text: "Create project" });
 
     const makeDivider = () => contentEl.createDiv({ cls: 'folio-modal-divider' });
 
@@ -23,8 +23,8 @@ export class NewBookModal extends Modal {
     makeDivider();
     const typeRow = contentEl.createDiv({ cls: 'folio-modal-row' });
     const typeLeft = typeRow.createDiv({ cls: 'folio-modal-left' });
-    typeLeft.createEl('div', { text: 'Project Type', cls: 'folio-modal-row-title' });
-    typeLeft.createEl('div', { text: 'Select the type of project', cls: 'folio-modal-row-sub' });
+    typeLeft.createEl('div', { text: 'Project type', cls: 'folio-modal-row-title' });
+    typeLeft.createEl('div', { text: 'Choose the structure Folio should create.', cls: 'folio-modal-row-sub' });
     const typeRight = typeRow.createDiv({ cls: 'folio-modal-right' });
     
     // Get templates from settings
@@ -33,14 +33,13 @@ export class NewBookModal extends Modal {
     // Build type names from templates
     const typeNames = {};
     templates.forEach(t => {
-      const emoji = { book: '📘', script: '📺', film: '🎬', essay: '📰' }[t.id] || '📄';
-      typeNames[t.id] = `${emoji} ${t.name}`;
+      typeNames[t.id] = t.name;
     });
     // Fallback for standard types
-    if (!typeNames[PROJECT_TYPES.BOOK]) typeNames[PROJECT_TYPES.BOOK] = '📘 Book';
-    if (!typeNames[PROJECT_TYPES.SCRIPT]) typeNames[PROJECT_TYPES.SCRIPT] = '📺 TV Show';
-    if (!typeNames[PROJECT_TYPES.FILM]) typeNames[PROJECT_TYPES.FILM] = '🎬 Film';
-    if (!typeNames[PROJECT_TYPES.ESSAY]) typeNames[PROJECT_TYPES.ESSAY] = '📰 Essay';
+    if (!typeNames[PROJECT_TYPES.BOOK]) typeNames[PROJECT_TYPES.BOOK] = 'Book';
+    if (!typeNames[PROJECT_TYPES.SCRIPT]) typeNames[PROJECT_TYPES.SCRIPT] = 'TV Show';
+    if (!typeNames[PROJECT_TYPES.FILM]) typeNames[PROJECT_TYPES.FILM] = 'Film';
+    if (!typeNames[PROJECT_TYPES.ESSAY]) typeNames[PROJECT_TYPES.ESSAY] = 'Essay';
     
     // Button to open project type selector
     const typeButton = typeRight.createEl('button', { text: 'Select', cls: 'folio-project-type-button' });
@@ -63,7 +62,7 @@ export class NewBookModal extends Modal {
     const coverRow = contentEl.createDiv({ cls: 'folio-modal-row' });
     const coverLeft = coverRow.createDiv({ cls: 'folio-modal-left' });
     coverLeft.createEl('div', { text: 'Cover', cls: 'folio-modal-row-title' });
-    coverLeft.createEl('div', { text: 'Select cover image (optional)', cls: 'folio-modal-row-sub' });
+    coverLeft.createEl('div', { text: 'Optional image for this project.', cls: 'folio-modal-row-sub' });
     const coverRight = coverRow.createDiv({ cls: 'folio-modal-right' });
     const coverBtn = coverRight.createEl('button', { text: 'Select Image' });
     // store selected cover in the modal instance
@@ -83,8 +82,8 @@ export class NewBookModal extends Modal {
             const ab = ev.target.result; // ArrayBuffer
             this._selectedCover = { name: file.name, data: ab };
             // Truncate long filenames for display
-            const label = file.name.length > 24 ? `${file.name.slice(0, 22)}…` : file.name;
-            coverBtn.textContent = `✓ ${label}`;
+            const label = file.name.length > 24 ? `${file.name.slice(0, 22)}...` : file.name;
+            coverBtn.textContent = `Selected: ${label}`;
           };
           reader.readAsArrayBuffer(file);
         } catch (err) {
@@ -101,7 +100,7 @@ export class NewBookModal extends Modal {
     const titleRow = contentEl.createDiv({ cls: 'folio-modal-row' });
     const titleLeft = titleRow.createDiv({ cls: 'folio-modal-left' });
     titleLeft.createEl('div', { text: 'Title', cls: 'folio-modal-row-title' });
-    titleLeft.createEl('div', { text: 'Please enter project title', cls: 'folio-modal-row-sub' });
+    titleLeft.createEl('div', { text: 'Used for the folder and project name.', cls: 'folio-modal-row-sub' });
     const titleRight = titleRow.createDiv({ cls: 'folio-modal-right' });
     // responsive field width (max 320px or 60% of modal)
     const fieldWidth = 'min(320px, 60%)';
@@ -123,9 +122,9 @@ export class NewBookModal extends Modal {
     const targetRow = contentEl.createDiv({ cls: 'folio-modal-row' });
     const targetLeft = targetRow.createDiv({ cls: 'folio-modal-left' });
     targetLeft.createEl('div', { text: 'Target word count', cls: 'folio-modal-row-title' });
-    targetLeft.createEl('div', { text: 'Set estimated total word count (in 1k)', cls: 'folio-modal-row-sub' });
+    targetLeft.createEl('div', { text: 'Optional total goal. Use 80000 or 80 for 80k.', cls: 'folio-modal-row-sub' });
     const targetRight = targetRow.createDiv({ cls: 'folio-modal-right' });
-    const targetInput = targetRight.createEl('input', { type: 'text', placeholder: 'e.g., 20 (20k) or 20000', cls: 'folio-modal-input' });
+    const targetInput = targetRight.createEl('input', { type: 'text', placeholder: 'e.g. 80000 or 80', cls: 'folio-modal-input' });
     try { targetInput.style.width = fieldWidth; } catch {}
 
     // Author - use default from settings
@@ -133,7 +132,7 @@ export class NewBookModal extends Modal {
     const authorRow = contentEl.createDiv({ cls: 'folio-modal-row' });
     const authorLeft = authorRow.createDiv({ cls: 'folio-modal-left' });
     authorLeft.createEl('div', { text: 'Author', cls: 'folio-modal-row-title' });
-    authorLeft.createEl('div', { text: 'Enter author names, separate multiple authors with commas', cls: 'folio-modal-row-sub' });
+    authorLeft.createEl('div', { text: 'Separate multiple authors with commas.', cls: 'folio-modal-row-sub' });
     const authorRight = authorRow.createDiv({ cls: 'folio-modal-right' });
     const authorInput = authorRight.createEl('input', { type: 'text', placeholder: 'Author', cls: 'folio-modal-input' });
     // Pre-fill with default author from settings
@@ -148,7 +147,7 @@ export class NewBookModal extends Modal {
     const descRow = contentEl.createDiv({ cls: 'folio-modal-row' });
     const descLeft = descRow.createDiv({ cls: 'folio-modal-left' });
     descLeft.createEl('div', { text: 'Description', cls: 'folio-modal-row-title' });
-    descLeft.createEl('div', { text: 'Please enter book description', cls: 'folio-modal-row-sub' });
+    descLeft.createEl('div', { text: 'Optional note for the project overview.', cls: 'folio-modal-row-sub' });
     const descRight = descRow.createDiv({ cls: 'folio-modal-right' });
     const descInput = descRight.createEl('textarea', { placeholder: 'Book description', cls: 'folio-modal-textarea' });
     try { descInput.style.width = fieldWidth; descInput.style.minHeight = '120px'; } catch {}
@@ -156,7 +155,10 @@ export class NewBookModal extends Modal {
     // Bottom divider + actions
     makeDivider();
     const actions = contentEl.createDiv({ cls: 'folio-modal-actions' });
+    const cancelBtn = actions.createEl('button', { text: 'Cancel', cls: 'folio-modal-cancel' });
     const createBtn = actions.createEl('button', { text: 'Create', cls: 'mod-cta folio-modal-create' });
+
+    cancelBtn.onclick = () => this.close();
 
     createBtn.onclick = async () => {
       const title = titleInput.value.trim();
