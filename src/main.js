@@ -7,6 +7,7 @@ import {
   PluginSettingTab,
   Setting,
   ItemView,
+  Notice,
   TFile,
   TFolder,
   Modal,
@@ -228,12 +229,20 @@ export default class FolioPlugin extends Plugin {
       );
 
       menu.addItem(it =>
-        it.setTitle("Delete").setIcon("trash").onClick(async () => {
-          try {
-            await this.app.vault.delete(file, file instanceof TFolder);
-            await this.refresh();
-            this.rerenderViews();
-          } catch (e) { console.error(e); }
+        it.setTitle("Delete").setIcon("trash").onClick(() => {
+          const name = file instanceof TFolder ? `folder "${file.name}"` : `"${file.name}"`;
+          new ConfirmModal(this.app, {
+            title: "Delete",
+            message: `Delete ${name}? This cannot be undone.`,
+            confirmText: "Delete",
+            onConfirm: async () => {
+              try {
+                await this.app.vault.delete(file, file instanceof TFolder);
+                await this.refresh();
+                this.rerenderViews();
+              } catch (e) { console.error(e); }
+            }
+          }).open();
         })
       );
 
@@ -348,12 +357,19 @@ export default class FolioPlugin extends Plugin {
       );
 
       menu.addItem(it =>
-        it.setTitle("Delete").setIcon("trash").onClick(async () => {
-          try {
-            await this.app.vault.delete(folder, folder instanceof TFolder);
-            await this.refresh();
-            this.rerenderViews();
-          } catch (e) { console.error(e); }
+        it.setTitle("Delete").setIcon("trash").onClick(() => {
+          new ConfirmModal(this.app, {
+            title: "Delete folder",
+            message: `Delete folder "${folder.name}" and all its contents? This cannot be undone.`,
+            confirmText: "Delete",
+            onConfirm: async () => {
+              try {
+                await this.app.vault.delete(folder, folder instanceof TFolder);
+                await this.refresh();
+                this.rerenderViews();
+              } catch (e) { console.error(e); }
+            }
+          }).open();
         })
       );
 
@@ -510,6 +526,10 @@ export default class FolioPlugin extends Plugin {
       return;
     }
     const leftLeaf = workspace.getLeftLeaf(false);
+    if (!leftLeaf) {
+      console.warn('Folio: could not obtain a left sidebar leaf');
+      return;
+    }
     await leftLeaf.setViewState({ type: VIEW_TYPE, active: true });
     this.folioLeaf = leftLeaf;
     workspace.revealLeaf(leftLeaf);
@@ -523,6 +543,10 @@ export default class FolioPlugin extends Plugin {
       return;
     }
     const rightLeaf = workspace.getRightLeaf(false);
+    if (!rightLeaf) {
+      console.warn('Folio: could not obtain a right sidebar leaf');
+      return;
+    }
     await rightLeaf.setViewState({ type: WRITER_TOOLS_VIEW_TYPE, active: true });
     workspace.revealLeaf(rightLeaf);
   }
@@ -882,7 +906,7 @@ export default class FolioPlugin extends Plugin {
   }
 
   generateNodeId() {
-    return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `node_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   async buildTreeFromFilesystem(bookFolder) {

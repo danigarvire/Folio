@@ -39,13 +39,13 @@ export class FolioView extends ItemView {
   }
 
   async onOpen() {
-    this.render();
+    this.render().catch(e => console.warn('FolioView.render() failed', e));
   }
 
   onClose() {
-    // clear plugin singleton reference to avoid multiple active views
-    if (this.plugin && this.plugin.novelistLeaf === this.leaf) {
-      this.plugin.novelistLeaf = null;
+    // clear plugin singleton reference to avoid stale leaf references
+    if (this.plugin && this.plugin.folioLeaf === this.leaf) {
+      this.plugin.folioLeaf = null;
     }
   }
 
@@ -118,17 +118,22 @@ export class FolioView extends ItemView {
     // while preserving existing order and metadata (Book-Smith pattern)
     let configTree = [];
     let useConfigTree = false;
-    
+
     try {
       // Build/sync tree from filesystem (merges with existing config)
       configTree = await this.plugin.buildTreeFromFilesystem(folder);
-      
+
       if (configTree.length > 0) {
-        // Save the synced tree
+        // Only persist when the tree actually changed — avoids a vault.modify
+        // write (and the resulting event chain) on every render.
         const cfg = (await this.plugin.loadBookConfig(book)) || {};
-        if (!cfg.structure) cfg.structure = {};
-        cfg.structure.tree = configTree;
-        await this.plugin.saveBookConfig(book, cfg);
+        const existingTree = cfg.structure?.tree;
+        const treeChanged = JSON.stringify(existingTree) !== JSON.stringify(configTree);
+        if (treeChanged) {
+          if (!cfg.structure) cfg.structure = {};
+          cfg.structure.tree = configTree;
+          await this.plugin.saveBookConfig(book, cfg);
+        }
         useConfigTree = true;
       }
     } catch (e) {
@@ -353,11 +358,9 @@ export class FolioView extends ItemView {
 
     // Render the tree
     if (useConfigTree && configTree.length > 0) {
-      console.log('Rendering tree with', configTree.length, 'root nodes');
       const sortedTree = [...configTree].sort((a, b) => a.order - b.order);
       sortedTree.forEach(node => renderNodeFromConfig(node, container));
     } else {
-      console.warn('No config tree to render, useConfigTree:', useConfigTree, 'length:', configTree.length);
     }
 
     // Allow drop on empty tree area to move item to root end
@@ -466,6 +469,89 @@ export class FolioView extends ItemView {
     } catch (e) {
       console.warn('renderStats failed', e);
     }
+  }
+
+  /**
+   * Show the "empty area" context menu (New root canvas / file / volume).
+   * Shared by the structure area and the stats overlay to avoid duplication.
+   */
+  _showTreeAreaContextMenu(evt, book, TextInputModal) {
+    try {
+      evt.preventDefault();
+      const menu = new Menu(this.plugin.app);
+
+      menu.addItem((it) =>
+        it.setTitle('New root canvas').setIcon('layout-dashboard').onClick(() => {
+          new TextInputModal(this.plugin.app, {
+            title: 'New root canvas',
+            placeholder: 'Canvas name (without .canvas)',
+            cta: 'Create',
+            onSubmit: async (value) => {
+              try {
+                const raw = (value || '').trim();
+                if (!raw) return;
+                const base = raw.endsWith('.canvas') ? raw.slice(0, -7) : raw;
+                let name = `${base}.canvas`;
+                let i = 1;
+                while (this.plugin.app.vault.getAbstractFileByPath(`${book.path}/${name}`)) {
+                  name = `${base} ${i++}.canvas`;
+                }
+                await this.plugin.app.vault.create(`${book.path}/${name}`, '');
+                await this.plugin.refresh();
+                this.plugin.rerenderViews();
+              } catch (e) { console.error(e); }
+            },
+          }).open();
+        })
+      );
+
+      menu.addItem((it) =>
+        it.setTitle('New root file').setIcon('file-plus').onClick(() => {
+          new TextInputModal(this.plugin.app, {
+            title: 'New root file',
+            placeholder: 'File name (without .md)',
+            cta: 'Create',
+            toggleLabel: 'Screenplay formatting',
+            toggleKey: 'screenplay',
+            onSubmit: async (value, opts = {}) => {
+              try {
+                const name = (value || '').trim();
+                if (!name) return;
+                const fileName = name.endsWith('.md') ? name : `${name}.md`;
+                const filePath = `${book.path}/${fileName}`;
+                if (!this.plugin.app.vault.getAbstractFileByPath(filePath)) {
+                  const frontmatter = await this.plugin.getNewFileFrontmatter(filePath, fileName, !!opts.screenplay);
+                  await this.plugin.app.vault.create(filePath, frontmatter);
+                }
+                await this.plugin.refresh();
+                this.plugin.rerenderViews();
+              } catch (e) { console.error(e); }
+            },
+          }).open();
+        })
+      );
+
+      menu.addItem((it) =>
+        it.setTitle('New volume').setIcon('folder-plus').onClick(() => {
+          new TextInputModal(this.plugin.app, {
+            title: 'New volume',
+            placeholder: 'Volume name',
+            cta: 'Create',
+            onSubmit: async (value) => {
+              try {
+                const name = (value || '').trim();
+                if (!name) return;
+                await this.plugin.createVolume(book, name);
+                await this.plugin.refresh();
+                this.plugin.rerenderViews();
+              } catch (e) { console.error(e); }
+            },
+          }).open();
+        })
+      );
+
+      menu.showAtMouseEvent(evt);
+    } catch (e) { console.error(e); }
   }
 
   async render() {
@@ -707,107 +793,11 @@ export class FolioView extends ItemView {
       // (stats compute will be run right before rendering the stats element)
 
       // Right-click on empty tree zone: show generic tree menu (New file / New volume)
-      try {
-        structureEl.addEventListener('contextmenu', (evt) => {
-          try {
-            // if the click was on a specific tree item, let its handler manage the menu
-            const item = evt.target && evt.target.closest && evt.target.closest('.tree-item');
-            if (item) return; // ignore — files/volumes have their own context menus
-            evt.preventDefault();
-            const menu = new Menu(this.plugin.app);
-
-            // New root canvas (ask for name)
-            menu.addItem((it) =>
-              it.setTitle('New root canvas').setIcon('layout-dashboard').onClick(() => {
-                const modal = new TextInputModal(this.plugin.app, {
-                  title: 'New root canvas',
-                  placeholder: 'Canvas name (without .canvas)',
-                  cta: 'Create',
-                  onSubmit: async (value) => {
-                    try {
-                      const raw = (value || '').trim();
-                      if (!raw) return;
-                      const base = raw.endsWith('.canvas') ? raw.slice(0, -7) : raw;
-                      let name = `${base}.canvas`;
-                      let i = 1;
-                      while (this.plugin.app.vault.getAbstractFileByPath(`${book.path}/${name}`)) {
-                        name = `${base} ${i}.canvas`;
-                        i += 1;
-                      }
-                      await this.plugin.app.vault.create(`${book.path}/${name}`, '');
-                      await this.plugin.refresh();
-                      this.plugin.rerenderViews();
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  },
-                });
-                modal.open();
-              })
-            );
-
-            // New root file (book root)
-            menu.addItem((it) =>
-              it.setTitle('New root file').setIcon('file-plus').onClick(() => {
-                const modal = new TextInputModal(this.plugin.app, {
-                  title: 'New root file',
-                  placeholder: 'File name (without .md)',
-                  cta: 'Create',
-                  toggleLabel: 'Screenplay formatting',
-                  toggleKey: 'screenplay',
-                  onSubmit: async (value, opts = {}) => {
-                    try {
-                      const name = (value || '').trim();
-                      if (!name) return;
-                      const fileName = name.endsWith('.md') ? name : `${name}.md`;
-                      const path = `${book.path}/${fileName}`;
-                      if (!this.plugin.app.vault.getAbstractFileByPath(path)) {
-                        const frontmatter = await this.plugin.getNewFileFrontmatter(path, fileName, !!opts.screenplay);
-                        await this.plugin.app.vault.create(path, frontmatter);
-                      }
-                      await this.plugin.refresh();
-                      this.plugin.rerenderViews();
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  },
-                });
-                modal.open();
-              })
-            );
-
-            // (Only root file/volume allowed from empty tree context)
-
-            menu.addItem((it) =>
-              it.setTitle('New volume').setIcon('folder-plus').onClick(() => {
-                const modal = new TextInputModal(this.plugin.app, {
-                  title: 'New volume',
-                  placeholder: 'Volume name',
-                  cta: 'Create',
-                  onSubmit: async (value) => {
-                    try {
-                      const name = (value || '').trim();
-                      if (!name) return;
-                      await this.plugin.createVolume(book, name);
-                      await this.plugin.refresh();
-                      this.plugin.rerenderViews();
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  },
-                });
-                modal.open();
-              })
-            );
-
-            menu.showAtMouseEvent(evt);
-          } catch (e) {
-            console.error(e);
-          }
-        });
-      } catch (e) {
-        // ignore if adding listener fails
-      }
+      structureEl.addEventListener('contextmenu', (evt) => {
+        // if the click was on a specific tree item, let its own handler manage the menu
+        if (evt.target?.closest?.('.tree-item')) return;
+        this._showTreeAreaContextMenu(evt, book, TextInputModal);
+      });
 
       // Fixed-height stats block (reserve real space for stats)
       // Always create a fresh stats element to ensure correct DOM order
@@ -818,102 +808,12 @@ export class FolioView extends ItemView {
       await this.renderStats(this.statsEl, book);
 
       // Also allow right-clicking the stats block (it overlays the lower area)
-      try {
-        if (this.statsEl) this.statsEl.addEventListener('contextmenu', (evt) => {
-          try {
-            evt.preventDefault();
-            const row = evt.target && evt.target.closest && evt.target.closest('.folio-stat-row');
-            if (row) return;
-
-            const menu = new Menu(this.plugin.app);
-            // New root canvas (ask for name)
-            menu.addItem((it) =>
-              it.setTitle('New root canvas').setIcon('layout-dashboard').onClick(() => {
-                const modal = new TextInputModal(this.plugin.app, {
-                  title: 'New root canvas',
-                  placeholder: 'Canvas name (without .canvas)',
-                  cta: 'Create',
-                  onSubmit: async (value) => {
-                    try {
-                      const raw = (value || '').trim();
-                      if (!raw) return;
-                      const base = raw.endsWith('.canvas') ? raw.slice(0, -7) : raw;
-                      let name = `${base}.canvas`;
-                      let i = 1;
-                      while (this.plugin.app.vault.getAbstractFileByPath(`${book.path}/${name}`)) {
-                        name = `${base} ${i}.canvas`;
-                        i += 1;
-                      }
-                      await this.plugin.app.vault.create(`${book.path}/${name}`, '');
-                      await this.plugin.refresh();
-                      this.plugin.rerenderViews();
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  },
-                });
-                modal.open();
-              })
-            );
-
-            menu.addItem((it) =>
-              it.setTitle('New root file').setIcon('file-plus').onClick(() => {
-                const modal = new TextInputModal(this.plugin.app, {
-                  title: 'New root file',
-                  placeholder: 'File name (without .md)',
-                  cta: 'Create',
-                  toggleLabel: 'Screenplay formatting',
-                  toggleKey: 'screenplay',
-                  onSubmit: async (value, opts = {}) => {
-                    try {
-                      const name = (value || '').trim();
-                      if (!name) return;
-                      const fileName = name.endsWith('.md') ? name : `${name}.md`;
-                      const path = `${book.path}/${fileName}`;
-                      if (!this.plugin.app.vault.getAbstractFileByPath(path)) {
-                        const frontmatter = await this.plugin.getNewFileFrontmatter(path, fileName, !!opts.screenplay);
-                        await this.plugin.app.vault.create(path, frontmatter);
-                      }
-                      await this.plugin.refresh();
-                      this.plugin.rerenderViews();
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  },
-                });
-                modal.open();
-              })
-            );
-
-            menu.addItem((it) =>
-              it.setTitle('New volume').setIcon('folder-plus').onClick(() => {
-                const modal = new TextInputModal(this.plugin.app, {
-                  title: 'New volume',
-                  placeholder: 'Volume name',
-                  cta: 'Create',
-                  onSubmit: async (value) => {
-                    try {
-                      const name = (value || '').trim();
-                      if (!name) return;
-                      await this.plugin.createVolume(book, name);
-                      await this.plugin.refresh();
-                      this.plugin.rerenderViews();
-                    } catch (e) {
-                      console.error(e);
-                    }
-                  },
-                });
-                modal.open();
-              })
-            );
-
-            menu.showAtMouseEvent(evt);
-          } catch (e) {
-            console.error(e);
-          }
+      if (this.statsEl) {
+        this.statsEl.addEventListener('contextmenu', (evt) => {
+          // ignore clicks on individual stat rows (they have no sub-menu, but keep consistent)
+          if (evt.target?.closest?.('.folio-stat-row')) return;
+          this._showTreeAreaContextMenu(evt, book, TextInputModal);
         });
-      } catch (e) {
-        // ignore
       }
     } finally {
       if (this._renderCounter === token) {

@@ -1,11 +1,21 @@
 {
   "name": "folio",
   "version": "1.0.6",
-  "description": "Obsidian plugin for novel writing",
+  "description": "Project-based long-form writing environment for books and scripts.",
+  "type": "module",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "node esbuild.config.mjs production"
+    "build": "node esbuild.config.mjs production",
+    "test": "NODE_OPTIONS='--experimental-vm-modules' jest"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": ["**/tests/**/*.test.js"],
+    "transform": {},
+    "moduleNameMapper": {
+      "^obsidian$": "<rootDir>/tests/__mocks__/obsidian.js"
+    }
   },
   "keywords": [],
   "author": "danigarvire",
@@ -14,6 +24,7 @@
     "@types/node": "^16.11.6",
     "builtin-modules": "^3.3.0",
     "esbuild": "0.17.3",
+    "jest": "^30.3.0",
     "obsidian": "latest"
   }
 }

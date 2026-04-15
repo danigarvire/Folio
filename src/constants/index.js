@@ -13,8 +13,7 @@ export const PROJECT_TYPES = {
 };
 
 export const DEFAULT_SETTINGS = {
-  booksPath: "projects",
-  basePath: "projects",  // Legacy compatibility
+  basePath: "projects",
   lastActiveBookPath: null,
   verboseLogs: false,
   defaultAuthor: "",
@@ -106,37 +105,44 @@ export const DEFAULT_SETTINGS = {
   ]
 };
 
-export const DEFAULT_BOOK_CONFIG = {
-  basic: {
-    title: "",
-    author: [],
-    subtitle: "",
-    desc: "",
-    uuid: "",
-    created_at: new Date().toISOString(),
-    projectType: "book", // Default project type
-  },
-  structure: {
-    tree: [],
-  },
-  stats: {
-    total_words: 0,
-    target_total_words: 10000,
-    progress_by_words: 0,
-    progress_by_chapter: 0,
-    daily_words: {},
-    writing_days: 0,
-    average_daily_words: 0,
-    last_writing_date: new Date().toISOString(),
-    last_modified: new Date().toISOString(),
-    per_chapter: {},
-  },
-  export: {
-    default_format: "pdf",
-    template: "default",
-    include_cover: true,
-  },
-};
+// Use a factory function so timestamps are generated at call time, not module load time
+export function makeDefaultBookConfig() {
+  const now = new Date().toISOString();
+  return {
+    basic: {
+      title: "",
+      author: [],
+      subtitle: "",
+      desc: "",
+      uuid: "",
+      created_at: now,
+      projectType: "book",
+    },
+    structure: {
+      tree: [],
+    },
+    stats: {
+      total_words: 0,
+      target_total_words: 10000,
+      progress_by_words: 0,
+      progress_by_chapter: 0,
+      daily_words: {},
+      writing_days: 0,
+      average_daily_words: 0,
+      last_writing_date: now,
+      last_modified: now,
+      per_chapter: {},
+    },
+    export: {
+      default_format: "pdf",
+      template: "default",
+      include_cover: true,
+    },
+  };
+}
+
+/** @deprecated Use makeDefaultBookConfig() instead */
+export const DEFAULT_BOOK_CONFIG = makeDefaultBookConfig();
 
 export const BOOK_STRUCTURE_FILES = [
   { name: "Preface.md", id: "preface" },

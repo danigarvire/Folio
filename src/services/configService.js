@@ -210,7 +210,7 @@ export class ConfigService {
    */
   generateUUID() {
     const timestamp = Date.now().toString(16);
-    const random = Math.random().toString(36).substr(2, 9);
+    const random = Math.random().toString(36).slice(2, 11);
     return `${timestamp}-${random}`;
   }
 }

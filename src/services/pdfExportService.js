@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import { Component, FileSystemAdapter, MarkdownRenderer, Notice } from "obsidian";
 import { SCREENPLAY_SNIPPET_CSS } from "../constants/screenplaySnippet.js";
 
@@ -114,8 +112,10 @@ export class PdfExportService {
       }
     }
 
-    const imageHtml = imageUrl
-      ? `<div class="cover-image" style="background-image:url('${imageUrl}')"></div>`
+    // Encode single-quotes so they cannot break the CSS url() value
+    const safeImageUrl = imageUrl.replace(/'/g, '%27');
+    const imageHtml = safeImageUrl
+      ? `<div class="cover-image" style="background-image:url('${safeImageUrl}')"></div>`
       : "";
 
     return `
@@ -223,6 +223,8 @@ export class PdfExportService {
 
   loadScreenplaySnippetCss() {
     try {
+      const fs = require("fs");
+      const path = require("path");
       const basePath = this.getVaultBasePath();
       const candidates = [
         path.join(__dirname, "assets", "third-party", "pro-screenwriting", "PRO Screenwriting Snippet.css"),
@@ -547,19 +549,27 @@ export class PdfExportService {
       }
     });
 
+    const TIMEOUT_MS = 60_000;
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("PDF render timed out after 60 s")), TIMEOUT_MS)
+    );
+
     try {
       const encoded = encodeURIComponent(html);
-      await win.loadURL(`data:text/html;charset=utf-8,${encoded}`);
+      await Promise.race([win.loadURL(`data:text/html;charset=utf-8,${encoded}`), timeout]);
       const headerTemplate = this.buildHeaderFooterTemplate("header", settings, meta);
       const footerTemplate = this.buildHeaderFooterTemplate("footer", settings, meta);
       const displayHeaderFooter = !!(settings?.layout?.includePageNumbers !== false);
-      const pdf = await win.webContents.printToPDF({
-        printBackground: true,
-        pageSize: settings?.pageSize || "A4",
-        displayHeaderFooter,
-        headerTemplate,
-        footerTemplate
-      });
+      const pdf = await Promise.race([
+        win.webContents.printToPDF({
+          printBackground: true,
+          pageSize: settings?.pageSize || "A4",
+          displayHeaderFooter,
+          headerTemplate,
+          footerTemplate
+        }),
+        timeout
+      ]);
       return pdf;
     } catch (e) {
       console.warn("printToPDF failed", e);
@@ -571,7 +581,6 @@ export class PdfExportService {
 
   buildHeaderFooterTemplate(kind, settings, meta) {
     let config = kind === "header" ? settings?.header : settings?.footer;
-    if (kind === "header") return "<div></div>";
     if (settings?.layout?.includePageNumbers === false) return "<div></div>";
     if (!config && kind === "footer") {
       config = { enabled: true, left: "", center: "", right: "{{pageNumber}}/{{totalPages}}", fontSize: 10 };
@@ -679,7 +688,7 @@ export class PdfExportService {
         return;
       }
     }
-    const fs = require("fs/promises");
-    await fs.writeFile(targetPath, pdfBuffer);
+    const fsPromises = require("fs/promises");
+    await fsPromises.writeFile(targetPath, pdfBuffer);
   }
 }

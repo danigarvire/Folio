@@ -1,4 +1,4 @@
-const { Modal, TFile } = require("obsidian");
+import { Modal, Notice, TFile } from "obsidian";
 import { PROJECT_TYPES } from '../constants/index.js';
 import { ProjectTypeSelectorModal } from './projectTypeSelectorModal.js';
 
@@ -82,7 +82,9 @@ export class NewBookModal extends Modal {
           reader.onload = (ev) => {
             const ab = ev.target.result; // ArrayBuffer
             this._selectedCover = { name: file.name, data: ab };
-            coverBtn.textContent = 'Select Image';
+            // Truncate long filenames for display
+            const label = file.name.length > 24 ? `${file.name.slice(0, 22)}…` : file.name;
+            coverBtn.textContent = `✓ ${label}`;
           };
           reader.readAsArrayBuffer(file);
         } catch (err) {
@@ -158,7 +160,17 @@ export class NewBookModal extends Modal {
 
     createBtn.onclick = async () => {
       const title = titleInput.value.trim();
-      if (!title) return;
+      if (!title) {
+        new Notice("Please enter a project title.");
+        return;
+      }
+
+      // Validate name before anything else (path traversal, illegal chars, etc.)
+      const nameError = this.plugin.bookService?.validateName?.(title);
+      if (nameError) {
+        new Notice(`Invalid project name: ${nameError}`);
+        return;
+      }
 
       // Get selected project type from dropdown; fallback to button label if unset
       let projectType = this.selectedProjectType;
@@ -169,12 +181,10 @@ export class NewBookModal extends Modal {
         else if (btnText.includes('Film')) projectType = PROJECT_TYPES.FILM;
         else projectType = PROJECT_TYPES.BOOK;
       }
-      console.debug && console.debug('Creating project with type:', projectType);
-      
       // Get template structure for the selected project type
       const selectedTemplate = templates.find(t => t.id === projectType);
       const templateStructure = selectedTemplate?.structure || null;
-      
+
       // capture fields before closing the modal (closing may remove DOM inputs)
       const subtitleVal = subtitleInput.value.trim();
       const authorVal = authorInput.value.trim();
@@ -183,7 +193,12 @@ export class NewBookModal extends Modal {
       const targetValNum = parseFloat(targetValRaw) || 0;
       this.close();
       // create book folder and base files WITH project type and template structure
-      await this.plugin.createBook(title, projectType, templateStructure);
+      try {
+        await this.plugin.createBook(title, projectType, templateStructure);
+      } catch (e) {
+        new Notice(`Failed to create project: ${e.message || e}`);
+        return;
+      }
       // normalize base path to match createBook's behavior
       const basePath = (this.plugin.settings && this.plugin.settings.basePath) ? String(this.plugin.settings.basePath).replace(/\/+/g, '/') : 'projects';
       const bookPath = `${basePath}/${title}`.replace(/\/+/g, "/");

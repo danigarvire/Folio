@@ -67,7 +67,8 @@ export class EditBookModal extends Modal {
           reader.onload = (ev) => {
             const ab = ev.target.result;
             selectedCover = { name: file.name, data: ab };
-            coverBtn.textContent = 'Select Image';
+            const label = file.name.length > 24 ? `${file.name.slice(0, 22)}…` : file.name;
+            coverBtn.textContent = `✓ ${label}`;
           };
           reader.readAsArrayBuffer(file);
         } catch (err) { console.warn('cover selection failed', err); }

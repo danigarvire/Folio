@@ -13,6 +13,23 @@ export class BookService {
     this.configService = configService;
   }
 
+  /**
+   * Validate a project or file name.
+   * Returns null if valid, or an error string describing the problem.
+   */
+  validateName(name) {
+    if (!name || !name.trim()) return "Name cannot be empty.";
+    // Characters illegal on Windows / macOS / most filesystems
+    if (/[\\/:*?"<>|]/.test(name)) return `Name contains an illegal character (\\ / : * ? " < > |).`;
+    // Path traversal
+    if (name.includes('..')) return "Name cannot contain '..'.";
+    // Leading/trailing dots (hidden files / macOS quirks)
+    if (name.startsWith('.')) return "Name cannot start with a dot.";
+    // Overly long names
+    if (name.length > 200) return "Name is too long (max 200 characters).";
+    return null;
+  }
+
   isSceneTitle(title) {
     const base = (title || "").toLowerCase().replace(/\.md$/, "");
     return base === "scene" || base.startsWith("scene ");
@@ -134,7 +151,8 @@ export class BookService {
    * Create a new book with structure from template
    */
   async createBook(basePath, name, projectType = 'book', templateStructure = null) {
-    if (!name) return;
+    const validationError = this.validateName(name);
+    if (validationError) throw new Error(validationError);
     const path = `${basePath}/${name}`;
     if (await this.app.vault.adapter.exists(path)) return;
 
@@ -223,7 +241,7 @@ export class BookService {
     let order = 1;
     return structure.map(item => {
       const itemPath = parentPath ? `${parentPath}/${item.title}` : item.title;
-      const id = `${item.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`;
+      const id = `${item.title.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       
       if (item.type === 'folder') {
         const filePath = itemPath;
@@ -593,7 +611,8 @@ export class BookService {
    * Create a new volume (folder) in a book
    */
   async createVolume(book, name) {
-    if (!name) return;
+    const err = this.validateName(name);
+    if (err) throw new Error(err);
     const path = `${book.path}/${name}`;
     if (await this.app.vault.adapter.exists(path)) return;
     await this.app.vault.createFolder(path);
@@ -603,7 +622,8 @@ export class BookService {
    * Create a new chapter (markdown file) in a volume
    */
   async createChapter(volume, name, projectType = 'book') {
-    if (!name) return;
+    const err = this.validateName(name);
+    if (err) throw new Error(err);
     const path = `${volume.path}/${name}.md`;
     if (await this.app.vault.adapter.exists(path)) return;
     

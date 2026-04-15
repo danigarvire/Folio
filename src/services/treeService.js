@@ -14,7 +14,7 @@ export class TreeService {
    * Generate unique node ID
    */
   generateNodeId() {
-    return `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `node_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
   }
 
   /**
@@ -143,7 +143,6 @@ export class TreeService {
         tree.push(node);
       });
 
-      console.log('Built tree from filesystem:', tree);
       return tree;
     } catch (e) {
       console.warn('buildTreeFromFilesystem failed', e);
