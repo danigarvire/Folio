@@ -7,45 +7,78 @@ export class PdfExportService {
     this.configService = configService;
   }
 
-  async exportProject(project, settings) {
+  async exportProject(project, settings, options = {}) {
+    const { signal, onProgress } = options || {};
+    const progress = (message) => {
+      if (typeof onProgress === "function") onProgress(message);
+    };
+
     if (!project) {
       new Notice("No active project selected.");
-      return;
+      return { ok: false };
     }
     if (this.app?.isMobile) {
       new Notice("PDF export is available on desktop only.");
-      return;
+      return { ok: false };
     }
 
-    const cfg = (await this.configService.loadProjectConfig(project)) || {};
-    const meta = (await this.configService.loadProjectMeta(project)) || {};
+    try {
+      this.throwIfAborted(signal);
+      progress("Loading project settings...");
+      const cfg = (await this.configService.loadProjectConfig(project)) || {};
+      const meta = (await this.configService.loadProjectMeta(project)) || {};
 
-    const html = await this.buildExportHtml(project, meta, cfg, settings);
-    if (!html) {
-      new Notice("Failed to build export document.");
-      return;
-    }
+      this.throwIfAborted(signal);
+      progress("Preparing the export document...");
+      const html = await this.buildExportHtml(project, meta, cfg, settings, { signal, onProgress: progress });
+      if (!html) {
+        new Notice("Failed to build export document.");
+        return { ok: false };
+      }
 
-    const targetPath = await this.promptSavePath(project, meta);
-    if (!targetPath) return;
+      this.throwIfAborted(signal);
+      progress("Choose where to save the PDF...");
+      const targetPath = await this.promptSavePath(project, meta);
+      if (!targetPath) return { ok: false, cancelled: false };
 
-    const pdfBuffer = await this.renderHtmlToPdf(html, settings, meta);
-    if (!pdfBuffer) {
+      this.throwIfAborted(signal);
+      progress("Rendering the PDF...");
+      const pdfBuffer = await this.renderHtmlToPdf(html, settings, meta, { signal });
+      if (!pdfBuffer) {
+        new Notice("PDF export failed.");
+        return { ok: false };
+      }
+
+      this.throwIfAborted(signal);
+      progress("Writing the PDF...");
+      await this.writePdf(targetPath, pdfBuffer);
+      this.throwIfAborted(signal);
+      progress("PDF exported.");
+      new Notice(`PDF exported to ${targetPath}`);
+      return { ok: true, targetPath };
+    } catch (error) {
+      if (this.isAbortError(error)) {
+        progress("Export cancelled.");
+        new Notice("PDF export cancelled.");
+        return { ok: false, cancelled: true };
+      }
+      console.warn("PDF export failed.", error);
       new Notice("PDF export failed.");
-      return;
+      return { ok: false, error };
     }
-
-    await this.writePdf(targetPath, pdfBuffer);
-    new Notice(`PDF exported to ${targetPath}`);
   }
 
-  async buildExportHtml(project, meta, cfg, settings) {
+  async buildExportHtml(project, meta, cfg, settings, options = {}) {
     const files = await this.collectOrderedMarkdownFiles(project, cfg, settings, meta);
     const sections = [];
     const tocItems = [];
 
     const applyCssClasses = settings?.layout?.applyCssClasses !== false;
-    for (const file of files) {
+    for (const [index, file] of files.entries()) {
+      this.throwIfAborted(options?.signal);
+      if (typeof options?.onProgress === "function") {
+        options.onProgress(`Preparing ${index + 1} of ${files.length}: ${file.basename || file.name || "file"}...`);
+      }
       if (file.extension === "canvas" || file.path.endsWith(".canvas")) {
         const canvasHtml = await this.renderCanvasToHtml(file);
         if (canvasHtml) {
@@ -60,6 +93,7 @@ export class PdfExportService {
       const classAttr = ["chapter", "markdown-preview-view", ...cssClasses].join(" ");
       sections.push(`<section class="${classAttr}" data-path="${this.escapeHtml(file.path)}">${html}</section>`);
     }
+    this.throwIfAborted(options?.signal);
 
     const coverHtml = settings?.cover?.include
       ? await this.buildCoverHtml(project, meta, settings)
@@ -533,7 +567,9 @@ export class PdfExportService {
     return [];
   }
 
-  async renderHtmlToPdf(html, settings, meta) {
+  async renderHtmlToPdf(html, settings, meta, options = {}) {
+    const signal = options?.signal;
+    this.throwIfAborted(signal);
     const { BrowserWindow } = this.getElectronApi() || {};
     if (!BrowserWindow) {
       new Notice("Electron API unavailable for PDF export.");
@@ -550,13 +586,26 @@ export class PdfExportService {
     });
 
     const TIMEOUT_MS = 60_000;
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("PDF render timed out after 60 s")), TIMEOUT_MS)
-    );
+    let timeoutId = null;
+    let abortHandler = null;
+    const timeout = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error("PDF render timed out after 60 s")), TIMEOUT_MS);
+    });
+    const aborted = new Promise((_, reject) => {
+      if (!signal) return;
+      abortHandler = () => {
+        try {
+          if (!win.isDestroyed?.()) win.close();
+        } catch {}
+        reject(this.createAbortError());
+      };
+      signal.addEventListener("abort", abortHandler, { once: true });
+    });
 
     try {
       const encoded = encodeURIComponent(html);
-      await Promise.race([win.loadURL(`data:text/html;charset=utf-8,${encoded}`), timeout]);
+      await Promise.race([win.loadURL(`data:text/html;charset=utf-8,${encoded}`), timeout, aborted]);
+      this.throwIfAborted(signal);
       const headerTemplate = this.buildHeaderFooterTemplate("header", settings, meta);
       const footerTemplate = this.buildHeaderFooterTemplate("footer", settings, meta);
       const displayHeaderFooter = !!(settings?.layout?.includePageNumbers !== false);
@@ -568,14 +617,21 @@ export class PdfExportService {
           headerTemplate,
           footerTemplate
         }),
-        timeout
+        timeout,
+        aborted
       ]);
+      this.throwIfAborted(signal);
       return pdf;
     } catch (e) {
+      if (this.isAbortError(e)) throw e;
       console.warn("printToPDF failed", e);
       return null;
     } finally {
-      win.close();
+      if (timeoutId) clearTimeout(timeoutId);
+      if (signal && abortHandler) signal.removeEventListener("abort", abortHandler);
+      try {
+        if (!win.isDestroyed?.()) win.close();
+      } catch {}
     }
   }
 
@@ -653,7 +709,7 @@ export class PdfExportService {
     const electron = this.getElectronApi();
     const dialog = electron?.dialog;
     if (dialog?.showSaveDialog) {
-      const defaultName = `${meta?.title || project?.name || "export"}.pdf`;
+      const defaultName = this.getDefaultPdfFileName(project, meta);
       const result = await dialog.showSaveDialog({
         title: "Export PDF",
         defaultPath: defaultName,
@@ -665,10 +721,30 @@ export class PdfExportService {
 
     const basePath = this.getVaultBasePath();
     const fallback = `${project.path}/exports`;
+    const defaultName = this.getDefaultPdfFileName(project, meta);
     try {
       await this.app.vault.createFolder(fallback);
     } catch {}
-    return basePath ? `${basePath}/${fallback}/export.pdf` : `${fallback}/export.pdf`;
+    return basePath ? `${basePath}/${fallback}/${defaultName}` : `${fallback}/${defaultName}`;
+  }
+
+  getDefaultPdfFileName(project, meta) {
+    const raw = String(meta?.title || project?.name || "export").trim() || "export";
+    const safe = raw
+      .replace(/[<>:"/\\|?*\x00-\x1F]/g, "_")
+      .replace(/\s+/g, " ")
+      .replace(/[. ]+$/g, "")
+      .trim() || "export";
+    return safe.toLowerCase().endsWith(".pdf") ? safe : `${safe}.pdf`;
+  }
+
+  getDefaultSaveHint(project, meta) {
+    const defaultName = this.getDefaultPdfFileName(project, meta);
+    const dialog = this.getElectronApi()?.dialog;
+    if (dialog?.showSaveDialog) {
+      return `Save dialog opens next. Default name: ${defaultName}.`;
+    }
+    return `Default location: ${project?.path || "project"}/exports/${defaultName}.`;
   }
 
   getVaultBasePath() {
@@ -690,5 +766,19 @@ export class PdfExportService {
     }
     const fsPromises = require("fs/promises");
     await fsPromises.writeFile(targetPath, pdfBuffer);
+  }
+
+  createAbortError() {
+    const error = new Error("PDF export cancelled.");
+    error.name = "AbortError";
+    return error;
+  }
+
+  isAbortError(error) {
+    return error?.name === "AbortError" || error?.message === "PDF export cancelled.";
+  }
+
+  throwIfAborted(signal) {
+    if (signal?.aborted) throw this.createAbortError();
   }
 }

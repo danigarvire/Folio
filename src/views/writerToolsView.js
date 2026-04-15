@@ -3,6 +3,7 @@
  */
 
 import { ItemView, Modal, Notice, setIcon } from 'obsidian';
+import { ConfirmModal } from '../modals/confirmModal.js';
 import { FocusModeStatsModal } from '../modals/focusModeStatsModal.js';
 import { createResourceSubheading, renderCalloutItem, renderHeroDetail, renderMentorDetail, renderHeraldDetail, renderShadowDetail, renderTricksterDetail, renderAllyDetail, renderShapeshifterDetail, renderThresholdGuardianDetail, renderCaregiverDetail, renderCreatorDetail, renderEverymanDetail, renderExplorerDetail, renderHeroJungDetail, renderInnocentDetail, renderJesterDetail, renderLoverDetail, renderMagicianDetail, renderOutlawDetail, renderRulerDetail, renderSageDetail, renderMoralAscentDetail, renderMoralDescentDetail, renderFlatMoralDetail, renderMoralTransformationDetail, renderPitfallsDetail, renderTipsDetail, renderTechniqueDetail, renderStructureDetail } from '../writer-tools/referenceDetails.js';
 
@@ -33,10 +34,18 @@ export class WriterToolsView extends ItemView {
     super(leaf);
     this.plugin = plugin;
     this.focusModeActive = false;
-    this.timerSeconds = 25 * 60; // 25 minutes
+    this.focusSessionDurationMinutes = 25;
+    this.focusSessionDurationSeconds = this.focusSessionDurationMinutes * 60;
+    this.timerSeconds = this.focusSessionDurationSeconds;
     this.timerRunning = false;
     this.timerInterval = null;
-    this.sessionStartWords = 0;
+    this.focusSessionState = "idle";
+    this.focusSessionStartedAt = null;
+    this.focusPauseStartWords = null;
+    this.sessionStartWords = null;
+    this.quietWorkspaceActive = false;
+    this.restoreLeftSidebarAfterFocus = false;
+    this.focusSetupExpanded = false;
     this.focusStats = {
       sessions: 0,
       interruptions: 0,
@@ -67,6 +76,7 @@ export class WriterToolsView extends ItemView {
     this.pdfPreviewWebview = null;
     this.pdfExportStateUpdater = null;
     this.isPdfExporting = false;
+    this.pdfExportAbortController = null;
   }
 
   getViewType() {
@@ -84,6 +94,8 @@ export class WriterToolsView extends ItemView {
   async onOpen() {
     const container = this.containerEl.children[1];
     container.empty();
+    container.removeClass("folio-focus-mode");
+    container.removeClass("folio-export-settings");
     container.addClass("folio-writer-tools");
 
     // Header (no icon)
@@ -103,15 +115,33 @@ export class WriterToolsView extends ItemView {
     this.renderAboutSection();
   }
 
+  async onClose() {
+    this.setQuietWorkspace(false);
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
   renderToolsSection() {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "TOOLS" });
 
     const focusItem = section.createDiv({ cls: "writer-tools-item" });
+    focusItem.setAttr("role", "button");
+    focusItem.setAttr("tabindex", "0");
+    focusItem.setAttr("aria-label", "Open Focus mode for a quiet timed writing session");
     const focusIcon = focusItem.createSpan({ cls: "writer-tools-item-icon" });
     setIcon(focusIcon, "circle-dot");
     focusItem.createSpan({ cls: "writer-tools-item-text", text: "Focus mode" });
-    focusItem.addEventListener("click", () => this.showFocusMode());
+    const openFocusMode = () => this.showFocusMode();
+    focusItem.addEventListener("click", openFocusMode);
+    focusItem.addEventListener("keydown", (evt) => {
+      if (evt.key === "Enter" || evt.key === " ") {
+        evt.preventDefault();
+        openFocusMode();
+      }
+    });
 
     const exportItem = section.createDiv({ cls: "writer-tools-item" });
     const exportIcon = exportItem.createSpan({ cls: "writer-tools-item-icon" });
@@ -132,19 +162,31 @@ export class WriterToolsView extends ItemView {
   }
 
   showFocusMode() {
-    this.focusModeActive = true;
     const container = this.containerEl.children[1];
     container.empty();
+    container.removeClass("folio-writer-tools");
+    container.removeClass("folio-export-settings");
     container.addClass("folio-focus-mode");
 
     // Get current project
     const project = this.plugin.activeProject || this.plugin.activeBook;
     if (!project) {
-      container.createDiv({ cls: "focus-mode-no-project", text: "No project selected. Please select a project first." });
-      const backBtn = container.createEl("button", { cls: "focus-mode-btn-secondary", text: "Back" });
-      backBtn.addEventListener("click", () => this.exitFocusMode());
+      this.focusModeActive = false;
+      this.focusModeProject = null;
+      const empty = container.createDiv({ cls: "focus-mode-empty-state" });
+      const emptyIcon = empty.createSpan({ cls: "focus-mode-empty-icon" });
+      setIcon(emptyIcon, "circle-dot");
+      empty.createDiv({ cls: "focus-mode-empty-title", text: "Choose a project first" });
+      empty.createDiv({
+        cls: "focus-mode-empty-subtitle",
+        text: "Focus Mode tracks words inside the active Folio project."
+      });
+      const backBtn = empty.createEl("button", { cls: "focus-mode-btn-secondary", text: "Back to tools" });
+      backBtn.addEventListener("click", () => this.closeFocusModeView());
       return;
     }
+
+    this.focusModeActive = true;
 
     // Load focus stats from project config
     this.loadFocusStats(project).then(() => {
@@ -282,7 +324,7 @@ export class WriterToolsView extends ItemView {
     modal.open();
   }
 
-  async handleExportAction() {
+  async handleExportAction(options = {}) {
     if (!this.exportProject) {
       new Notice("No active project selected.");
       return false;
@@ -292,7 +334,7 @@ export class WriterToolsView extends ItemView {
     }
     if (this.exportFormat === "pdf") {
       if (this.plugin?.pdfExportService?.exportProject) {
-        await this.plugin.pdfExportService.exportProject(this.exportProject, this.pdfSettings);
+        await this.plugin.pdfExportService.exportProject(this.exportProject, this.pdfSettings, options);
         return true;
       }
       new Notice("PDF export is not wired yet. Settings are saved and preview updates are in place.");
@@ -445,12 +487,20 @@ export class WriterToolsView extends ItemView {
       return { canExport: false, message: "Select at least one file to export." };
     }
     if (exportableNodes.length > 0) {
+      const saveHint = this.getPdfSaveHint();
       return {
         canExport: true,
-        message: `${includedNodes.length} ${includedNodes.length === 1 ? "file" : "files"} selected. You will choose a save location next.`
+        message: `${includedNodes.length} ${includedNodes.length === 1 ? "file" : "files"} selected. ${saveHint}`
       };
     }
-    return { canExport: true, message: "Folio will scan the project folder when export starts." };
+    return { canExport: true, message: `Folio will scan the project folder when export starts. ${this.getPdfSaveHint()}` };
+  }
+
+  getPdfSaveHint() {
+    if (this.plugin?.pdfExportService?.getDefaultSaveHint) {
+      return this.plugin.pdfExportService.getDefaultSaveHint(this.exportProject, this.exportMeta);
+    }
+    return "Save dialog opens next.";
   }
 
   updatePdfExportState() {
@@ -1246,8 +1296,18 @@ export class WriterToolsView extends ItemView {
 
   async loadFocusStats(project) {
     try {
+      this.focusStats = {
+        sessions: 0,
+        interruptions: 0,
+        currentWords: 0,
+        wordGoal: 500,
+        totalTimeSpent: 0,
+        history: []
+      };
+      this.setFocusSessionDuration(25, { resetTimer: true });
       const cfg = await this.plugin.configService.loadProjectConfig(project);
       if (cfg && cfg.focusMode) {
+        const durationMinutes = Number(cfg.focusMode.sessionDurationMinutes || 25);
         this.focusStats = {
           sessions: cfg.focusMode.sessions || 0,
           interruptions: cfg.focusMode.interruptions || 0,
@@ -1256,7 +1316,9 @@ export class WriterToolsView extends ItemView {
           totalTimeSpent: cfg.focusMode.totalTimeSpent || 0,
           history: Array.isArray(cfg.focusMode.history) ? cfg.focusMode.history : []
         };
+        this.setFocusSessionDuration(Number.isFinite(durationMinutes) ? durationMinutes : 25, { resetTimer: true });
       }
+      if (!this.focusStats.wordGoal) this.focusStats.wordGoal = 500;
     } catch (e) {
       console.warn("Failed to load focus stats", e);
     }
@@ -1270,6 +1332,7 @@ export class WriterToolsView extends ItemView {
         interruptions: this.focusStats.interruptions,
         currentWords: this.focusStats.currentWords || 0,
         wordGoal: this.focusStats.wordGoal,
+        sessionDurationMinutes: this.focusSessionDurationMinutes,
         totalTimeSpent: this.focusStats.totalTimeSpent,
         history: this.focusStats.history,
         lastSession: new Date().toISOString()
@@ -1286,48 +1349,167 @@ export class WriterToolsView extends ItemView {
 
   renderFocusModeUI(container, project) {
     this.focusModeProject = project;
-    // Header
+    this.focusModeContainer = container;
+    container.empty();
+    ["is-ready", "is-running", "is-paused", "is-completed", "is-ended"].forEach(cls => container.removeClass(cls));
+
     const header = container.createDiv({ cls: "focus-mode-header" });
     const headerIcon = header.createSpan({ cls: "focus-mode-header-icon" });
     setIcon(headerIcon, "circle-dot");
-    header.createSpan({ cls: "focus-mode-header-title", text: "Focus mode" });
+    const context = this.getFocusContext(project);
+    const headerCopy = header.createDiv({ cls: "focus-mode-header-copy" });
+    headerCopy.createSpan({ cls: "focus-mode-header-title", text: "Focus mode" });
+    const contextLine = headerCopy.createDiv({ cls: "focus-mode-header-context" });
+    contextLine.createSpan({ cls: "focus-mode-header-context-label", text: "Project" });
+    contextLine.createSpan({ cls: "focus-mode-header-context-value", text: context.projectName });
+    if (context.fileName) {
+      contextLine.createSpan({ cls: "focus-mode-header-context-separator", text: "/" });
+      contextLine.createSpan({ cls: "focus-mode-header-context-value", text: context.fileName });
+    }
+    const headerActions = header.createDiv({ cls: "focus-mode-header-actions" });
+    this.quietButton = headerActions.createEl("button", { cls: "focus-mode-header-action focus-mode-quiet-toggle", text: "Quiet" });
+    this.quietButton.setAttr("aria-label", "Quiet the workspace");
+    this.quietButton.addEventListener("click", () => this.toggleQuietWorkspace());
+    const backButton = headerActions.createEl("button", { cls: "focus-mode-exit-button", text: "Back" });
+    backButton.setAttr("aria-label", "Return to Writer Tools");
+    backButton.addEventListener("click", () => this.exitFocusMode());
 
-    // Project name
-    const projectLabel = container.createDiv({ cls: "focus-mode-project-name" });
-    projectLabel.createSpan({ text: "Project: ", cls: "focus-mode-project-label" });
-    projectLabel.createSpan({ text: project.name, cls: "focus-mode-project-value" });
+    const sessionPanel = container.createDiv({ cls: "focus-mode-session-panel" });
 
-    // Timer container
-    const timerContainer = container.createDiv({ cls: "focus-mode-timer-container" });
-    
-    // Timer circle
+    const timerContainer = sessionPanel.createDiv({ cls: "focus-mode-timer-container" });
     const timerCircle = timerContainer.createDiv({ cls: "focus-mode-timer-circle" });
+    this.timerCircle = timerCircle;
+    this.timerStateLabel = timerCircle.createDiv({ cls: "focus-mode-timer-state", text: "Ready" });
     this.timerDisplay = timerCircle.createDiv({ cls: "focus-mode-timer-display" });
+    this.timerDisplay.setAttr("aria-live", "polite");
+    this.timerCaption = timerCircle.createDiv({ cls: "focus-mode-timer-caption", text: "25-minute session" });
     this.updateTimerDisplay();
 
-    // Status text
-    this.statusText = container.createDiv({ cls: "focus-mode-status", text: "Ready to start" });
+    const statusBlock = sessionPanel.createDiv({ cls: "focus-mode-status-block" });
+    this.statusText = statusBlock.createDiv({ cls: "focus-mode-status", text: "Ready when you are" });
+    this.statusHint = statusBlock.createDiv({
+      cls: "focus-mode-status-hint",
+      text: "Start the timer, then write in your current project file."
+    });
 
-    // Buttons container
-    const buttonsContainer = container.createDiv({ cls: "focus-mode-buttons" });
-    
-    // Start/Pause button
-    this.startButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-primary", text: "Start focus" });
+    const progress = sessionPanel.createDiv({ cls: "focus-mode-word-progress" });
+    const progressHeader = progress.createDiv({ cls: "focus-mode-word-progress-header" });
+    this.wordProgressLabel = progressHeader.createDiv({ cls: "focus-mode-word-progress-label" });
+    this.focusProgressHint = progressHeader.createDiv({ cls: "focus-mode-word-progress-hint" });
+    const progressTrack = progress.createDiv({ cls: "focus-mode-word-progress-track" });
+    this.wordProgressBar = progressTrack.createDiv({ cls: "focus-mode-word-progress-fill" });
+
+    this.setupSummary = sessionPanel.createEl("button", { cls: "focus-mode-setup-summary" });
+    this.setupSummaryLabel = this.setupSummary.createSpan({ cls: "focus-mode-setup-summary-label", text: "Sprint setup" });
+    this.setupSummaryValue = this.setupSummary.createSpan({ cls: "focus-mode-setup-summary-value", text: "25 min / 500 words" });
+    this.setupSummary.setAttr("aria-expanded", "false");
+    this.setupSummary.addEventListener("click", () => {
+      if (this.hasFocusSessionInProgress()) return;
+      this.focusSetupExpanded = !this.focusSetupExpanded;
+      this.updateFocusControls();
+    });
+
+    this.setupPanel = sessionPanel.createDiv({ cls: "focus-mode-setup-panel" });
+    const setup = this.setupPanel.createDiv({ cls: "focus-mode-setup" });
+    const durationField = setup.createDiv({ cls: "focus-mode-setup-field" });
+    durationField.createDiv({ cls: "focus-mode-setup-label", text: "Minutes" });
+    this.durationInput = durationField.createEl("input", {
+      type: "number",
+      cls: "focus-mode-setup-input",
+      value: this.focusSessionDurationMinutes.toString()
+    });
+    this.durationInput.setAttr("min", "5");
+    this.durationInput.setAttr("max", "180");
+    this.durationInput.setAttr("step", "5");
+    this.durationInput.addEventListener("change", () => this.updateFocusSessionSetup(project));
+
+    const goalField = setup.createDiv({ cls: "focus-mode-setup-field" });
+    goalField.createDiv({ cls: "focus-mode-setup-label", text: "Word goal" });
+    this.wordGoalInput = goalField.createEl("input", {
+      type: "number",
+      cls: "focus-mode-setup-input",
+      value: String(this.focusStats.wordGoal || 500)
+    });
+    this.wordGoalInput.setAttr("min", "1");
+    this.wordGoalInput.setAttr("max", "99999");
+    this.wordGoalInput.setAttr("step", "50");
+    this.wordGoalInput.addEventListener("change", () => this.updateFocusSessionSetup(project));
+
+    const buttonsContainer = sessionPanel.createDiv({ cls: "focus-mode-buttons" });
+    this.startButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-primary", text: "Start session" });
     this.startButton.addEventListener("click", () => this.toggleTimer());
 
-    // Exit button
-    const exitButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-secondary", text: "Exit" });
-    exitButton.addEventListener("click", () => this.exitFocusMode());
+    this.endButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-secondary", text: "End early" });
+    this.endButton.addEventListener("click", () => this.endFocusSession());
 
-    // Stats bar
     const statsBar = container.createDiv({ cls: "focus-mode-stats-bar" });
     this.renderFocusStats(statsBar);
+    this.updateFocusControls();
+  }
+
+  getFocusContext(project) {
+    const projectName = project?.name || "Current project";
+    try {
+      const activeFile = this.plugin.app.workspace?.getActiveFile?.();
+      const projectPath = project?.path ? `${project.path}/` : "";
+      if (activeFile?.path && projectPath && activeFile.path.startsWith(projectPath)) {
+        const fileName = activeFile.basename || activeFile.name?.replace(/\.md$/i, "") || activeFile.path.split("/").pop();
+        return { projectName, fileName };
+      }
+    } catch (e) {
+      // Context is a nicety; Focus Mode should still open if Obsidian has no active file.
+    }
+    return { projectName, fileName: "" };
+  }
+
+  setFocusSessionDuration(minutes, { resetTimer = false } = {}) {
+    const normalized = Math.min(180, Math.max(5, Math.round(Number(minutes || 25))));
+    this.focusSessionDurationMinutes = normalized;
+    this.focusSessionDurationSeconds = normalized * 60;
+    if (resetTimer || !this.hasFocusSessionInProgress()) {
+      this.timerSeconds = this.focusSessionDurationSeconds;
+    }
+  }
+
+  updateFocusSessionSetup(project) {
+    if (this.hasFocusSessionInProgress()) {
+      this.updateFocusControls();
+      return;
+    }
+    const durationValue = Number(this.durationInput?.value || this.focusSessionDurationMinutes);
+    const goalValue = Number(this.wordGoalInput?.value || this.focusStats.wordGoal || 500);
+    this.setFocusSessionDuration(durationValue, { resetTimer: true });
+    this.focusStats.wordGoal = Math.min(99999, Math.max(1, Math.round(goalValue)));
+    if (this.durationInput) this.durationInput.value = this.focusSessionDurationMinutes.toString();
+    if (this.wordGoalInput) this.wordGoalInput.value = String(this.focusStats.wordGoal);
+    this.updateFocusControls();
+    this.refreshFocusStats();
+    if (project) this.saveFocusStats(project);
   }
 
   updateTimerDisplay() {
+    if (!this.timerDisplay) return;
     const minutes = Math.floor(this.timerSeconds / 60);
     const seconds = this.timerSeconds % 60;
     this.timerDisplay.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+    const elapsed = Math.max(0, this.focusSessionDurationSeconds - this.timerSeconds);
+    const progress = this.focusSessionDurationSeconds > 0 ? elapsed / this.focusSessionDurationSeconds : 0;
+    if (this.timerCircle) {
+      this.timerCircle.style.setProperty("--focus-progress", `${Math.min(360, Math.max(0, progress * 360))}deg`);
+      this.timerCircle.toggleClass("is-running", this.timerRunning);
+      this.timerCircle.toggleClass("is-paused", this.focusSessionState === "paused");
+      this.timerCircle.toggleClass("is-completed", this.focusSessionState === "completed");
+    }
+    if (this.timerCaption) {
+      this.timerCaption.textContent = this.focusSessionState === "running"
+        ? "left in this sprint"
+        : this.focusSessionState === "paused"
+          ? "Paused"
+          : this.focusSessionState === "completed"
+            ? "Session complete"
+            : `${this.focusSessionDurationMinutes}-minute session`;
+    }
+    this.updateFocusProgress();
   }
 
   toggleTimer() {
@@ -1339,69 +1521,273 @@ export class WriterToolsView extends ItemView {
   }
 
   startTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    const previousState = this.focusSessionState;
+    const shouldStartFresh = this.timerSeconds <= 0 || previousState === "completed" || previousState === "ended";
+    if (previousState === "paused" && this.focusPauseStartWords !== null && this.sessionStartWords !== null) {
+      const resumeWords = this.getActiveEditorWordCount();
+      this.sessionStartWords = Math.max(0, this.sessionStartWords + (resumeWords - this.focusPauseStartWords));
+      this.focusPauseStartWords = null;
+    }
+    this.focusSetupExpanded = false;
     this.timerRunning = true;
-    this.startButton.textContent = "Pause";
-    this.statusText.textContent = "Focus in progress...";
-    if (this.timerSeconds === 25 * 60) {
+    this.focusSessionState = "running";
+    if (shouldStartFresh) {
+      this.timerSeconds = this.focusSessionDurationSeconds;
+    }
+    if (this.timerSeconds === this.focusSessionDurationSeconds || this.sessionStartWords === null) {
+      this.focusSessionStartedAt = new Date().toISOString();
       this.sessionStartWords = this.getActiveEditorWordCount();
       this.focusStats.currentWords = 0;
       this.refreshFocusStats();
     }
+    this.updateFocusControls();
     this.timerInterval = setInterval(() => {
       if (this.timerSeconds > 0) {
         this.timerSeconds--;
         this.updateTimerDisplay();
-      } else {
+      }
+      if (this.timerSeconds <= 0) {
         this.completeSession();
       }
     }, 1000);
   }
 
   pauseTimer() {
+    if (!this.timerRunning) return;
     this.timerRunning = false;
-    this.startButton.textContent = "Resume";
-    this.statusText.textContent = "Paused";
-    this.focusStats.interruptions++;
-    this.focusStats.history.push({
-      type: 'interrupted',
-      timestamp: new Date().toISOString(),
-      words: this.focusStats.currentWords || 0,
-      target: this.focusStats.wordGoal || 0
-    });
+    this.focusSessionState = "paused";
+    this.focusPauseStartWords = this.getActiveEditorWordCount();
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    // Save interruption
-    const project = this.plugin.activeProject || this.plugin.activeBook;
+    const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
     if (project) this.saveFocusStats(project);
-    this.refreshFocusStats();
-    this.sessionStartWords = 0;
-    this.focusStats.currentWords = 0;
+    this.updateFocusControls();
   }
 
   completeSession() {
-    this.timerRunning = false;
-    this.focusStats.sessions++;
-    this.focusStats.totalTimeSpent += 25 * 60; // Add 25 minutes
-    this.focusStats.history.push({
-      type: 'completed',
-      timestamp: new Date().toISOString(),
-      words: this.focusStats.currentWords || 0,
-      target: this.focusStats.wordGoal || 0
-    });
-    this.startButton.textContent = "Start focus";
-    this.statusText.textContent = "Session complete!";
-    this.timerSeconds = 25 * 60;
-    this.updateTimerDisplay();
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
-    // Save completed session to project config
-    const project = this.plugin.activeProject || this.plugin.activeBook;
+    this.timerRunning = false;
+    this.focusSessionState = "completed";
+    this.focusStats.sessions++;
+    this.focusStats.totalTimeSpent += this.focusSessionDurationSeconds;
+    this.focusStats.history.push({
+      type: 'completed',
+      timestamp: new Date().toISOString(),
+      startedAt: this.focusSessionStartedAt,
+      words: this.focusStats.currentWords || 0,
+      target: this.focusStats.wordGoal || 0,
+      elapsedSeconds: this.focusSessionDurationSeconds
+    });
+    this.timerSeconds = 0;
+    this.focusSessionStartedAt = null;
+    this.focusPauseStartWords = null;
+    this.sessionStartWords = null;
+    this.updateTimerDisplay();
+    const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
     if (project) this.saveFocusStats(project);
     this.refreshFocusStats();
+    this.updateFocusControls();
+  }
+
+  async endFocusSession({ exitAfter = false } = {}) {
+    if (!this.hasFocusSessionInProgress()) {
+      if (exitAfter) this.closeFocusModeView();
+      return;
+    }
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    const elapsedSeconds = Math.max(0, this.focusSessionDurationSeconds - this.timerSeconds);
+    this.timerRunning = false;
+    this.focusSessionState = "ended";
+    this.focusStats.interruptions++;
+    this.focusStats.totalTimeSpent += elapsedSeconds;
+    this.focusStats.history.push({
+      type: 'interrupted',
+      timestamp: new Date().toISOString(),
+      startedAt: this.focusSessionStartedAt,
+      words: this.focusStats.currentWords || 0,
+      target: this.focusStats.wordGoal || 0,
+      elapsedSeconds
+    });
+    this.timerSeconds = this.focusSessionDurationSeconds;
+    this.focusSessionStartedAt = null;
+    this.focusPauseStartWords = null;
+    this.sessionStartWords = null;
+    this.updateTimerDisplay();
+    const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
+    if (project) await this.saveFocusStats(project);
+    this.refreshFocusStats();
+    this.updateFocusControls();
+    if (exitAfter) this.closeFocusModeView();
+  }
+
+  hasFocusSessionInProgress() {
+    return this.timerRunning || this.focusSessionState === "paused" || (
+      this.timerSeconds > 0 && this.timerSeconds < this.focusSessionDurationSeconds
+    );
+  }
+
+  updateFocusControls() {
+    const hasSession = this.hasFocusSessionInProgress();
+    const visualState = this.timerRunning
+      ? "running"
+      : this.focusSessionState === "paused"
+        ? "paused"
+        : this.focusSessionState === "completed"
+          ? "completed"
+          : this.focusSessionState === "ended"
+            ? "ended"
+            : "ready";
+    if (this.focusModeContainer) {
+      this.focusModeContainer.toggleClass("is-ready", visualState === "ready");
+      this.focusModeContainer.toggleClass("is-running", visualState === "running");
+      this.focusModeContainer.toggleClass("is-paused", visualState === "paused");
+      this.focusModeContainer.toggleClass("is-completed", visualState === "completed");
+      this.focusModeContainer.toggleClass("is-ended", visualState === "ended");
+    }
+    if (this.timerStateLabel) {
+      this.timerStateLabel.textContent = visualState === "running"
+        ? "Writing"
+        : visualState === "paused"
+          ? "Paused"
+          : visualState === "completed"
+            ? "Done"
+            : visualState === "ended"
+              ? "Ended"
+              : "Ready";
+    }
+    if (this.durationInput) this.durationInput.disabled = hasSession;
+    if (this.wordGoalInput) this.wordGoalInput.disabled = hasSession;
+    if (this.setupSummary) {
+      const goal = Number(this.focusStats.wordGoal || 0);
+      if (this.setupSummaryValue) {
+        this.setupSummaryValue.textContent = `${this.focusSessionDurationMinutes} min / ${goal || 0} words`;
+      }
+      this.setupSummary.disabled = hasSession;
+      this.setupSummary.setAttr("aria-expanded", this.focusSetupExpanded && !hasSession ? "true" : "false");
+      this.setupSummary.toggleClass("is-disabled", hasSession);
+      this.setupSummary.toggleClass("is-open", this.focusSetupExpanded && !hasSession);
+    }
+    if (this.setupPanel) {
+      this.setupPanel.toggleClass("is-open", this.focusSetupExpanded && !hasSession);
+    }
+    if (this.startButton) {
+      this.startButton.textContent = this.timerRunning
+        ? "Pause session"
+        : hasSession
+          ? "Resume session"
+          : this.focusSessionState === "completed"
+            ? "Start another"
+            : "Start session";
+      this.startButton.toggleClass("is-running", this.timerRunning);
+    }
+    if (this.endButton) {
+      this.endButton.disabled = !hasSession;
+      this.endButton.toggleClass("is-disabled", !hasSession);
+      this.endButton.toggleClass("is-hidden", !hasSession);
+    }
+    if (this.quietButton) {
+      this.quietButton.textContent = this.quietWorkspaceActive ? "Restore" : "Quiet";
+      this.quietButton.toggleClass("is-active", this.quietWorkspaceActive);
+    }
+    if (this.statusText && this.statusHint) {
+      if (this.timerRunning) {
+        this.statusText.textContent = "Writing session active";
+        this.statusHint.textContent = "Stay with the draft. Words and time are being tracked.";
+      } else if (this.focusSessionState === "paused") {
+        this.statusText.textContent = "Session paused";
+        this.statusHint.textContent = "Nothing is recorded as ended. Resume when ready.";
+      } else if (this.focusSessionState === "completed") {
+        this.statusText.textContent = "Session complete";
+        this.statusHint.textContent = "Saved to your Focus stats. Start another when you like.";
+      } else if (this.focusSessionState === "ended") {
+        this.statusText.textContent = "Session ended early";
+        this.statusHint.textContent = "Saved to your Focus stats as ended early.";
+      } else {
+        this.statusText.textContent = "Ready when you are";
+        this.statusHint.textContent = "Set a sprint, then write in your current project file.";
+      }
+    }
+    this.updateFocusProgress();
+    this.updateTimerDisplay();
+  }
+
+  updateFocusProgress() {
+    if (!this.wordProgressLabel || !this.wordProgressBar) return;
+    const words = Number(this.focusStats.currentWords || 0);
+    const goal = Number(this.focusStats.wordGoal || 0);
+    const percent = goal > 0 ? Math.min(100, Math.round((words / goal) * 100)) : 0;
+    this.wordProgressLabel.textContent = goal > 0
+      ? `${words} / ${goal} words`
+      : `${words} words this session`;
+    if (this.focusProgressHint) {
+      const remainingWords = goal > 0 ? Math.max(0, goal - words) : 0;
+      const timeLabel = this.timerSeconds > 0 ? `${this.formatFocusClock(this.timerSeconds)} left` : "Time complete";
+      const wordLabel = remainingWords > 0 ? `${remainingWords} words left` : "goal reached";
+      this.focusProgressHint.textContent = goal > 0
+        ? `${timeLabel} · ${wordLabel}`
+        : timeLabel;
+    }
+    this.wordProgressBar.style.width = `${percent}%`;
+  }
+
+  formatFocusClock(totalSeconds) {
+    const seconds = Math.max(0, Number(totalSeconds || 0));
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    }
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  }
+
+  toggleQuietWorkspace() {
+    this.setQuietWorkspace(!this.quietWorkspaceActive);
+  }
+
+  setQuietWorkspace(enabled) {
+    const body = typeof document !== "undefined" ? document.body : null;
+    if (!body) return;
+    if (enabled) {
+      this.quietWorkspaceActive = true;
+      body.classList.add("folio-focus-quiet-workspace");
+      const leftSplit = this.plugin.app.workspace?.leftSplit;
+      const wasCollapsed = !!leftSplit?.collapsed;
+      this.restoreLeftSidebarAfterFocus = !wasCollapsed;
+      try {
+        if (!wasCollapsed && typeof leftSplit?.collapse === "function") {
+          leftSplit.collapse();
+        }
+      } catch (e) {
+        console.warn("Failed to quiet the workspace", e);
+      }
+    } else {
+      const shouldRestore = this.quietWorkspaceActive && this.restoreLeftSidebarAfterFocus;
+      this.quietWorkspaceActive = false;
+      this.restoreLeftSidebarAfterFocus = false;
+      body.classList.remove("folio-focus-quiet-workspace");
+      const leftSplit = this.plugin.app.workspace?.leftSplit;
+      try {
+        if (shouldRestore && typeof leftSplit?.expand === "function") {
+          leftSplit.expand();
+        }
+      } catch (e) {
+        console.warn("Failed to restore the workspace", e);
+      }
+    }
+    this.updateFocusControls();
   }
 
   refreshFocusStats() {
@@ -1422,7 +1808,17 @@ export class WriterToolsView extends ItemView {
     
     const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
     const statsHeader = container.createDiv({ cls: "focus-mode-stats-header" });
-    const statsButton = statsHeader.createEl("button", { cls: "focus-mode-stats-button", text: "Focus mode stats" });
+    const totalTime = Number(this.focusStats.totalTimeSpent || 0);
+    const completed = Number(this.focusStats.sessions || 0);
+    const interrupted = Number(this.focusStats.interruptions || 0);
+    const hasHistory = completed > 0 || interrupted > 0 || totalTime > 0;
+    const statsSummary = statsHeader.createDiv({
+      cls: "focus-mode-stats-summary",
+      text: hasHistory
+        ? `${completed} completed · ${formatTime(totalTime)} focused`
+        : "No sessions yet"
+    });
+    const statsButton = statsHeader.createEl("button", { cls: "focus-mode-stats-button", text: "Session log" });
     statsButton.addEventListener("click", async (evt) => {
       evt.stopPropagation();
       if (!project) return;
@@ -1434,46 +1830,14 @@ export class WriterToolsView extends ItemView {
       this.focusStatsModal.open();
     });
 
-    // Create tooltip zone above stats
-    const tooltipZone = container.createDiv({ cls: "focus-mode-tooltip-zone" });
-    
-    const stats = [
-      { label: "Completed sessions", value: this.focusStats.sessions, tooltip: "Number of 25-minute focus sessions completed without exiting", priority: "secondary" },
-      { label: "Interrupted sessions", value: this.focusStats.interruptions, tooltip: "Number of times you paused during an active focus session", priority: "secondary" },
-      { label: "Words in session", value: this.focusStats.currentWords, tooltip: "Words written during the current focus session", priority: "primary" },
-      { label: "Session word target", value: this.focusStats.wordGoal, tooltip: "Target number of words to write per session", priority: "primary" }
-    ];
-    
-    const statsRow = container.createDiv({ cls: "focus-mode-stats-row" });
-    
-    stats.forEach(stat => {
-      const statItem = statsRow.createDiv({ cls: `focus-mode-stat-item ${stat.priority === 'primary' ? 'is-primary' : 'is-secondary'}` });
-      statItem.createDiv({ cls: "focus-mode-stat-label", text: stat.label });
-      statItem.createDiv({ cls: "focus-mode-stat-value", text: stat.value.toString() });
-      
-      // Show tooltip in central zone on click
-      statItem.addEventListener("click", (e) => {
-        e.stopPropagation();
-        tooltipZone.textContent = stat.tooltip;
-        tooltipZone.classList.add("visible");
-        
-        // Hide after 3 seconds or on next click
-        setTimeout(() => {
-          tooltipZone.classList.remove("visible");
-        }, 3000);
-      });
-    });
-    
-    // Click anywhere else to dismiss tooltip
-    container.addEventListener("click", () => {
-      tooltipZone.classList.remove("visible");
-    });
+    statsSummary.setAttr("aria-label", "Focus session summary");
   }
 
   getActiveEditorWordCount() {
     try {
+      const activeEditor = this.plugin.app.workspace.activeEditor?.editor;
       const leaf = this.plugin.app.workspace.getMostRecentLeaf();
-      const editor = leaf?.view?.editor;
+      const editor = activeEditor || leaf?.view?.editor;
       if (!editor || typeof editor.getValue !== "function") return 0;
       return this.plugin.statsService.countWords(editor.getValue());
     } catch (e) {
@@ -1483,6 +1847,7 @@ export class WriterToolsView extends ItemView {
 
   updateFocusSessionWordsFromEditor(text, file) {
     if (!this.focusModeActive) return;
+    if (!this.timerRunning) return;
     const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
     if (!project || !file?.path || !file.path.startsWith(project.path + "/")) return;
     const total = this.plugin.statsService.countWords(text);
@@ -1493,17 +1858,38 @@ export class WriterToolsView extends ItemView {
     if (current !== this.focusStats.currentWords) {
       this.focusStats.currentWords = current;
       this.refreshFocusStats();
+      this.updateFocusControls();
     }
   }
 
   exitFocusMode() {
+    if (this.hasFocusSessionInProgress()) {
+      new ConfirmModal(this.plugin.app, {
+        title: "End this focus session?",
+        message: "Your timer is still active. End the session early and return to Writer Tools?",
+        confirmText: "End session",
+        onConfirm: async () => {
+          await this.endFocusSession({ exitAfter: true });
+        }
+      }).open();
+      return;
+    }
+    this.closeFocusModeView();
+  }
+
+  closeFocusModeView() {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
     }
     this.timerRunning = false;
-    this.timerSeconds = 25 * 60;
+    this.timerSeconds = this.focusSessionDurationSeconds;
     this.focusModeActive = false;
+    this.focusSessionState = "idle";
+    this.focusSessionStartedAt = null;
+    this.focusPauseStartWords = null;
+    this.sessionStartWords = null;
+    this.setQuietWorkspace(false);
     const container = this.containerEl.children[1];
     container.removeClass("folio-focus-mode");
     this.onOpen();
@@ -3377,25 +3763,46 @@ class PdfSettingsModal extends Modal {
 
     this.view.pdfExportStateUpdater = (state) => {
       const canExport = !!state?.canExport && !this.view.isPdfExporting;
-      actionStatus.textContent = state?.message || "";
+      if (!this.view.isPdfExporting) {
+        actionStatus.textContent = state?.message || "";
+      }
       exportBtn.disabled = !canExport;
       exportBtn.toggleClass("is-disabled", !canExport);
     };
     this.view.updatePdfExportState();
 
-    cancel.addEventListener("click", () => this.close());
+    cancel.addEventListener("click", () => {
+      if (this.view.isPdfExporting && this.view.pdfExportAbortController) {
+        actionStatus.textContent = "Cancelling export...";
+        cancel.disabled = true;
+        this.view.pdfExportAbortController.abort();
+        return;
+      }
+      this.close();
+    });
     exportBtn.addEventListener("click", async () => {
       if (!this.view.validatePdfExportSettings()) return;
+      const controller = new AbortController();
+      this.view.pdfExportAbortController = controller;
       this.view.isPdfExporting = true;
       exportBtn.disabled = true;
       exportBtn.toggleClass("is-disabled", true);
       exportBtn.textContent = "Exporting...";
-      actionStatus.textContent = "Rendering the PDF...";
+      cancel.textContent = "Cancel export";
+      actionStatus.textContent = "Starting export...";
       try {
-        await this.view.handleExportAction();
+        await this.view.handleExportAction({
+          signal: controller.signal,
+          onProgress: (message) => {
+            actionStatus.textContent = message;
+          }
+        });
       } finally {
         this.view.isPdfExporting = false;
+        this.view.pdfExportAbortController = null;
         exportBtn.textContent = "Export PDF";
+        cancel.textContent = "Close";
+        cancel.disabled = false;
         this.view.updatePdfExportState();
       }
     });
@@ -3403,11 +3810,15 @@ class PdfSettingsModal extends Modal {
 
   onClose() {
     const { contentEl } = this;
+    if (this.view.isPdfExporting && this.view.pdfExportAbortController) {
+      this.view.pdfExportAbortController.abort();
+    }
     contentEl.empty();
     this.modalEl?.removeClass("pdf-settings-modal-shell");
     this.resetCenteredPaneLayout();
     this.view.pdfExportStateUpdater = null;
     this.view.isPdfExporting = false;
+    this.view.pdfExportAbortController = null;
     this.view.pdfSettingsLayoutRoot = null;
     this.view.pdfSettingsControlsEl = null;
     if (this.view.pdfSettingsContainer === this.contentEl.querySelector(".pdf-settings-modal-body")) {

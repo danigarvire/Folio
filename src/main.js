@@ -69,6 +69,11 @@ export default class FolioPlugin extends Plugin {
     this.registerView(WRITER_TOOLS_VIEW_TYPE, (leaf) => new WriterToolsView(leaf, this));
 
     this.addRibbonIcon("book", "Open Folio", () => this.activateFolio());
+    this.addCommand({
+      id: "open-focus-mode",
+      name: "Open Focus Mode",
+      callback: () => this.openFocusMode(),
+    });
     this.addSettingTab(new FolioSettingTab(this.app, this));
 
     /* LIVE SYNC — debounce create/delete to avoid cascading rescans during
@@ -517,6 +522,16 @@ export default class FolioPlugin extends Plugin {
     await this.openWriterTools();
   }
 
+  async openFocusMode() {
+    const leaf = await this.openWriterTools();
+    const view = leaf?.view;
+    if (view && typeof view.showFocusMode === "function") {
+      view.showFocusMode();
+    } else {
+      new Notice("Open Writer Tools, then choose Focus Mode.");
+    }
+  }
+
   async activateView() {
     const { workspace } = this.app;
     const existing = workspace.getLeavesOfType(VIEW_TYPE);
@@ -540,15 +555,16 @@ export default class FolioPlugin extends Plugin {
     const existing = workspace.getLeavesOfType(WRITER_TOOLS_VIEW_TYPE);
     if (existing.length > 0) {
       workspace.revealLeaf(existing[0]);
-      return;
+      return existing[0];
     }
     const rightLeaf = workspace.getRightLeaf(false);
     if (!rightLeaf) {
       console.warn('Folio: could not obtain a right sidebar leaf');
-      return;
+      return null;
     }
     await rightLeaf.setViewState({ type: WRITER_TOOLS_VIEW_TYPE, active: true });
     workspace.revealLeaf(rightLeaf);
+    return rightLeaf;
   }
 
   async refresh() {
