@@ -65,6 +65,8 @@ export class WriterToolsView extends ItemView {
     this.pdfPreviewUrl = null;
     this.pdfInlinePreviewContainer = null;
     this.pdfPreviewWebview = null;
+    this.pdfExportStateUpdater = null;
+    this.isPdfExporting = false;
   }
 
   getViewType() {
@@ -280,23 +282,27 @@ export class WriterToolsView extends ItemView {
     modal.open();
   }
 
-  handleExportAction() {
+  async handleExportAction() {
     if (!this.exportProject) {
       new Notice("No active project selected.");
-      return;
+      return false;
+    }
+    if (!this.validatePdfExportSettings()) {
+      return false;
     }
     if (this.exportFormat === "pdf") {
       if (this.plugin?.pdfExportService?.exportProject) {
-        this.plugin.pdfExportService.exportProject(this.exportProject, this.pdfSettings);
-        return;
+        await this.plugin.pdfExportService.exportProject(this.exportProject, this.pdfSettings);
+        return true;
       }
       new Notice("PDF export is not wired yet. Settings are saved and preview updates are in place.");
-      return;
+      return false;
     }
     if (this.exportFormat === "docx") {
       this.exportFormat = "pdf";
       this.queuePdfSettingsSave("export-format-fallback");
     }
+    return false;
   }
 
   getDefaultPdfSettings(meta) {
@@ -399,6 +405,68 @@ export class WriterToolsView extends ItemView {
     }, 250);
   }
 
+  getExportTreeNodes() {
+    const tree = this.exportConfig?.structure?.tree || [];
+    const nodes = [];
+    const walk = (node, depth) => {
+      if (!node) return;
+      nodes.push({ node, depth });
+      const children = [...(node.children || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
+      children.forEach((child) => walk(child, depth + 1));
+    };
+    [...tree].sort((a, b) => (a.order || 0) - (b.order || 0)).forEach((node) => walk(node, 0));
+    return nodes;
+  }
+
+  isExportableContentNode(node) {
+    if (!node || node.exclude || !node.path) return false;
+    const path = String(node.path).toLowerCase();
+    return node.type === "file" || node.type === "canvas" || path.endsWith(".md") || path.endsWith(".canvas");
+  }
+
+  getIncludedExportableNodes(nodes = this.getExportTreeNodes()) {
+    return nodes
+      .filter(({ node }) => this.isExportableContentNode(node))
+      .filter(({ node }) => this.resolveContentInclusion(node.path, node.type));
+  }
+
+  getPdfExportReadiness() {
+    if (!this.exportProject) {
+      return { canExport: false, message: "Select a project before exporting." };
+    }
+    if (this.app?.isMobile) {
+      return { canExport: false, message: "PDF export is available on desktop only." };
+    }
+
+    const nodes = this.getExportTreeNodes();
+    const exportableNodes = nodes.filter(({ node }) => this.isExportableContentNode(node));
+    const includedNodes = this.getIncludedExportableNodes(nodes);
+    if (exportableNodes.length > 0 && includedNodes.length === 0) {
+      return { canExport: false, message: "Select at least one file to export." };
+    }
+    if (exportableNodes.length > 0) {
+      return {
+        canExport: true,
+        message: `${includedNodes.length} ${includedNodes.length === 1 ? "file" : "files"} selected. You will choose a save location next.`
+      };
+    }
+    return { canExport: true, message: "Folio will scan the project folder when export starts." };
+  }
+
+  updatePdfExportState() {
+    if (typeof this.pdfExportStateUpdater === "function") {
+      this.pdfExportStateUpdater(this.getPdfExportReadiness());
+    }
+  }
+
+  validatePdfExportSettings(notify = true) {
+    const state = this.getPdfExportReadiness();
+    if (!state.canExport && notify) {
+      new Notice(state.message);
+    }
+    return state.canExport;
+  }
+
   requestPdfPreviewUpdate(reason) {
     if (this.pdfPreviewTimeout) window.clearTimeout(this.pdfPreviewTimeout);
     this.pdfPreviewTimeout = window.setTimeout(() => {
@@ -424,12 +492,14 @@ export class WriterToolsView extends ItemView {
     }
     container.empty();
     const card = container.createDiv({ cls: "pdf-preview-card" });
-    card.createDiv({ cls: "pdf-preview-title", text: "PDF Export Preview" });
+    card.createDiv({ cls: "pdf-preview-title", text: "Live PDF preview" });
     const frameWrap = card.createDiv({ cls: "pdf-preview-frame-wrap" });
+    const loadingMeta = card.createDiv({ cls: "pdf-preview-meta", text: "Rendering preview..." });
 
     const token = ++this.pdfPreviewRenderToken;
     const service = this.plugin?.pdfExportService;
     if (!service?.buildExportHtml) {
+      loadingMeta.remove();
       card.createDiv({ cls: "pdf-preview-meta", text: "Preview unavailable." });
       return;
     }
@@ -459,6 +529,7 @@ export class WriterToolsView extends ItemView {
       frameWrap.style.setProperty("--pdf-aspect", String(ratio));
       const html = await service.buildExportHtml(this.exportProject, this.exportMeta, this.exportConfig, this.pdfSettings);
       if (token !== this.pdfPreviewRenderToken) return;
+      loadingMeta.remove();
 
       let pdfDataUrl = "";
       if (service?.renderHtmlToPdf && !this.app?.isMobile) {
@@ -502,6 +573,7 @@ export class WriterToolsView extends ItemView {
       }
     } catch (e) {
       console.warn("Preview render failed", e);
+      loadingMeta.remove();
       card.createDiv({ cls: "pdf-preview-meta", text: "Preview failed to render." });
     }
   }
@@ -539,12 +611,13 @@ export class WriterToolsView extends ItemView {
 
     const title = controls.createDiv({ cls: "pdf-settings-header-row" });
     title.createSpan({ cls: "pdf-settings-header-accent" });
-    title.createSpan({ cls: "pdf-settings-header-title", text: "Export Settings" });
+    title.createSpan({ cls: "pdf-settings-header-title", text: "PDF setup" });
 
-    this.renderPageSizeSection(controls);
+    this.renderPdfSettingsOverview(controls);
     this.renderContentSelectionSection(controls);
     this.renderCoverSection(controls);
     this.renderFolioSettingsSection(controls);
+    this.updatePdfExportState();
 
     const actions = controls.createDiv({ cls: "pdf-settings-footer" });
     const resetBtn = actions.createEl("button", { cls: "pdf-settings-reset", text: "Reset to Defaults" });
@@ -556,31 +629,34 @@ export class WriterToolsView extends ItemView {
     });
   }
 
-  renderPageSizeSection(container) {
-    const card = container.createDiv({ cls: "pdf-settings-card" });
-    const header = card.createDiv({ cls: "pdf-settings-card-header" });
-    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    setIcon(icon, "book-open");
-    header.createDiv({ cls: "pdf-settings-card-title", text: "Page Size" });
+  renderPdfSettingsOverview(container) {
+    const nodes = this.getExportTreeNodes();
+    const exportableCount = nodes.filter(({ node }) => this.isExportableContentNode(node)).length;
+    const includedCount = this.getIncludedExportableNodes(nodes).length;
+    const projectTitle = this.exportMeta?.title || this.exportProject?.name || "Untitled project";
+    const mode = this.pdfSettings?.content?.mode || "allIncluded";
+    const modeLabel = this.getContentModeLabel(mode);
+    const coverText = this.pdfSettings?.cover?.include ? "Cover on" : "Cover off";
+    const pageSize = this.pdfSettings?.pageSize || "A4";
 
-    const row = this.createPdfRow(card, "Page Size");
-    const select = this.createPdfSelect(row.control, ["A4", "A5", "A3", "Letter", "Legal", "Tabloid"], this.pdfSettings.pageSize, (value) => {
-      this.pdfSettings.pageSize = value;
-      this.queuePdfSettingsSave("page-size");
-      this.requestPdfPreviewUpdate("page-size");
-    });
-    select.addClass("pdf-select-wide");
+    const overview = container.createDiv({ cls: "pdf-export-overview" });
+    const copy = overview.createDiv({ cls: "pdf-export-overview-copy" });
+    copy.createDiv({ cls: "pdf-export-overview-title", text: projectTitle });
+    const detail = exportableCount > 0
+      ? `${modeLabel} / ${includedCount} of ${exportableCount} files / ${pageSize} / ${coverText}`
+      : `${modeLabel} / Project folder scan / ${pageSize} / ${coverText}`;
+    copy.createDiv({ cls: "pdf-export-overview-detail", text: detail });
+    const badge = overview.createDiv({ cls: "pdf-export-overview-badge", text: "PDF" });
+    if (exportableCount > 0 && includedCount === 0) {
+      overview.addClass("has-warning");
+      badge.textContent = "Needs content";
+    }
   }
 
   renderCoverSection(container) {
-    // Book-Smith: "封面设置" -> "Cover Settings"
-    const card = container.createDiv({ cls: "pdf-settings-card" });
-    const header = card.createDiv({ cls: "pdf-settings-card-header" });
-    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    setIcon(icon, "palette");
-    header.createDiv({ cls: "pdf-settings-card-title", text: "Cover Settings" });
+    const card = this.createPdfCard(container, "Cover", "palette", "Add a simple title page before the manuscript.");
 
-    const toggleRow = this.createPdfRow(card, "Include Cover");
+    const toggleRow = this.createPdfRow(card, "Include cover page", "Uses the project title, subtitle, author, and optional artwork.");
     const toggle = this.createPdfToggle(toggleRow.control, !!this.pdfSettings.cover.include, (checked) => {
       this.pdfSettings.cover.include = checked;
       if (!checked) {
@@ -592,8 +668,12 @@ export class WriterToolsView extends ItemView {
       this.renderPdfSettingsPanel(this.pdfSettingsContainer);
     });
 
-    const actionRow = this.createPdfRow(card, "Cover Design");
-    const customizeBtn = actionRow.control.createEl("button", { cls: "pdf-settings-button", text: this.coverDesignOpen ? "Hide Cover Design" : "Customize Cover" });
+    const actionRow = this.createPdfRow(card, "Cover design", "Edit the cover text, artwork, and typography.");
+    const customizeBtn = actionRow.control.createEl("button", { cls: "pdf-settings-button", text: this.coverDesignOpen ? "Hide editor" : "Edit cover" });
+    if (!this.pdfSettings.cover.include) {
+      customizeBtn.setAttr("disabled", "true");
+      actionRow.row.addClass("is-muted");
+    }
     customizeBtn.addEventListener("click", () => {
       if (!this.pdfSettings.cover.include) return;
       this.coverDesignOpen = !this.coverDesignOpen;
@@ -604,7 +684,7 @@ export class WriterToolsView extends ItemView {
     });
 
     if (!this.pdfSettings.cover.include) {
-      this.applyPdfDisabled(card, true);
+      card.createDiv({ cls: "pdf-settings-note", text: "Turn on the cover page to edit its design." });
     }
 
     if (this.coverDesignOpen) {
@@ -613,25 +693,26 @@ export class WriterToolsView extends ItemView {
   }
 
   renderContentSelectionSection(container) {
-    const card = container.createDiv({ cls: "pdf-settings-card" });
-    const header = card.createDiv({ cls: "pdf-settings-card-header" });
-    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    setIcon(icon, "layers");
-    header.createDiv({ cls: "pdf-settings-card-title", text: "Content Selection" });
+    const card = this.createPdfCard(container, "Content", "layers", "Choose what goes into the PDF before changing layout.");
 
-    const modeRow = this.createPdfRow(card, "Mode");
     const projectType = this.exportMeta?.projectType || this.exportConfig?.basic?.projectType || "book";
     const isScriptProject = projectType === "script" || projectType === "film";
+    const currentMode = this.pdfSettings.content?.mode || "allIncluded";
+    const modeRow = this.createPdfRow(card, "Export scope", this.getContentModeHelper(currentMode, isScriptProject));
     const modeOptions = [
-      { label: isScriptProject ? "Script Only" : "Chapters Only", value: "scriptOnly" },
-      { label: "All Included Files", value: "allIncluded" },
-      { label: "Custom Selection", value: "custom" }
+      { label: isScriptProject ? "Script draft only" : "Chapter draft only", value: "scriptOnly" },
+      { label: "Everything in project", value: "allIncluded" },
+      { label: "Choose files manually", value: "custom" }
     ];
     const modeSelect = this.createPdfSelect(
       modeRow.control,
       modeOptions,
-      this.pdfSettings.content?.mode || "allIncluded",
+      currentMode,
       (value) => {
+        const previousMode = this.pdfSettings.content?.mode || "allIncluded";
+        if (value === "custom" && previousMode !== "custom") {
+          this.seedCustomContentRulesFromMode(previousMode);
+        }
         this.pdfSettings.content.mode = value;
         this.queuePdfSettingsSave("content-mode");
         this.requestPdfPreviewUpdate("content-mode");
@@ -640,28 +721,33 @@ export class WriterToolsView extends ItemView {
     );
     modeSelect.addClass("pdf-select-wide");
 
-    const tree = this.exportConfig?.structure?.tree || [];
+    const nodes = this.getExportTreeNodes();
+    const exportableNodes = nodes.filter(({ node }) => this.isExportableContentNode(node));
+    const includedNodes = this.getIncludedExportableNodes(nodes);
+    this.renderContentSummary(card, exportableNodes.length, includedNodes.length, currentMode);
+
+    const listLabel = card.createDiv({
+      cls: "pdf-content-list-label",
+      text: currentMode === "custom" ? "Choose files and folders" : "Included by current scope"
+    });
     const list = card.createDiv({ cls: "pdf-content-list" });
-    if (!tree.length) {
-      list.createDiv({ cls: "pdf-content-empty", text: "No project structure found." });
+    if (!nodes.length) {
+      list.createDiv({ cls: "pdf-content-empty", text: "No saved project structure was found. Folio will scan the project folder when export starts." });
       return;
     }
-
-    const nodes = [];
-    const walk = (node, depth) => {
-      nodes.push({ node, depth });
-      const children = [...(node.children || [])].sort((a, b) => (a.order || 0) - (b.order || 0));
-      children.forEach((child) => walk(child, depth + 1));
-    };
-    [...tree].sort((a, b) => (a.order || 0) - (b.order || 0)).forEach((node) => walk(node, 0));
 
     nodes.forEach(({ node, depth }) => {
       const row = list.createDiv({ cls: "pdf-content-row" });
       row.style.paddingLeft = `${depth * 14}px`;
       const checkbox = row.createEl("input", { type: "checkbox" });
-      checkbox.checked = this.resolveContentInclusion(node.path, node.type);
+      const included = this.resolveContentRowInclusion(node, nodes);
+      checkbox.checked = included;
+      checkbox.disabled = currentMode !== "custom";
+      if (!included) row.addClass("is-excluded");
+      if (currentMode !== "custom") row.addClass("is-readonly");
       checkbox.addEventListener("change", () => {
         this.updateContentRule(node.path, node.type, checkbox.checked);
+        this.renderPdfSettingsPanel(this.pdfSettingsContainer);
       });
       const label = row.createDiv({ cls: "pdf-content-label", text: node.title || node.path || "Untitled" });
       if (node.type === "group") label.addClass("is-folder");
@@ -674,7 +760,7 @@ export class WriterToolsView extends ItemView {
       this.normalizeCoverDesignColors(this.coverDesignDraft);
     }
     const panel = container.createDiv({ cls: "pdf-cover-design" });
-    panel.createDiv({ cls: "pdf-cover-design-title", text: "Cover Design" });
+    panel.createDiv({ cls: "pdf-cover-design-title", text: "Cover design" });
 
     const preview = panel.createDiv({ cls: "pdf-cover-preview" });
     const renderCoverPreview = () => {
@@ -702,10 +788,10 @@ export class WriterToolsView extends ItemView {
     };
     renderCoverPreview();
 
-    const imageRow = this.createPdfRow(panel, "Cover Image");
+    const imageRow = this.createPdfRow(panel, "Cover image", "Choose an image from your computer.");
     const imageControls = imageRow.control.createDiv({ cls: "pdf-cover-image-controls" });
-    const selectBtn = imageControls.createEl("button", { cls: "pdf-settings-button", text: "Select Image" });
-    const clearBtn = imageControls.createEl("button", { cls: "pdf-settings-button", text: "Clear Image" });
+    const selectBtn = imageControls.createEl("button", { cls: "pdf-settings-button", text: "Select image" });
+    const clearBtn = imageControls.createEl("button", { cls: "pdf-settings-button", text: "Clear" });
     const imageLabel = imageRow.control.createDiv({ cls: "pdf-cover-image-label", text: this.coverDesignDraft?.imagePath ? `Selected: ${this.coverDesignDraft.imagePath}` : "No image selected" });
 
     const fileInput = imageControls.createEl("input", { type: "file", attr: { accept: "image/*" } });
@@ -778,7 +864,7 @@ export class WriterToolsView extends ItemView {
 
     const actions = panel.createDiv({ cls: "pdf-cover-actions" });
     const cancelBtn = actions.createEl("button", { cls: "pdf-settings-button", text: "Cancel" });
-    const applyBtn = actions.createEl("button", { cls: "pdf-settings-button is-primary", text: "Apply" });
+    const applyBtn = actions.createEl("button", { cls: "pdf-settings-button is-primary", text: "Apply cover" });
     cancelBtn.addEventListener("click", () => {
       this.coverDesignOpen = false;
       this.coverDesignDraft = null;
@@ -797,24 +883,22 @@ export class WriterToolsView extends ItemView {
   }
 
   renderFolioSettingsSection(container) {
-    const card = container.createDiv({ cls: "pdf-settings-card" });
-    const header = card.createDiv({ cls: "pdf-settings-card-header" });
-    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    setIcon(icon, "sliders-horizontal");
-    header.createDiv({ cls: "pdf-settings-card-title", text: "Folio Settings" });
+    const card = this.createPdfCard(container, "Layout & formatting", "sliders-horizontal", "Set the reading shape of the exported document.");
 
     if (!this.pdfSettings.layout) {
       this.pdfSettings.layout = this.getDefaultPdfSettings(this.exportMeta).layout;
     }
 
-    const applyRow = this.createPdfRow(card, "Apply CSS Classes");
-    const applyToggle = this.createPdfToggle(applyRow.control, this.pdfSettings.layout.applyCssClasses !== false, (checked) => {
-      this.pdfSettings.layout.applyCssClasses = checked;
-      this.queuePdfSettingsSave("layout-apply-css");
-      this.requestPdfPreviewUpdate("layout-apply-css");
+    const pageRow = this.createPdfRow(card, "Page size", "Paper size for the generated PDF.");
+    const pageSelect = this.createPdfSelect(pageRow.control, ["A4", "A5", "A3", "Letter", "Legal", "Tabloid"], this.pdfSettings.pageSize, (value) => {
+      this.pdfSettings.pageSize = value;
+      this.queuePdfSettingsSave("page-size");
+      this.requestPdfPreviewUpdate("page-size");
+      this.renderPdfSettingsPanel(this.pdfSettingsContainer);
     });
+    pageSelect.addClass("pdf-select-wide");
 
-    const fontRow = this.createPdfRow(card, "Font");
+    const fontRow = this.createPdfRow(card, "Body font", "Used for prose and screenplay text unless note CSS overrides it.");
     const fontOptions = [
       { label: "Courier Prime", value: "Courier Prime, \"Courier New\", Courier, monospace" },
       { label: "Courier New", value: "\"Courier New\", Courier, monospace" },
@@ -838,7 +922,7 @@ export class WriterToolsView extends ItemView {
     });
     fontSelect.addClass("pdf-select-wide");
 
-    const sizeRow = this.createPdfRow(card, "Font Size (pt)");
+    const sizeRow = this.createPdfRow(card, "Font size", "Measured in points.");
     const sizeInput = sizeRow.control.createEl("input", { type: "number", cls: "pdf-text-input" });
     this.preventNumberScroll(sizeInput);
     sizeInput.min = "8";
@@ -851,7 +935,7 @@ export class WriterToolsView extends ItemView {
       this.requestPdfPreviewUpdate("layout-font-size");
     });
 
-    const lineRow = this.createPdfRow(card, "Line Height");
+    const lineRow = this.createPdfRow(card, "Line spacing", "Controls vertical rhythm in the exported pages.");
     const lineInput = lineRow.control.createEl("input", { type: "number", cls: "pdf-text-input" });
     this.preventNumberScroll(lineInput);
     lineInput.min = "1";
@@ -864,7 +948,29 @@ export class WriterToolsView extends ItemView {
       this.requestPdfPreviewUpdate("layout-line-height");
     });
 
-    const marginRow = this.createPdfRow(card, "Margins (mm)");
+    const numbersRow = this.createPdfRow(card, "Page numbers", "Adds page numbers in the footer.");
+    this.createPdfToggle(numbersRow.control, this.pdfSettings.layout.includePageNumbers !== false, (checked) => {
+      this.pdfSettings.layout.includePageNumbers = checked;
+      this.queuePdfSettingsSave("layout-page-numbers");
+      this.requestPdfPreviewUpdate("layout-page-numbers");
+      this.updatePdfExportState();
+    });
+
+    const advancedRow = this.createPdfRow(card, "Advanced layout", "Margins, bleed, note CSS, and screenplay heading behavior.");
+    const advancedBtn = advancedRow.control.createEl("button", {
+      cls: "pdf-settings-button",
+      text: this.advancedLayoutOpen ? "Hide advanced" : "Show advanced"
+    });
+    advancedBtn.addEventListener("click", () => {
+      this.advancedLayoutOpen = !this.advancedLayoutOpen;
+      this.renderPdfSettingsPanel(this.pdfSettingsContainer);
+    });
+
+    if (!this.advancedLayoutOpen) return;
+
+    const advancedPanel = card.createDiv({ cls: "pdf-advanced-panel" });
+
+    const marginRow = this.createPdfRow(advancedPanel, "Margins", "Top, right, bottom, and left spacing in millimeters.");
     const marginControls = marginRow.control.createDiv({ cls: "pdf-margin-controls" });
     const makeMarginInput = (label, key) => {
       const wrap = marginControls.createDiv({ cls: "pdf-margin-control" });
@@ -887,7 +993,7 @@ export class WriterToolsView extends ItemView {
     makeMarginInput("Bottom", "bottom");
     makeMarginInput("Left", "left");
 
-    const bleedRow = this.createPdfRow(card, "Bleed (mm)");
+    const bleedRow = this.createPdfRow(advancedPanel, "Bleed", "Extra page edge space in millimeters.");
     const bleedInput = bleedRow.control.createEl("input", { type: "number", cls: "pdf-text-input" });
     this.preventNumberScroll(bleedInput);
     bleedInput.min = "0";
@@ -900,19 +1006,30 @@ export class WriterToolsView extends ItemView {
       this.requestPdfPreviewUpdate("layout-bleed");
     });
 
-    const capRow = this.createPdfRow(card, "Capitalize Headings");
+    const applyRow = this.createPdfRow(advancedPanel, "Use note CSS classes", "Applies cssclass/cssclasses frontmatter, including screenplay formatting.");
+    const applyToggle = this.createPdfToggle(applyRow.control, this.pdfSettings.layout.applyCssClasses !== false, (checked) => {
+      this.pdfSettings.layout.applyCssClasses = checked;
+      this.queuePdfSettingsSave("layout-apply-css");
+      this.requestPdfPreviewUpdate("layout-apply-css");
+    });
+
+    const capRow = this.createPdfRow(advancedPanel, "Uppercase screenplay headings", "Matches common screenplay export style.");
     this.createPdfToggle(capRow.control, this.pdfSettings.layout.capitalizeHeadings !== false, (checked) => {
       this.pdfSettings.layout.capitalizeHeadings = checked;
       this.queuePdfSettingsSave("layout-capitalization");
       this.requestPdfPreviewUpdate("layout-capitalization");
     });
+  }
 
-    const pageRow = this.createPdfRow(card, "Include Page Numbers");
-    this.createPdfToggle(pageRow.control, this.pdfSettings.layout.includePageNumbers !== false, (checked) => {
-      this.pdfSettings.layout.includePageNumbers = checked;
-      this.queuePdfSettingsSave("layout-page-numbers");
-      this.requestPdfPreviewUpdate("layout-page-numbers");
-    });
+  createPdfCard(container, title, iconName, helper) {
+    const card = container.createDiv({ cls: "pdf-settings-card" });
+    const header = card.createDiv({ cls: "pdf-settings-card-header" });
+    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
+    setIcon(icon, iconName);
+    const copy = header.createDiv({ cls: "pdf-settings-card-copy" });
+    copy.createDiv({ cls: "pdf-settings-card-title", text: title });
+    if (helper) copy.createDiv({ cls: "pdf-settings-card-helper", text: helper });
+    return card;
   }
 
   createPdfRow(parent, label, helper) {
@@ -999,19 +1116,9 @@ export class WriterToolsView extends ItemView {
     if (cover.author && legacyLight.has(normalize(cover.author.color))) cover.author.color = "#555555";
   }
 
-  applyPdfDisabled(container, disabled) {
-    if (!container) return;
-    container.toggleClass("is-disabled", disabled);
-    container.querySelectorAll("input, select, button, textarea").forEach((el) => {
-      if (disabled && el.dataset?.pdfKeepEnabled === "true") return;
-      if (disabled) el.setAttr("disabled", "true");
-      else el.removeAttr("disabled");
-    });
-  }
-
-  resolveContentInclusion(path, kind) {
-    const mode = this.pdfSettings?.content?.mode || "allIncluded";
-    const rules = this.pdfSettings?.content?.rules || [];
+  resolveContentInclusion(path, kind, modeOverride = null, rulesOverride = null) {
+    const mode = modeOverride || this.pdfSettings?.content?.mode || "allIncluded";
+    const rules = rulesOverride || this.pdfSettings?.content?.rules || [];
     if (mode === "custom") {
       const rule = this.findContentRule(path, rules);
       if (rule) return !!rule.include;
@@ -1024,6 +1131,65 @@ export class WriterToolsView extends ItemView {
       return isScriptProject ? this.isScriptContentPath(path) : this.isChapterContentPath(path);
     }
     return true;
+  }
+
+  resolveContentRowInclusion(node, allNodes = this.getExportTreeNodes()) {
+    if (!node) return false;
+    if (node.type !== "group") return this.resolveContentInclusion(node.path, node.type);
+    const prefix = node.path ? `${node.path}/` : "";
+    const descendants = allNodes.filter(({ node: child }) => {
+      if (!this.isExportableContentNode(child)) return false;
+      if (!prefix) return false;
+      return child.path === node.path || child.path.startsWith(prefix);
+    });
+    if (!descendants.length) return this.resolveContentInclusion(node.path, node.type);
+    return descendants.some(({ node: child }) => this.resolveContentInclusion(child.path, child.type));
+  }
+
+  getContentModeLabel(mode) {
+    const projectType = this.getProjectType();
+    const isScriptProject = projectType === "script" || projectType === "film";
+    if (mode === "scriptOnly") return isScriptProject ? "Script draft only" : "Chapter draft only";
+    if (mode === "custom") return "Manual selection";
+    return "Everything in project";
+  }
+
+  getContentModeHelper(mode, isScriptProject) {
+    if (mode === "custom") return "Choose exactly which files and folders appear in the PDF.";
+    if (mode === "scriptOnly") return isScriptProject
+      ? "Includes script-like files and skips dossier, research, and outline material."
+      : "Includes chapter-like files and skips planning material.";
+    return "Includes every saved project file except items marked excluded.";
+  }
+
+  renderContentSummary(card, exportableCount, includedCount, mode) {
+    const summary = card.createDiv({ cls: "pdf-content-summary" });
+    summary.createDiv({ cls: "pdf-content-summary-item", text: this.getContentModeLabel(mode) });
+    if (exportableCount > 0) {
+      summary.createDiv({
+        cls: "pdf-content-summary-item",
+        text: `${includedCount} of ${exportableCount} ${exportableCount === 1 ? "file" : "files"} selected`
+      });
+    } else {
+      summary.createDiv({ cls: "pdf-content-summary-item", text: "Folder scan at export" });
+    }
+    if (exportableCount > 0 && includedCount === 0) {
+      summary.addClass("has-warning");
+    }
+  }
+
+  seedCustomContentRulesFromMode(previousMode) {
+    this.pdfSettings.content = this.pdfSettings.content || { mode: "custom", rules: [] };
+    const rules = [];
+    this.getExportTreeNodes().forEach(({ node }) => {
+      if (!this.isExportableContentNode(node)) return;
+      rules.push({
+        path: node.path,
+        kind: node.type === "group" ? "folder" : "file",
+        include: this.resolveContentInclusion(node.path, node.type, previousMode, [])
+      });
+    });
+    this.pdfSettings.content.rules = rules;
   }
 
   findContentRule(path, rules) {
@@ -1040,11 +1206,14 @@ export class WriterToolsView extends ItemView {
 
   updateContentRule(path, kind, include) {
     if (!path) return;
+    this.pdfSettings.content = this.pdfSettings.content || { mode: "custom", rules: [] };
     if (this.pdfSettings.content.mode !== "custom") {
       this.pdfSettings.content.mode = "custom";
-      this.renderPdfSettingsPanel(this.pdfSettingsContainer);
     }
-    const rules = this.pdfSettings.content.rules || [];
+    let rules = this.pdfSettings.content.rules || [];
+    if (kind === "group") {
+      rules = rules.filter((rule) => rule.path !== path && !rule.path.startsWith(`${path}/`));
+    }
     const existingIndex = rules.findIndex((rule) => rule.path === path);
     const nextRule = { path, kind: kind === "group" ? "folder" : "file", include };
     if (existingIndex >= 0) rules[existingIndex] = nextRule;
@@ -3192,19 +3361,43 @@ class PdfSettingsModal extends Modal {
     this.applyCenteredPaneLayout();
 
     const header = contentEl.createDiv({ cls: "pdf-settings-modal-header" });
-    header.createDiv({ cls: "pdf-settings-modal-title", text: "PDF Export Settings" });
+    const headerCopy = header.createDiv({ cls: "pdf-settings-modal-heading" });
+    headerCopy.createDiv({ cls: "pdf-settings-modal-title", text: "PDF export" });
+    headerCopy.createDiv({ cls: "pdf-settings-modal-subtitle", text: "Choose the content, check the preview, then export." });
 
     const body = contentEl.createDiv({ cls: "pdf-settings-modal-body" });
     this.view.pdfSettingsContainer = body;
     this.view.renderPdfSettingsPanel(body);
 
     const actions = contentEl.createDiv({ cls: "pdf-settings-modal-actions" });
-    const cancel = actions.createEl("button", { cls: "export-settings-btn", text: "Cancel" });
-    const exportBtn = actions.createEl("button", { cls: "export-settings-btn is-primary", text: "Export" });
+    const actionStatus = actions.createDiv({ cls: "pdf-settings-action-status" });
+    const actionButtons = actions.createDiv({ cls: "pdf-settings-action-buttons" });
+    const cancel = actionButtons.createEl("button", { cls: "export-settings-btn", text: "Close" });
+    const exportBtn = actionButtons.createEl("button", { cls: "export-settings-btn is-primary", text: "Export PDF" });
+
+    this.view.pdfExportStateUpdater = (state) => {
+      const canExport = !!state?.canExport && !this.view.isPdfExporting;
+      actionStatus.textContent = state?.message || "";
+      exportBtn.disabled = !canExport;
+      exportBtn.toggleClass("is-disabled", !canExport);
+    };
+    this.view.updatePdfExportState();
 
     cancel.addEventListener("click", () => this.close());
-    exportBtn.addEventListener("click", () => {
-      this.view.handleExportAction();
+    exportBtn.addEventListener("click", async () => {
+      if (!this.view.validatePdfExportSettings()) return;
+      this.view.isPdfExporting = true;
+      exportBtn.disabled = true;
+      exportBtn.toggleClass("is-disabled", true);
+      exportBtn.textContent = "Exporting...";
+      actionStatus.textContent = "Rendering the PDF...";
+      try {
+        await this.view.handleExportAction();
+      } finally {
+        this.view.isPdfExporting = false;
+        exportBtn.textContent = "Export PDF";
+        this.view.updatePdfExportState();
+      }
     });
   }
 
@@ -3213,6 +3406,8 @@ class PdfSettingsModal extends Modal {
     contentEl.empty();
     this.modalEl?.removeClass("pdf-settings-modal-shell");
     this.resetCenteredPaneLayout();
+    this.view.pdfExportStateUpdater = null;
+    this.view.isPdfExporting = false;
     this.view.pdfSettingsLayoutRoot = null;
     this.view.pdfSettingsControlsEl = null;
     if (this.view.pdfSettingsContainer === this.contentEl.querySelector(".pdf-settings-modal-body")) {

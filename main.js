@@ -7642,6 +7642,8 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     this.pdfPreviewUrl = null;
     this.pdfInlinePreviewContainer = null;
     this.pdfPreviewWebview = null;
+    this.pdfExportStateUpdater = null;
+    this.isPdfExporting = false;
   }
   getViewType() {
     return WRITER_TOOLS_VIEW_TYPE2;
@@ -7832,24 +7834,28 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     const modal = new PdfSettingsModal(this.app, this);
     modal.open();
   }
-  handleExportAction() {
+  async handleExportAction() {
     var _a, _b;
     if (!this.exportProject) {
       new import_obsidian15.Notice("No active project selected.");
-      return;
+      return false;
+    }
+    if (!this.validatePdfExportSettings()) {
+      return false;
     }
     if (this.exportFormat === "pdf") {
       if ((_b = (_a = this.plugin) == null ? void 0 : _a.pdfExportService) == null ? void 0 : _b.exportProject) {
-        this.plugin.pdfExportService.exportProject(this.exportProject, this.pdfSettings);
-        return;
+        await this.plugin.pdfExportService.exportProject(this.exportProject, this.pdfSettings);
+        return true;
       }
       new import_obsidian15.Notice("PDF export is not wired yet. Settings are saved and preview updates are in place.");
-      return;
+      return false;
     }
     if (this.exportFormat === "docx") {
       this.exportFormat = "pdf";
       this.queuePdfSettingsSave("export-format-fallback");
     }
+    return false;
   }
   getDefaultPdfSettings(meta) {
     const author = Array.isArray(meta == null ? void 0 : meta.author) ? meta.author.join(", ") : (meta == null ? void 0 : meta.author) || "";
@@ -7955,6 +7961,63 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.exportConfig = cfg;
     }, 250);
   }
+  getExportTreeNodes() {
+    var _a, _b;
+    const tree = ((_b = (_a = this.exportConfig) == null ? void 0 : _a.structure) == null ? void 0 : _b.tree) || [];
+    const nodes = [];
+    const walk = (node, depth) => {
+      if (!node)
+        return;
+      nodes.push({ node, depth });
+      const children = [...node.children || []].sort((a, b) => (a.order || 0) - (b.order || 0));
+      children.forEach((child) => walk(child, depth + 1));
+    };
+    [...tree].sort((a, b) => (a.order || 0) - (b.order || 0)).forEach((node) => walk(node, 0));
+    return nodes;
+  }
+  isExportableContentNode(node) {
+    if (!node || node.exclude || !node.path)
+      return false;
+    const path = String(node.path).toLowerCase();
+    return node.type === "file" || node.type === "canvas" || path.endsWith(".md") || path.endsWith(".canvas");
+  }
+  getIncludedExportableNodes(nodes = this.getExportTreeNodes()) {
+    return nodes.filter(({ node }) => this.isExportableContentNode(node)).filter(({ node }) => this.resolveContentInclusion(node.path, node.type));
+  }
+  getPdfExportReadiness() {
+    var _a;
+    if (!this.exportProject) {
+      return { canExport: false, message: "Select a project before exporting." };
+    }
+    if ((_a = this.app) == null ? void 0 : _a.isMobile) {
+      return { canExport: false, message: "PDF export is available on desktop only." };
+    }
+    const nodes = this.getExportTreeNodes();
+    const exportableNodes = nodes.filter(({ node }) => this.isExportableContentNode(node));
+    const includedNodes = this.getIncludedExportableNodes(nodes);
+    if (exportableNodes.length > 0 && includedNodes.length === 0) {
+      return { canExport: false, message: "Select at least one file to export." };
+    }
+    if (exportableNodes.length > 0) {
+      return {
+        canExport: true,
+        message: `${includedNodes.length} ${includedNodes.length === 1 ? "file" : "files"} selected. You will choose a save location next.`
+      };
+    }
+    return { canExport: true, message: "Folio will scan the project folder when export starts." };
+  }
+  updatePdfExportState() {
+    if (typeof this.pdfExportStateUpdater === "function") {
+      this.pdfExportStateUpdater(this.getPdfExportReadiness());
+    }
+  }
+  validatePdfExportSettings(notify = true) {
+    const state = this.getPdfExportReadiness();
+    if (!state.canExport && notify) {
+      new import_obsidian15.Notice(state.message);
+    }
+    return state.canExport;
+  }
   requestPdfPreviewUpdate(reason) {
     if (this.pdfPreviewTimeout)
       window.clearTimeout(this.pdfPreviewTimeout);
@@ -7981,11 +8044,13 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     }
     container.empty();
     const card = container.createDiv({ cls: "pdf-preview-card" });
-    card.createDiv({ cls: "pdf-preview-title", text: "PDF Export Preview" });
+    card.createDiv({ cls: "pdf-preview-title", text: "Live PDF preview" });
     const frameWrap = card.createDiv({ cls: "pdf-preview-frame-wrap" });
+    const loadingMeta = card.createDiv({ cls: "pdf-preview-meta", text: "Rendering preview..." });
     const token = ++this.pdfPreviewRenderToken;
     const service = (_a = this.plugin) == null ? void 0 : _a.pdfExportService;
     if (!(service == null ? void 0 : service.buildExportHtml)) {
+      loadingMeta.remove();
       card.createDiv({ cls: "pdf-preview-meta", text: "Preview unavailable." });
       return;
     }
@@ -8016,6 +8081,7 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       const html = await service.buildExportHtml(this.exportProject, this.exportMeta, this.exportConfig, this.pdfSettings);
       if (token !== this.pdfPreviewRenderToken)
         return;
+      loadingMeta.remove();
       let pdfDataUrl = "";
       if ((service == null ? void 0 : service.renderHtmlToPdf) && !((_d = this.app) == null ? void 0 : _d.isMobile)) {
         const pdfBuffer = await service.renderHtmlToPdf(html, this.pdfSettings, this.exportMeta);
@@ -8055,6 +8121,7 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       }
     } catch (e) {
       console.warn("Preview render failed", e);
+      loadingMeta.remove();
       card.createDiv({ cls: "pdf-preview-meta", text: "Preview failed to render." });
     }
   }
@@ -8089,11 +8156,12 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     this.renderPdfPreview(previewPane);
     const title = controls.createDiv({ cls: "pdf-settings-header-row" });
     title.createSpan({ cls: "pdf-settings-header-accent" });
-    title.createSpan({ cls: "pdf-settings-header-title", text: "Export Settings" });
-    this.renderPageSizeSection(controls);
+    title.createSpan({ cls: "pdf-settings-header-title", text: "PDF setup" });
+    this.renderPdfSettingsOverview(controls);
     this.renderContentSelectionSection(controls);
     this.renderCoverSection(controls);
     this.renderFolioSettingsSection(controls);
+    this.updatePdfExportState();
     const actions = controls.createDiv({ cls: "pdf-settings-footer" });
     const resetBtn = actions.createEl("button", { cls: "pdf-settings-reset", text: "Reset to Defaults" });
     resetBtn.addEventListener("click", () => {
@@ -8103,27 +8171,30 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.renderPdfSettingsPanel(container);
     });
   }
-  renderPageSizeSection(container) {
-    const card = container.createDiv({ cls: "pdf-settings-card" });
-    const header = card.createDiv({ cls: "pdf-settings-card-header" });
-    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    (0, import_obsidian15.setIcon)(icon, "book-open");
-    header.createDiv({ cls: "pdf-settings-card-title", text: "Page Size" });
-    const row = this.createPdfRow(card, "Page Size");
-    const select = this.createPdfSelect(row.control, ["A4", "A5", "A3", "Letter", "Legal", "Tabloid"], this.pdfSettings.pageSize, (value) => {
-      this.pdfSettings.pageSize = value;
-      this.queuePdfSettingsSave("page-size");
-      this.requestPdfPreviewUpdate("page-size");
-    });
-    select.addClass("pdf-select-wide");
+  renderPdfSettingsOverview(container) {
+    var _a, _b, _c, _d, _e, _f, _g;
+    const nodes = this.getExportTreeNodes();
+    const exportableCount = nodes.filter(({ node }) => this.isExportableContentNode(node)).length;
+    const includedCount = this.getIncludedExportableNodes(nodes).length;
+    const projectTitle = ((_a = this.exportMeta) == null ? void 0 : _a.title) || ((_b = this.exportProject) == null ? void 0 : _b.name) || "Untitled project";
+    const mode = ((_d = (_c = this.pdfSettings) == null ? void 0 : _c.content) == null ? void 0 : _d.mode) || "allIncluded";
+    const modeLabel = this.getContentModeLabel(mode);
+    const coverText = ((_f = (_e = this.pdfSettings) == null ? void 0 : _e.cover) == null ? void 0 : _f.include) ? "Cover on" : "Cover off";
+    const pageSize = ((_g = this.pdfSettings) == null ? void 0 : _g.pageSize) || "A4";
+    const overview = container.createDiv({ cls: "pdf-export-overview" });
+    const copy = overview.createDiv({ cls: "pdf-export-overview-copy" });
+    copy.createDiv({ cls: "pdf-export-overview-title", text: projectTitle });
+    const detail = exportableCount > 0 ? `${modeLabel} / ${includedCount} of ${exportableCount} files / ${pageSize} / ${coverText}` : `${modeLabel} / Project folder scan / ${pageSize} / ${coverText}`;
+    copy.createDiv({ cls: "pdf-export-overview-detail", text: detail });
+    const badge = overview.createDiv({ cls: "pdf-export-overview-badge", text: "PDF" });
+    if (exportableCount > 0 && includedCount === 0) {
+      overview.addClass("has-warning");
+      badge.textContent = "Needs content";
+    }
   }
   renderCoverSection(container) {
-    const card = container.createDiv({ cls: "pdf-settings-card" });
-    const header = card.createDiv({ cls: "pdf-settings-card-header" });
-    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    (0, import_obsidian15.setIcon)(icon, "palette");
-    header.createDiv({ cls: "pdf-settings-card-title", text: "Cover Settings" });
-    const toggleRow = this.createPdfRow(card, "Include Cover");
+    const card = this.createPdfCard(container, "Cover", "palette", "Add a simple title page before the manuscript.");
+    const toggleRow = this.createPdfRow(card, "Include cover page", "Uses the project title, subtitle, author, and optional artwork.");
     const toggle = this.createPdfToggle(toggleRow.control, !!this.pdfSettings.cover.include, (checked) => {
       this.pdfSettings.cover.include = checked;
       if (!checked) {
@@ -8134,8 +8205,12 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.requestPdfPreviewUpdate("cover-toggle");
       this.renderPdfSettingsPanel(this.pdfSettingsContainer);
     });
-    const actionRow = this.createPdfRow(card, "Cover Design");
-    const customizeBtn = actionRow.control.createEl("button", { cls: "pdf-settings-button", text: this.coverDesignOpen ? "Hide Cover Design" : "Customize Cover" });
+    const actionRow = this.createPdfRow(card, "Cover design", "Edit the cover text, artwork, and typography.");
+    const customizeBtn = actionRow.control.createEl("button", { cls: "pdf-settings-button", text: this.coverDesignOpen ? "Hide editor" : "Edit cover" });
+    if (!this.pdfSettings.cover.include) {
+      customizeBtn.setAttr("disabled", "true");
+      actionRow.row.addClass("is-muted");
+    }
     customizeBtn.addEventListener("click", () => {
       if (!this.pdfSettings.cover.include)
         return;
@@ -8146,32 +8221,34 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.renderPdfSettingsPanel(this.pdfSettingsContainer);
     });
     if (!this.pdfSettings.cover.include) {
-      this.applyPdfDisabled(card, true);
+      card.createDiv({ cls: "pdf-settings-note", text: "Turn on the cover page to edit its design." });
     }
     if (this.coverDesignOpen) {
       this.renderCoverDesignPanel(card);
     }
   }
   renderContentSelectionSection(container) {
-    var _a, _b, _c, _d, _e, _f;
-    const card = container.createDiv({ cls: "pdf-settings-card" });
-    const header = card.createDiv({ cls: "pdf-settings-card-header" });
-    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    (0, import_obsidian15.setIcon)(icon, "layers");
-    header.createDiv({ cls: "pdf-settings-card-title", text: "Content Selection" });
-    const modeRow = this.createPdfRow(card, "Mode");
+    var _a, _b, _c, _d;
+    const card = this.createPdfCard(container, "Content", "layers", "Choose what goes into the PDF before changing layout.");
     const projectType = ((_a = this.exportMeta) == null ? void 0 : _a.projectType) || ((_c = (_b = this.exportConfig) == null ? void 0 : _b.basic) == null ? void 0 : _c.projectType) || "book";
     const isScriptProject = projectType === "script" || projectType === "film";
+    const currentMode = ((_d = this.pdfSettings.content) == null ? void 0 : _d.mode) || "allIncluded";
+    const modeRow = this.createPdfRow(card, "Export scope", this.getContentModeHelper(currentMode, isScriptProject));
     const modeOptions = [
-      { label: isScriptProject ? "Script Only" : "Chapters Only", value: "scriptOnly" },
-      { label: "All Included Files", value: "allIncluded" },
-      { label: "Custom Selection", value: "custom" }
+      { label: isScriptProject ? "Script draft only" : "Chapter draft only", value: "scriptOnly" },
+      { label: "Everything in project", value: "allIncluded" },
+      { label: "Choose files manually", value: "custom" }
     ];
     const modeSelect = this.createPdfSelect(
       modeRow.control,
       modeOptions,
-      ((_d = this.pdfSettings.content) == null ? void 0 : _d.mode) || "allIncluded",
+      currentMode,
       (value) => {
+        var _a2;
+        const previousMode = ((_a2 = this.pdfSettings.content) == null ? void 0 : _a2.mode) || "allIncluded";
+        if (value === "custom" && previousMode !== "custom") {
+          this.seedCustomContentRulesFromMode(previousMode);
+        }
         this.pdfSettings.content.mode = value;
         this.queuePdfSettingsSave("content-mode");
         this.requestPdfPreviewUpdate("content-mode");
@@ -8179,26 +8256,33 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       }
     );
     modeSelect.addClass("pdf-select-wide");
-    const tree = ((_f = (_e = this.exportConfig) == null ? void 0 : _e.structure) == null ? void 0 : _f.tree) || [];
+    const nodes = this.getExportTreeNodes();
+    const exportableNodes = nodes.filter(({ node }) => this.isExportableContentNode(node));
+    const includedNodes = this.getIncludedExportableNodes(nodes);
+    this.renderContentSummary(card, exportableNodes.length, includedNodes.length, currentMode);
+    const listLabel = card.createDiv({
+      cls: "pdf-content-list-label",
+      text: currentMode === "custom" ? "Choose files and folders" : "Included by current scope"
+    });
     const list = card.createDiv({ cls: "pdf-content-list" });
-    if (!tree.length) {
-      list.createDiv({ cls: "pdf-content-empty", text: "No project structure found." });
+    if (!nodes.length) {
+      list.createDiv({ cls: "pdf-content-empty", text: "No saved project structure was found. Folio will scan the project folder when export starts." });
       return;
     }
-    const nodes = [];
-    const walk = (node, depth) => {
-      nodes.push({ node, depth });
-      const children = [...node.children || []].sort((a, b) => (a.order || 0) - (b.order || 0));
-      children.forEach((child) => walk(child, depth + 1));
-    };
-    [...tree].sort((a, b) => (a.order || 0) - (b.order || 0)).forEach((node) => walk(node, 0));
     nodes.forEach(({ node, depth }) => {
       const row = list.createDiv({ cls: "pdf-content-row" });
       row.style.paddingLeft = `${depth * 14}px`;
       const checkbox = row.createEl("input", { type: "checkbox" });
-      checkbox.checked = this.resolveContentInclusion(node.path, node.type);
+      const included = this.resolveContentRowInclusion(node, nodes);
+      checkbox.checked = included;
+      checkbox.disabled = currentMode !== "custom";
+      if (!included)
+        row.addClass("is-excluded");
+      if (currentMode !== "custom")
+        row.addClass("is-readonly");
       checkbox.addEventListener("change", () => {
         this.updateContentRule(node.path, node.type, checkbox.checked);
+        this.renderPdfSettingsPanel(this.pdfSettingsContainer);
       });
       const label = row.createDiv({ cls: "pdf-content-label", text: node.title || node.path || "Untitled" });
       if (node.type === "group")
@@ -8212,7 +8296,7 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.normalizeCoverDesignColors(this.coverDesignDraft);
     }
     const panel = container.createDiv({ cls: "pdf-cover-design" });
-    panel.createDiv({ cls: "pdf-cover-design-title", text: "Cover Design" });
+    panel.createDiv({ cls: "pdf-cover-design-title", text: "Cover design" });
     const preview = panel.createDiv({ cls: "pdf-cover-preview" });
     const renderCoverPreview = () => {
       var _a2, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k;
@@ -8239,10 +8323,10 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       }
     };
     renderCoverPreview();
-    const imageRow = this.createPdfRow(panel, "Cover Image");
+    const imageRow = this.createPdfRow(panel, "Cover image", "Choose an image from your computer.");
     const imageControls = imageRow.control.createDiv({ cls: "pdf-cover-image-controls" });
-    const selectBtn = imageControls.createEl("button", { cls: "pdf-settings-button", text: "Select Image" });
-    const clearBtn = imageControls.createEl("button", { cls: "pdf-settings-button", text: "Clear Image" });
+    const selectBtn = imageControls.createEl("button", { cls: "pdf-settings-button", text: "Select image" });
+    const clearBtn = imageControls.createEl("button", { cls: "pdf-settings-button", text: "Clear" });
     const imageLabel = imageRow.control.createDiv({ cls: "pdf-cover-image-label", text: ((_a = this.coverDesignDraft) == null ? void 0 : _a.imagePath) ? `Selected: ${this.coverDesignDraft.imagePath}` : "No image selected" });
     const fileInput = imageControls.createEl("input", { type: "file", attr: { accept: "image/*" } });
     fileInput.addClass("pdf-cover-file-input");
@@ -8312,7 +8396,7 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     createCoverTextRow("Author", "author");
     const actions = panel.createDiv({ cls: "pdf-cover-actions" });
     const cancelBtn = actions.createEl("button", { cls: "pdf-settings-button", text: "Cancel" });
-    const applyBtn = actions.createEl("button", { cls: "pdf-settings-button is-primary", text: "Apply" });
+    const applyBtn = actions.createEl("button", { cls: "pdf-settings-button is-primary", text: "Apply cover" });
     cancelBtn.addEventListener("click", () => {
       this.coverDesignOpen = false;
       this.coverDesignDraft = null;
@@ -8330,21 +8414,19 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     });
   }
   renderFolioSettingsSection(container) {
-    const card = container.createDiv({ cls: "pdf-settings-card" });
-    const header = card.createDiv({ cls: "pdf-settings-card-header" });
-    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    (0, import_obsidian15.setIcon)(icon, "sliders-horizontal");
-    header.createDiv({ cls: "pdf-settings-card-title", text: "Folio Settings" });
+    const card = this.createPdfCard(container, "Layout & formatting", "sliders-horizontal", "Set the reading shape of the exported document.");
     if (!this.pdfSettings.layout) {
       this.pdfSettings.layout = this.getDefaultPdfSettings(this.exportMeta).layout;
     }
-    const applyRow = this.createPdfRow(card, "Apply CSS Classes");
-    const applyToggle = this.createPdfToggle(applyRow.control, this.pdfSettings.layout.applyCssClasses !== false, (checked) => {
-      this.pdfSettings.layout.applyCssClasses = checked;
-      this.queuePdfSettingsSave("layout-apply-css");
-      this.requestPdfPreviewUpdate("layout-apply-css");
+    const pageRow = this.createPdfRow(card, "Page size", "Paper size for the generated PDF.");
+    const pageSelect = this.createPdfSelect(pageRow.control, ["A4", "A5", "A3", "Letter", "Legal", "Tabloid"], this.pdfSettings.pageSize, (value) => {
+      this.pdfSettings.pageSize = value;
+      this.queuePdfSettingsSave("page-size");
+      this.requestPdfPreviewUpdate("page-size");
+      this.renderPdfSettingsPanel(this.pdfSettingsContainer);
     });
-    const fontRow = this.createPdfRow(card, "Font");
+    pageSelect.addClass("pdf-select-wide");
+    const fontRow = this.createPdfRow(card, "Body font", "Used for prose and screenplay text unless note CSS overrides it.");
     const fontOptions = [
       { label: "Courier Prime", value: 'Courier Prime, "Courier New", Courier, monospace' },
       { label: "Courier New", value: '"Courier New", Courier, monospace' },
@@ -8367,7 +8449,7 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.requestPdfPreviewUpdate("layout-font-family");
     });
     fontSelect.addClass("pdf-select-wide");
-    const sizeRow = this.createPdfRow(card, "Font Size (pt)");
+    const sizeRow = this.createPdfRow(card, "Font size", "Measured in points.");
     const sizeInput = sizeRow.control.createEl("input", { type: "number", cls: "pdf-text-input" });
     this.preventNumberScroll(sizeInput);
     sizeInput.min = "8";
@@ -8379,7 +8461,7 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.queuePdfSettingsSave("layout-font-size");
       this.requestPdfPreviewUpdate("layout-font-size");
     });
-    const lineRow = this.createPdfRow(card, "Line Height");
+    const lineRow = this.createPdfRow(card, "Line spacing", "Controls vertical rhythm in the exported pages.");
     const lineInput = lineRow.control.createEl("input", { type: "number", cls: "pdf-text-input" });
     this.preventNumberScroll(lineInput);
     lineInput.min = "1";
@@ -8391,7 +8473,26 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.queuePdfSettingsSave("layout-line-height");
       this.requestPdfPreviewUpdate("layout-line-height");
     });
-    const marginRow = this.createPdfRow(card, "Margins (mm)");
+    const numbersRow = this.createPdfRow(card, "Page numbers", "Adds page numbers in the footer.");
+    this.createPdfToggle(numbersRow.control, this.pdfSettings.layout.includePageNumbers !== false, (checked) => {
+      this.pdfSettings.layout.includePageNumbers = checked;
+      this.queuePdfSettingsSave("layout-page-numbers");
+      this.requestPdfPreviewUpdate("layout-page-numbers");
+      this.updatePdfExportState();
+    });
+    const advancedRow = this.createPdfRow(card, "Advanced layout", "Margins, bleed, note CSS, and screenplay heading behavior.");
+    const advancedBtn = advancedRow.control.createEl("button", {
+      cls: "pdf-settings-button",
+      text: this.advancedLayoutOpen ? "Hide advanced" : "Show advanced"
+    });
+    advancedBtn.addEventListener("click", () => {
+      this.advancedLayoutOpen = !this.advancedLayoutOpen;
+      this.renderPdfSettingsPanel(this.pdfSettingsContainer);
+    });
+    if (!this.advancedLayoutOpen)
+      return;
+    const advancedPanel = card.createDiv({ cls: "pdf-advanced-panel" });
+    const marginRow = this.createPdfRow(advancedPanel, "Margins", "Top, right, bottom, and left spacing in millimeters.");
     const marginControls = marginRow.control.createDiv({ cls: "pdf-margin-controls" });
     const makeMarginInput = (label, key) => {
       var _a, _b;
@@ -8414,7 +8515,7 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     makeMarginInput("Right", "right");
     makeMarginInput("Bottom", "bottom");
     makeMarginInput("Left", "left");
-    const bleedRow = this.createPdfRow(card, "Bleed (mm)");
+    const bleedRow = this.createPdfRow(advancedPanel, "Bleed", "Extra page edge space in millimeters.");
     const bleedInput = bleedRow.control.createEl("input", { type: "number", cls: "pdf-text-input" });
     this.preventNumberScroll(bleedInput);
     bleedInput.min = "0";
@@ -8426,18 +8527,29 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       this.queuePdfSettingsSave("layout-bleed");
       this.requestPdfPreviewUpdate("layout-bleed");
     });
-    const capRow = this.createPdfRow(card, "Capitalize Headings");
+    const applyRow = this.createPdfRow(advancedPanel, "Use note CSS classes", "Applies cssclass/cssclasses frontmatter, including screenplay formatting.");
+    const applyToggle = this.createPdfToggle(applyRow.control, this.pdfSettings.layout.applyCssClasses !== false, (checked) => {
+      this.pdfSettings.layout.applyCssClasses = checked;
+      this.queuePdfSettingsSave("layout-apply-css");
+      this.requestPdfPreviewUpdate("layout-apply-css");
+    });
+    const capRow = this.createPdfRow(advancedPanel, "Uppercase screenplay headings", "Matches common screenplay export style.");
     this.createPdfToggle(capRow.control, this.pdfSettings.layout.capitalizeHeadings !== false, (checked) => {
       this.pdfSettings.layout.capitalizeHeadings = checked;
       this.queuePdfSettingsSave("layout-capitalization");
       this.requestPdfPreviewUpdate("layout-capitalization");
     });
-    const pageRow = this.createPdfRow(card, "Include Page Numbers");
-    this.createPdfToggle(pageRow.control, this.pdfSettings.layout.includePageNumbers !== false, (checked) => {
-      this.pdfSettings.layout.includePageNumbers = checked;
-      this.queuePdfSettingsSave("layout-page-numbers");
-      this.requestPdfPreviewUpdate("layout-page-numbers");
-    });
+  }
+  createPdfCard(container, title, iconName, helper) {
+    const card = container.createDiv({ cls: "pdf-settings-card" });
+    const header = card.createDiv({ cls: "pdf-settings-card-header" });
+    const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
+    (0, import_obsidian15.setIcon)(icon, iconName);
+    const copy = header.createDiv({ cls: "pdf-settings-card-copy" });
+    copy.createDiv({ cls: "pdf-settings-card-title", text: title });
+    if (helper)
+      copy.createDiv({ cls: "pdf-settings-card-helper", text: helper });
+    return card;
   }
   createPdfRow(parent, label, helper) {
     const row = parent.createDiv({ cls: "pdf-settings-row" });
@@ -8527,24 +8639,10 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     if (cover.author && legacyLight.has(normalize(cover.author.color)))
       cover.author.color = "#555555";
   }
-  applyPdfDisabled(container, disabled) {
-    if (!container)
-      return;
-    container.toggleClass("is-disabled", disabled);
-    container.querySelectorAll("input, select, button, textarea").forEach((el) => {
-      var _a;
-      if (disabled && ((_a = el.dataset) == null ? void 0 : _a.pdfKeepEnabled) === "true")
-        return;
-      if (disabled)
-        el.setAttr("disabled", "true");
-      else
-        el.removeAttr("disabled");
-    });
-  }
-  resolveContentInclusion(path, kind) {
+  resolveContentInclusion(path, kind, modeOverride = null, rulesOverride = null) {
     var _a, _b, _c, _d;
-    const mode = ((_b = (_a = this.pdfSettings) == null ? void 0 : _a.content) == null ? void 0 : _b.mode) || "allIncluded";
-    const rules = ((_d = (_c = this.pdfSettings) == null ? void 0 : _c.content) == null ? void 0 : _d.rules) || [];
+    const mode = modeOverride || ((_b = (_a = this.pdfSettings) == null ? void 0 : _a.content) == null ? void 0 : _b.mode) || "allIncluded";
+    const rules = rulesOverride || ((_d = (_c = this.pdfSettings) == null ? void 0 : _c.content) == null ? void 0 : _d.rules) || [];
     if (mode === "custom") {
       const rule = this.findContentRule(path, rules);
       if (rule)
@@ -8557,6 +8655,68 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       return isScriptProject ? this.isScriptContentPath(path) : this.isChapterContentPath(path);
     }
     return true;
+  }
+  resolveContentRowInclusion(node, allNodes = this.getExportTreeNodes()) {
+    if (!node)
+      return false;
+    if (node.type !== "group")
+      return this.resolveContentInclusion(node.path, node.type);
+    const prefix = node.path ? `${node.path}/` : "";
+    const descendants = allNodes.filter(({ node: child }) => {
+      if (!this.isExportableContentNode(child))
+        return false;
+      if (!prefix)
+        return false;
+      return child.path === node.path || child.path.startsWith(prefix);
+    });
+    if (!descendants.length)
+      return this.resolveContentInclusion(node.path, node.type);
+    return descendants.some(({ node: child }) => this.resolveContentInclusion(child.path, child.type));
+  }
+  getContentModeLabel(mode) {
+    const projectType = this.getProjectType();
+    const isScriptProject = projectType === "script" || projectType === "film";
+    if (mode === "scriptOnly")
+      return isScriptProject ? "Script draft only" : "Chapter draft only";
+    if (mode === "custom")
+      return "Manual selection";
+    return "Everything in project";
+  }
+  getContentModeHelper(mode, isScriptProject) {
+    if (mode === "custom")
+      return "Choose exactly which files and folders appear in the PDF.";
+    if (mode === "scriptOnly")
+      return isScriptProject ? "Includes script-like files and skips dossier, research, and outline material." : "Includes chapter-like files and skips planning material.";
+    return "Includes every saved project file except items marked excluded.";
+  }
+  renderContentSummary(card, exportableCount, includedCount, mode) {
+    const summary = card.createDiv({ cls: "pdf-content-summary" });
+    summary.createDiv({ cls: "pdf-content-summary-item", text: this.getContentModeLabel(mode) });
+    if (exportableCount > 0) {
+      summary.createDiv({
+        cls: "pdf-content-summary-item",
+        text: `${includedCount} of ${exportableCount} ${exportableCount === 1 ? "file" : "files"} selected`
+      });
+    } else {
+      summary.createDiv({ cls: "pdf-content-summary-item", text: "Folder scan at export" });
+    }
+    if (exportableCount > 0 && includedCount === 0) {
+      summary.addClass("has-warning");
+    }
+  }
+  seedCustomContentRulesFromMode(previousMode) {
+    this.pdfSettings.content = this.pdfSettings.content || { mode: "custom", rules: [] };
+    const rules = [];
+    this.getExportTreeNodes().forEach(({ node }) => {
+      if (!this.isExportableContentNode(node))
+        return;
+      rules.push({
+        path: node.path,
+        kind: node.type === "group" ? "folder" : "file",
+        include: this.resolveContentInclusion(node.path, node.type, previousMode, [])
+      });
+    });
+    this.pdfSettings.content.rules = rules;
   }
   findContentRule(path, rules) {
     if (!path)
@@ -8575,11 +8735,14 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
   updateContentRule(path, kind, include) {
     if (!path)
       return;
+    this.pdfSettings.content = this.pdfSettings.content || { mode: "custom", rules: [] };
     if (this.pdfSettings.content.mode !== "custom") {
       this.pdfSettings.content.mode = "custom";
-      this.renderPdfSettingsPanel(this.pdfSettingsContainer);
     }
-    const rules = this.pdfSettings.content.rules || [];
+    let rules = this.pdfSettings.content.rules || [];
+    if (kind === "group") {
+      rules = rules.filter((rule) => rule.path !== path && !rule.path.startsWith(`${path}/`));
+    }
     const existingIndex = rules.findIndex((rule) => rule.path === path);
     const nextRule = { path, kind: kind === "group" ? "folder" : "file", include };
     if (existingIndex >= 0)
@@ -10618,16 +10781,40 @@ var PdfSettingsModal = class extends import_obsidian15.Modal {
     (_a = this.modalEl) == null ? void 0 : _a.addClass("pdf-settings-modal-shell");
     this.applyCenteredPaneLayout();
     const header = contentEl.createDiv({ cls: "pdf-settings-modal-header" });
-    header.createDiv({ cls: "pdf-settings-modal-title", text: "PDF Export Settings" });
+    const headerCopy = header.createDiv({ cls: "pdf-settings-modal-heading" });
+    headerCopy.createDiv({ cls: "pdf-settings-modal-title", text: "PDF export" });
+    headerCopy.createDiv({ cls: "pdf-settings-modal-subtitle", text: "Choose the content, check the preview, then export." });
     const body = contentEl.createDiv({ cls: "pdf-settings-modal-body" });
     this.view.pdfSettingsContainer = body;
     this.view.renderPdfSettingsPanel(body);
     const actions = contentEl.createDiv({ cls: "pdf-settings-modal-actions" });
-    const cancel = actions.createEl("button", { cls: "export-settings-btn", text: "Cancel" });
-    const exportBtn = actions.createEl("button", { cls: "export-settings-btn is-primary", text: "Export" });
+    const actionStatus = actions.createDiv({ cls: "pdf-settings-action-status" });
+    const actionButtons = actions.createDiv({ cls: "pdf-settings-action-buttons" });
+    const cancel = actionButtons.createEl("button", { cls: "export-settings-btn", text: "Close" });
+    const exportBtn = actionButtons.createEl("button", { cls: "export-settings-btn is-primary", text: "Export PDF" });
+    this.view.pdfExportStateUpdater = (state) => {
+      const canExport = !!(state == null ? void 0 : state.canExport) && !this.view.isPdfExporting;
+      actionStatus.textContent = (state == null ? void 0 : state.message) || "";
+      exportBtn.disabled = !canExport;
+      exportBtn.toggleClass("is-disabled", !canExport);
+    };
+    this.view.updatePdfExportState();
     cancel.addEventListener("click", () => this.close());
-    exportBtn.addEventListener("click", () => {
-      this.view.handleExportAction();
+    exportBtn.addEventListener("click", async () => {
+      if (!this.view.validatePdfExportSettings())
+        return;
+      this.view.isPdfExporting = true;
+      exportBtn.disabled = true;
+      exportBtn.toggleClass("is-disabled", true);
+      exportBtn.textContent = "Exporting...";
+      actionStatus.textContent = "Rendering the PDF...";
+      try {
+        await this.view.handleExportAction();
+      } finally {
+        this.view.isPdfExporting = false;
+        exportBtn.textContent = "Export PDF";
+        this.view.updatePdfExportState();
+      }
     });
   }
   onClose() {
@@ -10636,6 +10823,8 @@ var PdfSettingsModal = class extends import_obsidian15.Modal {
     contentEl.empty();
     (_a = this.modalEl) == null ? void 0 : _a.removeClass("pdf-settings-modal-shell");
     this.resetCenteredPaneLayout();
+    this.view.pdfExportStateUpdater = null;
+    this.view.isPdfExporting = false;
     this.view.pdfSettingsLayoutRoot = null;
     this.view.pdfSettingsControlsEl = null;
     if (this.view.pdfSettingsContainer === this.contentEl.querySelector(".pdf-settings-modal-body")) {
