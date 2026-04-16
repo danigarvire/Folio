@@ -18,6 +18,7 @@ export const DEFAULT_SETTINGS = {
   verboseLogs: false,
   defaultAuthor: "",
   defaultProjectType: "book",
+  resourceLanguage: "en",
   projectTemplates: [
     { 
       id: "book", 

@@ -76,6 +76,7 @@ var init_constants = __esm({
       verboseLogs: false,
       defaultAuthor: "",
       defaultProjectType: "book",
+      resourceLanguage: "en",
       projectTemplates: [
         {
           id: "book",
@@ -300,8 +301,8 @@ var init_newBookModal = __esm({
               reader.onload = (ev) => {
                 const ab = ev.target.result;
                 this._selectedCover = { name: file.name, data: ab };
-                const label = file.name.length > 24 ? `${file.name.slice(0, 22)}...` : file.name;
-                coverBtn.textContent = `Selected: ${label}`;
+                const label2 = file.name.length > 24 ? `${file.name.slice(0, 22)}...` : file.name;
+                coverBtn.textContent = `Selected: ${label2}`;
               };
               reader.readAsArrayBuffer(file);
             } catch (err) {
@@ -820,8 +821,8 @@ var init_editBookModal = __esm({
               reader.onload = (ev) => {
                 const ab = ev.target.result;
                 selectedCover = { name: file.name, data: ab };
-                const label = file.name.length > 24 ? `${file.name.slice(0, 22)}\u2026` : file.name;
-                coverBtn.textContent = `\u2713 ${label}`;
+                const label2 = file.name.length > 24 ? `${file.name.slice(0, 22)}\u2026` : file.name;
+                coverBtn.textContent = `\u2713 ${label2}`;
               };
               reader.readAsArrayBuffer(file);
             } catch (err) {
@@ -4445,7 +4446,7 @@ var PdfExportService = class {
       return `<path d="M ${start.x} ${start.y} L ${end.x} ${end.y}" stroke="#777" stroke-width="2" fill="none" marker-end="url(#arrow)" />`;
     }).join("");
     const rects = await Promise.all(boxes.map(async (node) => {
-      const label = escape(renderLabel(node));
+      const label2 = escape(renderLabel(node));
       const x = node.x;
       const y = node.y;
       const w = node.width;
@@ -4457,7 +4458,7 @@ var PdfExportService = class {
       const paddingX = 12;
       const fontSize = 14;
       const maxChars = Math.max(4, Math.floor((w - paddingX * 2) / (fontSize * 0.6)));
-      const words = String(label || "").split(/\s+/).filter(Boolean);
+      const words = String(label2 || "").split(/\s+/).filter(Boolean);
       const lines = [];
       let current = "";
       words.forEach((word) => {
@@ -5043,12 +5044,12 @@ var FolioView = class extends import_obsidian12.ItemView {
           (0, import_obsidian12.setIcon)(icon, node.icon || defaultIcon);
         } catch (e) {
         }
-        const label = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });
+        const label2 = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });
         if (node.exclude) {
-          label.classList.add("exclude-from-stats");
+          label2.classList.add("exclude-from-stats");
         }
         if (node.completed) {
-          label.classList.add("is-done");
+          label2.classList.add("is-done");
         }
         fileRow.onclick = (e) => {
           var _a3, _b3;
@@ -5161,7 +5162,7 @@ var FolioView = class extends import_obsidian12.ItemView {
       const writingDays = typeof stats.writing_days === "number" ? stats.writing_days : stats.daily_words ? Object.keys(stats.daily_words).length : 0;
       const dailyAvg = typeof stats.average_daily_words === "number" ? stats.average_daily_words : writingDays > 0 ? Math.round(totalWords / writingDays) : 0;
       container.empty();
-      const row = (iconName, label, value, extra) => {
+      const row = (iconName, label2, value, extra) => {
         const r = container.createDiv("folio-stat-row");
         const left = r.createDiv({ cls: "folio-stat-left" });
         const iconSpan = left.createSpan({ cls: "folio-stat-icon" });
@@ -5182,7 +5183,7 @@ var FolioView = class extends import_obsidian12.ItemView {
           }
         } catch (e) {
         }
-        left.createSpan({ text: label, cls: "folio-stat-label" });
+        left.createSpan({ text: label2, cls: "folio-stat-label" });
         r.createSpan({ text: value, cls: "folio-stat-value" });
         if (extra && typeof extra === "function")
           extra(r);
@@ -5300,9 +5301,9 @@ var FolioView = class extends import_obsidian12.ItemView {
         return;
       el.addClass("folio-view");
       const topBar = el.createDiv("folio-topbar");
-      const labelButton = (button, label) => {
-        button.title = label;
-        button.setAttribute("aria-label", label);
+      const labelButton = (button, label2) => {
+        button.title = label2;
+        button.setAttribute("aria-label", label2);
       };
       const newBtn = topBar.createEl("button", { cls: "folio-top-btn folio-top-new" });
       labelButton(newBtn, "New Project");
@@ -5572,20 +5573,20 @@ var FocusModeStatsModal = class extends import_obsidian13.Modal {
     if (subtitle)
       copy.createDiv({ cls: "focus-mode-stats-modal-subtitle", text: subtitle });
   }
-  renderMetricCard(container, label, value, helper, isPrimary = false) {
+  renderMetricCard(container, label2, value, helper, isPrimary = false) {
     const card = container.createDiv({ cls: `focus-mode-summary-card${isPrimary ? " is-primary" : ""}` });
-    card.createDiv({ cls: "focus-mode-summary-label", text: label });
+    card.createDiv({ cls: "focus-mode-summary-label", text: label2 });
     card.createDiv({ cls: "focus-mode-summary-value", text: value });
     if (helper)
       card.createDiv({ cls: "focus-mode-summary-helper", text: helper });
   }
-  renderProgressCard(container, label, value, target) {
+  renderProgressCard(container, label2, value, target) {
     const goal = Number(target || 0);
     const current = Number(value || 0);
     const percent = goal > 0 ? Math.min(100, Math.round(current / goal * 100)) : 0;
     const card = container.createDiv({ cls: "focus-mode-progress-card" });
     const top = card.createDiv({ cls: "focus-mode-progress-card-top" });
-    top.createDiv({ cls: "focus-mode-progress-card-label", text: label });
+    top.createDiv({ cls: "focus-mode-progress-card-label", text: label2 });
     top.createDiv({
       cls: "focus-mode-progress-card-value",
       text: goal > 0 ? `${this.formatNumber(current)} / ${this.formatNumber(goal)}` : this.formatNumber(current)
@@ -5732,9 +5733,9 @@ var FocusModeStatsModal = class extends import_obsidian13.Modal {
     const infoSection = body.createDiv({ cls: "focus-mode-stats-section" });
     infoSection.createDiv({ cls: "focus-mode-stats-section-title", text: "Project info" });
     const infoGrid = infoSection.createDiv({ cls: "focus-mode-info-grid" });
-    const addInfoRow = (label, value) => {
+    const addInfoRow = (label2, value) => {
       const row = infoGrid.createDiv({ cls: "focus-mode-info-row" });
-      row.createDiv({ cls: "focus-mode-info-label", text: label });
+      row.createDiv({ cls: "focus-mode-info-label", text: label2 });
       row.createDiv({ cls: "focus-mode-info-value", text: this.formatValue(value) });
     };
     addInfoRow("Title", meta.title || this.project.name || "\u2014");
@@ -5744,9 +5745,9 @@ var FocusModeStatsModal = class extends import_obsidian13.Modal {
     const statsSection = body.createDiv({ cls: "focus-mode-stats-section" });
     statsSection.createDiv({ cls: "focus-mode-stats-section-title", text: "Session totals" });
     const statsGrid = statsSection.createDiv({ cls: "focus-mode-info-grid" });
-    const addStatRow = (label, value) => {
+    const addStatRow = (label2, value) => {
       const row = statsGrid.createDiv({ cls: "focus-mode-info-row" });
-      row.createDiv({ cls: "focus-mode-info-label", text: label });
+      row.createDiv({ cls: "focus-mode-info-label", text: label2 });
       row.createDiv({ cls: "focus-mode-info-value", text: value });
     };
     addStatRow("Words across saved sessions", this.formatNumber(historyWords));
@@ -5793,1798 +5794,1611 @@ var FocusModeStatsModal = class extends import_obsidian13.Modal {
 
 // src/writer-tools/referenceDetails.js
 var import_obsidian14 = require("obsidian");
+
+// src/writer-tools/resourcesI18n.js
+var ARCHETYPE_DATA = {
+  // ── Campbell archetypes ──────────────────────────────────────────────────
+  hero: {
+    en: {
+      introQuestion: "Who is the Hero?",
+      intro: [
+        "The Hero is the transforming protagonist. They represent the struggle for personal growth, the confrontation of fear, and the overcoming of obstacles. The Hero symbolizes the human drive to transcend limits, improve, and give meaning to adversity.",
+        "This is a universal archetype found in myth, classical stories, and modern narratives. The Hero's journey forms the backbone of many plots."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Courage in the face of danger", "Inner and outer strength", "Empathy and leadership", "Strong sense of justice", "Human flaws and vulnerability"],
+      traitsNote: "The Hero is not perfect. They fall, struggle, and rise transformed.",
+      relationshipsHeading: "Key relationships",
+      relationships: ["Mentor \u2192 guidance and wisdom", "Ally \u2192 shared mission", "Threshold Guardian \u2192 trial or blockage", "Shadow \u2192 antagonist or repressed self", "Trickster \u2192 chaos and disruption", "Shapeshifter \u2192 uncertainty and tension", "Herald \u2192 announces change"],
+      writingHeading: "Writing a strong Hero",
+      writing: ["Clear motivation", "Internal conflict", "Meaningful backstory", "Unique skills", "Emotional relationships", "Balance of strength and fragility", "Strong contrast between ordinary life and transformation"],
+      whyHeading: "Why this archetype works",
+      why: "Because it mirrors the human experience: struggle, fall, learning, and transformation.",
+      examplesHeading: "Hero Examples",
+      examples: ["Harry Potter", "Frodo Baggins", "Katniss Everdeen", "Mulan", "Luke Skywalker", "Simba", "Elizabeth Bennet"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el H\xE9roe?",
+      intro: [
+        "El H\xE9roe es el protagonista transformador. Representa la lucha por el crecimiento personal, la confrontaci\xF3n del miedo y la superaci\xF3n de los obst\xE1culos. El H\xE9roe simboliza el impulso humano de trascender los l\xEDmites, mejorar y dar sentido a la adversidad.",
+        "Este es un arquetipo universal presente en el mito, las historias cl\xE1sicas y las narrativas modernas. El viaje del H\xE9roe forma la columna vertebral de muchas tramas."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Valent\xEDa ante el peligro", "Fuerza interior y exterior", "Empat\xEDa y liderazgo", "Fuerte sentido de la justicia", "Defectos y vulnerabilidad humana"],
+      traitsNote: "El H\xE9roe no es perfecto. Cae, lucha y emerge transformado.",
+      relationshipsHeading: "Relaciones clave",
+      relationships: ["Mentor \u2192 gu\xEDa y sabidur\xEDa", "Aliado \u2192 misi\xF3n compartida", "Guardi\xE1n del Umbral \u2192 prueba o bloqueo", "Sombra \u2192 antagonista o yo reprimido", "Embaucador \u2192 caos y disrupci\xF3n", "Cambiante \u2192 incertidumbre y tensi\xF3n", "Heraldo \u2192 anuncia el cambio"],
+      writingHeading: "C\xF3mo escribir un H\xE9roe s\xF3lido",
+      writing: ["Motivaci\xF3n clara", "Conflicto interno", "Historia de fondo significativa", "Habilidades \xFAnicas", "Relaciones emocionales", "Equilibrio entre fortaleza y fragilidad", "Contraste marcado entre la vida ordinaria y la transformaci\xF3n"],
+      whyHeading: "Por qu\xE9 funciona este arquetipo",
+      why: "Porque refleja la experiencia humana: la lucha, la ca\xEDda, el aprendizaje y la transformaci\xF3n.",
+      examplesHeading: "Ejemplos del H\xE9roe",
+      examples: ["Harry Potter", "Frodo Bols\xF3n", "Katniss Everdeen", "Mulan", "Luke Skywalker", "Simba", "Elizabeth Bennet"]
+    }
+  },
+  mentor: {
+    en: {
+      introQuestion: "Who is the Mentor?",
+      intro: [
+        "The Mentor guides, teaches, and inspires the Hero. They provide wisdom, experience, and emotional support, helping the Hero grow and overcome challenges.",
+        "The Mentor represents inherited knowledge, tradition, and the possibility of inner transformation."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Spiritual and practical guide", "Accumulated wisdom", "Emotional support figure", "Ethical compass", "Connection to tradition", "Catalyst for action"],
+      traitsNote: "Often the Mentor sacrifices something, forcing the Hero into independence.",
+      functionHeading: "Narrative function",
+      functionIntro: "The Mentor supports the Hero's growth as:",
+      functions: ["Trusted advisor", "Trainer or teacher", "Giver of tools or gifts", "Emotional challenger", "Bridge between worlds"],
+      functionNote: "When the Mentor disappears, the Hero must act alone.",
+      relationshipsHeading: "Key relationships",
+      relationships: ["Hero \u2192 formative bond", "Threshold Guardian \u2192 shared trials", "Shadow \u2192 moral counterpoint", "Ally \u2192 cooperation or tension", "Trickster \u2192 disruption of authority", "Shapeshifter \u2192 ambiguity", "Herald \u2192 signals the need for guidance"],
+      writingHeading: "Writing a compelling Mentor",
+      writing: ["Strong introduction", "Clear motivation", "Demonstrated expertise", "Unique personality", "Revealing backstory", "Trust with the Hero", "Memorable first lesson", "Symbolic presence"],
+      examplesHeading: "Mentor Examples",
+      examples: ["Gandalf", "Dumbledore", "Mr. Miyagi", "Yoda", "Professor Xavier", "Glinda", "Haymitch", "Rafiki", "Morpheus"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Mentor?",
+      intro: [
+        "El Mentor gu\xEDa, ense\xF1a e inspira al H\xE9roe. Proporciona sabidur\xEDa, experiencia y apoyo emocional, ayud\xE1ndole a crecer y a superar los desaf\xEDos.",
+        "El Mentor representa el conocimiento heredado, la tradici\xF3n y la posibilidad de la transformaci\xF3n interior."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Gu\xEDa espiritual y pr\xE1ctico", "Sabidur\xEDa acumulada", "Figura de apoyo emocional", "Br\xFAjula \xE9tica", "Conexi\xF3n con la tradici\xF3n", "Catalizador de la acci\xF3n"],
+      traitsNote: "Con frecuencia, el Mentor sacrifica algo, lo que obliga al H\xE9roe a valerse por s\xED mismo.",
+      functionHeading: "Funci\xF3n narrativa",
+      functionIntro: "El Mentor apoya el crecimiento del H\xE9roe como:",
+      functions: ["Consejero de confianza", "Formador o maestro", "Dador de herramientas o dones", "Desaf\xEDo emocional", "Puente entre mundos"],
+      functionNote: "Cuando el Mentor desaparece, el H\xE9roe debe actuar solo.",
+      relationshipsHeading: "Relaciones clave",
+      relationships: ["H\xE9roe \u2192 v\xEDnculo formativo", "Guardi\xE1n del Umbral \u2192 pruebas compartidas", "Sombra \u2192 contrapunto moral", "Aliado \u2192 cooperaci\xF3n o tensi\xF3n", "Embaucador \u2192 disrupci\xF3n de la autoridad", "Cambiante \u2192 ambig\xFCedad", "Heraldo \u2192 se\xF1ala la necesidad de gu\xEDa"],
+      writingHeading: "C\xF3mo escribir un Mentor convincente",
+      writing: ["Presentaci\xF3n s\xF3lida", "Motivaci\xF3n clara", "Experiencia demostrada", "Personalidad \xFAnica", "Historia de fondo reveladora", "Relaci\xF3n de confianza con el H\xE9roe", "Primera lecci\xF3n memorable", "Presencia simb\xF3lica"],
+      examplesHeading: "Ejemplos del Mentor",
+      examples: ["Gandalf", "Dumbledore", "Mr. Miyagi", "Yoda", "Profesor Xavier", "Glinda", "Haymitch", "Rafiki", "Morfeo"]
+    }
+  },
+  herald: {
+    en: {
+      introQuestion: "Who is the Herald?",
+      intro: [
+        "The Herald announces change. They disrupt the status quo and deliver the call to adventure, signaling that the current world can no longer remain the same.",
+        "The Herald does not need to stay in the story long \u2014 their power lies in initiating movement."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Messenger of change", "Catalyst for action", "Bringer of information or crisis", "External or internal trigger", "Neutral, positive, or threatening"],
+      traitsNote: "The Herald forces a decision.",
+      functionHeading: "Narrative function",
+      functionIntro: "The Herald appears to:",
+      functions: ["Deliver news", "Introduce conflict", "Reveal danger or opportunity", "Force the Hero to act", "Break routine"],
+      functionNote: "They are the narrative spark.",
+      relationshipsHeading: "Key relationships",
+      relationships: ["Hero \u2192 awakens purpose", "Mentor \u2192 confirms the call", "Shadow \u2192 escalation of threat", "Ally \u2192 shared urgency", "Shapeshifter \u2192 uncertainty around meaning", "Trickster \u2192 distorted message"],
+      writingHeading: "Writing an effective Herald",
+      writing: ["Clear message", "Strong timing", "Memorable entrance", "Emotional impact", "Immediate consequences", "No unnecessary exposition"],
+      examplesHeading: "Herald Examples",
+      examples: ["R2-D2", "The White Rabbit", "Hagrid", "The Letter from Hogwarts", "The Black Spot (Treasure Island)", "Morpheus (first contact)", "Paul Revere"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Heraldo?",
+      intro: [
+        "El Heraldo anuncia el cambio. Trastoca el statu quo y entrega la llamada a la aventura, se\xF1alando que el mundo tal como existe ya no puede seguir igual.",
+        "El Heraldo no necesita permanecer en la historia mucho tiempo; su poder reside en iniciar el movimiento."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Mensajero del cambio", "Catalizador de la acci\xF3n", "Portador de informaci\xF3n o crisis", "Detonante externo o interno", "Neutral, positivo o amenazante"],
+      traitsNote: "El Heraldo fuerza una decisi\xF3n.",
+      functionHeading: "Funci\xF3n narrativa",
+      functionIntro: "El Heraldo aparece para:",
+      functions: ["Entregar noticias", "Introducir el conflicto", "Revelar peligro u oportunidad", "Obligar al H\xE9roe a actuar", "Romper la rutina"],
+      functionNote: "Es la chispa narrativa.",
+      relationshipsHeading: "Relaciones clave",
+      relationships: ["H\xE9roe \u2192 despierta el prop\xF3sito", "Mentor \u2192 confirma la llamada", "Sombra \u2192 escalada de la amenaza", "Aliado \u2192 urgencia compartida", "Cambiante \u2192 incertidumbre sobre el significado", "Embaucador \u2192 mensaje distorsionado"],
+      writingHeading: "C\xF3mo escribir un Heraldo efectivo",
+      writing: ["Mensaje claro", "Momento oportuno", "Entrada memorable", "Impacto emocional", "Consecuencias inmediatas", "Sin exposici\xF3n innecesaria"],
+      examplesHeading: "Ejemplos del Heraldo",
+      examples: ["R2-D2", "El Conejo Blanco", "Hagrid", "La carta de Hogwarts", "La Mancha Negra (La isla del tesoro)", "Morfeo (primer contacto)", "Paul Revere"]
+    }
+  },
+  shadow: {
+    en: {
+      introQuestion: "Who is the Shadow?",
+      intro: [
+        "The Shadow represents the Hero's greatest obstacle. It often embodies the Hero's repressed fears, flaws, or dark potential.",
+        "The Shadow can be a villain, antagonist, rival, or internal force."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Opposition and threat", "Moral contrast", "Power or temptation", "Psychological mirror", "Fear incarnate"],
+      traitsNote: "The Shadow tests the Hero's values.",
+      functionHeading: "Narrative function",
+      functionIntro: "The Shadow exists to:",
+      functions: ["Block progress", "Challenge morality", "Force growth", "Expose weakness", "Represent consequences"],
+      functionNote: "Defeating the Shadow often means internal change.",
+      relationshipsHeading: "Key relationships",
+      relationships: ["Hero \u2192 mirrored opposition", "Mentor \u2192 ideological contrast", "Ally \u2192 collateral conflict", "Trickster \u2192 destabilization", "Shapeshifter \u2192 hidden threat", "Threshold Guardian \u2192 shared function"],
+      writingHeading: "Writing a powerful Shadow",
+      writing: ["Clear motivation", "Personal connection to Hero", "Symbolic design", "Escalating threat", "Moral complexity", "Consequences beyond defeat"],
+      examplesHeading: "Shadow Examples",
+      examples: ["Darth Vader", "Voldemort", "Sauron", "Joker", "Scar", "Thanos", "Capit\xE1n Ahab"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es la Sombra?",
+      intro: [
+        "La Sombra representa el mayor obst\xE1culo del H\xE9roe. Con frecuencia encarna los miedos reprimidos, los defectos o el potencial oscuro del propio H\xE9roe.",
+        "La Sombra puede ser un villano, un antagonista, un rival o una fuerza interior."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Oposici\xF3n y amenaza", "Contraste moral", "Poder o tentaci\xF3n", "Espejo psicol\xF3gico", "El miedo hecho carne"],
+      traitsNote: "La Sombra pone a prueba los valores del H\xE9roe.",
+      functionHeading: "Funci\xF3n narrativa",
+      functionIntro: "La Sombra existe para:",
+      functions: ["Bloquear el progreso", "Desafiar la moralidad", "Forzar el crecimiento", "Exponer las debilidades", "Representar las consecuencias"],
+      functionNote: "Vencer a la Sombra a menudo implica un cambio interno.",
+      relationshipsHeading: "Relaciones clave",
+      relationships: ["H\xE9roe \u2192 oposici\xF3n especular", "Mentor \u2192 contraste ideol\xF3gico", "Aliado \u2192 conflicto colateral", "Embaucador \u2192 desestabilizaci\xF3n", "Cambiante \u2192 amenaza oculta", "Guardi\xE1n del Umbral \u2192 funci\xF3n compartida"],
+      writingHeading: "C\xF3mo escribir una Sombra poderosa",
+      writing: ["Motivaci\xF3n clara", "Conexi\xF3n personal con el H\xE9roe", "Dise\xF1o simb\xF3lico", "Amenaza en escalada", "Complejidad moral", "Consecuencias m\xE1s all\xE1 de la derrota"],
+      examplesHeading: "Ejemplos de la Sombra",
+      examples: ["Darth Vader", "Voldemort", "Sauron", "Joker", "Scar", "Thanos", "Capit\xE1n Ahab"]
+    }
+  },
+  trickster: {
+    en: {
+      introQuestion: "Who is the Trickster?",
+      intro: [
+        "The Trickster introduces chaos, humor, and unpredictability. They question authority, expose hypocrisy, and disrupt order.",
+        "The Trickster is rarely evil \u2014 they destabilize to reveal truth."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Humor and wit", "Rule-breaking behavior", "Irony and satire", "Unpredictability", "Social disruption"],
+      traitsNote: "They thrive on contradiction.",
+      functionHeading: "Narrative function",
+      functionIntro: "The Trickster serves to:",
+      functions: ["Relieve tension", "Challenge norms", "Reveal hidden truths", "Expose weakness", "Create narrative surprise"],
+      functionNote: "They prevent stagnation.",
+      relationshipsHeading: "Key relationships",
+      relationships: ["Hero \u2192 comic relief or moral test", "Mentor \u2192 challenges authority", "Shadow \u2192 ironic contrast", "Ally \u2192 unreliable support", "Shapeshifter \u2192 shared ambiguity"],
+      writingHeading: "Writing an effective Trickster",
+      writing: ["Sharp dialogue", "Clear worldview", "Narrative timing", "Purposeful disruption", "Balance humor and impact"],
+      examplesHeading: "Trickster Examples",
+      examples: ["Loki", "Jack Sparrow", "Bugs Bunny", "Deadpool", "The Joker (comic function)", "Puck", "Han Solo"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Embaucador?",
+      intro: [
+        "El Embaucador introduce el caos, el humor y la imprevisibilidad. Cuestiona la autoridad, expone la hipocres\xEDa y trastoca el orden establecido.",
+        "El Embaucador rara vez es malvado: desestabiliza para revelar la verdad."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Humor e ingenio", "Comportamiento transgresor", "Iron\xEDa y s\xE1tira", "Imprevisibilidad", "Disrupci\xF3n social"],
+      traitsNote: "Prospera en la contradicci\xF3n.",
+      functionHeading: "Funci\xF3n narrativa",
+      functionIntro: "El Embaucador sirve para:",
+      functions: ["Aliviar la tensi\xF3n", "Cuestionar las normas", "Revelar verdades ocultas", "Exponer las debilidades", "Crear sorpresa narrativa"],
+      functionNote: "Impide el estancamiento.",
+      relationshipsHeading: "Relaciones clave",
+      relationships: ["H\xE9roe \u2192 alivio c\xF3mico o prueba moral", "Mentor \u2192 desaf\xEDa la autoridad", "Sombra \u2192 contraste ir\xF3nico", "Aliado \u2192 apoyo poco fiable", "Cambiante \u2192 ambig\xFCedad compartida"],
+      writingHeading: "C\xF3mo escribir un Embaucador efectivo",
+      writing: ["Di\xE1logo afilado", "Visi\xF3n del mundo clara", "Ritmo narrativo", "Disrupci\xF3n con prop\xF3sito", "Equilibrar humor e impacto"],
+      examplesHeading: "Ejemplos del Embaucador",
+      examples: ["Loki", "Jack Sparrow", "Bugs Bunny", "Deadpool", "El Joker (funci\xF3n c\xF3mica)", "Puck", "Han Solo"]
+    }
+  },
+  ally: {
+    en: {
+      introQuestion: "Who is the Ally?",
+      intro: [
+        "The Ally supports the Hero emotionally, strategically, or practically. They represent friendship, loyalty, and shared purpose.",
+        "Allies humanize the Hero."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Loyalty", "Complementary skills", "Emotional support", "Shared risk", "Personal stake"],
+      traitsNote: "Allies often have their own arcs.",
+      functionHeading: "Narrative function",
+      functionIntro: "The Ally helps by:",
+      functions: ["Assisting in conflict", "Providing perspective", "Supporting decisions", "Sharing danger", "Reflecting growth"],
+      functionNote: "They reinforce connection.",
+      relationshipsHeading: "Key relationships",
+      relationships: ["Hero \u2192 partnership", "Mentor \u2192 guidance extension", "Shadow \u2192 vulnerability", "Trickster \u2192 contrast", "Shapeshifter \u2192 trust tension"],
+      writingHeading: "Writing strong Allies",
+      writing: ["Clear individuality", "Defined strengths", "Emotional bond", "Independent goals", "Potential conflict"],
+      examplesHeading: "Ally Examples",
+      examples: ["Samwise Gamgee", "Ron Weasley", "Hermione Granger", "Chewbacca", "Dr. Watson", "Merry & Pippin", "Peeta Mellark"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Aliado?",
+      intro: [
+        "El Aliado apoya al H\xE9roe emocional, estrat\xE9gica o pr\xE1cticamente. Representa la amistad, la lealtad y el prop\xF3sito compartido.",
+        "Los aliados humanizan al H\xE9roe."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Lealtad", "Habilidades complementarias", "Apoyo emocional", "Riesgo compartido", "Inter\xE9s personal en el resultado"],
+      traitsNote: "Los aliados suelen tener sus propios arcos.",
+      functionHeading: "Funci\xF3n narrativa",
+      functionIntro: "El Aliado ayuda mediante:",
+      functions: ["Asistencia en el conflicto", "Aportaci\xF3n de perspectiva", "Respaldo en las decisiones", "Compartir el peligro", "Reflejo del crecimiento del H\xE9roe"],
+      functionNote: "Refuerzan la conexi\xF3n.",
+      relationshipsHeading: "Relaciones clave",
+      relationships: ["H\xE9roe \u2192 asociaci\xF3n", "Mentor \u2192 extensi\xF3n de la gu\xEDa", "Sombra \u2192 vulnerabilidad", "Embaucador \u2192 contraste", "Cambiante \u2192 tensi\xF3n de confianza"],
+      writingHeading: "C\xF3mo escribir Aliados s\xF3lidos",
+      writing: ["Individualidad clara", "Fortalezas definidas", "V\xEDnculo emocional", "Objetivos propios", "Potencial de conflicto"],
+      examplesHeading: "Ejemplos del Aliado",
+      examples: ["Samsagaz Gamyi", "Ron Weasley", "Hermione Granger", "Chewbacca", "Dr. Watson", "Merry y Pippin", "Peeta Mellark"]
+    }
+  },
+  shapeshifter: {
+    en: {
+      introQuestion: "Who is the Shapeshifter?",
+      intro: [
+        "The Shapeshifter embodies uncertainty. Their allegiance, identity, or intentions are unclear, creating doubt and tension.",
+        "They represent change and ambiguity."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Duality", "Uncertainty", "Fluid loyalty", "Deception or mystery", "Emotional instability"],
+      traitsNote: "They challenge trust.",
+      functionHeading: "Narrative function",
+      functionIntro: "The Shapeshifter exists to:",
+      functions: ["Create doubt", "Test perception", "Complicate relationships", "Introduce surprise", "Represent internal conflict"],
+      relationshipsHeading: "Key relationships",
+      relationships: ["Hero \u2192 trust challenge", "Mentor \u2192 warning or lesson", "Shadow \u2192 secret alliance", "Ally \u2192 betrayal risk", "Trickster \u2192 shared chaos"],
+      writingHeading: "Writing a compelling Shapeshifter",
+      writing: ["Clear mystery", "Consistent ambiguity", "Emotional stakes", "Gradual revelation", "Meaningful transformation"],
+      examplesHeading: "Shapeshifter Examples",
+      examples: ["Catwoman", "Severus Snape", "Gollum", "Mystique", "Nick Fury", "Scarlett O'Hara"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Cambiante?",
+      intro: [
+        "El Cambiante encarna la incertidumbre. Su lealtad, identidad o intenciones son difusas, lo que genera duda y tensi\xF3n.",
+        "Representa el cambio y la ambig\xFCedad."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Dualidad", "Incertidumbre", "Lealtad fluida", "Enga\xF1o o misterio", "Inestabilidad emocional"],
+      traitsNote: "Pone a prueba la confianza.",
+      functionHeading: "Funci\xF3n narrativa",
+      functionIntro: "El Cambiante existe para:",
+      functions: ["Crear duda", "Poner a prueba la percepci\xF3n", "Complicar las relaciones", "Introducir la sorpresa", "Representar el conflicto interno"],
+      relationshipsHeading: "Relaciones clave",
+      relationships: ["H\xE9roe \u2192 desaf\xEDo a la confianza", "Mentor \u2192 advertencia o lecci\xF3n", "Sombra \u2192 alianza secreta", "Aliado \u2192 riesgo de traici\xF3n", "Embaucador \u2192 caos compartido"],
+      writingHeading: "C\xF3mo escribir un Cambiante convincente",
+      writing: ["Misterio claro", "Ambig\xFCedad coherente", "Apuestas emocionales", "Revelaci\xF3n gradual", "Transformaci\xF3n significativa"],
+      examplesHeading: "Ejemplos del Cambiante",
+      examples: ["Catwoman", "Severus Snape", "Gollum", "Mystique", "Nick Fury", "Scarlett O'Hara"]
+    }
+  },
+  thresholdGuardian: {
+    en: {
+      introQuestion: "Who is the Threshold Guardian?",
+      intro: [
+        "The Threshold Guardian blocks progress and tests readiness. They appear at key moments of transition.",
+        "They are not always villains \u2014 they are gatekeepers."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Obstacle or challenge", "Moral or physical test", "Enforcer of rules", "Neutral opposition", "Trial embodiment"],
+      traitsNote: "Passing them marks growth.",
+      functionHeading: "Narrative function",
+      functions: ["Tests commitment", "Filters worthiness", "Forces preparation", "Delays progression", "Raises stakes"],
+      relationshipsHeading: "Key relationships",
+      relationships: ["Hero \u2192 rite of passage", "Mentor \u2192 preparation source", "Shadow \u2192 structural parallel", "Ally \u2192 shared test", "Trickster \u2192 bypass attempt"],
+      writingHeading: "Writing effective Threshold Guardians",
+      writing: ["Clear rules", "Symbolic challenge", "Consequences for failure", "Escalation of difficulty", "Memorable encounter"],
+      examplesHeading: "Threshold Guardian Examples",
+      examples: ["The Sphinx", "Cerberus", "The Bouncer", "Stormtroopers", "Gatekeepers", "Dragons", "The First Boss"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Guardi\xE1n del Umbral?",
+      intro: [
+        "El Guardi\xE1n del Umbral bloquea el progreso y pone a prueba la preparaci\xF3n. Aparece en momentos clave de transici\xF3n.",
+        "No siempre es un villano: es el guardi\xE1n de la puerta."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Obst\xE1culo o desaf\xEDo", "Prueba moral o f\xEDsica", "Custodio de las reglas", "Oposici\xF3n neutral", "Encarnaci\xF3n de la prueba"],
+      traitsNote: "Superarlo marca el crecimiento.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Pone a prueba el compromiso", "Filtra la val\xEDa", "Obliga a la preparaci\xF3n", "Retrasa la progresi\xF3n", "Eleva las apuestas"],
+      relationshipsHeading: "Relaciones clave",
+      relationships: ["H\xE9roe \u2192 rito de paso", "Mentor \u2192 fuente de preparaci\xF3n", "Sombra \u2192 paralelo estructural", "Aliado \u2192 prueba compartida", "Embaucador \u2192 intento de eludir la prueba"],
+      writingHeading: "C\xF3mo escribir Guardianes del Umbral efectivos",
+      writing: ["Reglas claras", "Desaf\xEDo simb\xF3lico", "Consecuencias por el fracaso", "Escalada de dificultad", "Encuentro memorable"],
+      examplesHeading: "Ejemplos del Guardi\xE1n del Umbral",
+      examples: ["La Esfinge", "Cerbero", "El portero", "Soldados imperiales", "Guardianes", "Dragones", "El primer jefe"]
+    }
+  },
+  // ── Jung archetypes ─────────────────────────────────────────────────────
+  caregiver: {
+    en: {
+      introQuestion: "Who is the Caregiver?",
+      intro: [
+        "The Caregiver is driven by compassion, responsibility, and the desire to protect others. They exist to nurture, support, and sustain, often putting others' needs before their own.",
+        "This archetype represents altruism, sacrifice, and unconditional care."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Empathy and compassion", "Selflessness", "Responsibility", "Emotional strength", "Protective instinct"],
+      traitsNote: "The Caregiver's weakness is often self-neglect.",
+      functionHeading: "Narrative function",
+      functions: ["Protects vulnerable characters", "Provides emotional stability", "Represents moral goodness", "Motivates sacrifice", "Creates emotional stakes"],
+      functionNote: "They often anchor the story's heart.",
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Helping others vs. self-preservation", "Love vs. burnout", "Responsibility vs. freedom"],
+      examplesHeading: "Caregiver Examples",
+      examples: ["Marmee (Little Women)", "Samwise Gamgee", "Aunt May", "Molly Weasley", "Baymax", "Marlin (Finding Nemo)"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Cuidador?",
+      intro: [
+        "El Cuidador est\xE1 impulsado por la compasi\xF3n, la responsabilidad y el deseo de proteger a los dem\xE1s. Existe para nutrir, apoyar y sostener, anteponiendo con frecuencia las necesidades ajenas a las propias.",
+        "Este arquetipo representa el altruismo, el sacrificio y el cuidado incondicional."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Empat\xEDa y compasi\xF3n", "Altruismo", "Responsabilidad", "Fortaleza emocional", "Instinto protector"],
+      traitsNote: "La debilidad del Cuidador suele ser el descuido de s\xED mismo.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Protege a los personajes vulnerables", "Proporciona estabilidad emocional", "Representa la bondad moral", "Motiva el sacrificio", "Crea apuestas emocionales"],
+      functionNote: "Con frecuencia ancla el coraz\xF3n de la historia.",
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["Ayudar a otros frente a la autoconservaci\xF3n", "Amor frente al agotamiento", "Responsabilidad frente a libertad"],
+      examplesHeading: "Ejemplos del Cuidador",
+      examples: ["Marmee (Mujercitas)", "Samsagaz Gamyi", "T\xEDa May", "Molly Weasley", "Baymax", "Marlin (Buscando a Nemo)"]
+    }
+  },
+  creator: {
+    en: {
+      introQuestion: "Who is the Creator?",
+      intro: [
+        "The Creator is driven by imagination and the urge to build something meaningful. They seek originality, self-expression, and lasting impact through creation.",
+        "This archetype fears mediocrity and unrealized potential."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Creativity", "Vision", "Innovation", "Sensitivity", "Perfectionism"],
+      traitsNote: "They are often torn between inspiration and self-doubt.",
+      functionHeading: "Narrative function",
+      functions: ["Brings new ideas into the world", "Challenges existing systems", "Embodies artistic struggle", "Explores identity through creation"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Fear of failure", "Obsession with perfection", "Isolation", "The cost of creation"],
+      examplesHeading: "Creator Examples",
+      examples: ["Victor Frankenstein", "Tony Stark", "Walt Disney (fictionalized)", "Dr. Emmett Brown", "Jo March", "Da Vinci\u2013type characters"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Creador?",
+      intro: [
+        "El Creador est\xE1 impulsado por la imaginaci\xF3n y el impulso de construir algo significativo. Busca la originalidad, la autoexpresi\xF3n y un impacto duradero a trav\xE9s de la creaci\xF3n.",
+        "Este arquetipo teme la mediocridad y el potencial sin realizar."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Creatividad", "Visi\xF3n", "Innovaci\xF3n", "Sensibilidad", "Perfeccionismo"],
+      traitsNote: "Con frecuencia se debate entre la inspiraci\xF3n y la duda.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Trae nuevas ideas al mundo", "Desaf\xEDa los sistemas existentes", "Encarna la lucha art\xEDstica", "Explora la identidad a trav\xE9s de la creaci\xF3n"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["Miedo al fracaso", "Obsesi\xF3n con la perfecci\xF3n", "Aislamiento", "El precio de la creaci\xF3n"],
+      examplesHeading: "Ejemplos del Creador",
+      examples: ["V\xEDctor Frankenstein", "Tony Stark", "Walt Disney (ficcional)", "Dr. Emmett Brown", "Jo March", "Personajes tipo Da Vinci"]
+    }
+  },
+  everyman: {
+    en: {
+      introQuestion: "Who is the Everyman?",
+      intro: [
+        "The Everyman represents normalcy, relatability, and belonging. They are not exceptional by skill or destiny, but by humanity.",
+        "This archetype allows the audience to see themselves in the story."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Humility", "Honesty", "Reliability", "Relatability", "Desire for connection"],
+      traitsNote: "They succeed through perseverance, not greatness.",
+      functionHeading: "Narrative function",
+      functions: ["Grounds the story", "Reflects audience values", "Humanizes extraordinary events", "Emphasizes community and belonging"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Feeling insignificant", "Fear of standing out", "Desire to belong vs. desire to matter"],
+      examplesHeading: "Everyman Examples",
+      examples: ["Arthur Dent", "Bilbo Baggins (early)", "Jim Halpert", "Forrest Gump", "Frodo (initially)"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Ciudadano Com\xFAn?",
+      intro: [
+        "El Ciudadano Com\xFAn representa la normalidad, la identificaci\xF3n y la pertenencia. No es excepcional por sus habilidades o destino, sino por su humanidad.",
+        "Este arquetipo permite al p\xFAblico verse reflejado en la historia."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Humildad", "Honestidad", "Fiabilidad", "Identificabilidad", "Deseo de conexi\xF3n"],
+      traitsNote: "Triunfa gracias a la perseverancia, no a la grandeza.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Ancla la historia", "Refleja los valores del p\xFAblico", "Humaniza los eventos extraordinarios", "Subraya la comunidad y la pertenencia"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["Sentirse insignificante", "Miedo a destacar", "Deseo de pertenecer frente a deseo de importar"],
+      examplesHeading: "Ejemplos del Ciudadano Com\xFAn",
+      examples: ["Arthur Dent", "Bilbo Bols\xF3n (al inicio)", "Jim Halpert", "Forrest Gump", "Frodo (al principio)"]
+    }
+  },
+  explorer: {
+    en: {
+      introQuestion: "Who is the Explorer?",
+      intro: [
+        "The Explorer seeks freedom, discovery, and self-definition. They reject confinement and pursue meaning through experience.",
+        "This archetype values independence above all else."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Curiosity", "Independence", "Courage", "Restlessness", "Self-reliance"],
+      traitsNote: "They fear conformity and stagnation.",
+      functionHeading: "Narrative function",
+      functions: ["Drives journeys and quests", "Expands the world of the story", "Challenges limits and borders", "Represents personal freedom"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Commitment", "Loneliness", "Rootlessness", "The cost of freedom"],
+      examplesHeading: "Explorer Examples",
+      examples: ["Indiana Jones", "Lara Croft", "Moana", "Huck Finn", "The Doctor (Doctor Who)"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Explorador?",
+      intro: [
+        "El Explorador busca libertad, descubrimiento y autodefinici\xF3n. Rechaza el confinamiento y persigue el significado a trav\xE9s de la experiencia.",
+        "Este arquetipo valora la independencia por encima de todo."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Curiosidad", "Independencia", "Valent\xEDa", "Inquietud", "Autosuficiencia"],
+      traitsNote: "Teme la conformidad y el estancamiento.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Impulsa viajes y b\xFAsquedas", "Ampl\xEDa el mundo de la historia", "Desaf\xEDa los l\xEDmites y las fronteras", "Representa la libertad personal"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["El compromiso", "La soledad", "La falta de ra\xEDces", "El precio de la libertad"],
+      examplesHeading: "Ejemplos del Explorador",
+      examples: ["Indiana Jones", "Lara Croft", "Moana", "Huck Finn", "El Doctor (Doctor Who)"]
+    }
+  },
+  heroJung: {
+    en: {
+      introQuestion: "Who is the Hero (Jungian)?",
+      intro: [
+        "The Jungian Hero represents courage, willpower, and the drive to prove worth through action. Unlike the mythic Hero's Journey, this archetype focuses on strength and achievement."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Bravery", "Determination", "Discipline", "Moral clarity", "Endurance"],
+      traitsNote: "They define themselves through struggle.",
+      functionHeading: "Narrative function",
+      functions: ["Confronts danger directly", "Overcomes adversity", "Protects others", "Embodies action and resolve"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Pride", "Fear of weakness", "Burnout", "Identity tied solely to victory"],
+      examplesHeading: "Hero Examples",
+      examples: ["Wonder Woman", "Captain America", "Achilles", "Beowulf", "Maximus"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el H\xE9roe (Jung)?",
+      intro: [
+        "El H\xE9roe jungiano representa el valor, la fuerza de voluntad y el impulso de demostrar la val\xEDa a trav\xE9s de la acci\xF3n. A diferencia del viaje m\xEDtico del H\xE9roe, este arquetipo se centra en la fortaleza y el logro."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Valent\xEDa", "Determinaci\xF3n", "Disciplina", "Claridad moral", "Resistencia"],
+      traitsNote: "Se definen a s\xED mismos a trav\xE9s de la lucha.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Afronta el peligro directamente", "Supera la adversidad", "Protege a los dem\xE1s", "Encarna la acci\xF3n y la resoluci\xF3n"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["Orgullo", "Miedo a la debilidad", "Agotamiento", "Identidad ligada exclusivamente a la victoria"],
+      examplesHeading: "Ejemplos del H\xE9roe",
+      examples: ["Wonder Woman", "Capit\xE1n Am\xE9rica", "Aquiles", "Beowulf", "M\xE1ximo"]
+    }
+  },
+  innocent: {
+    en: {
+      introQuestion: "Who is the Innocent?",
+      intro: [
+        "The Innocent seeks happiness, safety, and goodness. They believe in a just world and trust others easily.",
+        "This archetype represents hope and moral purity."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Optimism", "Trust", "Faith", "Simplicity", "Moral clarity"],
+      traitsNote: "Their weakness is naivety.",
+      functionHeading: "Narrative function",
+      functions: ["Highlights corruption or cruelty", "Inspires protection", "Restores hope", "Contrasts darker characters"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Loss of faith", "Disillusionment", "Exposure to harsh reality"],
+      examplesHeading: "Innocent Examples",
+      examples: ["Dorothy Gale", "Paddington", "Buddy (Elf)", "Bambi", "Am\xE9lie"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Inocente?",
+      intro: [
+        "El Inocente busca la felicidad, la seguridad y la bondad. Cree en un mundo justo y conf\xEDa en los dem\xE1s con facilidad.",
+        "Este arquetipo representa la esperanza y la pureza moral."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Optimismo", "Confianza", "Fe", "Sencillez", "Claridad moral"],
+      traitsNote: "Su debilidad es la ingenuidad.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Pone de relieve la corrupci\xF3n o la crueldad", "Inspira la protecci\xF3n", "Restaura la esperanza", "Contrasta con los personajes m\xE1s oscuros"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["P\xE9rdida de la fe", "Desilusi\xF3n", "Exposici\xF3n a la realidad m\xE1s dura"],
+      examplesHeading: "Ejemplos del Inocente",
+      examples: ["Dorothy Gale", "Paddington", "Buddy (Elf)", "Bambi", "Am\xE9lie"]
+    }
+  },
+  jester: {
+    en: {
+      introQuestion: "Who is the Jester?",
+      intro: [
+        "The Jester lives in the moment, embracing humor, chaos, and joy. They expose truth through laughter and subversion."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Humor", "Irreverence", "Playfulness", "Chaos", "Social critique"],
+      traitsNote: "They fear boredom and oppression.",
+      functionHeading: "Narrative function",
+      functions: ["Relieves tension", "Exposes hypocrisy", "Challenges authority", "Brings levity"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Being taken seriously", "Hiding pain behind humor"],
+      examplesHeading: "Jester Examples",
+      examples: ["Jack Sparrow", "The Genie", "Tyrion Lannister", "Bugs Bunny", "Puck"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Buf\xF3n?",
+      intro: [
+        "El Buf\xF3n vive el momento presente, abrazando el humor, el caos y la alegr\xEDa. Revela la verdad a trav\xE9s de la risa y la subversi\xF3n."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Humor", "Irreverencia", "Juego", "Caos", "Cr\xEDtica social"],
+      traitsNote: "Teme el aburrimiento y la opresi\xF3n.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Alivia la tensi\xF3n", "Expone la hipocres\xEDa", "Desaf\xEDa la autoridad", "Aporta ligereza"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["No ser tomado en serio", "Esconder el dolor detr\xE1s del humor"],
+      examplesHeading: "Ejemplos del Buf\xF3n",
+      examples: ["Jack Sparrow", "El Genio", "Tyrion Lannister", "Bugs Bunny", "Puck"]
+    }
+  },
+  lover: {
+    en: {
+      introQuestion: "Who is the Lover?",
+      intro: [
+        "The Lover is driven by passion, intimacy, and connection. They seek union \u2014 romantic, emotional, or aesthetic."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Passion", "Devotion", "Sensuality", "Emotional depth", "Vulnerability"],
+      traitsNote: "They fear abandonment and loss.",
+      functionHeading: "Narrative function",
+      functions: ["Raises emotional stakes", "Motivates sacrifice", "Explores intimacy", "Drives relational conflict"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Obsession", "Dependency", "Loss of identity"],
+      examplesHeading: "Lover Examples",
+      examples: ["Romeo & Juliet", "Rose (Titanic)", "Westley", "Scarlett O'Hara", "Jack Dawson"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Amante?",
+      intro: [
+        "El Amante est\xE1 impulsado por la pasi\xF3n, la intimidad y la conexi\xF3n. Busca la uni\xF3n, ya sea rom\xE1ntica, emocional o est\xE9tica."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Pasi\xF3n", "Devoci\xF3n", "Sensualidad", "Profundidad emocional", "Vulnerabilidad"],
+      traitsNote: "Teme el abandono y la p\xE9rdida.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Eleva las apuestas emocionales", "Motiva el sacrificio", "Explora la intimidad", "Impulsa el conflicto relacional"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["La obsesi\xF3n", "La dependencia", "La p\xE9rdida de identidad"],
+      examplesHeading: "Ejemplos del Amante",
+      examples: ["Romeo y Julieta", "Rose (Titanic)", "Westley", "Scarlett O'Hara", "Jack Dawson"]
+    }
+  },
+  magician: {
+    en: {
+      introQuestion: "Who is the Magician?",
+      intro: [
+        "The Magician seeks transformation \u2014 of self, others, or reality itself. They understand hidden systems and use knowledge to enact change."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Insight", "Vision", "Power", "Charisma", "Transformation"],
+      traitsNote: "They fear unintended consequences.",
+      functionHeading: "Narrative function",
+      functions: ["Enables change", "Transforms situations", "Reveals hidden truths", "Alters reality"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Control vs. ethics", "Power misuse", "Hubris"],
+      examplesHeading: "Magician Examples",
+      examples: ["Gandalf", "Doctor Strange", "Merlin", "Neo", "Dumbledore"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Mago?",
+      intro: [
+        "El Mago busca la transformaci\xF3n, ya sea de s\xED mismo, de los dem\xE1s o de la propia realidad. Comprende los sistemas ocultos y utiliza el conocimiento para provocar el cambio."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Perspicacia", "Visi\xF3n", "Poder", "Carisma", "Transformaci\xF3n"],
+      traitsNote: "Teme las consecuencias no deseadas.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Posibilita el cambio", "Transforma las situaciones", "Revela verdades ocultas", "Altera la realidad"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["Control frente a \xE9tica", "Abuso de poder", "Hybris"],
+      examplesHeading: "Ejemplos del Mago",
+      examples: ["Gandalf", "Doctor Strange", "Merl\xEDn", "Neo", "Dumbledore"]
+    }
+  },
+  outlaw: {
+    en: {
+      introQuestion: "Who is the Outlaw?",
+      intro: [
+        "The Outlaw rejects rules, authority, and conformity. They seek freedom through rebellion and disruption."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Defiance", "Independence", "Anger or idealism", "Courage", "Anti-authoritarianism"],
+      traitsNote: "They fear powerlessness.",
+      functionHeading: "Narrative function",
+      functions: ["Challenges systems", "Sparks revolution", "Represents resistance", "Breaks unjust rules"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Destruction vs. change", "Isolation", "Moral ambiguity"],
+      examplesHeading: "Outlaw Examples",
+      examples: ["V", "Robin Hood", "Han Solo", "Tyler Durden", "Katniss Everdeen"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Forajido?",
+      intro: [
+        "El Forajido rechaza las normas, la autoridad y la conformidad. Busca la libertad a trav\xE9s de la rebeli\xF3n y la disrupci\xF3n."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Rebeld\xEDa", "Independencia", "Ira o idealismo", "Valent\xEDa", "Antiautoritarismo"],
+      traitsNote: "Teme la impotencia.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Desaf\xEDa los sistemas", "Inflama la revoluci\xF3n", "Representa la resistencia", "Rompe las normas injustas"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["Destrucci\xF3n frente a cambio", "Aislamiento", "Ambig\xFCedad moral"],
+      examplesHeading: "Ejemplos del Forajido",
+      examples: ["V", "Robin Hood", "Han Solo", "Tyler Durden", "Katniss Everdeen"]
+    }
+  },
+  ruler: {
+    en: {
+      introQuestion: "Who is the Ruler?",
+      intro: [
+        "The Ruler seeks order, control, and stability. They value leadership, responsibility, and structure."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Authority", "Control", "Responsibility", "Vision", "Discipline"],
+      traitsNote: "They fear chaos and loss of power.",
+      functionHeading: "Narrative function",
+      functions: ["Establishes order", "Sets laws and norms", "Represents power", "Creates political stakes"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Tyranny vs. justice", "Control vs. trust"],
+      examplesHeading: "Ruler Examples",
+      examples: ["Mufasa", "Aragorn", "Queen Elizabeth\u2013type figures", "Tywin Lannister", "Odin"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Gobernante?",
+      intro: [
+        "El Gobernante busca el orden, el control y la estabilidad. Valora el liderazgo, la responsabilidad y la estructura."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Autoridad", "Control", "Responsabilidad", "Visi\xF3n", "Disciplina"],
+      traitsNote: "Teme el caos y la p\xE9rdida de poder.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Establece el orden", "Fija leyes y normas", "Representa el poder", "Crea apuestas pol\xEDticas"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["Tiran\xEDa frente a justicia", "Control frente a confianza"],
+      examplesHeading: "Ejemplos del Gobernante",
+      examples: ["Mufasa", "Aragorn", "Figuras tipo Isabel I", "Tywin Lannister", "Od\xEDn"]
+    }
+  },
+  sage: {
+    en: {
+      introQuestion: "Who is the Sage?",
+      intro: [
+        "The Sage seeks truth through knowledge and understanding. They value wisdom over action."
+      ],
+      traitsHeading: "Core traits",
+      traits: ["Intelligence", "Objectivity", "Insight", "Reflection", "Patience"],
+      traitsNote: "They fear ignorance and deception.",
+      functionHeading: "Narrative function",
+      functions: ["Provides truth", "Explains systems", "Guides decisions", "Offers perspective"],
+      innerConflictHeading: "Inner conflict",
+      innerConflicts: ["Detachment", "Inaction", "Emotional distance"],
+      examplesHeading: "Sage Examples",
+      examples: ["Obi-Wan Kenobi", "Socrates\u2013type figures", "Professor X", "Dumbledore (as Sage)", "Spock"]
+    },
+    es: {
+      introQuestion: "\xBFQui\xE9n es el Sabio?",
+      intro: [
+        "El Sabio busca la verdad a trav\xE9s del conocimiento y la comprensi\xF3n. Valora la sabidur\xEDa por encima de la acci\xF3n."
+      ],
+      traitsHeading: "Rasgos fundamentales",
+      traits: ["Inteligencia", "Objetividad", "Perspicacia", "Reflexi\xF3n", "Paciencia"],
+      traitsNote: "Teme la ignorancia y el enga\xF1o.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Proporciona la verdad", "Explica los sistemas", "Gu\xEDa las decisiones", "Ofrece perspectiva"],
+      innerConflictHeading: "Conflicto interno",
+      innerConflicts: ["Distanciamiento", "Inacci\xF3n", "Distancia emocional"],
+      examplesHeading: "Ejemplos del Sabio",
+      examples: ["Obi-Wan Kenobi", "Figuras tipo S\xF3crates", "Profesor X", "Dumbledore (como Sabio)", "Spock"]
+    }
+  },
+  // ── Character arcs ─────────────────────────────────────────────────────
+  moralAscent: {
+    en: {
+      introQuestion: "What is a Moral Ascent?",
+      intro: [
+        "A Moral Ascent arc follows a character who grows ethically over the course of the story. The character starts with flaws, ignorance, or selfishness and gradually learns to act with greater integrity, empathy, or responsibility.",
+        "This is the classic arc of becoming better."
+      ],
+      characteristicsHeading: "Core characteristics",
+      characteristics: ["Ethical growth", "Increased empathy", "Personal responsibility", "Learning from mistakes", "Sacrifice for others"],
+      characteristicsNote: "The character ends the story morally stronger than they began.",
+      functionHeading: "Narrative function",
+      functions: ["Inspire the audience", "Reinforce ethical values", "Reward self-reflection and growth", "Create emotional catharsis"],
+      functionNote: "It often aligns with hopeful or redemptive stories.",
+      conflictsHeading: "Common internal conflicts",
+      conflicts: ["Fear vs. courage", "Self-interest vs. responsibility", "Ignorance vs. awareness", "Comfort vs. change"],
+      examplesHeading: "Moral Ascent Examples",
+      examples: ["Ebenezer Scrooge", "Zuko", "Jean Valjean", "Tony Stark", "Shrek", "Mulan"]
+    },
+    es: {
+      introQuestion: "\xBFQu\xE9 es el Ascenso Moral?",
+      intro: [
+        "El arco de Ascenso Moral sigue a un personaje que crece \xE9ticamente a lo largo de la historia. El personaje comienza con defectos, ignorancia o ego\xEDsmo y aprende gradualmente a actuar con mayor integridad, empat\xEDa o responsabilidad.",
+        "Es el arco cl\xE1sico de llegar a ser mejor."
+      ],
+      characteristicsHeading: "Caracter\xEDsticas fundamentales",
+      characteristics: ["Crecimiento \xE9tico", "Mayor empat\xEDa", "Responsabilidad personal", "Aprendizaje de los errores", "Sacrificio por los dem\xE1s"],
+      characteristicsNote: "El personaje termina la historia moralmente m\xE1s fuerte que al comenzarla.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Inspirar al p\xFAblico", "Reforzar los valores \xE9ticos", "Recompensar la autorreflexi\xF3n y el crecimiento", "Crear catarsis emocional"],
+      functionNote: "Con frecuencia se asocia a historias esperanzadoras o de redenci\xF3n.",
+      conflictsHeading: "Conflictos internos frecuentes",
+      conflicts: ["Miedo frente a valent\xEDa", "Inter\xE9s propio frente a responsabilidad", "Ignorancia frente a conciencia", "Comodidad frente a cambio"],
+      examplesHeading: "Ejemplos de Ascenso Moral",
+      examples: ["Ebenezer Scrooge", "Zuko", "Jean Valjean", "Tony Stark", "Shrek", "Mulan"]
+    }
+  },
+  moralDescent: {
+    en: {
+      introQuestion: "What is a Moral Descent?",
+      intro: [
+        "A Moral Descent arc follows a character who deteriorates ethically over time. They begin with good intentions or neutrality but gradually compromise their values, often due to fear, ambition, pride, or trauma.",
+        "This is the arc of corruption."
+      ],
+      characteristicsHeading: "Core characteristics",
+      characteristics: ["Ethical erosion", "Rationalization of wrongdoing", "Increasing selfishness or cruelty", "Loss of empathy", "Escalating consequences"],
+      characteristicsNote: "The character becomes morally worse by the end.",
+      functionHeading: "Narrative function",
+      functions: ["Explore the cost of power", "Examine temptation and corruption", "Create tragedy or cautionary tales", "Critique ambition or hubris"],
+      conflictsHeading: "Common internal conflicts",
+      conflicts: ["Power vs. morality", "Control vs. restraint", "Fear vs. conscience", "Justification vs. accountability"],
+      examplesHeading: "Moral Descent Examples",
+      examples: ["Walter White", "Anakin Skywalker", "Michael Corleone", "Macbeth", "Gollum", "Light Yagami"]
+    },
+    es: {
+      introQuestion: "\xBFQu\xE9 es el Descenso Moral?",
+      intro: [
+        "El arco de Descenso Moral sigue a un personaje que se deteriora \xE9ticamente con el tiempo. Comienza con buenas intenciones o neutralidad, pero poco a poco compromete sus valores, a menudo por miedo, ambici\xF3n, orgullo o trauma.",
+        "Es el arco de la corrupci\xF3n."
+      ],
+      characteristicsHeading: "Caracter\xEDsticas fundamentales",
+      characteristics: ["Erosi\xF3n \xE9tica", "Racionalizaci\xF3n de las malas acciones", "Ego\xEDsmo o crueldad en aumento", "P\xE9rdida de empat\xEDa", "Consecuencias en escalada"],
+      characteristicsNote: "El personaje es moralmente peor al final que al comienzo.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Explorar el precio del poder", "Examinar la tentaci\xF3n y la corrupci\xF3n", "Crear tragedias o relatos moralizantes", "Criticar la ambici\xF3n o la hybris"],
+      conflictsHeading: "Conflictos internos frecuentes",
+      conflicts: ["Poder frente a moralidad", "Control frente a contenci\xF3n", "Miedo frente a conciencia", "Justificaci\xF3n frente a responsabilidad"],
+      examplesHeading: "Ejemplos de Descenso Moral",
+      examples: ["Walter White", "Anakin Skywalker", "Michael Corleone", "Macbeth", "Gollum", "Light Yagami"]
+    }
+  },
+  flatMoral: {
+    en: {
+      introQuestion: "What is a Flat Moral Arc?",
+      intro: [
+        "In a Flat Moral Arc, the character does not significantly change their moral beliefs. Instead, the character's values remain constant while the world around them is challenged or transformed.",
+        "The character changes others, not themselves."
+      ],
+      characteristicsHeading: "Core characteristics",
+      characteristics: ["Stable moral compass", "Strong convictions", "Resistance to pressure", "Consistency under stress", "Influence on others"],
+      characteristicsNote: "The arc is external rather than internal.",
+      functionHeading: "Narrative function",
+      functions: ["Represent ideal values", "Challenge a flawed world", "Serve as moral anchors", "Highlight societal change"],
+      conflictsHeading: "Common internal tensions",
+      conflicts: ["Isolation due to integrity", "Conflict with changing norms", "Burden of being right", "Moral fatigue"],
+      examplesHeading: "Flat Moral Arc Examples",
+      examples: ["Captain America", "Paddington", "Atticus Finch", "Superman", "Wonder Woman", "Marge Gunderson"]
+    },
+    es: {
+      introQuestion: "\xBFQu\xE9 es el Arco Plano?",
+      intro: [
+        "En el Arco Plano, el personaje no cambia significativamente sus creencias morales. En cambio, sus valores permanecen constantes mientras el mundo a su alrededor es desafiado o transformado.",
+        "El personaje cambia a los dem\xE1s, no a s\xED mismo."
+      ],
+      characteristicsHeading: "Caracter\xEDsticas fundamentales",
+      characteristics: ["Br\xFAjula moral estable", "Convicciones s\xF3lidas", "Resistencia a la presi\xF3n", "Coherencia bajo el estr\xE9s", "Influencia sobre los dem\xE1s"],
+      characteristicsNote: "El arco es externo, no interno.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Representar los valores ideales", "Desafiar un mundo defectuoso", "Servir de ancla moral", "Poner de relieve el cambio social"],
+      conflictsHeading: "Tensiones internas frecuentes",
+      conflicts: ["Aislamiento por integridad", "Conflicto con las normas cambiantes", "La carga de tener raz\xF3n", "Fatiga moral"],
+      examplesHeading: "Ejemplos de Arco Plano",
+      examples: ["Capit\xE1n Am\xE9rica", "Paddington", "Atticus Finch", "Superman", "Wonder Woman", "Marge Gunderson"]
+    }
+  },
+  moralTransformation: {
+    en: {
+      introQuestion: "What is a Moral Transformation?",
+      intro: [
+        "A Moral Transformation arc depicts a character who undergoes a fundamental ethical shift. Unlike gradual ascent or descent, this change is often abrupt, intense, and tied to a defining moment or revelation.",
+        "The character becomes morally different \u2014 not just better or worse."
+      ],
+      characteristicsHeading: "Core characteristics",
+      characteristics: ["Pivotal turning point", "Identity redefinition", "Value realignment", "Emotional shock or revelation", "Clear 'before and after'"],
+      characteristicsNote: "Transformation is often irreversible.",
+      functionHeading: "Narrative function",
+      functions: ["Mark decisive moments", "Reinvent characters", "Shock or reframe audience perception", "Signal thematic shifts"],
+      conflictsHeading: "Common internal conflicts",
+      conflicts: ["Guilt vs. denial", "Old identity vs. new self", "Fear of change", "Consequences of awakening"],
+      examplesHeading: "Moral Transformation Examples",
+      examples: ["Darth Vader (redemption moment)", "Neo (awakening)", "Clarice Starling", "Jaime Lannister", "Elsa (acceptance)", "Andy Dufresne"]
+    },
+    es: {
+      introQuestion: "\xBFQu\xE9 es la Transformaci\xF3n Moral?",
+      intro: [
+        "El arco de Transformaci\xF3n Moral muestra a un personaje que experimenta un cambio \xE9tico fundamental. A diferencia del ascenso o descenso gradual, este cambio suele ser abrupto, intenso y ligado a un momento o revelaci\xF3n decisivos.",
+        "El personaje se vuelve moralmente diferente, no simplemente mejor o peor."
+      ],
+      characteristicsHeading: "Caracter\xEDsticas fundamentales",
+      characteristics: ["Punto de inflexi\xF3n decisivo", "Redefinici\xF3n de la identidad", "Realineamiento de los valores", "Conmoci\xF3n emocional o revelaci\xF3n", "Claro 'antes y despu\xE9s'"],
+      characteristicsNote: "La transformaci\xF3n suele ser irreversible.",
+      functionHeading: "Funci\xF3n narrativa",
+      functions: ["Marcar momentos decisivos", "Reinventar a los personajes", "Impactar o replantear la percepci\xF3n del p\xFAblico", "Se\xF1alar cambios tem\xE1ticos"],
+      conflictsHeading: "Conflictos internos frecuentes",
+      conflicts: ["Culpa frente a negaci\xF3n", "Identidad antigua frente a nuevo yo", "Miedo al cambio", "Consecuencias del despertar"],
+      examplesHeading: "Ejemplos de Transformaci\xF3n Moral",
+      examples: ["Darth Vader (momento de redenci\xF3n)", "Neo (el despertar)", "Clarice Starling", "Jaime Lannister", "Elsa (la aceptaci\xF3n)", "Andy Dufresne"]
+    }
+  }
+};
+var UI_I18N = {
+  en: {
+    back: "Back",
+    languageLabel: "Language",
+    resources: "Resources",
+    characterResources: "Character resources",
+    narrativeResources: "Narrative resources",
+    structureResources: "Structure resources",
+    tipsResources: "Writing tips",
+    characterArcs: "Character arcs",
+    characterArchetypes: "Character archetypes",
+    campbellArchetypes: "Campbell archetypes",
+    jungArchetypes: "Jung archetypes",
+    narrativeTechniques: "Narrative techniques",
+    storyArchitecture: "Story architecture",
+    commonPitfalls: "Common pitfalls",
+    writingTips: "Writing tips",
+    coreCharacteristics: "Core characteristics",
+    coreTechniques: "Core techniques",
+    coreTraits: "Core traits",
+    narrativeFunction: "Narrative function",
+    keyRelationships: "Key relationships",
+    innerConflict: "Inner conflict",
+    examples: "Examples",
+    categoryDescriptions: {
+      character: "Archetypes, arcs, and character roles",
+      narrative: "Techniques that shape how stories unfold",
+      structure: "Frameworks and architectures for storytelling",
+      tips: "Craft guidance for sentence-level writing"
+    },
+    tipsIntro: "Practical craft guidance focused on sentence-level execution, clarity of communication, and reader impact. Unlike structural frameworks, this category deals with how language operates moment to moment \u2014 voice, rhythm, precision, and rhetorical control. These tips refine technique inside paragraphs rather than shaping the macro architecture of a story.",
+    narrativeGroups: [
+      { title: "Structural Time Manipulation", subtitle: "Techniques that reorganize chronology to control information flow.", note: "These operate on the temporal axis of the narrative. They don't change events \u2014 they change when the audience receives them." },
+      { title: "Setup / Payoff Mechanics", subtitle: "Techniques about planting and resolving narrative information. They're all about audience prediction vs outcome.", note: "" },
+      { title: "Resolution Devices", subtitle: "Techniques that control how conflict is concluded. Think of these as ending logic frameworks.", note: "" },
+      { title: "Style & Delivery Techniques", subtitle: "These shape how information is expressed rather than plot structure. These affect reader experience, not plot mechanics.", note: "" }
+    ],
+    structureGroups: [
+      { title: "Archetypal Character Journeys", subtitle: "Frameworks that model internal transformation and mythic character evolution rather than strict plot beats." },
+      { title: "Dramatic Tension Architectures", subtitle: "Models that describe how narrative pressure rises and falls across the story." },
+      { title: "Commercial Beat Frameworks", subtitle: "Prescriptive systems designed for audience engagement, genre expectations, and market-friendly pacing." },
+      { title: "Narrative Geometry / Experimental Structures", subtitle: "Architectural choices that shape how perspective, time, or reality are presented." }
+    ]
+  },
+  es: {
+    back: "Volver",
+    languageLabel: "Idioma",
+    resources: "Recursos",
+    characterResources: "Recursos de personaje",
+    narrativeResources: "Recursos narrativos",
+    structureResources: "Recursos de estructura",
+    tipsResources: "T\xE9cnicas de escritura",
+    characterArcs: "Arcos de personaje",
+    characterArchetypes: "Arquetipos de personaje",
+    campbellArchetypes: "Arquetipos de Campbell",
+    jungArchetypes: "Arquetipos de Jung",
+    narrativeTechniques: "T\xE9cnicas narrativas",
+    storyArchitecture: "Arquitectura narrativa",
+    commonPitfalls: "Errores frecuentes",
+    writingTips: "T\xE9cnicas de escritura",
+    coreCharacteristics: "Caracter\xEDsticas fundamentales",
+    coreTechniques: "T\xE9cnicas fundamentales",
+    coreTraits: "Rasgos fundamentales",
+    narrativeFunction: "Funci\xF3n narrativa",
+    keyRelationships: "Relaciones clave",
+    innerConflict: "Conflicto interno",
+    examples: "Ejemplos",
+    categoryDescriptions: {
+      character: "Arquetipos, arcos y roles de personaje",
+      narrative: "T\xE9cnicas que modelan c\xF3mo se desarrollan las historias",
+      structure: "Marcos y arquitecturas para la narraci\xF3n",
+      tips: "Gu\xEDa de oficio para la escritura a nivel de frase"
+    },
+    tipsIntro: "Gu\xEDa pr\xE1ctica de oficio centrada en la ejecuci\xF3n a nivel de frase, la claridad de la comunicaci\xF3n y el impacto en el lector. A diferencia de los marcos estructurales, esta categor\xEDa trata c\xF3mo opera el lenguaje momento a momento: voz, ritmo, precisi\xF3n y control ret\xF3rico. Estos consejos perfeccionan la t\xE9cnica dentro de los p\xE1rrafos, en lugar de moldear la arquitectura macro de una historia.",
+    narrativeGroups: [
+      { title: "Manipulaci\xF3n Temporal Estructural", subtitle: "T\xE9cnicas que reorganizan la cronolog\xEDa para controlar el flujo de informaci\xF3n.", note: "Operan sobre el eje temporal de la narrativa. No cambian los eventos, sino cu\xE1ndo los recibe el p\xFAblico." },
+      { title: "Mec\xE1nicas de Preparaci\xF3n y Resoluci\xF3n", subtitle: "T\xE9cnicas sobre la siembra y resoluci\xF3n de informaci\xF3n narrativa. Se centran en la predicci\xF3n del p\xFAblico frente al desenlace real.", note: "" },
+      { title: "Dispositivos de Resoluci\xF3n", subtitle: "T\xE9cnicas que controlan c\xF3mo se concluye el conflicto. Son marcos de l\xF3gica del final.", note: "" },
+      { title: "T\xE9cnicas de Estilo y Presentaci\xF3n", subtitle: "Moldean c\xF3mo se expresa la informaci\xF3n, no la estructura de la trama. Afectan la experiencia del lector, no la mec\xE1nica del argumento.", note: "" }
+    ],
+    structureGroups: [
+      { title: "Viajes Arquet\xEDpicos del Personaje", subtitle: "Marcos que modelan la transformaci\xF3n interna y la evoluci\xF3n m\xEDtica del personaje, en lugar de beats de trama estrictos." },
+      { title: "Arquitecturas de Tensi\xF3n Dram\xE1tica", subtitle: "Modelos que describen c\xF3mo la presi\xF3n narrativa sube y baja a lo largo de la historia." },
+      { title: "Marcos Comerciales de Estructura", subtitle: "Sistemas prescriptivos dise\xF1ados para el compromiso del p\xFAblico, las expectativas del g\xE9nero y un ritmo adecuado para el mercado." },
+      { title: "Geometr\xEDa Narrativa / Estructuras Experimentales", subtitle: "Elecciones arquitect\xF3nicas que moldean c\xF3mo se presentan la perspectiva, el tiempo o la realidad." }
+    ]
+  }
+};
+var LABEL_I18N = {
+  en: {
+    // Character
+    "The Hero": "The Hero",
+    "The Mentor": "The Mentor",
+    "The Herald": "The Herald",
+    "The Shadow": "The Shadow",
+    "The Trickster": "The Trickster",
+    "The Ally": "The Ally",
+    "The Shapeshifter": "The Shapeshifter",
+    "The Threshold Guardian": "The Threshold Guardian",
+    "The Caregiver": "The Caregiver",
+    "The Creator": "The Creator",
+    "The Everyman": "The Everyman",
+    "The Explorer": "The Explorer",
+    "The Hero (Jung)": "The Hero (Jung)",
+    "The Innocent": "The Innocent",
+    "The Jester": "The Jester",
+    "The Lover": "The Lover",
+    "The Magician": "The Magician",
+    "The Outlaw": "The Outlaw",
+    "The Ruler": "The Ruler",
+    "The Sage": "The Sage",
+    "Moral Ascent": "Moral Ascent",
+    "Moral Descent": "Moral Descent",
+    "Flat Moral": "Flat Moral Arc",
+    "Moral Transformation": "Moral Transformation",
+    // Narrative
+    "Flashback": "Flashback",
+    "Flashforward": "Flashforward",
+    "Foreshadowing": "Foreshadowing",
+    "Chekhov's Gun": "Chekhov's Gun",
+    "Red Herring": "Red Herring",
+    "Plot Twist": "Plot Twist",
+    "Deus Ex Machina": "Deus Ex Machina",
+    "Eucatastrophe": "Eucatastrophe",
+    "Poetic Justice": "Poetic Justice",
+    "\u201CShow, Don\u2019t Tell\u201D": "\u201CShow, Don\u2019t Tell\u201D",
+    "Quibble (Wordplay)": "Quibble (Wordplay)",
+    // Structure
+    "The Hero's Journey": "The Hero's Journey",
+    "Dan Harmon Story Circle": "Dan Harmon Story Circle",
+    "Freytag's Pyramid": "Freytag's Pyramid",
+    "Fichtean Curve": "Fichtean Curve",
+    "Three Act Structure": "Three Act Structure",
+    "Kish\u014Dtenketsu": "Kish\u014Dtenketsu",
+    "Save the Cat": "Save the Cat",
+    "Seven Point Structure": "Seven Point Structure",
+    "Pulp Formula": "Pulp Formula",
+    "McKee Story paradigm": "McKee Story Paradigm",
+    "Into the Woods structure": "Into the Woods Structure",
+    "Frame Narrative": "Frame Narrative",
+    "Nonlinear Structure": "Nonlinear Structure",
+    "Rashomon Structure": "Rashomon Structure",
+    "In Medias Res": "In Medias Res",
+    // Tips
+    "Argumentation (tips)": "Argumentation",
+    "Description (tips)": "Description",
+    "Dialogue (tips)": "Dialogue",
+    "Exposition (tips)": "Exposition",
+    "Narration (tips)": "Narration",
+    "Persuasion (tips)": "Persuasion",
+    // Pitfalls
+    "Character Pitfalls": "Character Pitfalls",
+    "Character Arc Pitfalls": "Character Arc Pitfalls",
+    "Narrative Technique Pitfalls": "Narrative Technique Pitfalls",
+    "Structure Pitfalls": "Structure Pitfalls",
+    "Writing-Level Pitfalls": "Writing-Level Pitfalls"
+  },
+  es: {
+    // Character
+    "The Hero": "El H\xE9roe",
+    "The Mentor": "El Mentor",
+    "The Herald": "El Heraldo",
+    "The Shadow": "La Sombra",
+    "The Trickster": "El Embaucador",
+    "The Ally": "El Aliado",
+    "The Shapeshifter": "El Cambiante",
+    "The Threshold Guardian": "El Guardi\xE1n del Umbral",
+    "The Caregiver": "El Cuidador",
+    "The Creator": "El Creador",
+    "The Everyman": "El Ciudadano Com\xFAn",
+    "The Explorer": "El Explorador",
+    "The Hero (Jung)": "El H\xE9roe (Jung)",
+    "The Innocent": "El Inocente",
+    "The Jester": "El Buf\xF3n",
+    "The Lover": "El Amante",
+    "The Magician": "El Mago",
+    "The Outlaw": "El Forajido",
+    "The Ruler": "El Gobernante",
+    "The Sage": "El Sabio",
+    "Moral Ascent": "Ascenso Moral",
+    "Moral Descent": "Descenso Moral",
+    "Flat Moral": "Arco Plano",
+    "Moral Transformation": "Transformaci\xF3n Moral",
+    // Narrative
+    "Flashback": "Analepsis",
+    "Flashforward": "Prolepsis",
+    "Foreshadowing": "Presagio",
+    "Chekhov's Gun": "La Pistola de Ch\xE9jov",
+    "Red Herring": "Pista Falsa",
+    "Plot Twist": "Giro de Trama",
+    "Deus Ex Machina": "Deus Ex Machina",
+    "Eucatastrophe": "Eucat\xE1strofe",
+    "Poetic Justice": "Justicia Po\xE9tica",
+    "\u201CShow, Don\u2019t Tell\u201D": "Mostrar, No Contar",
+    "Quibble (Wordplay)": "Quibble (Juego de Palabras)",
+    // Structure
+    "The Hero's Journey": "El Viaje del H\xE9roe",
+    "Dan Harmon Story Circle": "El C\xEDrculo de Dan Harmon",
+    "Freytag's Pyramid": "La Pir\xE1mide de Freytag",
+    "Fichtean Curve": "La Curva Fichtean",
+    "Three Act Structure": "Estructura de Tres Actos",
+    "Kish\u014Dtenketsu": "Kish\u014Dtenketsu",
+    "Save the Cat": "Save the Cat",
+    "Seven Point Structure": "Estructura de Siete Puntos",
+    "Pulp Formula": "F\xF3rmula Pulp",
+    "McKee Story paradigm": "Paradigma de McKee",
+    "Into the Woods structure": "Estructura Into the Woods",
+    "Frame Narrative": "Narraci\xF3n Enmarcada",
+    "Nonlinear Structure": "Estructura No Lineal",
+    "Rashomon Structure": "Estructura Rashomon",
+    "In Medias Res": "In Medias Res",
+    // Tips
+    "Argumentation (tips)": "Argumentaci\xF3n",
+    "Description (tips)": "Descripci\xF3n",
+    "Dialogue (tips)": "Di\xE1logo",
+    "Exposition (tips)": "Exposici\xF3n",
+    "Narration (tips)": "Narraci\xF3n",
+    "Persuasion (tips)": "Persuasi\xF3n",
+    // Pitfalls
+    "Character Pitfalls": "Errores de Personaje",
+    "Character Arc Pitfalls": "Errores de Arco de Personaje",
+    "Narrative Technique Pitfalls": "Errores de T\xE9cnica Narrativa",
+    "Structure Pitfalls": "Errores de Estructura",
+    "Writing-Level Pitfalls": "Errores de Escritura"
+  }
+};
+function ui(lang, key) {
+  var _a, _b, _c;
+  return (_c = (_b = (_a = UI_I18N[lang]) == null ? void 0 : _a[key]) != null ? _b : UI_I18N.en[key]) != null ? _c : key;
+}
+function label(lang, key) {
+  var _a, _b, _c;
+  return (_c = (_b = (_a = LABEL_I18N[lang]) == null ? void 0 : _a[key]) != null ? _b : LABEL_I18N.en[key]) != null ? _c : key;
+}
+function getArchetypeData(archetypeKey, lang) {
+  var _a, _b, _c, _d;
+  return (_d = (_c = (_a = ARCHETYPE_DATA[archetypeKey]) == null ? void 0 : _a[lang]) != null ? _c : (_b = ARCHETYPE_DATA[archetypeKey]) == null ? void 0 : _b.en) != null ? _d : null;
+}
+var TECHNIQUE_DATA = {
+  "Flashback": {
+    en: {
+      introTitle: "What is a Flashback?",
+      intro: ["A flashback interrupts the present narrative to show events from the past. It provides context, emotional depth, or critical information that reshapes how the audience understands current events."],
+      core: ["Temporal shift to the past", "Reveals backstory", "Adds emotional or thematic weight", "Recontextualizes present actions"],
+      coreNote: "Flashbacks change understanding, not events.",
+      narrativeFunction: ["Reveal motivation", "Explain relationships", "Deepen character psychology", "Withhold and release information strategically"],
+      risksTitle: "Common risks",
+      risks: ["Interrupting narrative momentum", "Overexplaining", "Redundancy with present action"],
+      examplesTitle: "Flashback Examples",
+      examples: ["Lost", "The Godfather Part II", "Citizen Kane", "Arrow", "Eternal Sunshine of the Spotless Mind"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es una Analepsis?",
+      intro: ["La analepsis (flashback) interrumpe la narrativa presente para mostrar eventos del pasado. Aporta contexto, profundidad emocional o informaci\xF3n esencial que transforma la comprensi\xF3n del p\xFAblico sobre los eventos actuales."],
+      core: ["Salto temporal al pasado", "Revela la historia previa", "A\xF1ade peso emocional o tem\xE1tico", "Recontextualiza las acciones presentes"],
+      coreNote: "Las analepsis cambian la comprensi\xF3n, no los hechos.",
+      narrativeFunction: ["Revelar la motivaci\xF3n", "Explicar las relaciones", "Profundizar en la psicolog\xEDa del personaje", "Retener y liberar informaci\xF3n estrat\xE9gicamente"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Interrumpir el ritmo narrativo", "Sobreexplicar", "Redundancia con la acci\xF3n presente"],
+      examplesTitle: "Ejemplos de Analepsis",
+      examples: ["Lost", "El Padrino II", "Ciudadano Kane", "Arrow", "Eterno resplandor de una mente sin recuerdos"]
+    }
+  },
+  "Flashforward": {
+    en: {
+      introTitle: "What is a Flashforward?",
+      intro: ["A flashforward reveals events that will occur later in the story. It creates anticipation, tension, or dramatic irony by showing consequences before causes."],
+      core: ["Temporal jump to the future", "Creates suspense", "Reframes current decisions", "Often partial or ambiguous"],
+      narrativeFunction: ["Build anticipation", "Signal inevitability", "Create dramatic irony", "Frame the narrative outcome"],
+      risksTitle: "Common risks",
+      risks: ["Spoiling tension", "Removing mystery", "Confusing chronology"],
+      examplesTitle: "Flashforward Examples",
+      examples: ["Breaking Bad (cold opens)", "How to Get Away with Murder", "Arrival", "Six Feet Under", "The Book Thief"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es una Prolepsis?",
+      intro: ["La prolepsis (flashforward) revela eventos que ocurrir\xE1n m\xE1s adelante en la historia. Crea anticipaci\xF3n, tensi\xF3n o iron\xEDa dram\xE1tica al mostrar las consecuencias antes que las causas."],
+      core: ["Salto temporal al futuro", "Crea suspense", "Replantea las decisiones actuales", "Con frecuencia parcial o ambiguo"],
+      narrativeFunction: ["Generar anticipaci\xF3n", "Se\xF1alar la inevitabilidad", "Crear iron\xEDa dram\xE1tica", "Enmarcar el desenlace narrativo"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Desvelar la tensi\xF3n", "Eliminar el misterio", "Confundir la cronolog\xEDa"],
+      examplesTitle: "Ejemplos de Prolepsis",
+      examples: ["Breaking Bad (cold opens)", "How to Get Away with Murder", "La llegada", "Six Feet Under", "La ladrona de libros"]
+    }
+  },
+  "Foreshadowing": {
+    en: {
+      introTitle: "What is Foreshadowing?",
+      intro: ["Foreshadowing plants subtle hints about future events. These clues may be symbolic, visual, verbal, or thematic.", "The goal is preparation, not prediction."],
+      core: ["Early setup", "Subtlety", "Payoff later in the story", "Often unnoticed on first read"],
+      narrativeFunction: ["Create cohesion", "Make twists feel earned", "Build subconscious anticipation", "Reinforce themes"],
+      risksTitle: "Common risks",
+      risks: ["Being too obvious", "Making outcomes predictable", "Heavy-handed symbolism"],
+      examplesTitle: "Foreshadowing Examples",
+      examples: ["Romeo and Juliet", "Jaws (early warnings)", "Breaking Bad (visual cues)", "Of Mice and Men", "The Sixth Sense"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Presagio?",
+      intro: ["El presagio (foreshadowing) siembra pistas sutiles sobre eventos futuros. Estas claves pueden ser simb\xF3licas, visuales, verbales o tem\xE1ticas.", "El objetivo es la preparaci\xF3n, no la predicci\xF3n."],
+      core: ["Establecimiento temprano", "Sutileza", "Recompensa m\xE1s adelante en la historia", "A menudo pasa desapercibido en la primera lectura"],
+      narrativeFunction: ["Crear cohesi\xF3n", "Hacer que los giros parezcan merecidos", "Generar anticipaci\xF3n subconsciente", "Reforzar los temas"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Ser demasiado obvio", "Hacer los desenlaces predecibles", "Simbolismo excesivamente obvio"],
+      examplesTitle: "Ejemplos de Presagio",
+      examples: ["Romeo y Julieta", "Tibur\xF3n (advertencias tempranas)", "Breaking Bad (claves visuales)", "De ratones y hombres", "El sexto sentido"]
+    }
+  },
+  "Chekhov's Gun": {
+    en: {
+      introTitle: "What is Chekhov's Gun?",
+      intro: ["Chekhov's Gun states that every significant element introduced in a story should have a purpose. If a detail is highlighted, it must eventually matter."],
+      core: ["Meaningful setup", "Inevitable payoff", "Narrative economy", "Focused attention"],
+      narrativeFunction: ["Eliminate filler", "Create satisfying resolutions", "Train audience attention", "Strengthen narrative cohesion"],
+      risksTitle: "Common risks",
+      risks: ["Over-signaling importance", "Forced payoff", "Red herrings mistaken for setup"],
+      examplesTitle: "Chekhov's Gun Examples",
+      examples: ["The rifle in Chekhov's plays", "The ring in Lord of the Rings", "The knife in Psycho", "The coin in No Country for Old Men"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Pistola de Ch\xE9jov?",
+      intro: ["La Pistola de Ch\xE9jov establece que todo elemento significativo introducido en una historia debe tener un prop\xF3sito. Si un detalle se enfatiza, debe importar en alg\xFAn momento."],
+      core: ["Establecimiento significativo", "Resoluci\xF3n inevitable", "Econom\xEDa narrativa", "Atenci\xF3n focalizada"],
+      narrativeFunction: ["Eliminar el relleno", "Crear resoluciones satisfactorias", "Educar la atenci\xF3n del p\xFAblico", "Reforzar la cohesi\xF3n narrativa"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Se\xF1alar la importancia en exceso", "Resoluci\xF3n forzada", "Pistas falsas confundidas con elementos de setup"],
+      examplesTitle: "Ejemplos de la Pistola de Ch\xE9jov",
+      examples: ["El rifle en las obras de Ch\xE9jov", "El anillo en El Se\xF1or de los Anillos", "El cuchillo en Psicosis", "La moneda en No Country for Old Men"]
+    }
+  },
+  "Red Herring": {
+    en: {
+      introTitle: "What is a Red Herring?",
+      intro: ["A red herring is a deliberate misdirection that leads the audience to form false assumptions. It distracts from the true narrative outcome."],
+      core: ["False emphasis", "Misdirection", "Plausibility", "Temporary relevance"],
+      narrativeFunction: ["Create mystery", "Increase suspense", "Hide twists", "Manipulate expectations"],
+      risksTitle: "Common risks",
+      risks: ["Feeling unfair", "Wasting narrative time", "Breaking trust with the audience"],
+      examplesTitle: "Red Herring Examples",
+      examples: ["Murder mystery suspects", "Knives Out", "Sherlock Holmes stories", "Gone Girl", "The Girl with the Dragon Tattoo"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es una Pista Falsa?",
+      intro: ["Una pista falsa (red herring) es una desorientaci\xF3n deliberada que lleva al p\xFAblico a formarse suposiciones incorrectas. Distrae del verdadero desenlace narrativo."],
+      core: ["\xC9nfasis falso", "Desorientaci\xF3n", "Plausibilidad", "Relevancia temporal"],
+      narrativeFunction: ["Crear misterio", "Aumentar el suspense", "Ocultar los giros", "Manipular las expectativas"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Parecer injusta", "Desperdiciar tiempo narrativo", "Romper la confianza del p\xFAblico"],
+      examplesTitle: "Ejemplos de Pista Falsa",
+      examples: ["Sospechosos en los misterios detectivescos", "Entre navajas y secretos", "Las historias de Sherlock Holmes", "Perdida", "La chica del drag\xF3n tatuado"]
+    }
+  },
+  "Plot Twist": {
+    en: {
+      introTitle: "What is a Plot Twist?",
+      intro: ["A plot twist is an unexpected development that recontextualizes the story. It surprises the audience while remaining logically consistent."],
+      core: ["Surprise", "Retrospective logic", "Setup and payoff", "Shift in perspective"],
+      narrativeFunction: ["Reframe the story", "Shock the audience", "Elevate stakes", "Reveal hidden truth"],
+      risksTitle: "Common risks",
+      risks: ["Twist for shock only", "Lack of setup", "Undermining character logic"],
+      examplesTitle: "Plot Twist Examples",
+      examples: ["The Sixth Sense", "Fight Club", "The Others", "Oldboy", "Shutter Island"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es un Giro de Trama?",
+      intro: ["Un giro de trama es un desarrollo inesperado que recontextualiza la historia. Sorprende al p\xFAblico y al mismo tiempo mantiene la coherencia l\xF3gica."],
+      core: ["Sorpresa", "L\xF3gica retrospectiva", "Setup y resoluci\xF3n", "Cambio de perspectiva"],
+      narrativeFunction: ["Replantear la historia", "Impactar al p\xFAblico", "Elevar las apuestas", "Revelar la verdad oculta"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Giro solo para impactar", "Falta de preparaci\xF3n previa", "Socavar la l\xF3gica del personaje"],
+      examplesTitle: "Ejemplos de Giro de Trama",
+      examples: ["El sexto sentido", "El club de la lucha", "Los otros", "Oldboy", "La isla siniestra"]
+    }
+  },
+  "Deus Ex Machina": {
+    en: {
+      introTitle: "What is Deus Ex Machina?",
+      intro: ["Deus ex Machina resolves conflict through an external, unexpected intervention that is not properly set up within the story."],
+      core: ["Sudden resolution", "External force", "Minimal foreshadowing", "Breaks causality"],
+      narrativeFunction: ["Resolve unsolvable conflicts", "Deliver moral or divine judgment"],
+      narrativeNote: "In modern storytelling, it is often discouraged.",
+      risksTitle: "Common risks",
+      risks: ["Undermining stakes", "Invalidating character effort", "Breaking narrative credibility"],
+      examplesTitle: "Deus Ex Machina Examples",
+      examples: ["Ancient Greek theater", "War of the Worlds (original ending)", "Certain superhero rescues", "Mythological interventions"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Deus Ex Machina?",
+      intro: ["El Deus ex Machina resuelve el conflicto mediante una intervenci\xF3n externa e inesperada que no ha sido debidamente preparada dentro de la historia."],
+      core: ["Resoluci\xF3n repentina", "Fuerza externa", "Escaso presagio previo", "Rompe la causalidad"],
+      narrativeFunction: ["Resolver conflictos irresolubles", "Emitir un juicio moral o divino"],
+      narrativeNote: "En la narrativa moderna, su uso suele desaconsejarse.",
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Socavar las apuestas", "Invalidar el esfuerzo del personaje", "Romper la credibilidad narrativa"],
+      examplesTitle: "Ejemplos de Deus Ex Machina",
+      examples: ["Teatro griego antiguo", "La guerra de los mundos (final original)", "Ciertos rescates de superh\xE9roes", "Intervenciones mitol\xF3gicas"]
+    }
+  },
+  "Eucatastrophe": {
+    en: {
+      introTitle: "What is Eucatastrophe?",
+      intro: ["Eucatastrophe is a sudden positive reversal at the story's darkest moment. Unlike Deus ex Machina, it feels meaningful and earned.", "The term was coined by J.R.R. Tolkien."],
+      core: ["Sudden hope", "Emotional release", "Moral or thematic payoff", "Earned resolution"],
+      narrativeFunction: ["Affirm hope", "Deliver catharsis", "Reinforce moral order", "Reward endurance"],
+      risksTitle: "Common risks",
+      risks: ["Confusing it with Deus ex Machina", "Insufficient setup", "Over-sentimentality"],
+      examplesTitle: "Eucatastrophe Examples",
+      examples: ["The Lord of the Rings", "The Lion, the Witch and the Wardrobe", "It's a Wonderful Life", "Harry Potter finales"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Eucat\xE1strofe?",
+      intro: ["La eucat\xE1strofe es una inversi\xF3n positiva repentina en el momento m\xE1s oscuro de la historia. A diferencia del Deus ex Machina, se siente significativa y merecida.", "El t\xE9rmino fue acu\xF1ado por J.R.R. Tolkien."],
+      core: ["Esperanza repentina", "Liberaci\xF3n emocional", "Resoluci\xF3n moral o tem\xE1tica", "Resoluci\xF3n merecida"],
+      narrativeFunction: ["Afirmar la esperanza", "Proporcionar catarsis", "Reforzar el orden moral", "Recompensar la resistencia"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Confundirla con el Deus ex Machina", "Preparaci\xF3n insuficiente", "Exceso de sentimentalismo"],
+      examplesTitle: "Ejemplos de Eucat\xE1strofe",
+      examples: ["El Se\xF1or de los Anillos", "El le\xF3n, la bruja y el armario", "Qu\xE9 bello es vivir", "Los finales de Harry Potter"]
+    }
+  },
+  "Poetic Justice": {
+    en: {
+      introTitle: "What is Poetic Justice?",
+      intro: ["Poetic Justice ensures that characters receive outcomes that fittingly reflect their actions, values, or flaws."],
+      core: ["Moral symmetry", "Cause-and-effect resolution", "Thematic reinforcement", "Emotional satisfaction"],
+      narrativeFunction: ["Reinforce theme", "Deliver moral closure", "Satisfy audience expectations", "Balance narrative consequences"],
+      risksTitle: "Common risks",
+      risks: ["Predictability", "Moral simplification", "Heavy-handed messaging"],
+      examplesTitle: "Poetic Justice Examples",
+      examples: ["Villains undone by their own schemes", "Fables and fairy tales", "Crime fiction endings", "Shakespearean punishment arcs"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Justicia Po\xE9tica?",
+      intro: ["La justicia po\xE9tica garantiza que los personajes reciban los desenlaces que reflejan de manera apropiada sus acciones, valores o defectos."],
+      core: ["Simetr\xEDa moral", "Resoluci\xF3n de causa y efecto", "Refuerzo tem\xE1tico", "Satisfacci\xF3n emocional"],
+      narrativeFunction: ["Reforzar el tema", "Proporcionar cierre moral", "Satisfacer las expectativas del p\xFAblico", "Equilibrar las consecuencias narrativas"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Predictabilidad", "Simplificaci\xF3n moral", "Mensaje excesivamente expl\xEDcito"],
+      examplesTitle: "Ejemplos de Justicia Po\xE9tica",
+      examples: ["Villanos destruidos por sus propias tramas", "F\xE1bulas y cuentos de hadas", "Finales de novela negra", "Arcos de castigo shakespearianos"]
+    }
+  },
+  "\u201CShow, Don\u2019t Tell\u201D": {
+    en: {
+      introTitle: "What does \u201CShow, Don\u2019t Tell\u201D mean?",
+      intro: ["This principle encourages conveying information through action, dialogue, and sensory detail rather than direct explanation."],
+      core: ["Implicit storytelling", "Sensory detail", "Active scenes", "Reader inference"],
+      narrativeFunction: ["Increase immersion", "Engage the reader", "Strengthen emotional impact", "Avoid exposition overload"],
+      risksTitle: "Common risks",
+      risks: ["Obscuring clarity", "Over-description", "Avoiding necessary exposition"],
+      examplesTitle: "Show, Don't Tell Examples",
+      examples: ["Character emotion shown through action", "Visual storytelling in film", "Minimalist prose styles", "Hemingway's writing"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 significa \u201CMostrar, No Contar\u201D?",
+      intro: ["Este principio anima a transmitir la informaci\xF3n a trav\xE9s de la acci\xF3n, el di\xE1logo y el detalle sensorial, en lugar de la explicaci\xF3n directa."],
+      core: ["Narraci\xF3n impl\xEDcita", "Detalle sensorial", "Escenas activas", "Inferencia del lector"],
+      narrativeFunction: ["Aumentar la inmersi\xF3n", "Implicar al lector", "Reforzar el impacto emocional", "Evitar la sobrecarga de exposici\xF3n"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Oscurecer la claridad", "Descripci\xF3n excesiva", "Evitar la exposici\xF3n necesaria"],
+      examplesTitle: "Ejemplos de Mostrar, No Contar",
+      examples: ["Emoci\xF3n del personaje mostrada mediante la acci\xF3n", "Narraci\xF3n visual en el cine", "Estilos de prosa minimalistas", "La escritura de Hemingway"]
+    }
+  },
+  "Quibble (Wordplay)": {
+    en: {
+      introTitle: "What is a Quibble?",
+      intro: ["A quibble is playful or clever use of language, often relying on ambiguity, double meanings, or rhetorical tricks."],
+      core: ["Linguistic play", "Humor or irony", "Verbal agility", "Ambiguity"],
+      narrativeFunction: ["Add wit", "Reveal character intelligence", "Create tonal contrast", "Engage the audience linguistically"],
+      risksTitle: "Common risks",
+      risks: ["Overuse", "Breaking tone", "Confusing meaning"],
+      examplesTitle: "Quibble Examples",
+      examples: ["Shakespearean wordplay", "Oscar Wilde", "Legal or political dialogue", "Screwball comedies"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Quibble?",
+      intro: ["Un quibble es el uso juguet\xF3n o ingenioso del lenguaje, a menudo basado en la ambig\xFCedad, los dobles sentidos o los recursos ret\xF3ricos."],
+      core: ["Juego ling\xFC\xEDstico", "Humor o iron\xEDa", "Agilidad verbal", "Ambig\xFCedad"],
+      narrativeFunction: ["A\xF1adir ingenio", "Revelar la inteligencia del personaje", "Crear contraste tonal", "Implicar al p\xFAblico ling\xFC\xEDsticamente"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Uso excesivo", "Ruptura del tono", "Ambig\xFCedad confusa"],
+      examplesTitle: "Ejemplos de Quibble",
+      examples: ["El juego de palabras shakespeariano", "Oscar Wilde", "El di\xE1logo legal o pol\xEDtico", "Las comedias de enredo"]
+    }
+  }
+};
+var TIPS_DATA = {
+  "Argumentation (tips)": {
+    en: {
+      introTitle: "What is argumentative writing?",
+      intro: ["Argumentative writing focuses on presenting, supporting, and defending a position with the goal of persuading the reader through reasoned discourse.", "It is essential for essays, opinion pieces, critical analysis, and persuasive nonfiction."],
+      techniques: ["Logical reasoning \u2014 Use deductive, inductive, or analogical reasoning to support claims and conclusions.", "Evidence and examples \u2014 Support arguments with facts, data, statistics, real-world examples, or credible sources.", "Counterarguments and refutation \u2014 Anticipate opposing views and address them directly to strengthen overall credibility.", "Emotional appeal \u2014 Engage the reader's emotions, values, or beliefs to reinforce logical points.", "Rhetorical strategies \u2014 Apply ethos (credibility), pathos (emotion), and logos (logic) strategically.", "Clear structure and organization \u2014 Present arguments in a coherent order with clear topic sentences and conclusions.", "Clarity and concision \u2014 Avoid unnecessary complexity; express ideas precisely and directly.", "Ethical responsibility \u2014 Ground arguments in honesty and respect for the audience's values and intelligence."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la escritura argumentativa?",
+      intro: ["La escritura argumentativa se centra en presentar, fundamentar y defender una posici\xF3n con el objetivo de persuadir al lector mediante el discurso razonado.", "Es esencial para los ensayos, los art\xEDculos de opini\xF3n, el an\xE1lisis cr\xEDtico y la no ficci\xF3n persuasiva."],
+      techniques: ["Razonamiento l\xF3gico \u2014 Utiliza el razonamiento deductivo, inductivo o anal\xF3gico para sustentar afirmaciones y conclusiones.", "Evidencia y ejemplos \u2014 Apoya los argumentos con hechos, datos, estad\xEDsticas, ejemplos reales o fuentes fiables.", "Contraargumentos y refutaci\xF3n \u2014 Anticipa las opiniones contrarias y ab\xF3rdalas directamente para reforzar la credibilidad global.", "Apelaci\xF3n emocional \u2014 Involucra las emociones, los valores o las creencias del lector para reforzar los puntos l\xF3gicos.", "Estrategias ret\xF3ricas \u2014 Aplica estrat\xE9gicamente el ethos (credibilidad), el pathos (emoci\xF3n) y el logos (l\xF3gica).", "Estructura y organizaci\xF3n claras \u2014 Presenta los argumentos en un orden coherente con frases tem\xE1ticas y conclusiones bien definidas.", "Claridad y concisi\xF3n \u2014 Evita la complejidad innecesaria; expresa las ideas con precisi\xF3n y de forma directa.", "Responsabilidad \xE9tica \u2014 Fundamenta los argumentos en la honestidad y el respeto por los valores e inteligencia del p\xFAblico."]
+    }
+  },
+  "Description (tips)": {
+    en: {
+      introTitle: "What is descriptive writing?",
+      intro: ["Descriptive writing creates vivid mental images by engaging the reader's senses, emotions, and imagination. Its purpose is immersion rather than explanation."],
+      techniques: ["Sensory imagery \u2014 Appeal to sight, sound, touch, taste, and smell to create a multidimensional experience.", "Figurative language \u2014 Use metaphor, simile, personification, and imagery to enrich atmosphere and tone.", "Specificity and detail \u2014 Favor precise, concrete details over generic or abstract descriptions.", "Show, don't tell \u2014 Convey meaning through action, sensory detail, and implication rather than direct explanation.", "Point of view awareness \u2014 Filter description through the narrator's perspective, biases, and limitations.", "Emotional resonance \u2014 Connect description to characters' internal reactions and emotional states.", "Narrative pacing \u2014 Balance descriptive passages with action and dialogue to maintain momentum.", "Symbolism and motifs \u2014 Use recurring imagery to reinforce theme and meaning."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la escritura descriptiva?",
+      intro: ["La escritura descriptiva crea im\xE1genes mentales v\xEDvidas al involucrar los sentidos, las emociones y la imaginaci\xF3n del lector. Su prop\xF3sito es la inmersi\xF3n, no la explicaci\xF3n."],
+      techniques: ["Im\xE1genes sensoriales \u2014 Apela a la vista, el sonido, el tacto, el gusto y el olfato para crear una experiencia multidimensional.", "Lenguaje figurado \u2014 Utiliza la met\xE1fora, el s\xEDmil, la personificaci\xF3n y las im\xE1genes para enriquecer la atm\xF3sfera y el tono.", "Especificidad y detalle \u2014 Favorece los detalles precisos y concretos frente a las descripciones gen\xE9ricas o abstractas.", "Mostrar, no contar \u2014 Transmite el significado a trav\xE9s de la acci\xF3n, el detalle sensorial y la implicaci\xF3n, en lugar de la explicaci\xF3n directa.", "Conciencia del punto de vista \u2014 Filtra la descripci\xF3n a trav\xE9s de la perspectiva, los sesgos y las limitaciones del narrador.", "Resonancia emocional \u2014 Conecta la descripci\xF3n con las reacciones internas y los estados emocionales de los personajes.", "Ritmo narrativo \u2014 Equilibra los pasajes descriptivos con la acci\xF3n y el di\xE1logo para mantener el impulso.", "Simbolismo y motivos \u2014 Utiliza im\xE1genes recurrentes para reforzar el tema y el significado."]
+    }
+  },
+  "Dialogue (tips)": {
+    en: {
+      introTitle: "What is effective dialogue?",
+      intro: ["Effective dialogue creates believable conversations that reveal character, advance plot, and convey subtext without sounding artificial or expository."],
+      techniques: ["Distinct character voice \u2014 Give each character unique speech patterns, vocabulary, and tone.", "Subtext \u2014 Allow meaning to exist beneath the spoken words through implication and tension.", "Natural flow \u2014 Imitate real conversational rhythm without reproducing real speech verbatim.", "Rhythm and cadence \u2014 Vary sentence length and pacing to reflect emotional intensity.", "Conflict and tension \u2014 Use disagreement, power imbalance, or competing goals to energize exchanges.", "Show, don't tell \u2014 Reveal emotion and motivation through what is said \u2014 and what is avoided.", "Subtle exposition \u2014 Embed necessary information naturally within conversation.", "Authenticity and realism \u2014 Reflect cultural, social, and contextual speech patterns appropriately."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el di\xE1logo efectivo?",
+      intro: ["El di\xE1logo efectivo crea conversaciones cre\xEDbles que revelan el car\xE1cter, hacen avanzar la trama y transmiten el subtexto sin sonar artificiales o expositivos."],
+      techniques: ["Voz propia de cada personaje \u2014 Dota a cada personaje de patrones de habla, vocabulario y tono \xFAnicos.", "Subtexto \u2014 Permite que el significado exista bajo las palabras pronunciadas, a trav\xE9s de la implicaci\xF3n y la tensi\xF3n.", "Fluidez natural \u2014 Imita el ritmo conversacional real sin reproducir el habla real de forma literal.", "Ritmo y cadencia \u2014 Var\xEDa la longitud de las frases y el ritmo para reflejar la intensidad emocional.", "Conflicto y tensi\xF3n \u2014 Usa el desacuerdo, el desequilibrio de poder o los objetivos en competencia para dinamizar los intercambios.", "Mostrar, no contar \u2014 Revela la emoci\xF3n y la motivaci\xF3n a trav\xE9s de lo que se dice, y de lo que se evita.", "Exposici\xF3n sutil \u2014 Integra la informaci\xF3n necesaria de forma natural dentro de la conversaci\xF3n.", "Autenticidad y realismo \u2014 Refleja adecuadamente los patrones de habla culturales, sociales y contextuales."]
+    }
+  },
+  "Exposition (tips)": {
+    en: {
+      introTitle: "What is exposition?",
+      intro: ["Exposition provides essential background information, context, or history needed for the audience to understand the story world without disrupting narrative flow."],
+      techniques: ["Narrative summary \u2014 Compress complex information into concise overviews.", "Flashbacks \u2014 Reveal past events that directly inform present actions or motivations.", "Dialogue-based exposition \u2014 Deliver information through natural conversation rather than narration.", "Descriptive context \u2014 Use sensory detail to establish setting, culture, or historical background.", "Prologues or introductory sections \u2014 Present foundational information before the main narrative begins.", "Gradual information release \u2014 Distribute exposition strategically to avoid overload.", "Integrated backstory \u2014 Weave background details into character thoughts or actions.", "Worldbuilding \u2014 Establish social, political, cultural, or historical frameworks that support the story."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la exposici\xF3n?",
+      intro: ["La exposici\xF3n proporciona la informaci\xF3n de fondo, el contexto o la historia esenciales para que el p\xFAblico comprenda el mundo de la historia sin interrumpir el flujo narrativo."],
+      techniques: ["Resumen narrativo \u2014 Condensa la informaci\xF3n compleja en panor\xE1micas concisas.", "Analepsis \u2014 Revela eventos pasados que informan directamente las acciones o motivaciones presentes.", "Exposici\xF3n dialogada \u2014 Transmite la informaci\xF3n a trav\xE9s de una conversaci\xF3n natural, no de la narraci\xF3n.", "Contexto descriptivo \u2014 Usa el detalle sensorial para establecer el escenario, la cultura o el trasfondo hist\xF3rico.", "Pr\xF3logos o secciones introductorias \u2014 Presenta la informaci\xF3n fundacional antes de que comience la narrativa principal.", "Liberaci\xF3n gradual de informaci\xF3n \u2014 Distribuye la exposici\xF3n estrat\xE9gicamente para evitar la sobrecarga.", "Historia de fondo integrada \u2014 Entreteje los detalles del trasfondo en los pensamientos o acciones de los personajes.", "Worldbuilding \u2014 Establece los marcos sociales, pol\xEDticos, culturales o hist\xF3ricos que sustentan la historia."]
+    }
+  },
+  "Narration (tips)": {
+    en: {
+      introTitle: "What is narration?",
+      intro: ["Narration refers to how a story is told: the voice, perspective, structure, and style that shape how the reader experiences events."],
+      techniques: ["Point of view \u2014 Choose first person, second person, or third person (limited or omniscient) deliberately.", "Narrative structure \u2014 Organize events using linear, nonlinear, framed, or experimental sequencing.", "Tone and atmosphere \u2014 Establish emotional mood through diction, imagery, and rhythm.", "Characterization \u2014 Reveal character through actions, internal thought, and reaction.", "Foreshadowing and suspense \u2014 Plant hints and manage anticipation to sustain engagement.", "Symbolism and imagery \u2014 Use recurring symbols to convey deeper meaning.", "Voice and style \u2014 Develop a distinctive narrative presence consistent with theme and perspective.", "Narrative pacing \u2014 Control speed and tension through sentence structure, scene length, and transitions."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la narraci\xF3n?",
+      intro: ["La narraci\xF3n se refiere a c\xF3mo se cuenta una historia: la voz, la perspectiva, la estructura y el estilo que moldean la experiencia del lector con los eventos."],
+      techniques: ["Punto de vista \u2014 Elige deliberadamente la primera, segunda o tercera persona (limitada u omnisciente).", "Estructura narrativa \u2014 Organiza los eventos con una secuencia lineal, no lineal, enmarcada o experimental.", "Tono y atm\xF3sfera \u2014 Establece el estado de \xE1nimo emocional a trav\xE9s de la dicci\xF3n, las im\xE1genes y el ritmo.", "Caracterizaci\xF3n \u2014 Revela el car\xE1cter a trav\xE9s de las acciones, el pensamiento interno y la reacci\xF3n.", "Presagio y suspense \u2014 Siembra pistas y gestiona la anticipaci\xF3n para mantener el inter\xE9s.", "Simbolismo e im\xE1genes \u2014 Utiliza s\xEDmbolos recurrentes para transmitir un significado m\xE1s profundo.", "Voz y estilo \u2014 Desarrolla una presencia narrativa distintiva coherente con el tema y la perspectiva.", "Ritmo narrativo \u2014 Controla la velocidad y la tensi\xF3n mediante la estructura de las frases, la duraci\xF3n de las escenas y las transiciones."]
+    }
+  },
+  "Persuasion (tips)": {
+    en: {
+      introTitle: "What is persuasive writing?",
+      intro: ["Persuasive writing aims to influence beliefs, attitudes, or actions by combining logic, emotion, credibility, and narrative clarity."],
+      techniques: ["Emotional appeal \u2014 Engage feelings such as empathy, fear, hope, or desire.", "Storytelling \u2014 Use anecdotes or narratives to humanize abstract ideas.", "Social proof \u2014 Reference collective agreement, trends, or testimonials.", "Authority \u2014 Establish credibility through expertise or reputable sources.", "Repetition \u2014 Reinforce key ideas to increase memorability.", "Persuasive language \u2014 Choose words that convey urgency, clarity, and emotional weight.", "Call to action \u2014 Direct the reader toward a specific response or behavior.", "Addressing counterarguments \u2014 Acknowledge and refute opposing views to strengthen trust."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la escritura persuasiva?",
+      intro: ["La escritura persuasiva busca influir en las creencias, actitudes o acciones combinando l\xF3gica, emoci\xF3n, credibilidad y claridad narrativa."],
+      techniques: ["Apelaci\xF3n emocional \u2014 Involucra sentimientos como la empat\xEDa, el miedo, la esperanza o el deseo.", "Narraci\xF3n \u2014 Usa an\xE9cdotas o relatos para humanizar ideas abstractas.", "Prueba social \u2014 Referencia el consenso colectivo, las tendencias o los testimonios.", "Autoridad \u2014 Establece la credibilidad a trav\xE9s de la experiencia o fuentes reputadas.", "Repetici\xF3n \u2014 Refuerza las ideas clave para aumentar la memorabilidad.", "Lenguaje persuasivo \u2014 Elige palabras que transmitan urgencia, claridad y peso emocional.", "Llamada a la acci\xF3n \u2014 Dirige al lector hacia una respuesta o comportamiento espec\xEDfico.", "Abordar los contraargumentos \u2014 Reconoce y refuta los puntos de vista opuestos para reforzar la confianza."]
+    }
+  }
+};
+var PITFALLS_DATA = {
+  "Character Pitfalls": {
+    en: { title: "Character Pitfalls", items: ["Flat characters", "Inconsistent motivation", "Unearned redemption", "Passive protagonists", "Villain without agency", "Archetype clich\xE9s"] },
+    es: { title: "Errores de Personaje", items: ["Personajes planos", "Motivaci\xF3n incoherente", "Redenci\xF3n no merecida", "Protagonistas pasivos", "Villano sin agencia", "Clich\xE9s de arquetipo"] }
+  },
+  "Character Arc Pitfalls": {
+    en: { title: "Character Arc Pitfalls", items: ["No real change", "Change without cause", "Moral whiplash", "Transformation too late", "Arc contradicts theme"] },
+    es: { title: "Errores de Arco de Personaje", items: ["Sin cambio real", "Cambio sin causa", "Latigazo moral", "Transformaci\xF3n demasiado tard\xEDa", "El arco contradice el tema"] }
+  },
+  "Narrative Technique Pitfalls": {
+    en: { title: "Narrative Technique Pitfalls", items: ["Foreshadowing too obvious", "Plot twists without setup", "Red herrings that waste time", "Deus ex machina abuse", "Flashbacks killing momentum"] },
+    es: { title: "Errores de T\xE9cnica Narrativa", items: ["Presagio demasiado obvio", "Giros sin preparaci\xF3n previa", "Pistas falsas que no aportan nada", "Abuso del Deus ex Machina", "Flashbacks que matan el ritmo"] }
+  },
+  "Structure Pitfalls": {
+    en: { title: "Structure Pitfalls", items: ["Act breaks without tension", "Sagging middle", "Climax too early / too late", "Resolution without consequence", "Structure fighting the story"] },
+    es: { title: "Errores de Estructura", items: ["Quiebres de acto sin tensi\xF3n", "Segundo acto fl\xE1cido", "Cl\xEDmax demasiado temprano / tard\xEDo", "Resoluci\xF3n sin consecuencias", "La estructura lucha contra la historia"] }
+  },
+  "Writing-Level Pitfalls": {
+    en: { title: "Writing-Level Pitfalls", items: ["Over-exposition", "On-the-nose dialogue", "Telling instead of showing", "Purple prose", "Inconsistent tone"] },
+    es: { title: "Errores de Escritura", items: ["Sobreexposici\xF3n", "Di\xE1logo demasiado expl\xEDcito", "Contar en lugar de mostrar", "Prosa recargada", "Tono inconsistente"] }
+  }
+};
+
+// src/writer-tools/referenceDetails.js
 function createResourceSubheading(parent, iconName, text) {
   const heading = parent.createDiv({ cls: "resource-detail-subheading-row" });
   const icon = heading.createSpan({ cls: "resource-detail-subheading-icon" });
   (0, import_obsidian14.setIcon)(icon, iconName);
   heading.createSpan({ cls: "resource-detail-subheading", text });
 }
-function renderHeroDetail(container) {
+function renderArchetypeDetail(container, archetypeKey, lang = "en") {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+  const data = getArchetypeData(archetypeKey, lang);
+  if (!data) {
+    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+    return;
+  }
   const content = container.createDiv({ cls: "resource-detail-content" });
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Hero?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Hero is the transforming protagonist. They represent the struggle for personal growth, the confrontation of fear, and the overcoming of obstacles. The Hero symbolizes the human drive to transcend limits, improve, and give meaning to adversity."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "This is a universal archetype found in myth, classical stories, and modern narratives. The Hero\u2019s journey forms the backbone of many plots."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Courage in the face of danger",
-    "Inner and outer strength",
-    "Empathy and leadership",
-    "Strong sense of justice",
-    "Human flaws and vulnerability"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Hero is not perfect. They fall, struggle, and rise transformed."
-  });
-  const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
-  const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Mentor \u2192 guidance and wisdom",
-    "Ally \u2192 shared mission",
-    "Threshold Guardian \u2192 trial or blockage",
-    "Shadow \u2192 antagonist or repressed self",
-    "Trickster \u2192 chaos and disruption",
-    "Shapeshifter \u2192 uncertainty and tension",
-    "Herald \u2192 announces change"
-  ].forEach((item) => {
-    relationships.createEl("li", { text: item });
-  });
-  const writingZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(writingZone, "square-pen", "Writing a strong Hero");
-  const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Clear motivation",
-    "Internal conflict",
-    "Meaningful backstory",
-    "Unique skills",
-    "Emotional relationships",
-    "Balance of strength and fragility",
-    "Strong contrast between ordinary life and transformation"
-  ].forEach((item) => {
-    writing.createEl("li", { text: item });
-  });
-  const whyZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(whyZone, "chart-spline", "Why this archetype works");
-  whyZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "Because it mirrors the human experience: struggle, fall, learning, and transformation."
-  });
+  createResourceSubheading(introZone, "circle-question-mark", data.introQuestion);
+  data.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
+  if ((_a = data.traits) == null ? void 0 : _a.length) {
+    const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(traitsZone, "heart", data.traitsHeading || ((_b = UI_I18N[lang]) == null ? void 0 : _b.coreTraits) || "Core traits");
+    const list = traitsZone.createEl("ul", { cls: "resource-detail-list" });
+    data.traits.forEach((item) => list.createEl("li", { text: item }));
+    if (data.traitsNote) {
+      traitsZone.createDiv({ cls: "resource-detail-paragraph", text: data.traitsNote });
+    }
+  }
+  if ((_c = data.functions) == null ? void 0 : _c.length) {
+    const funcZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(funcZone, "chart-spline", data.functionHeading || ((_d = UI_I18N[lang]) == null ? void 0 : _d.narrativeFunction) || "Narrative function");
+    if (data.functionIntro) {
+      funcZone.createDiv({ cls: "resource-detail-paragraph", text: data.functionIntro });
+    }
+    const list = funcZone.createEl("ul", { cls: "resource-detail-list" });
+    data.functions.forEach((item) => list.createEl("li", { text: item }));
+    if (data.functionNote) {
+      funcZone.createDiv({ cls: "resource-detail-paragraph", text: data.functionNote });
+    }
+  }
+  if ((_e = data.relationships) == null ? void 0 : _e.length) {
+    const relZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(relZone, "flask-conical", data.relationshipsHeading || ((_f = UI_I18N[lang]) == null ? void 0 : _f.keyRelationships) || "Key relationships");
+    const list = relZone.createEl("ul", { cls: "resource-detail-list" });
+    data.relationships.forEach((item) => list.createEl("li", { text: item }));
+  }
+  if ((_g = data.writing) == null ? void 0 : _g.length) {
+    const writeZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(writeZone, "square-pen", data.writingHeading || "Writing tips");
+    const list = writeZone.createEl("ul", { cls: "resource-detail-list" });
+    data.writing.forEach((item) => list.createEl("li", { text: item }));
+  }
+  if (data.why) {
+    const whyZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(whyZone, "chart-spline", data.whyHeading || "Why this archetype works");
+    whyZone.createDiv({ cls: "resource-detail-paragraph", text: data.why });
+  }
+  if ((_h = data.innerConflicts) == null ? void 0 : _h.length) {
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(conflictZone, "alert-triangle", data.innerConflictHeading || ((_i = UI_I18N[lang]) == null ? void 0 : _i.innerConflict) || "Inner conflict");
+    const list = conflictZone.createEl("ul", { cls: "resource-detail-list" });
+    data.innerConflicts.forEach((item) => list.createEl("li", { text: item }));
+  }
+  if ((_j = data.examples) == null ? void 0 : _j.length) {
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian14.setIcon)(examplesIcon, "bookmark");
+    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
+    const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    data.examples.forEach((example) => {
+      const card = grid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+}
+function renderCharacterArcDetail(container, arcKey, lang = "en") {
+  var _a, _b, _c, _d, _e, _f;
+  const data = getArchetypeData(arcKey, lang);
+  if (!data) {
+    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+    return;
+  }
+  const content = container.createDiv({ cls: "resource-detail-content" });
+  const introZone = content.createDiv({ cls: "resource-detail-zone" });
+  createResourceSubheading(introZone, "circle-question-mark", data.introQuestion);
+  data.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
+  if ((_a = data.characteristics) == null ? void 0 : _a.length) {
+    const charZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(charZone, "heart", data.characteristicsHeading || ((_b = UI_I18N[lang]) == null ? void 0 : _b.coreCharacteristics) || "Core characteristics");
+    const list = charZone.createEl("ul", { cls: "resource-detail-list" });
+    data.characteristics.forEach((item) => list.createEl("li", { text: item }));
+    if (data.characteristicsNote) {
+      charZone.createDiv({ cls: "resource-detail-paragraph", text: data.characteristicsNote });
+    }
+  }
+  if ((_c = data.functions) == null ? void 0 : _c.length) {
+    const funcZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(funcZone, "chart-spline", data.functionHeading || ((_d = UI_I18N[lang]) == null ? void 0 : _d.narrativeFunction) || "Narrative function");
+    const list = funcZone.createEl("ul", { cls: "resource-detail-list" });
+    data.functions.forEach((item) => list.createEl("li", { text: item }));
+    if (data.functionNote) {
+      funcZone.createDiv({ cls: "resource-detail-paragraph", text: data.functionNote });
+    }
+  }
+  if ((_e = data.conflicts) == null ? void 0 : _e.length) {
+    const confZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(confZone, "alert-triangle", data.conflictsHeading || "Common internal conflicts");
+    const list = confZone.createEl("ul", { cls: "resource-detail-list" });
+    data.conflicts.forEach((item) => list.createEl("li", { text: item }));
+  }
+  if ((_f = data.examples) == null ? void 0 : _f.length) {
+    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+    const header = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
+    const icon = header.createSpan({ cls: "resource-detail-examples-icon" });
+    (0, import_obsidian14.setIcon)(icon, "bookmark");
+    header.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
+    const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
+    data.examples.forEach((example) => {
+      const card = grid.createDiv({ cls: "resource-detail-example-card" });
+      card.createSpan({ text: example });
+    });
+  }
+}
+function renderTechniqueDetail(container, config) {
+  const content = container.createDiv({ cls: "resource-detail-content" });
+  const introZone = content.createDiv({ cls: "resource-detail-zone" });
+  createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
+  config.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
+  const coreZone = content.createDiv({ cls: "resource-detail-zone" });
+  createResourceSubheading(coreZone, "heart", config.coreHeading || "Core characteristics");
+  const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
+  config.core.forEach((item) => coreList.createEl("li", { text: item }));
+  if (config.coreNote) {
+    coreZone.createDiv({ cls: "resource-detail-paragraph", text: config.coreNote });
+  }
+  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
+  createResourceSubheading(functionZone, "chart-spline", config.functionHeading || "Narrative function");
+  const functionList = functionZone.createEl("ul", { cls: "resource-detail-list" });
+  config.narrativeFunction.forEach((item) => functionList.createEl("li", { text: item }));
+  if (config.narrativeNote) {
+    functionZone.createDiv({ cls: "resource-detail-paragraph", text: config.narrativeNote });
+  }
+  const risksZone = content.createDiv({ cls: "resource-detail-zone" });
+  createResourceSubheading(risksZone, "alert-triangle", config.risksTitle || "Common risks");
+  const risksList = risksZone.createEl("ul", { cls: "resource-detail-list" });
+  config.risks.forEach((item) => risksList.createEl("li", { text: item }));
   const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
   const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
   const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
   (0, import_obsidian14.setIcon)(examplesIcon, "bookmark");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Hero Examples" });
+  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
   const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Harry Potter",
-    "Frodo Baggins",
-    "Katniss Everdeen",
-    "Mulan",
-    "Luke Skywalker",
-    "Simba",
-    "Elizabeth Bennet"
-  ].forEach((example) => {
+  config.examples.forEach((example) => {
     const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
     card.createSpan({ text: example });
-  });
-}
-function renderMentorDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Mentor?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Mentor guides, teaches, and inspires the Hero. They provide wisdom, experience, and emotional support, helping the Hero grow and overcome challenges."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Mentor represents inherited knowledge, tradition, and the possibility of inner transformation."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Spiritual and practical guide",
-    "Accumulated wisdom",
-    "Emotional support figure",
-    "Ethical compass",
-    "Connection to tradition",
-    "Catalyst for action"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "Often the Mentor sacrifices something, forcing the Hero into independence."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Mentor supports the Hero\u2019s growth as:"
-  });
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Trusted advisor",
-    "Trainer or teacher",
-    "Giver of tools or gifts",
-    "Emotional challenger",
-    "Bridge between worlds"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "When the Mentor disappears, the Hero must act alone."
-  });
-  const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
-  const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Hero \u2192 formative bond",
-    "Threshold Guardian \u2192 shared trials",
-    "Shadow \u2192 moral counterpoint",
-    "Ally \u2192 cooperation or tension",
-    "Trickster \u2192 disruption of authority",
-    "Shapeshifter \u2192 ambiguity",
-    "Herald \u2192 signals the need for guidance"
-  ].forEach((item) => {
-    relationships.createEl("li", { text: item });
-  });
-  const writingZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(writingZone, "square-pen", "Writing a compelling Mentor");
-  const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Strong introduction",
-    "Clear motivation",
-    "Demonstrated expertise",
-    "Unique personality",
-    "Revealing backstory",
-    "Trust with the Hero",
-    "Memorable first lesson",
-    "Symbolic presence"
-  ].forEach((item) => {
-    writing.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "layout-grid");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Mentor Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Gandalf",
-    "Dumbledore",
-    "Mr. Miyagi",
-    "Yoda",
-    "Professor Xavier",
-    "Glinda",
-    "Haymitch",
-    "Rafiki",
-    "Morpheus"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderHeraldDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Herald?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Herald announces change. They disrupt the status quo and deliver the call to adventure, signaling that the current world can no longer remain the same."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Herald does not need to stay in the story long \u2014 their power lies in initiating movement."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Messenger of change",
-    "Catalyst for action",
-    "Bringer of information or crisis",
-    "External or internal trigger",
-    "Neutral, positive, or threatening"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Herald forces a decision."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Herald appears to:"
-  });
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Deliver news",
-    "Introduce conflict",
-    "Reveal danger or opportunity",
-    "Force the Hero to act",
-    "Break routine"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They are the narrative spark."
-  });
-  const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
-  const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Hero \u2192 awakens purpose",
-    "Mentor \u2192 confirms the call",
-    "Shadow \u2192 escalation of threat",
-    "Ally \u2192 shared urgency",
-    "Shapeshifter \u2192 uncertainty around meaning",
-    "Trickster \u2192 distorted message"
-  ].forEach((item) => {
-    relationships.createEl("li", { text: item });
-  });
-  const writingZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(writingZone, "square-pen", "Writing an effective Herald");
-  const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Clear message",
-    "Strong timing",
-    "Memorable entrance",
-    "Emotional impact",
-    "Immediate consequences",
-    "No unnecessary exposition"
-  ].forEach((item) => {
-    writing.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Herald Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "R2-D2",
-    "The White Rabbit",
-    "Hagrid",
-    "The Letter from Hogwarts",
-    "The Black Spot (Treasure Island)",
-    "Morpheus (first contact)",
-    "Paul Revere"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderShadowDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Shadow?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Shadow represents the Hero\u2019s greatest obstacle. It often embodies the Hero\u2019s repressed fears, flaws, or dark potential."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Shadow can be a villain, antagonist, rival, or internal force."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Opposition and threat",
-    "Moral contrast",
-    "Power or temptation",
-    "Psychological mirror",
-    "Fear incarnate"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Shadow tests the Hero\u2019s values."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Shadow exists to:"
-  });
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Block progress",
-    "Challenge morality",
-    "Force growth",
-    "Expose weakness",
-    "Represent consequences"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "Defeating the Shadow often means internal change."
-  });
-  const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
-  const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Hero \u2192 mirrored opposition",
-    "Mentor \u2192 ideological contrast",
-    "Ally \u2192 collateral conflict",
-    "Trickster \u2192 destabilization",
-    "Shapeshifter \u2192 hidden threat",
-    "Threshold Guardian \u2192 shared function"
-  ].forEach((item) => {
-    relationships.createEl("li", { text: item });
-  });
-  const writingZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(writingZone, "square-pen", "Writing a powerful Shadow");
-  const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Clear motivation",
-    "Personal connection to Hero",
-    "Symbolic design",
-    "Escalating threat",
-    "Moral complexity",
-    "Consequences beyond defeat"
-  ].forEach((item) => {
-    writing.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Shadow Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Darth Vader",
-    "Voldemort",
-    "Sauron",
-    "Joker",
-    "Scar",
-    "Thanos",
-    "Captain Ahab"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderTricksterDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Trickster?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Trickster introduces chaos, humor, and unpredictability. They question authority, expose hypocrisy, and disrupt order."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Trickster is rarely evil \u2014 they destabilize to reveal truth."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Humor and wit",
-    "Rule-breaking behavior",
-    "Irony and satire",
-    "Unpredictability",
-    "Social disruption"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They thrive on contradiction."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Trickster serves to:"
-  });
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Relieve tension",
-    "Challenge norms",
-    "Reveal hidden truths",
-    "Expose weakness",
-    "Create narrative surprise"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They prevent stagnation."
-  });
-  const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
-  const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Hero \u2192 comic relief or moral test",
-    "Mentor \u2192 challenges authority",
-    "Shadow \u2192 ironic contrast",
-    "Ally \u2192 unreliable support",
-    "Shapeshifter \u2192 shared ambiguity"
-  ].forEach((item) => {
-    relationships.createEl("li", { text: item });
-  });
-  const writingZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(writingZone, "square-pen", "Writing an effective Trickster");
-  const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Sharp dialogue",
-    "Clear worldview",
-    "Narrative timing",
-    "Purposeful disruption",
-    "Balance humor and impact"
-  ].forEach((item) => {
-    writing.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Trickster Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Loki",
-    "Jack Sparrow",
-    "Bugs Bunny",
-    "Deadpool",
-    "The Joker (comic function)",
-    "Puck",
-    "Han Solo"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderAllyDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Ally?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Ally supports the Hero emotionally, strategically, or practically. They represent friendship, loyalty, and shared purpose."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "Allies humanize the Hero."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Loyalty",
-    "Complementary skills",
-    "Emotional support",
-    "Shared risk",
-    "Personal stake"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "Allies often have their own arcs."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Ally helps by:"
-  });
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Assisting in conflict",
-    "Providing perspective",
-    "Supporting decisions",
-    "Sharing danger",
-    "Reflecting growth"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They reinforce connection."
-  });
-  const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
-  const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Hero \u2192 partnership",
-    "Mentor \u2192 guidance extension",
-    "Shadow \u2192 vulnerability",
-    "Trickster \u2192 contrast",
-    "Shapeshifter \u2192 trust tension"
-  ].forEach((item) => {
-    relationships.createEl("li", { text: item });
-  });
-  const writingZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(writingZone, "square-pen", "Writing strong Allies");
-  const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Clear individuality",
-    "Defined strengths",
-    "Emotional bond",
-    "Independent goals",
-    "Potential conflict"
-  ].forEach((item) => {
-    writing.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Ally Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Samwise Gamgee",
-    "Ron Weasley",
-    "Hermione Granger",
-    "Chewbacca",
-    "Dr. Watson",
-    "Merry & Pippin",
-    "Peeta Mellark"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderShapeshifterDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Shapeshifter?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Shapeshifter embodies uncertainty. Their allegiance, identity, or intentions are unclear, creating doubt and tension."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They represent change and ambiguity."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Duality",
-    "Uncertainty",
-    "Fluid loyalty",
-    "Deception or mystery",
-    "Emotional instability"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They challenge trust."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Shapeshifter exists to:"
-  });
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Create doubt",
-    "Test perception",
-    "Complicate relationships",
-    "Introduce surprise",
-    "Represent internal conflict"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
-  const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Hero \u2192 trust challenge",
-    "Mentor \u2192 warning or lesson",
-    "Shadow \u2192 secret alliance",
-    "Ally \u2192 betrayal risk",
-    "Trickster \u2192 shared chaos"
-  ].forEach((item) => {
-    relationships.createEl("li", { text: item });
-  });
-  const writingZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(writingZone, "square-pen", "Writing a compelling Shapeshifter");
-  const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Clear mystery",
-    "Consistent ambiguity",
-    "Emotional stakes",
-    "Gradual revelation",
-    "Meaningful transformation"
-  ].forEach((item) => {
-    writing.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Shapeshifter Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Catwoman",
-    "Severus Snape",
-    "Gollum",
-    "Mystique",
-    "Nick Fury",
-    "Scarlett O\u2019Hara"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderThresholdGuardianDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Threshold Guardian?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Threshold Guardian blocks progress and tests readiness. They appear at key moments of transition."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They are not always villains \u2014 they are gatekeepers."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Obstacle or challenge",
-    "Moral or physical test",
-    "Enforcer of rules",
-    "Neutral opposition",
-    "Trial embodiment"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "Passing them marks growth."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Tests commitment",
-    "Filters worthiness",
-    "Forces preparation",
-    "Delays progression",
-    "Raises stakes"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const relationshipsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(relationshipsZone, "flask-conical", "Key relationships");
-  const relationships = relationshipsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Hero \u2192 rite of passage",
-    "Mentor \u2192 preparation source",
-    "Shadow \u2192 structural parallel",
-    "Ally \u2192 shared test",
-    "Trickster \u2192 bypass attempt"
-  ].forEach((item) => {
-    relationships.createEl("li", { text: item });
-  });
-  const writingZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(writingZone, "square-pen", "Writing effective Threshold Guardians");
-  const writing = writingZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Clear rules",
-    "Symbolic challenge",
-    "Consequences for failure",
-    "Escalation of difficulty",
-    "Memorable encounter"
-  ].forEach((item) => {
-    writing.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "club");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Threshold Guardian Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "The Sphinx",
-    "Cerberus",
-    "The Bouncer",
-    "Stormtroopers",
-    "Gatekeepers",
-    "Dragons",
-    "The First Boss"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderCaregiverDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Caregiver?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Caregiver is driven by compassion, responsibility, and the desire to protect others. They exist to nurture, support, and sustain, often putting others\u2019 needs before their own."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "This archetype represents altruism, sacrifice, and unconditional care."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Empathy and compassion",
-    "Selflessness",
-    "Responsibility",
-    "Emotional strength",
-    "Protective instinct"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Caregiver\u2019s weakness is often self-neglect."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Protects vulnerable characters",
-    "Provides emotional stability",
-    "Represents moral goodness",
-    "Motivates sacrifice",
-    "Creates emotional stakes"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They often anchor the story\u2019s heart."
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Helping others vs. self-preservation",
-    "Love vs. burnout",
-    "Responsibility vs. freedom"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Caregiver Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Marmee (Little Women)",
-    "Samwise Gamgee",
-    "Aunt May",
-    "Molly Weasley",
-    "Baymax",
-    "Marlin (Finding Nemo)"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderCreatorDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Creator?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Creator is driven by imagination and the urge to build something meaningful. They seek originality, self-expression, and lasting impact through creation."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "This archetype fears mediocrity and unrealized potential."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Creativity",
-    "Vision",
-    "Innovation",
-    "Sensitivity",
-    "Perfectionism"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They are often torn between inspiration and self-doubt."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Brings new ideas into the world",
-    "Challenges existing systems",
-    "Embodies artistic struggle",
-    "Explores identity through creation"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Fear of failure",
-    "Obsession with perfection",
-    "Isolation",
-    "The cost of creation"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Creator Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Victor Frankenstein",
-    "Tony Stark",
-    "Walt Disney (fictionalized)",
-    "Dr. Emmett Brown",
-    "Jo March",
-    "Da Vinci\u2013type characters"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderEverymanDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Everyman?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Everyman represents normalcy, relatability, and belonging. They are not exceptional by skill or destiny, but by humanity."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "This archetype allows the audience to see themselves in the story."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Humility",
-    "Honesty",
-    "Reliability",
-    "Relatability",
-    "Desire for connection"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They succeed through perseverance, not greatness."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Grounds the story",
-    "Reflects audience values",
-    "Humanizes extraordinary events",
-    "Emphasizes community and belonging"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Feeling insignificant",
-    "Fear of standing out",
-    "Desire to belong vs. desire to matter"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Everyman Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Arthur Dent",
-    "Bilbo Baggins (early)",
-    "Jim Halpert",
-    "Forrest Gump",
-    "Frodo (initially)"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderExplorerDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Explorer?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Explorer seeks freedom, discovery, and self-definition. They reject confinement and pursue meaning through experience."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "This archetype values independence above all else."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Curiosity",
-    "Independence",
-    "Courage",
-    "Restlessness",
-    "Self-reliance"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They fear conformity and stagnation."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Drives journeys and quests",
-    "Expands the world of the story",
-    "Challenges limits and borders",
-    "Represents personal freedom"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Commitment",
-    "Loneliness",
-    "Rootlessness",
-    "The cost of freedom"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Explorer Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Indiana Jones",
-    "Lara Croft",
-    "Moana",
-    "Huck Finn",
-    "The Doctor (Doctor Who)"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderHeroJungDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Hero?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Jungian Hero represents courage, willpower, and the drive to prove worth through action. Unlike the mythic Hero\u2019s Journey, this archetype focuses on strength and achievement."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Bravery",
-    "Determination",
-    "Discipline",
-    "Moral clarity",
-    "Endurance"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They define themselves through struggle."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Confronts danger directly",
-    "Overcomes adversity",
-    "Protects others",
-    "Embodies action and resolve"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Pride",
-    "Fear of weakness",
-    "Burnout",
-    "Identity tied solely to victory"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Hero Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Wonder Woman",
-    "Captain America",
-    "Achilles",
-    "Beowulf",
-    "Maximus"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderInnocentDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Innocent?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Innocent seeks happiness, safety, and goodness. They believe in a just world and trust others easily."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "This archetype represents hope and moral purity."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Optimism",
-    "Trust",
-    "Faith",
-    "Simplicity",
-    "Moral clarity"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "Their weakness is naivety."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Highlights corruption or cruelty",
-    "Inspires protection",
-    "Restores hope",
-    "Contrasts darker characters"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Loss of faith",
-    "Disillusionment",
-    "Exposure to harsh reality"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Innocent Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Dorothy Gale",
-    "Paddington",
-    "Buddy (Elf)",
-    "Bambi",
-    "Am\xE9lie"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderJesterDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Jester?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Jester lives in the moment, embracing humor, chaos, and joy. They expose truth through laughter and subversion."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Humor",
-    "Irreverence",
-    "Playfulness",
-    "Chaos",
-    "Social critique"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They fear boredom and oppression."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Relieves tension",
-    "Exposes hypocrisy",
-    "Challenges authority",
-    "Brings levity"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Being taken seriously",
-    "Hiding pain behind humor"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Jester Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Jack Sparrow",
-    "The Genie",
-    "Tyrion Lannister",
-    "Bugs Bunny",
-    "Puck"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderLoverDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Lover?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Lover is driven by passion, intimacy, and connection. They seek union \u2014 romantic, emotional, or aesthetic."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Passion",
-    "Devotion",
-    "Sensuality",
-    "Emotional depth",
-    "Vulnerability"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They fear abandonment and loss."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Raises emotional stakes",
-    "Motivates sacrifice",
-    "Explores intimacy",
-    "Drives relational conflict"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Obsession",
-    "Dependency",
-    "Loss of identity"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Lover Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Romeo & Juliet",
-    "Rose (Titanic)",
-    "Westley",
-    "Scarlett O\u2019Hara",
-    "Jack Dawson"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderMagicianDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Magician?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Magician seeks transformation \u2014 of self, others, or reality itself. They understand hidden systems and use knowledge to enact change."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Insight",
-    "Vision",
-    "Power",
-    "Charisma",
-    "Transformation"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They fear unintended consequences."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Enables change",
-    "Transforms situations",
-    "Reveals hidden truths",
-    "Alters reality"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Control vs. ethics",
-    "Power misuse",
-    "Hubris"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Magician Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Gandalf",
-    "Doctor Strange",
-    "Merlin",
-    "Neo",
-    "Dumbledore"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderOutlawDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Outlaw?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Outlaw rejects rules, authority, and conformity. They seek freedom through rebellion and disruption."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Defiance",
-    "Independence",
-    "Anger or idealism",
-    "Courage",
-    "Anti-authoritarianism"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They fear powerlessness."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Challenges systems",
-    "Sparks revolution",
-    "Represents resistance",
-    "Breaks unjust rules"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Destruction vs. change",
-    "Isolation",
-    "Moral ambiguity"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Outlaw Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "V",
-    "Robin Hood",
-    "Han Solo",
-    "Tyler Durden",
-    "Katniss Everdeen"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderRulerDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Ruler?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Ruler seeks order, control, and stability. They value leadership, responsibility, and structure."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Authority",
-    "Control",
-    "Responsibility",
-    "Vision",
-    "Discipline"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They fear chaos and loss of power."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Establishes order",
-    "Sets laws and norms",
-    "Represents power",
-    "Creates political stakes"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Tyranny vs. justice",
-    "Control vs. trust"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Ruler Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Mufasa",
-    "Aragorn",
-    "Queen Elizabeth\u2013type figures",
-    "Tywin Lannister",
-    "Odin"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderSageDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "Who is the Sage?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The Sage seeks truth through knowledge and understanding. They value wisdom over action."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core traits");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Intelligence",
-    "Objectivity",
-    "Insight",
-    "Reflection",
-    "Patience"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "They fear ignorance and deception."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Provides truth",
-    "Explains systems",
-    "Guides decisions",
-    "Offers perspective"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Inner conflict");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Detachment",
-    "Inaction",
-    "Emotional distance"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Sage Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Obi-Wan Kenobi",
-    "Socrates\u2013type figures",
-    "Professor X",
-    "Dumbledore (as Sage)",
-    "Spock"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderMoralAscentDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "What is a Moral Ascent?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "A Moral Ascent arc follows a character who grows ethically over the course of the story. The character starts with flaws, ignorance, or selfishness and gradually learns to act with greater integrity, empathy, or responsibility."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "This is the classic arc of becoming better."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core characteristics");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Ethical growth",
-    "Increased empathy",
-    "Personal responsibility",
-    "Learning from mistakes",
-    "Sacrifice for others"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The character ends the story morally stronger than they began."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Inspire the audience",
-    "Reinforce ethical values",
-    "Reward self-reflection and growth",
-    "Create emotional catharsis"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  functionZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "It often aligns with hopeful or redemptive stories."
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Common internal conflicts");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Fear vs. courage",
-    "Self-interest vs. responsibility",
-    "Ignorance vs. awareness",
-    "Comfort vs. change"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Moral Ascent Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Ebenezer Scrooge",
-    "Zuko",
-    "Jean Valjean",
-    "Tony Stark",
-    "Shrek",
-    "Mulan"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderMoralDescentDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "What is a Moral Descent?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "A Moral Descent arc follows a character who deteriorates ethically over time. They begin with good intentions or neutrality but gradually compromise their values, often due to fear, ambition, pride, or trauma."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "This is the arc of corruption."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core characteristics");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Ethical erosion",
-    "Rationalization of wrongdoing",
-    "Increasing selfishness or cruelty",
-    "Loss of empathy",
-    "Escalating consequences"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The character becomes morally worse by the end."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Explore the cost of power",
-    "Examine temptation and corruption",
-    "Create tragedy or cautionary tales",
-    "Critique ambition or hubris"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Common internal conflicts");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Power vs. morality",
-    "Control vs. restraint",
-    "Fear vs. conscience",
-    "Justification vs. accountability"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Moral Descent Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Walter White",
-    "Anakin Skywalker",
-    "Michael Corleone",
-    "Macbeth",
-    "Gollum",
-    "Light Yagami"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderFlatMoralDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "What is a Flat Moral Arc?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "In a Flat Moral Arc, the character does not significantly change their moral beliefs. Instead, the character\u2019s values remain constant while the world around them is challenged or transformed."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The character changes others, not themselves."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core characteristics");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Stable moral compass",
-    "Strong convictions",
-    "Resistance to pressure",
-    "Consistency under stress",
-    "Influence on others"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The arc is external rather than internal."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Represent ideal values",
-    "Challenge a flawed world",
-    "Serve as moral anchors",
-    "Highlight societal change"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Common internal tensions");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Isolation due to integrity",
-    "Conflict with changing norms",
-    "Burden of being right",
-    "Moral fatigue"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Flat Moral Arc Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Captain America",
-    "Paddington",
-    "Atticus Finch",
-    "Superman",
-    "Wonder Woman",
-    "Marge Gunderson"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderMoralTransformationDetail(container) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", "What is a Moral Transformation?");
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "A Moral Transformation arc depicts a character who undergoes a fundamental ethical shift. Unlike gradual ascent or descent, this change is often abrupt, intense, and tied to a defining moment or revelation."
-  });
-  introZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "The character becomes morally different \u2014 not just better or worse."
-  });
-  const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(traitsZone, "heart", "Core characteristics");
-  const traits = traitsZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Pivotal turning point",
-    "Identity redefinition",
-    "Value realignment",
-    "Emotional shock or revelation",
-    "Clear \u201Cbefore and after\u201D"
-  ].forEach((item) => {
-    traits.createEl("li", { text: item });
-  });
-  traitsZone.createDiv({
-    cls: "resource-detail-paragraph",
-    text: "Transformation is often irreversible."
-  });
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionsList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Mark decisive moments",
-    "Reinvent characters",
-    "Shock or reframe audience perception",
-    "Signal thematic shifts"
-  ].forEach((item) => {
-    functionsList.createEl("li", { text: item });
-  });
-  const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(conflictZone, "alert-triangle", "Common internal conflicts");
-  const conflictList = conflictZone.createEl("ul", { cls: "resource-detail-list" });
-  [
-    "Guilt vs. denial",
-    "Old identity vs. new self",
-    "Fear of change",
-    "Consequences of awakening"
-  ].forEach((item) => {
-    conflictList.createEl("li", { text: item });
-  });
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "user-round");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: "Moral Transformation Examples" });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  [
-    "Darth Vader (redemption moment)",
-    "Neo (awakening)",
-    "Clarice Starling",
-    "Jaime Lannister",
-    "Elsa (acceptance)",
-    "Andy Dufresne"
-  ].forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
-}
-function renderPitfallsDetail(container, title, items) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const pitfallsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(pitfallsZone, "alert-triangle", title);
-  const list = pitfallsZone.createEl("ul", { cls: "resource-detail-list" });
-  items.forEach((item) => {
-    list.createEl("li", { text: item });
-  });
-}
-function renderTipsDetail(container, config) {
-  const content = container.createDiv({ cls: "resource-detail-content" });
-  const introZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
-  config.intro.forEach((paragraph) => {
-    introZone.createDiv({ cls: "resource-detail-paragraph", text: paragraph });
-  });
-  const techniquesZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(techniquesZone, "heart", "Core techniques");
-  const techniquesList = techniquesZone.createDiv({ cls: "resource-detail-callout-list" });
-  config.techniques.forEach((item) => {
-    renderCalloutItem(techniquesList, item);
   });
 }
 function renderCalloutItem(container, item) {
@@ -7672,9 +7486,8 @@ function renderCalloutItem(container, item) {
     "CONTINUATION TO RESOLUTION": "arrow-right"
   };
   const iconName = typeof item === "object" ? item == null ? void 0 : item.icon : title ? stepIconMap[title.toUpperCase()] : null;
-  if (!title) {
+  if (!title)
     return;
-  }
   const callout = container.createDiv({ cls: "resource-detail-callout" });
   if (iconName) {
     const icon = callout.createSpan({ cls: "resource-detail-callout-icon" });
@@ -7685,37 +7498,53 @@ function renderCalloutItem(container, item) {
     callout.createDiv({ cls: "resource-detail-callout-body", text: body });
   }
 }
-function renderTechniqueDetail(container, config) {
+function renderStructureDetail(container, config) {
+  var _a, _b;
   const content = container.createDiv({ cls: "resource-detail-content" });
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
   createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
-  config.intro.forEach((paragraph) => {
-    introZone.createDiv({ cls: "resource-detail-paragraph", text: paragraph });
-  });
-  const coreZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(coreZone, "heart", "Core characteristics");
-  const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
-  config.core.forEach((item) => {
-    coreList.createEl("li", { text: item });
-  });
-  if (config.coreNote) {
-    coreZone.createDiv({ cls: "resource-detail-paragraph", text: config.coreNote });
+  config.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
+  if ((_a = config.core) == null ? void 0 : _a.length) {
+    const coreZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(coreZone, "heart", config.coreHeading || "Core characteristics");
+    const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
+    config.core.forEach((item) => coreList.createEl("li", { text: item }));
+    if (config.coreNote) {
+      coreZone.createDiv({ cls: "resource-detail-paragraph", text: config.coreNote });
+    }
   }
-  const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", "Narrative function");
-  const functionList = functionZone.createEl("ul", { cls: "resource-detail-list" });
-  config.narrativeFunction.forEach((item) => {
-    functionList.createEl("li", { text: item });
-  });
-  if (config.narrativeNote) {
-    functionZone.createDiv({ cls: "resource-detail-paragraph", text: config.narrativeNote });
+  const stepsZone = content.createDiv({ cls: "resource-detail-zone" });
+  createResourceSubheading(stepsZone, "list-ordered", config.stepsTitle || "Steps");
+  if ((_b = config.stepGroups) == null ? void 0 : _b.length) {
+    const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
+    config.stepGroups.forEach((group) => {
+      const headingClass = /^ACT\s+/i.test(group.title) ? "resource-detail-step-heading-plain" : "resource-detail-step-heading";
+      stepsList.createDiv({ cls: headingClass }).createSpan({ text: group.title });
+      const groupBox = stepsList.createDiv({ cls: "resource-detail-step-group" });
+      group.items.forEach((item) => renderCalloutItem(groupBox, item));
+    });
+  } else if (config.numberedSteps) {
+    const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
+    let currentGroup = null;
+    config.steps.forEach((item) => {
+      if (/^ACT\s+[IVX]+\s+—\s+/i.test(item)) {
+        stepsList.createDiv({ cls: "resource-detail-step-heading" }).createSpan({ text: item });
+        currentGroup = stepsList.createDiv({ cls: "resource-detail-step-group" });
+        return;
+      }
+      if (!currentGroup)
+        currentGroup = stepsList.createDiv({ cls: "resource-detail-step-group" });
+      renderCalloutItem(currentGroup, item);
+    });
+  } else {
+    const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
+    config.steps.forEach((item) => renderCalloutItem(stepsList, item));
   }
-  const risksZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(risksZone, "alert-triangle", config.risksTitle || "Common risks");
-  const risksList = risksZone.createEl("ul", { cls: "resource-detail-list" });
-  config.risks.forEach((item) => {
-    risksList.createEl("li", { text: item });
-  });
+  if (config.why) {
+    const whyZone = content.createDiv({ cls: "resource-detail-zone" });
+    createResourceSubheading(whyZone, "chart-spline", config.whyTitle || "Why this works");
+    whyZone.createDiv({ cls: "resource-detail-paragraph", text: config.why });
+  }
   const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
   const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
   const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
@@ -7727,74 +7556,22 @@ function renderTechniqueDetail(container, config) {
     card.createSpan({ text: example });
   });
 }
-function renderStructureDetail(container, config) {
-  var _a, _b;
+function renderTipsDetail(container, config) {
   const content = container.createDiv({ cls: "resource-detail-content" });
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
   createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
-  config.intro.forEach((paragraph) => {
-    introZone.createDiv({ cls: "resource-detail-paragraph", text: paragraph });
-  });
-  if ((_a = config.core) == null ? void 0 : _a.length) {
-    const coreZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(coreZone, "heart", "Core characteristics");
-    const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
-    config.core.forEach((item) => {
-      coreList.createEl("li", { text: item });
-    });
-    if (config.coreNote) {
-      coreZone.createDiv({ cls: "resource-detail-paragraph", text: config.coreNote });
-    }
-  }
-  const stepsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(stepsZone, "list-ordered", config.stepsTitle || "Steps");
-  if ((_b = config.stepGroups) == null ? void 0 : _b.length) {
-    const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
-    config.stepGroups.forEach((group) => {
-      const headingClass = /^ACT\\s+/i.test(group.title) ? "resource-detail-step-heading-plain" : "resource-detail-step-heading";
-      const heading = stepsList.createDiv({ cls: headingClass });
-      heading.createSpan({ text: group.title });
-      const groupBox = stepsList.createDiv({ cls: "resource-detail-step-group" });
-      group.items.forEach((item) => {
-        renderCalloutItem(groupBox, item);
-      });
-    });
-  } else if (config.numberedSteps) {
-    const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
-    let currentGroup = null;
-    config.steps.forEach((item) => {
-      if (/^ACT\s+[IVX]+\s+—\s+/i.test(item)) {
-        const heading = stepsList.createDiv({ cls: "resource-detail-step-heading" });
-        heading.createSpan({ text: item });
-        currentGroup = stepsList.createDiv({ cls: "resource-detail-step-group" });
-        return;
-      }
-      if (!currentGroup) {
-        currentGroup = stepsList.createDiv({ cls: "resource-detail-step-group" });
-      }
-      renderCalloutItem(currentGroup, item);
-    });
-  } else {
-    const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
-    config.steps.forEach((item) => {
-      renderCalloutItem(stepsList, item);
-    });
-  }
-  if (config.why) {
-    const whyZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(whyZone, "chart-spline", config.whyTitle || "Why this works");
-    whyZone.createDiv({ cls: "resource-detail-paragraph", text: config.why });
-  }
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian14.setIcon)(examplesIcon, "layout-grid");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  config.examples.forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
+  config.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
+  const techniquesZone = content.createDiv({ cls: "resource-detail-zone" });
+  createResourceSubheading(techniquesZone, "heart", config.techniquesHeading || "Core techniques");
+  const techniquesList = techniquesZone.createDiv({ cls: "resource-detail-callout-list" });
+  config.techniques.forEach((item) => renderCalloutItem(techniquesList, item));
+}
+function renderPitfallsDetail(container, title, items) {
+  const content = container.createDiv({ cls: "resource-detail-content" });
+  const pitfallsZone = content.createDiv({ cls: "resource-detail-zone" });
+  createResourceSubheading(pitfallsZone, "alert-triangle", title);
+  const list = pitfallsZone.createEl("ul", { cls: "resource-detail-list" });
+  items.forEach((item) => list.createEl("li", { text: item }));
 }
 
 // src/views/writerToolsView.js
@@ -7848,6 +7625,7 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     this.pdfExportStateUpdater = null;
     this.isPdfExporting = false;
     this.pdfExportAbortController = null;
+    this.resourceLanguage = "en";
   }
   getViewType() {
     return WRITER_TOOLS_VIEW_TYPE2;
@@ -7859,6 +7637,8 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     return "pencil-ruler";
   }
   async onOpen() {
+    var _a;
+    this.resourceLanguage = ((_a = this.plugin.settings) == null ? void 0 : _a.resourceLanguage) || "en";
     const container = this.containerEl.children[1];
     container.empty();
     container.removeClass("folio-focus-mode");
@@ -8526,9 +8306,9 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
         this.updateContentRule(node.path, node.type, checkbox.checked);
         this.renderPdfSettingsPanel(this.pdfSettingsContainer);
       });
-      const label = row.createDiv({ cls: "pdf-content-label", text: node.title || node.path || "Untitled" });
+      const label2 = row.createDiv({ cls: "pdf-content-label", text: node.title || node.path || "Untitled" });
       if (node.type === "group")
-        label.addClass("is-folder");
+        label2.addClass("is-folder");
     });
   }
   renderCoverDesignPanel(container) {
@@ -8598,12 +8378,12 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       imageLabel.textContent = "No image selected";
       renderCoverPreview();
     });
-    const createCoverTextRow = (label, key) => {
+    const createCoverTextRow = (label2, key) => {
       var _a2, _b, _c, _d, _e, _f, _g, _h, _i, _j;
       if (!this.coverDesignDraft[key]) {
         this.coverDesignDraft[key] = { text: "", size: 12, color: "#ffffff", weight: "Regular", style: "Normal" };
       }
-      const row = this.createPdfRow(panel, label);
+      const row = this.createPdfRow(panel, label2);
       row.row.addClass("pdf-cover-text-row");
       const input = row.control.createEl("input", { type: "text", cls: "pdf-text-input" });
       input.value = ((_b = (_a2 = this.coverDesignDraft) == null ? void 0 : _a2[key]) == null ? void 0 : _b.text) || "";
@@ -8736,10 +8516,10 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     const advancedPanel = card.createDiv({ cls: "pdf-advanced-panel" });
     const marginRow = this.createPdfRow(advancedPanel, "Margins", "Top, right, bottom, and left spacing in millimeters.");
     const marginControls = marginRow.control.createDiv({ cls: "pdf-margin-controls" });
-    const makeMarginInput = (label, key) => {
+    const makeMarginInput = (label2, key) => {
       var _a, _b;
       const wrap = marginControls.createDiv({ cls: "pdf-margin-control" });
-      wrap.createDiv({ cls: "pdf-margin-label", text: label });
+      wrap.createDiv({ cls: "pdf-margin-label", text: label2 });
       const input = wrap.createEl("input", { type: "number", cls: "pdf-text-input" });
       this.preventNumberScroll(input);
       input.min = "0";
@@ -8793,10 +8573,10 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
       copy.createDiv({ cls: "pdf-settings-card-helper", text: helper });
     return card;
   }
-  createPdfRow(parent, label, helper) {
+  createPdfRow(parent, label2, helper) {
     const row = parent.createDiv({ cls: "pdf-settings-row" });
     const labelWrap = row.createDiv({ cls: "pdf-settings-row-label" });
-    labelWrap.createDiv({ cls: "pdf-settings-row-title", text: label });
+    labelWrap.createDiv({ cls: "pdf-settings-row-title", text: label2 });
     if (helper) {
       labelWrap.createDiv({ cls: "pdf-settings-row-helper", text: helper });
     }
@@ -8815,9 +8595,9 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
   createPdfSelect(control, options, value, onChange) {
     const select = control.createEl("select", { cls: "pdf-select" });
     options.forEach((opt) => {
-      const label = typeof opt === "string" ? opt : opt.label;
+      const label2 = typeof opt === "string" ? opt : opt.label;
       const optionValue = typeof opt === "string" ? opt : opt.value;
-      const option = select.createEl("option", { text: label, value: optionValue });
+      const option = select.createEl("option", { text: label2, value: optionValue });
       if (optionValue === value)
         option.selected = true;
     });
@@ -9575,997 +9355,414 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
     this.onOpen();
   }
   renderResourcesSection() {
+    const lang = this.resourceLanguage;
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "RESOURCES" });
     const resourcesGrid = section.createDiv({ cls: "writer-tools-resources-grid" });
     const resources = [
-      { icon: "user", label: "Character", tooltip: "Character development resources" },
-      { icon: "bookmark", label: "Narrative", tooltip: "Narrative techniques" },
-      { icon: "layout-grid", label: "Structure", tooltip: "Story structure guides" },
-      { icon: "lightbulb", label: "Tips", tooltip: "Writing tips" }
+      { icon: "user", key: "character", label: ui(lang, "characterResources"), action: () => this.showCharacterResources() },
+      { icon: "bookmark", key: "narrative", label: ui(lang, "narrativeResources"), action: () => this.showNarrativeResources() },
+      { icon: "layout-grid", key: "structure", label: ui(lang, "structureResources"), action: () => this.showStructureResources() },
+      { icon: "lightbulb", key: "tips", label: ui(lang, "tipsResources"), action: () => this.showTipsResources() }
     ];
     resources.forEach((resource) => {
-      const resourceItem = resourcesGrid.createDiv({ cls: "writer-tools-resource-item" });
-      resourceItem.setAttribute("aria-label", resource.tooltip);
-      const iconWrapper = resourceItem.createDiv({ cls: "writer-tools-resource-icon" });
+      const resourceItem = resourcesGrid.createDiv({ cls: "writer-tools-item" });
+      resourceItem.setAttribute("role", "button");
+      resourceItem.setAttribute("tabindex", "0");
+      resourceItem.setAttribute("aria-label", resource.label);
+      const iconWrapper = resourceItem.createDiv({ cls: "writer-tools-item-icon" });
       (0, import_obsidian15.setIcon)(iconWrapper, resource.icon);
-      resourceItem.createDiv({ cls: "writer-tools-resource-label", text: resource.label });
-      resourceItem.addEventListener("click", () => {
-        if (resource.label === "Character") {
-          this.showCharacterResources();
-          return;
+      resourceItem.createDiv({ cls: "writer-tools-item-text", text: resource.label });
+      const activate = () => resource.action();
+      resourceItem.addEventListener("click", activate);
+      resourceItem.addEventListener("keydown", (evt) => {
+        if (evt.key === "Enter" || evt.key === " ") {
+          evt.preventDefault();
+          activate();
         }
-        if (resource.label === "Narrative") {
-          this.showNarrativeResources();
-          return;
-        }
-        if (resource.label === "Structure") {
-          this.showStructureResources();
-          return;
-        }
-        if (resource.label === "Tips") {
-          this.showTipsResources();
-          return;
-        }
-        console.log(`${resource.label} clicked`);
       });
+    });
+  }
+  // ── Language toggle helper ─────────────────────────────────────────────────
+  /**
+   * Creates an ES/EN language toggle and appends it to the given container.
+   * Returns the toggle element.
+   */
+  createLangToggle(parent, onToggle) {
+    const toggle = parent.createDiv({ cls: "resource-lang-toggle" });
+    toggle.setAttribute("role", "group");
+    toggle.setAttribute("aria-label", "Language");
+    const langOptions = [
+      { code: "en", label: "EN" },
+      { code: "es", label: "ES" }
+    ];
+    langOptions.forEach((opt) => {
+      const btn = toggle.createEl("button", {
+        cls: "resource-lang-btn" + (this.resourceLanguage === opt.code ? " is-active" : ""),
+        text: opt.label
+      });
+      btn.setAttribute("aria-pressed", String(this.resourceLanguage === opt.code));
+      btn.addEventListener("click", async () => {
+        var _a, _b;
+        if (this.resourceLanguage === opt.code)
+          return;
+        this.resourceLanguage = opt.code;
+        if (this.plugin.settings) {
+          this.plugin.settings.resourceLanguage = opt.code;
+          await ((_b = (_a = this.plugin).saveSettings) == null ? void 0 : _b.call(_a));
+        }
+        onToggle(opt.code);
+      });
+    });
+    return toggle;
+  }
+  /** Shared header builder for all resource category views. */
+  buildResourceViewHeader(container, iconName, titleText, onBack, onLangToggle) {
+    const header = container.createDiv({ cls: "folio-resource-view-header" });
+    const left = header.createDiv({ cls: "folio-resource-view-header-left" });
+    const iconEl = left.createSpan({ cls: "folio-resource-view-header-icon" });
+    (0, import_obsidian15.setIcon)(iconEl, iconName);
+    left.createSpan({ cls: "folio-resource-view-header-title", text: titleText });
+    const right = header.createDiv({ cls: "folio-resource-view-header-right" });
+    this.createLangToggle(right, onLangToggle);
+    const backButton = right.createEl("button", { cls: "folio-resource-view-back" });
+    const backIcon = backButton.createSpan({ cls: "folio-resource-view-back-icon" });
+    (0, import_obsidian15.setIcon)(backIcon, "chevron-left");
+    backButton.createSpan({ text: ui(this.resourceLanguage, "back") });
+    backButton.addEventListener("click", onBack);
+    return header;
+  }
+  /** Make a div act as an accessible interactive card. */
+  makeInteractive(el, action) {
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.addEventListener("click", action);
+    el.addEventListener("keydown", (evt) => {
+      if (evt.key === "Enter" || evt.key === " ") {
+        evt.preventDefault();
+        action();
+      }
     });
   }
   showCharacterResources() {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("folio-character-resources");
+    container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
       (0, import_obsidian15.setIcon)(el, iconName);
-      if (!el.querySelector("svg")) {
+      if (!el.querySelector("svg"))
         (0, import_obsidian15.setIcon)(el, "circle-dot");
-      }
     };
-    const header = container.createDiv({ cls: "character-resources-header" });
-    const headerIcon = header.createSpan({ cls: "character-resources-header-icon" });
-    applyIcon(headerIcon, "user");
-    header.createSpan({ cls: "character-resources-header-title", text: "Character resources" });
-    const backButton = header.createEl("button", { cls: "character-resources-back", text: "Back" });
-    backButton.addEventListener("click", () => this.exitCharacterResources());
-    const arcsSection = container.createDiv({ cls: "character-resources-section" });
-    arcsSection.createDiv({ cls: "character-resources-section-title", text: "Character arcs" });
-    const arcsGrid = arcsSection.createDiv({ cls: "character-resources-arc-grid" });
+    this.buildResourceViewHeader(
+      container,
+      "user",
+      ui(lang, "characterResources"),
+      () => this.onOpen(),
+      () => this.showCharacterResources()
+    );
+    const arcsSection = container.createDiv({ cls: "resource-view-section" });
+    arcsSection.createDiv({ cls: "resource-view-section-title", text: ui(lang, "characterArcs") });
+    const arcsGrid = arcsSection.createDiv({ cls: "resource-view-arc-grid" });
     const arcs = [
-      { label: "Moral Ascent", icon: "trending-up" },
-      { label: "Moral Descent", icon: "trending-down" },
-      { label: "Flat Moral", icon: "minus" },
-      { label: "Moral Transformation", icon: "trending-up-down" }
+      { key: "Moral Ascent", icon: "trending-up" },
+      { key: "Moral Descent", icon: "trending-down" },
+      { key: "Flat Moral", icon: "minus" },
+      { key: "Moral Transformation", icon: "trending-up-down" }
     ];
     arcs.forEach((arc) => {
-      const item = arcsGrid.createDiv({ cls: "character-resources-arc-item" });
-      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+      const item = arcsGrid.createDiv({ cls: "resource-view-arc-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, arc.icon);
-      item.createDiv({ cls: "character-resources-arc-label", text: arc.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(arc.label, () => this.showCharacterResources());
-      });
+      item.createDiv({ cls: "resource-view-item-label", text: label(lang, arc.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(arc.key, () => this.showCharacterResources()));
     });
-    const archetypesSection = container.createDiv({ cls: "character-resources-section is-separated" });
-    archetypesSection.createDiv({ cls: "character-resources-section-title", text: "Character archetypes" });
-    const campbellSection = archetypesSection.createDiv({ cls: "character-resources-subsection" });
-    campbellSection.createDiv({ cls: "character-resources-subtitle", text: "Campbell archetypes" });
-    const campbellGrid = campbellSection.createDiv({ cls: "character-resources-grid" });
+    const archetypesSection = container.createDiv({ cls: "resource-view-section is-separated" });
+    archetypesSection.createDiv({ cls: "resource-view-section-title", text: ui(lang, "characterArchetypes") });
+    const campbellSection = archetypesSection.createDiv({ cls: "resource-view-subsection" });
+    campbellSection.createDiv({ cls: "resource-view-subtitle", text: ui(lang, "campbellArchetypes") });
+    const campbellGrid = campbellSection.createDiv({ cls: "resource-view-grid" });
     const campbellArchetypes = [
-      { label: "The Ally", icon: "handshake" },
-      { label: "The Herald", icon: "bell" },
-      { label: "The Hero (Jung)", icon: "sword" },
-      { label: "The Mentor", icon: "graduation-cap" },
-      { label: "The Shadow", icon: "moon" },
-      { label: "The Shapeshifter", icon: "hat-glasses" },
-      { label: "The Threshold Guardian", icon: "shield" },
-      { label: "The Trickster", icon: "dice" }
+      { key: "The Ally", icon: "handshake" },
+      { key: "The Herald", icon: "bell" },
+      { key: "The Hero (Jung)", icon: "sword" },
+      { key: "The Mentor", icon: "graduation-cap" },
+      { key: "The Shadow", icon: "moon" },
+      { key: "The Shapeshifter", icon: "hat-glasses" },
+      { key: "The Threshold Guardian", icon: "shield" },
+      { key: "The Trickster", icon: "dice" }
     ];
     campbellArchetypes.forEach((itemData) => {
-      const item = campbellGrid.createDiv({ cls: "character-resources-card" });
-      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+      const item = campbellGrid.createDiv({ cls: "resource-view-card" });
+      const icon = item.createSpan({ cls: "resource-view-card-icon" });
       applyIcon(icon, itemData.icon);
-      item.createDiv({ cls: "character-resources-card-label", text: itemData.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(itemData.label, () => this.showCharacterResources());
-      });
+      item.createDiv({ cls: "resource-view-card-label", text: label(lang, itemData.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
     });
-    const jungSection = archetypesSection.createDiv({ cls: "character-resources-subsection" });
-    jungSection.createDiv({ cls: "character-resources-subtitle", text: "Jung archetypes" });
-    const jungGrid = jungSection.createDiv({ cls: "character-resources-grid" });
+    const jungSection = archetypesSection.createDiv({ cls: "resource-view-subsection" });
+    jungSection.createDiv({ cls: "resource-view-subtitle", text: ui(lang, "jungArchetypes") });
+    const jungGrid = jungSection.createDiv({ cls: "resource-view-grid" });
     const jungArchetypes = [
-      { label: "The Caregiver", icon: "heart-handshake" },
-      { label: "The Creator", icon: "paintbrush" },
-      { label: "The Everyman", icon: "users" },
-      { label: "The Explorer", icon: "compass" },
-      { label: "The Hero", icon: "sword" },
-      { label: "The Innocent", icon: "baby" },
-      { label: "The Jester", icon: "party-popper" },
-      { label: "The Lover", icon: "heart" },
-      { label: "The Magician", icon: "wand-2" },
-      { label: "The Outlaw", icon: "flame-kindling" },
-      { label: "The Ruler", icon: "crown" },
-      { label: "The Sage", icon: "book-open" }
+      { key: "The Caregiver", icon: "heart-handshake" },
+      { key: "The Creator", icon: "paintbrush" },
+      { key: "The Everyman", icon: "users" },
+      { key: "The Explorer", icon: "compass" },
+      { key: "The Hero", icon: "sword" },
+      { key: "The Innocent", icon: "baby" },
+      { key: "The Jester", icon: "party-popper" },
+      { key: "The Lover", icon: "heart" },
+      { key: "The Magician", icon: "wand-2" },
+      { key: "The Outlaw", icon: "flame-kindling" },
+      { key: "The Ruler", icon: "crown" },
+      { key: "The Sage", icon: "book-open" }
     ];
     jungArchetypes.forEach((itemData) => {
-      const item = jungGrid.createDiv({ cls: "character-resources-card" });
-      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+      const item = jungGrid.createDiv({ cls: "resource-view-card" });
+      const icon = item.createSpan({ cls: "resource-view-card-icon" });
       applyIcon(icon, itemData.icon);
-      item.createDiv({ cls: "character-resources-card-label", text: itemData.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(itemData.label, () => this.showCharacterResources());
-      });
+      item.createDiv({ cls: "resource-view-card-label", text: label(lang, itemData.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
     });
-  }
-  exitCharacterResources() {
-    const container = this.containerEl.children[1];
-    container.removeClass("folio-character-resources");
-    this.onOpen();
   }
   showNarrativeResources() {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("folio-narrative-resources");
+    container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
       (0, import_obsidian15.setIcon)(el, iconName);
-      if (!el.querySelector("svg")) {
+      if (!el.querySelector("svg"))
         (0, import_obsidian15.setIcon)(el, "circle-dot");
-      }
     };
-    const header = container.createDiv({ cls: "narrative-resources-header" });
-    const headerIcon = header.createSpan({ cls: "narrative-resources-header-icon" });
-    applyIcon(headerIcon, "bookmark");
-    header.createSpan({ cls: "narrative-resources-header-title", text: "Narrative resources" });
-    const backButton = header.createEl("button", { cls: "narrative-resources-back", text: "Back" });
-    backButton.addEventListener("click", () => this.exitNarrativeResources());
-    const intro = container.createDiv({ cls: "narrative-resources-intro" });
-    intro.createSpan({ text: "Narrative techniques" });
-    const groups = [
-      {
-        title: "Structural Time Manipulation",
-        subtitle: "Techniques that reorganize chronology to control information flow.",
-        items: [
-          { label: "Flashback", icon: "rewind" },
-          { label: "Flashforward", icon: "fast-forward" },
-          { label: "Foreshadowing", icon: "scan-eye" }
-        ],
-        note: "These operate on the temporal axis of the narrative. They don\u2019t change events \u2014 they change when the audience receives them."
-      },
-      {
-        title: "Setup / Payoff Mechanics",
-        subtitle: "Techniques about planting and resolving narrative information. They\u2019re all about audience prediction vs outcome.",
-        items: [
-          { label: "Chekhov\u2019s Gun", icon: "bomb" },
-          { label: "Red Herring", icon: "fish" },
-          { label: "Plot Twist", icon: "rotate-3d" }
-        ],
-        note: ""
-      },
-      {
-        title: "Resolution Devices",
-        subtitle: "Techniques that control how conflict is concluded. Think of these as ending logic frameworks.",
-        items: [
-          { label: "Deus Ex Machina", icon: "wand-2" },
-          { label: "Eucatastrophe", icon: "mountain" },
-          { label: "Poetic Justice", icon: "scale" }
-        ],
-        note: ""
-      },
-      {
-        title: "Style & Delivery Techniques",
-        subtitle: "These shape how information is expressed rather than plot structure. These affect reader experience, not plot mechanics.",
-        items: [
-          { label: "\u201CShow, Don\u2019t Tell\u201D", icon: "eye" },
-          { label: "Quibble (Wordplay)", icon: "quote" }
-        ],
-        note: ""
-      }
+    this.buildResourceViewHeader(
+      container,
+      "bookmark",
+      ui(lang, "narrativeResources"),
+      () => this.onOpen(),
+      () => this.showNarrativeResources()
+    );
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "narrativeTechniques") });
+    const groups = ui(lang, "narrativeGroups");
+    const groupItems = [
+      [
+        { key: "Flashback", icon: "rewind" },
+        { key: "Flashforward", icon: "fast-forward" },
+        { key: "Foreshadowing", icon: "scan-eye" }
+      ],
+      [
+        { key: "Chekhov's Gun", icon: "bomb" },
+        { key: "Red Herring", icon: "fish" },
+        { key: "Plot Twist", icon: "rotate-3d" }
+      ],
+      [
+        { key: "Deus Ex Machina", icon: "wand-2" },
+        { key: "Eucatastrophe", icon: "mountain" },
+        { key: "Poetic Justice", icon: "scale" }
+      ],
+      [
+        { key: "\u201CShow, Don\u2019t Tell\u201D", icon: "eye" },
+        { key: "Quibble (Wordplay)", icon: "quote" }
+      ]
     ];
-    groups.forEach((group) => {
-      const card = container.createDiv({ cls: "narrative-resources-card" });
-      card.createDiv({ cls: "narrative-resources-card-title", text: group.title });
-      card.createDiv({ cls: "narrative-resources-card-subtitle", text: group.subtitle });
-      const grid = card.createDiv({ cls: "narrative-resources-grid" });
-      group.items.forEach((label) => {
-        const item = grid.createDiv({ cls: "narrative-resources-item" });
-        const icon = item.createSpan({ cls: "narrative-resources-item-icon" });
-        applyIcon(icon, label.icon);
-        item.createSpan({ cls: "narrative-resources-item-text", text: label.label });
-        item.addEventListener("click", () => {
-          this.showResourceDetail(label.label, () => this.showNarrativeResources());
-        });
+    groups.forEach((group, i) => {
+      const card = container.createDiv({ cls: "resource-view-group-card" });
+      card.createDiv({ cls: "resource-view-group-title", text: group.title });
+      if (group.subtitle) {
+        card.createDiv({ cls: "resource-view-group-subtitle", text: group.subtitle });
+      }
+      const grid = card.createDiv({ cls: "resource-view-group-grid" });
+      groupItems[i].forEach((itemData) => {
+        const item = grid.createDiv({ cls: "resource-view-item" });
+        const icon = item.createSpan({ cls: "resource-view-item-icon" });
+        applyIcon(icon, itemData.icon);
+        item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+        this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showNarrativeResources()));
       });
       if (group.note) {
-        const note = card.createDiv({ cls: "narrative-resources-note" });
-        group.note.split("\n").forEach((line, index) => {
-          if (index > 0)
-            note.createEl("br");
-          note.createSpan({ text: line });
-        });
+        card.createDiv({ cls: "resource-view-group-note", text: group.note });
       }
     });
-  }
-  exitNarrativeResources() {
-    const container = this.containerEl.children[1];
-    container.removeClass("folio-narrative-resources");
-    this.onOpen();
   }
   showStructureResources() {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("folio-structure-resources");
+    container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
       (0, import_obsidian15.setIcon)(el, iconName);
-      if (!el.querySelector("svg")) {
+      if (!el.querySelector("svg"))
         (0, import_obsidian15.setIcon)(el, "circle-dot");
-      }
     };
-    const header = container.createDiv({ cls: "structure-resources-header" });
-    const headerIcon = header.createSpan({ cls: "structure-resources-header-icon" });
-    applyIcon(headerIcon, "layout-grid");
-    header.createSpan({ cls: "structure-resources-header-title", text: "Structure resources" });
-    const backButton = header.createEl("button", { cls: "structure-resources-back", text: "Back" });
-    backButton.addEventListener("click", () => this.exitStructureResources());
-    const intro = container.createDiv({ cls: "structure-resources-intro" });
-    intro.createSpan({ text: "Story architecture" });
-    const groups = [
-      {
-        title: "Archetypal Character Journeys",
-        subtitle: "Frameworks that model internal transformation and mythic character evolution rather than strict plot beats.",
-        items: [
-          { label: "The Hero\u2019s Journey", icon: "map" },
-          { label: "Dan Harmon Story Circle", icon: "orbit" }
-        ]
-      },
-      {
-        title: "Dramatic Tension Architectures",
-        subtitle: "Models that describe how narrative pressure rises and falls across the story.",
-        items: [
-          { label: "Freytag\u2019s Pyramid", icon: "triangle" },
-          { label: "Fichtean Curve", icon: "line-chart" },
-          { label: "Three Act Structure", icon: "columns-3" },
-          { label: "Kish\u014Dtenketsu", icon: "route" }
-        ]
-      },
-      {
-        title: "Commercial Beat Frameworks",
-        subtitle: "Prescriptive systems designed for audience engagement, genre expectations, and market-friendly pacing.",
-        items: [
-          { label: "Save the Cat", icon: "cat" },
-          { label: "Seven Point Structure", icon: "wheat" },
-          { label: "Pulp Formula", icon: "book" },
-          { label: "McKee Story paradigm", icon: "book-open" },
-          { label: "Into the Woods structure", icon: "trees" }
-        ]
-      },
-      {
-        title: "Narrative Geometry / Experimental Structures",
-        subtitle: "Architectural choices that shape how perspective, time, or reality are presented.",
-        items: [
-          { label: "Frame Narrative", icon: "scan" },
-          { label: "Nonlinear Structure", icon: "line-squiggle" },
-          { label: "Rashomon Structure", icon: "shrink" },
-          { label: "In Medias Res", icon: "git-commit-horizontal" }
-        ]
-      }
+    this.buildResourceViewHeader(
+      container,
+      "layout-grid",
+      ui(lang, "structureResources"),
+      () => this.onOpen(),
+      () => this.showStructureResources()
+    );
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "storyArchitecture") });
+    const groups = ui(lang, "structureGroups");
+    const groupItems = [
+      [
+        { key: "The Hero's Journey", icon: "map" },
+        { key: "Dan Harmon Story Circle", icon: "orbit" }
+      ],
+      [
+        { key: "Freytag's Pyramid", icon: "triangle" },
+        { key: "Fichtean Curve", icon: "line-chart" },
+        { key: "Three Act Structure", icon: "columns-3" },
+        { key: "Kish\u014Dtenketsu", icon: "route" }
+      ],
+      [
+        { key: "Save the Cat", icon: "cat" },
+        { key: "Seven Point Structure", icon: "wheat" },
+        { key: "Pulp Formula", icon: "book" },
+        { key: "McKee Story paradigm", icon: "book-open" },
+        { key: "Into the Woods structure", icon: "trees" }
+      ],
+      [
+        { key: "Frame Narrative", icon: "scan" },
+        { key: "Nonlinear Structure", icon: "line-squiggle" },
+        { key: "Rashomon Structure", icon: "shrink" },
+        { key: "In Medias Res", icon: "git-commit-horizontal" }
+      ]
     ];
-    groups.forEach((group) => {
-      const card = container.createDiv({ cls: "structure-resources-card" });
-      card.createDiv({ cls: "structure-resources-card-title", text: group.title });
-      card.createDiv({ cls: "structure-resources-card-subtitle", text: group.subtitle });
-      const grid = card.createDiv({ cls: "structure-resources-grid" });
-      group.items.forEach((itemData) => {
-        const item = grid.createDiv({ cls: "structure-resources-item" });
-        const icon = item.createSpan({ cls: "structure-resources-item-icon" });
+    groups.forEach((group, i) => {
+      const card = container.createDiv({ cls: "resource-view-group-card" });
+      card.createDiv({ cls: "resource-view-group-title", text: group.title });
+      if (group.subtitle) {
+        card.createDiv({ cls: "resource-view-group-subtitle", text: group.subtitle });
+      }
+      const grid = card.createDiv({ cls: "resource-view-group-grid" });
+      groupItems[i].forEach((itemData) => {
+        const item = grid.createDiv({ cls: "resource-view-item" });
+        const icon = item.createSpan({ cls: "resource-view-item-icon" });
         applyIcon(icon, itemData.icon);
-        item.createSpan({ cls: "structure-resources-item-text", text: itemData.label });
-        item.addEventListener("click", () => {
-          this.showResourceDetail(itemData.label, () => this.showStructureResources());
-        });
+        item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+        this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showStructureResources()));
       });
     });
-  }
-  exitStructureResources() {
-    const container = this.containerEl.children[1];
-    container.removeClass("folio-structure-resources");
-    this.onOpen();
   }
   showTipsResources() {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("folio-tips-resources");
+    container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
       (0, import_obsidian15.setIcon)(el, iconName);
-      if (!el.querySelector("svg")) {
+      if (!el.querySelector("svg"))
         (0, import_obsidian15.setIcon)(el, "circle-dot");
-      }
     };
-    const header = container.createDiv({ cls: "tips-resources-header" });
-    const headerIcon = header.createSpan({ cls: "tips-resources-header-icon" });
-    applyIcon(headerIcon, "lightbulb");
-    header.createSpan({ cls: "tips-resources-header-title", text: "Writing tips" });
-    const backButton = header.createEl("button", { cls: "tips-resources-back", text: "Back" });
-    backButton.addEventListener("click", () => this.exitTipsResources());
-    const intro = container.createDiv({ cls: "tips-resources-intro" });
-    intro.createSpan({ text: "Writing tips" });
-    const description = container.createDiv({ cls: "tips-resources-description" });
-    description.createSpan({
-      text: "Practical craft guidance focused on sentence-level execution, clarity of communication, and reader impact. Unlike structural frameworks, this category deals with how language operates moment to moment \u2014 voice, rhythm, precision, and rhetorical control. These tips refine technique inside paragraphs rather than shaping the macro architecture of a story."
-    });
-    const gridCard = container.createDiv({ cls: "tips-resources-card" });
-    const grid = gridCard.createDiv({ cls: "tips-resources-grid" });
+    this.buildResourceViewHeader(
+      container,
+      "lightbulb",
+      ui(lang, "tipsResources"),
+      () => this.onOpen(),
+      () => this.showTipsResources()
+    );
+    container.createDiv({ cls: "resource-view-description", text: ui(lang, "tipsIntro") });
+    const tipsCard = container.createDiv({ cls: "resource-view-group-card" });
+    const tipsGrid = tipsCard.createDiv({ cls: "resource-view-group-grid" });
     const tips = [
-      { label: "Argumentation (tips)", icon: "scale" },
-      { label: "Description (tips)", icon: "image" },
-      { label: "Dialogue (tips)", icon: "message-circle" },
-      { label: "Exposition (tips)", icon: "file-text" },
-      { label: "Narration (tips)", icon: "book-open" },
-      { label: "Persuasion (tips)", icon: "megaphone" }
+      { key: "Argumentation (tips)", icon: "scale" },
+      { key: "Description (tips)", icon: "image" },
+      { key: "Dialogue (tips)", icon: "message-circle" },
+      { key: "Exposition (tips)", icon: "file-text" },
+      { key: "Narration (tips)", icon: "book-open" },
+      { key: "Persuasion (tips)", icon: "megaphone" }
     ];
     tips.forEach((tip) => {
-      const item = grid.createDiv({ cls: "tips-resources-item" });
-      const icon = item.createSpan({ cls: "tips-resources-item-icon" });
+      const item = tipsGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, tip.icon);
-      item.createSpan({ cls: "tips-resources-item-text", text: tip.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(tip.label, () => this.showTipsResources());
-      });
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, tip.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(tip.key, () => this.showTipsResources()));
     });
-    container.createDiv({ cls: "tips-resources-divider" });
-    container.createDiv({ cls: "tips-resources-subtitle", text: "Common pitfalls" });
-    const pitfallsCard = container.createDiv({ cls: "tips-resources-card" });
-    const pitfallsGrid = pitfallsCard.createDiv({ cls: "tips-resources-grid" });
+    container.createDiv({ cls: "resource-view-divider" });
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "commonPitfalls") });
+    const pitfallsCard = container.createDiv({ cls: "resource-view-group-card" });
+    const pitfallsGrid = pitfallsCard.createDiv({ cls: "resource-view-group-grid" });
     const pitfalls = [
-      { label: "Character Pitfalls", icon: "user" },
-      { label: "Character Arc Pitfalls", icon: "route" },
-      { label: "Narrative Technique Pitfalls", icon: "book-open" },
-      { label: "Structure Pitfalls", icon: "layout-grid" },
-      { label: "Writing-Level Pitfalls", icon: "pen-line" }
+      { key: "Character Pitfalls", icon: "user" },
+      { key: "Character Arc Pitfalls", icon: "route" },
+      { key: "Narrative Technique Pitfalls", icon: "book-open" },
+      { key: "Structure Pitfalls", icon: "layout-grid" },
+      { key: "Writing-Level Pitfalls", icon: "pen-line" }
     ];
     pitfalls.forEach((pitfall) => {
-      const item = pitfallsGrid.createDiv({ cls: "tips-resources-item" });
-      const icon = item.createSpan({ cls: "tips-resources-item-icon" });
+      const item = pitfallsGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, pitfall.icon);
-      item.createSpan({ cls: "tips-resources-item-text", text: pitfall.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(pitfall.label, () => this.showTipsResources());
-      });
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, pitfall.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(pitfall.key, () => this.showTipsResources()));
     });
   }
-  exitTipsResources() {
-    const container = this.containerEl.children[1];
-    container.removeClass("folio-tips-resources");
-    this.onOpen();
-  }
   showResourceDetail(title, onBack) {
+    var _a, _b, _c;
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
     container.addClass("folio-resource-detail");
-    const header = container.createDiv({ cls: "resource-detail-header" });
-    const headingText = this.getResourceHeading(title);
-    const headingIcon = header.createSpan({ cls: "resource-detail-heading-icon" });
-    (0, import_obsidian15.setIcon)(headingIcon, this.getResourceIcon(title));
-    header.createSpan({ cls: "resource-detail-heading", text: headingText });
-    const backButton = header.createEl("button", { cls: "resource-detail-back", text: "Back" });
-    backButton.addEventListener("click", () => {
-      container.removeClass("folio-resource-detail");
-      onBack();
-    });
-    if (title === "The Hero") {
-      renderHeroDetail(container);
+    this.buildResourceViewHeader(
+      container,
+      this.getResourceIcon(title),
+      label(lang, title),
+      () => {
+        container.removeClass("folio-resource-detail");
+        onBack();
+      },
+      () => this.showResourceDetail(title, onBack)
+    );
+    const archetypeKeyMap = {
+      "The Ally": "ally",
+      "The Herald": "herald",
+      "The Hero (Jung)": "heroJung",
+      "The Mentor": "mentor",
+      "The Shadow": "shadow",
+      "The Shapeshifter": "shapeshifter",
+      "The Threshold Guardian": "thresholdGuardian",
+      "The Trickster": "trickster",
+      "The Caregiver": "caregiver",
+      "The Creator": "creator",
+      "The Everyman": "everyman",
+      "The Explorer": "explorer",
+      "The Hero": "hero",
+      "The Innocent": "innocent",
+      "The Jester": "jester",
+      "The Lover": "lover",
+      "The Magician": "magician",
+      "The Outlaw": "outlaw",
+      "The Ruler": "ruler",
+      "The Sage": "sage"
+    };
+    if (archetypeKeyMap[title]) {
+      renderArchetypeDetail(container, archetypeKeyMap[title], lang);
       return;
     }
-    if (title === "The Caregiver") {
-      renderCaregiverDetail(container);
+    const arcKeyMap = {
+      "Moral Ascent": "moralAscent",
+      "Moral Descent": "moralDescent",
+      "Flat Moral": "flatMoral",
+      "Moral Transformation": "moralTransformation"
+    };
+    if (arcKeyMap[title]) {
+      renderCharacterArcDetail(container, arcKeyMap[title], lang);
       return;
     }
-    if (title === "The Creator") {
-      renderCreatorDetail(container);
+    if (TECHNIQUE_DATA[title]) {
+      renderTechniqueDetail(container, (_a = TECHNIQUE_DATA[title][lang]) != null ? _a : TECHNIQUE_DATA[title].en);
       return;
     }
-    if (title === "The Everyman") {
-      renderEverymanDetail(container);
+    if (TIPS_DATA[title]) {
+      renderTipsDetail(container, (_b = TIPS_DATA[title][lang]) != null ? _b : TIPS_DATA[title].en);
       return;
     }
-    if (title === "The Explorer") {
-      renderExplorerDetail(container);
+    if (PITFALLS_DATA[title]) {
+      const data = (_c = PITFALLS_DATA[title][lang]) != null ? _c : PITFALLS_DATA[title].en;
+      renderPitfallsDetail(container, data.title, data.items);
       return;
     }
-    if (title === "The Hero (Jung)") {
-      renderHeroJungDetail(container);
-      return;
-    }
-    if (title === "The Innocent") {
-      renderInnocentDetail(container);
-      return;
-    }
-    if (title === "The Jester") {
-      renderJesterDetail(container);
-      return;
-    }
-    if (title === "The Lover") {
-      renderLoverDetail(container);
-      return;
-    }
-    if (title === "The Magician") {
-      renderMagicianDetail(container);
-      return;
-    }
-    if (title === "The Outlaw") {
-      renderOutlawDetail(container);
-      return;
-    }
-    if (title === "The Ruler") {
-      renderRulerDetail(container);
-      return;
-    }
-    if (title === "The Sage") {
-      renderSageDetail(container);
-      return;
-    }
-    if (title === "Moral Ascent") {
-      renderMoralAscentDetail(container);
-      return;
-    }
-    if (title === "Moral Descent") {
-      renderMoralDescentDetail(container);
-      return;
-    }
-    if (title === "Flat Moral") {
-      renderFlatMoralDetail(container);
-      return;
-    }
-    if (title === "Moral Transformation") {
-      renderMoralTransformationDetail(container);
-      return;
-    }
-    if (title === "Character Pitfalls") {
-      renderPitfallsDetail(container, "Character Pitfalls", [
-        "Flat characters",
-        "Inconsistent motivation",
-        "Unearned redemption",
-        "Passive protagonists",
-        "Villain without agency",
-        "Archetype clich\xE9s"
-      ]);
-      return;
-    }
-    if (title === "Character Arc Pitfalls") {
-      renderPitfallsDetail(container, "Character Arc Pitfalls", [
-        "No real change",
-        "Change without cause",
-        "Moral whiplash",
-        "Transformation too late",
-        "Arc contradicts theme"
-      ]);
-      return;
-    }
-    if (title === "Narrative Technique Pitfalls") {
-      renderPitfallsDetail(container, "Narrative Technique Pitfalls", [
-        "Foreshadowing too obvious",
-        "Plot twists without setup",
-        "Red herrings that waste time",
-        "Deus ex machina abuse",
-        "Flashbacks killing momentum"
-      ]);
-      return;
-    }
-    if (title === "Structure Pitfalls") {
-      renderPitfallsDetail(container, "Structure Pitfalls", [
-        "Act breaks without tension",
-        "Sagging middle",
-        "Climax too early / too late",
-        "Resolution without consequence",
-        "Structure fighting the story"
-      ]);
-      return;
-    }
-    if (title === "Writing-Level Pitfalls") {
-      renderPitfallsDetail(container, "Writing-Level Pitfalls", [
-        "Over-exposition",
-        "On-the-nose dialogue",
-        "Telling instead of showing",
-        "Purple prose",
-        "Inconsistent tone"
-      ]);
-      return;
-    }
-    if (title === "Argumentation (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is argumentative writing?",
-        intro: [
-          "Argumentative writing focuses on presenting, supporting, and defending a position with the goal of persuading the reader through reasoned discourse.",
-          "It is essential for essays, opinion pieces, critical analysis, and persuasive nonfiction."
-        ],
-        techniques: [
-          "Logical reasoning \u2014 Use deductive, inductive, or analogical reasoning to support claims and conclusions.",
-          "Evidence and examples \u2014 Support arguments with facts, data, statistics, real-world examples, or credible sources.",
-          "Counterarguments and refutation \u2014 Anticipate opposing views and address them directly to strengthen overall credibility.",
-          "Emotional appeal \u2014 Engage the reader\u2019s emotions, values, or beliefs to reinforce logical points.",
-          "Rhetorical strategies \u2014 Apply ethos (credibility), pathos (emotion), and logos (logic) strategically.",
-          "Clear structure and organization \u2014 Present arguments in a coherent order with clear topic sentences and conclusions.",
-          "Clarity and concision \u2014 Avoid unnecessary complexity; express ideas precisely and directly.",
-          "Ethical responsibility \u2014 Ground arguments in honesty and respect for the audience\u2019s values and intelligence."
-        ]
-      });
-      return;
-    }
-    if (title === "Description (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is descriptive writing?",
-        intro: [
-          "Descriptive writing creates vivid mental images by engaging the reader\u2019s senses, emotions, and imagination. Its purpose is immersion rather than explanation."
-        ],
-        techniques: [
-          "Sensory imagery \u2014 Appeal to sight, sound, touch, taste, and smell to create a multidimensional experience.",
-          "Figurative language \u2014 Use metaphor, simile, personification, and imagery to enrich atmosphere and tone.",
-          "Specificity and detail \u2014 Favor precise, concrete details over generic or abstract descriptions.",
-          "Show, don\u2019t tell \u2014 Convey meaning through action, sensory detail, and implication rather than direct explanation.",
-          "Point of view awareness \u2014 Filter description through the narrator\u2019s perspective, biases, and limitations.",
-          "Emotional resonance \u2014 Connect description to characters\u2019 internal reactions and emotional states.",
-          "Narrative pacing \u2014 Balance descriptive passages with action and dialogue to maintain momentum.",
-          "Symbolism and motifs \u2014 Use recurring imagery to reinforce theme and meaning."
-        ]
-      });
-      return;
-    }
-    if (title === "Dialogue (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is effective dialogue?",
-        intro: [
-          "Effective dialogue creates believable conversations that reveal character, advance plot, and convey subtext without sounding artificial or expository."
-        ],
-        techniques: [
-          "Distinct character voice \u2014 Give each character unique speech patterns, vocabulary, and tone.",
-          "Subtext \u2014 Allow meaning to exist beneath the spoken words through implication and tension.",
-          "Natural flow \u2014 Imitate real conversational rhythm without reproducing real speech verbatim.",
-          "Rhythm and cadence \u2014 Vary sentence length and pacing to reflect emotional intensity.",
-          "Conflict and tension \u2014 Use disagreement, power imbalance, or competing goals to energize exchanges.",
-          "Show, don\u2019t tell \u2014 Reveal emotion and motivation through what is said \u2014 and what is avoided.",
-          "Subtle exposition \u2014 Embed necessary information naturally within conversation.",
-          "Authenticity and realism \u2014 Reflect cultural, social, and contextual speech patterns appropriately."
-        ]
-      });
-      return;
-    }
-    if (title === "Exposition (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is exposition?",
-        intro: [
-          "Exposition provides essential background information, context, or history needed for the audience to understand the story world without disrupting narrative flow."
-        ],
-        techniques: [
-          "Narrative summary \u2014 Compress complex information into concise overviews.",
-          "Flashbacks \u2014 Reveal past events that directly inform present actions or motivations.",
-          "Dialogue-based exposition \u2014 Deliver information through natural conversation rather than narration.",
-          "Descriptive context \u2014 Use sensory detail to establish setting, culture, or historical background.",
-          "Prologues or introductory sections \u2014 Present foundational information before the main narrative begins.",
-          "Gradual information release \u2014 Distribute exposition strategically to avoid overload.",
-          "Integrated backstory \u2014 Weave background details into character thoughts or actions.",
-          "Worldbuilding \u2014 Establish social, political, cultural, or historical frameworks that support the story."
-        ]
-      });
-      return;
-    }
-    if (title === "Narration (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is narration?",
-        intro: [
-          "Narration refers to how a story is told: the voice, perspective, structure, and style that shape how the reader experiences events."
-        ],
-        techniques: [
-          "Point of view \u2014 Choose first person, second person, or third person (limited or omniscient) deliberately.",
-          "Narrative structure \u2014 Organize events using linear, nonlinear, framed, or experimental sequencing.",
-          "Tone and atmosphere \u2014 Establish emotional mood through diction, imagery, and rhythm.",
-          "Characterization \u2014 Reveal character through actions, internal thought, and reaction.",
-          "Foreshadowing and suspense \u2014 Plant hints and manage anticipation to sustain engagement.",
-          "Symbolism and imagery \u2014 Use recurring symbols to convey deeper meaning.",
-          "Voice and style \u2014 Develop a distinctive narrative presence consistent with theme and perspective.",
-          "Narrative pacing \u2014 Control speed and tension through sentence structure, scene length, and transitions."
-        ]
-      });
-      return;
-    }
-    if (title === "Persuasion (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is persuasive writing?",
-        intro: [
-          "Persuasive writing aims to influence beliefs, attitudes, or actions by combining logic, emotion, credibility, and narrative clarity."
-        ],
-        techniques: [
-          "Emotional appeal \u2014 Engage feelings such as empathy, fear, hope, or desire.",
-          "Storytelling \u2014 Use anecdotes or narratives to humanize abstract ideas.",
-          "Social proof \u2014 Reference collective agreement, trends, or testimonials.",
-          "Authority \u2014 Establish credibility through expertise or reputable sources.",
-          "Repetition \u2014 Reinforce key ideas to increase memorability.",
-          "Persuasive language \u2014 Choose words that convey urgency, clarity, and emotional weight.",
-          "Call to action \u2014 Direct the reader toward a specific response or behavior.",
-          "Addressing counterarguments \u2014 Acknowledge and refute opposing views to strengthen trust."
-        ]
-      });
-      return;
-    }
-    if (title === "Flashback") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Flashback?",
-        intro: [
-          "A flashback interrupts the present narrative to show events from the past. It provides context, emotional depth, or critical information that reshapes how the audience understands current events."
-        ],
-        core: [
-          "Temporal shift to the past",
-          "Reveals backstory",
-          "Adds emotional or thematic weight",
-          "Recontextualizes present actions"
-        ],
-        coreNote: "Flashbacks change understanding, not events.",
-        narrativeFunction: [
-          "Reveal motivation",
-          "Explain relationships",
-          "Deepen character psychology",
-          "Withhold and release information strategically"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Interrupting narrative momentum",
-          "Overexplaining",
-          "Redundancy with present action"
-        ],
-        examplesTitle: "Flashback Examples",
-        examples: [
-          "Lost",
-          "The Godfather Part II",
-          "Citizen Kane",
-          "Arrow",
-          "Eternal Sunshine of the Spotless Mind"
-        ]
-      });
-      return;
-    }
-    if (title === "Flashforward") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Flashforward?",
-        intro: [
-          "A flashforward reveals events that will occur later in the story. It creates anticipation, tension, or dramatic irony by showing consequences before causes."
-        ],
-        core: [
-          "Temporal jump to the future",
-          "Creates suspense",
-          "Reframes current decisions",
-          "Often partial or ambiguous"
-        ],
-        narrativeFunction: [
-          "Build anticipation",
-          "Signal inevitability",
-          "Create dramatic irony",
-          "Frame the narrative outcome"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Spoiling tension",
-          "Removing mystery",
-          "Confusing chronology"
-        ],
-        examplesTitle: "Flashforward Examples",
-        examples: [
-          "Breaking Bad (cold opens)",
-          "How to Get Away with Murder",
-          "Arrival",
-          "Six Feet Under",
-          "The Book Thief"
-        ]
-      });
-      return;
-    }
-    if (title === "Foreshadowing") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Foreshadowing?",
-        intro: [
-          "Foreshadowing plants subtle hints about future events. These clues may be symbolic, visual, verbal, or thematic.",
-          "The goal is preparation, not prediction."
-        ],
-        core: [
-          "Early setup",
-          "Subtlety",
-          "Payoff later in the story",
-          "Often unnoticed on first read"
-        ],
-        narrativeFunction: [
-          "Create cohesion",
-          "Make twists feel earned",
-          "Build subconscious anticipation",
-          "Reinforce themes"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Being too obvious",
-          "Making outcomes predictable",
-          "Heavy-handed symbolism"
-        ],
-        examplesTitle: "Foreshadowing Examples",
-        examples: [
-          "Romeo and Juliet",
-          "Jaws (early warnings)",
-          "Breaking Bad (visual cues)",
-          "Of Mice and Men",
-          "The Sixth Sense"
-        ]
-      });
-      return;
-    }
-    if (title === "Chekhov\u2019s Gun") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Chekhov\u2019s Gun?",
-        intro: [
-          "Chekhov\u2019s Gun states that every significant element introduced in a story should have a purpose. If a detail is highlighted, it must eventually matter."
-        ],
-        core: [
-          "Meaningful setup",
-          "Inevitable payoff",
-          "Narrative economy",
-          "Focused attention"
-        ],
-        narrativeFunction: [
-          "Eliminate filler",
-          "Create satisfying resolutions",
-          "Train audience attention",
-          "Strengthen narrative cohesion"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Over-signaling importance",
-          "Forced payoff",
-          "Red herrings mistaken for setup"
-        ],
-        examplesTitle: "Chekhov\u2019s Gun Examples",
-        examples: [
-          "The rifle in Chekhov\u2019s plays",
-          "The ring in Lord of the Rings",
-          "The knife in Psycho",
-          "The coin in No Country for Old Men"
-        ]
-      });
-      return;
-    }
-    if (title === "Red Herring") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Red Herring?",
-        intro: [
-          "A red herring is a deliberate misdirection that leads the audience to form false assumptions. It distracts from the true narrative outcome."
-        ],
-        core: [
-          "False emphasis",
-          "Misdirection",
-          "Plausibility",
-          "Temporary relevance"
-        ],
-        narrativeFunction: [
-          "Create mystery",
-          "Increase suspense",
-          "Hide twists",
-          "Manipulate expectations"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Feeling unfair",
-          "Wasting narrative time",
-          "Breaking trust with the audience"
-        ],
-        examplesTitle: "Red Herring Examples",
-        examples: [
-          "Murder mystery suspects",
-          "Knives Out",
-          "Sherlock Holmes stories",
-          "Gone Girl",
-          "The Girl with the Dragon Tattoo"
-        ]
-      });
-      return;
-    }
-    if (title === "Plot Twist") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Plot Twist?",
-        intro: [
-          "A plot twist is an unexpected development that recontextualizes the story. It surprises the audience while remaining logically consistent."
-        ],
-        core: [
-          "Surprise",
-          "Retrospective logic",
-          "Setup and payoff",
-          "Shift in perspective"
-        ],
-        narrativeFunction: [
-          "Reframe the story",
-          "Shock the audience",
-          "Elevate stakes",
-          "Reveal hidden truth"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Twist for shock only",
-          "Lack of setup",
-          "Undermining character logic"
-        ],
-        examplesTitle: "Plot Twist Examples",
-        examples: [
-          "The Sixth Sense",
-          "Fight Club",
-          "The Others",
-          "Oldboy",
-          "Shutter Island"
-        ]
-      });
-      return;
-    }
-    if (title === "Deus Ex Machina") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Deus Ex Machina?",
-        intro: [
-          "Deus ex Machina resolves conflict through an external, unexpected intervention that is not properly set up within the story."
-        ],
-        core: [
-          "Sudden resolution",
-          "External force",
-          "Minimal foreshadowing",
-          "Breaks causality"
-        ],
-        narrativeFunction: [
-          "Resolve unsolvable conflicts",
-          "Deliver moral or divine judgment"
-        ],
-        narrativeNote: "In modern storytelling, it is often discouraged.",
-        risksTitle: "Common risks",
-        risks: [
-          "Undermining stakes",
-          "Invalidating character effort",
-          "Breaking narrative credibility"
-        ],
-        examplesTitle: "Deus Ex Machina Examples",
-        examples: [
-          "Ancient Greek theater",
-          "War of the Worlds (original ending)",
-          "Certain superhero rescues",
-          "Mythological interventions"
-        ]
-      });
-      return;
-    }
-    if (title === "Eucatastrophe") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Eucatastrophe?",
-        intro: [
-          "Eucatastrophe is a sudden positive reversal at the story\u2019s darkest moment. Unlike Deus ex Machina, it feels meaningful and earned.",
-          "The term was coined by J.R.R. Tolkien."
-        ],
-        core: [
-          "Sudden hope",
-          "Emotional release",
-          "Moral or thematic payoff",
-          "Earned resolution"
-        ],
-        narrativeFunction: [
-          "Affirm hope",
-          "Deliver catharsis",
-          "Reinforce moral order",
-          "Reward endurance"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Confusing it with Deus ex Machina",
-          "Insufficient setup",
-          "Over-sentimentality"
-        ],
-        examplesTitle: "Eucatastrophe Examples",
-        examples: [
-          "The Lord of the Rings",
-          "The Lion, the Witch and the Wardrobe",
-          "It\u2019s a Wonderful Life",
-          "Harry Potter finales"
-        ]
-      });
-      return;
-    }
-    if (title === "Poetic Justice") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Poetic Justice?",
-        intro: [
-          "Poetic Justice ensures that characters receive outcomes that fittingly reflect their actions, values, or flaws."
-        ],
-        core: [
-          "Moral symmetry",
-          "Cause-and-effect resolution",
-          "Thematic reinforcement",
-          "Emotional satisfaction"
-        ],
-        narrativeFunction: [
-          "Reinforce theme",
-          "Deliver moral closure",
-          "Satisfy audience expectations",
-          "Balance narrative consequences"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Predictability",
-          "Moral simplification",
-          "Heavy-handed messaging"
-        ],
-        examplesTitle: "Poetic Justice Examples",
-        examples: [
-          "Villains undone by their own schemes",
-          "Fables and fairy tales",
-          "Crime fiction endings",
-          "Shakespearean punishment arcs"
-        ]
-      });
-      return;
-    }
-    if (title === "\u201CShow, Don\u2019t Tell\u201D") {
-      renderTechniqueDetail(container, {
-        introTitle: "What does \u201CShow, Don\u2019t Tell\u201D mean?",
-        intro: [
-          "This principle encourages conveying information through action, dialogue, and sensory detail rather than direct explanation."
-        ],
-        core: [
-          "Implicit storytelling",
-          "Sensory detail",
-          "Active scenes",
-          "Reader inference"
-        ],
-        narrativeFunction: [
-          "Increase immersion",
-          "Engage the reader",
-          "Strengthen emotional impact",
-          "Avoid exposition overload"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Obscuring clarity",
-          "Over-description",
-          "Avoiding necessary exposition"
-        ],
-        examplesTitle: "Show, Don\u2019t Tell Examples",
-        examples: [
-          "Character emotion shown through action",
-          "Visual storytelling in film",
-          "Minimalist prose styles",
-          "Hemingway\u2019s writing"
-        ]
-      });
-      return;
-    }
-    if (title === "Quibble (Wordplay)") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Quibble?",
-        intro: [
-          "A quibble is playful or clever use of language, often relying on ambiguity, double meanings, or rhetorical tricks."
-        ],
-        core: [
-          "Linguistic play",
-          "Humor or irony",
-          "Verbal agility",
-          "Ambiguity"
-        ],
-        narrativeFunction: [
-          "Add wit",
-          "Reveal character intelligence",
-          "Create tonal contrast",
-          "Engage the audience linguistically"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Overuse",
-          "Breaking tone",
-          "Confusing meaning"
-        ],
-        examplesTitle: "Quibble Examples",
-        examples: [
-          "Shakespearean wordplay",
-          "Oscar Wilde",
-          "Legal or political dialogue",
-          "Screwball comedies"
-        ]
-      });
-      return;
-    }
-    if (title === "The Hero\u2019s Journey") {
+    if (title === "The Hero's Journey") {
       renderStructureDetail(container, {
         introTitle: "What is the Hero\u2019s Journey?",
         intro: [
@@ -10582,89 +9779,35 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           {
             title: "ACT I",
             items: [
-              {
-                title: "Ordinary World",
-                body: "Establish the Hero\u2019s baseline life, limitations, and unmet need.",
-                icon: "earth"
-              },
-              {
-                title: "Call to Adventure",
-                body: "A disruption offers a mission, opportunity, or threat that demands response.",
-                icon: "phone-incoming"
-              },
-              {
-                title: "Refusal of the Call",
-                body: "Fear, duty, or doubt causes hesitation; the Hero resists change.",
-                icon: "phone-off"
-              },
-              {
-                title: "Meeting the Mentor",
-                body: "Guidance appears: training, tools, wisdom, or encouragement.",
-                icon: "graduation-cap"
-              },
-              {
-                title: "Crossing the First Threshold",
-                body: "The Hero commits and enters the \u201Cspecial world,\u201D leaving the old life behind.",
-                icon: "brick-wall"
-              }
+              { title: "Ordinary World", body: "Establish the Hero\u2019s baseline life, limitations, and unmet need.", icon: "earth" },
+              { title: "Call to Adventure", body: "A disruption offers a mission, opportunity, or threat that demands response.", icon: "phone-incoming" },
+              { title: "Refusal of the Call", body: "Fear, duty, or doubt causes hesitation; the Hero resists change.", icon: "phone-off" },
+              { title: "Meeting the Mentor", body: "Guidance appears: training, tools, wisdom, or encouragement.", icon: "graduation-cap" },
+              { title: "Crossing the First Threshold", body: "The Hero commits and enters the \u201Cspecial world,\u201D leaving the old life behind.", icon: "brick-wall" }
             ]
           },
           {
             title: "ACT II",
             items: [
-              {
-                title: "Tests, Allies, Enemies",
-                body: "The rules of the new world are learned; relationships and rivalries form.",
-                icon: "line-squiggle"
-              },
-              {
-                title: "Approach to the Inmost Cave",
-                body: "Preparation for the central crisis; tensions tighten and stakes clarify.",
-                icon: "mountain"
-              },
-              {
-                title: "Ordeal",
-                body: "A major confrontation with death, failure, or the deepest fear.",
-                icon: "swords"
-              },
-              {
-                title: "Reward (Seizing the Sword)",
-                body: "The Hero gains something: knowledge, power, object, love, or self-belief.",
-                icon: "trophy"
-              }
+              { title: "Tests, Allies, Enemies", body: "The rules of the new world are learned; relationships and rivalries form.", icon: "line-squiggle" },
+              { title: "Approach to the Inmost Cave", body: "Preparation for the central crisis; tensions tighten and stakes clarify.", icon: "mountain" },
+              { title: "Ordeal", body: "A major confrontation with death, failure, or the deepest fear.", icon: "swords" },
+              { title: "Reward (Seizing the Sword)", body: "The Hero gains something: knowledge, power, object, love, or self-belief.", icon: "trophy" }
             ]
           },
           {
             title: "ACT III",
             items: [
-              {
-                title: "The Road Back",
-                body: "Consequences arrive; the Hero must return with the reward under pressure.",
-                icon: "arrow-big-left"
-              },
-              {
-                title: "Resurrection",
-                body: "A final test proves transformation. The Hero confronts the core flaw one last time.",
-                icon: "user-round-plus"
-              },
-              {
-                title: "Return with the Elixir",
-                body: "The Hero returns changed, bringing value to others: healing, truth, freedom, hope.",
-                icon: "gem"
-              }
+              { title: "The Road Back", body: "Consequences arrive; the Hero must return with the reward under pressure.", icon: "arrow-big-left" },
+              { title: "Resurrection", body: "A final test proves transformation. The Hero confronts the core flaw one last time.", icon: "user-round-plus" },
+              { title: "Return with the Elixir", body: "The Hero returns changed, bringing value to others: healing, truth, freedom, hope.", icon: "gem" }
             ]
           }
         ],
         whyTitle: "Why this works",
         why: "These steps externalize inner change: the world forces the Hero to become someone new.",
         examplesTitle: "Hero\u2019s Journey Examples",
-        examples: [
-          "Star Wars",
-          "The Matrix",
-          "The Lord of the Rings",
-          "Moana",
-          "Harry Potter"
-        ]
+        examples: ["Star Wars", "The Matrix", "The Lord of the Rings", "Moana", "Harry Potter"]
       });
       return;
     }
@@ -10692,21 +9835,14 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           { title: "CHANGE (TRANSFORMED)", body: "The character is different: wiser, broken, empowered, humbled, etc.", icon: "user-pen" }
         ],
         examplesTitle: "Story Circle Examples",
-        examples: [
-          "Episodic TV arcs",
-          "Community",
-          "Rick and Morty",
-          "Character-centered short stories"
-        ]
+        examples: ["Episodic TV arcs", "Community", "Rick and Morty", "Character-centered short stories"]
       });
       return;
     }
     if (title === "Three Act Structure") {
       renderStructureDetail(container, {
         introTitle: "What is the Three Act Structure?",
-        intro: [
-          "A story divided into Setup, Confrontation, and Resolution. It\u2019s the most common modern narrative skeleton because it aligns with audience attention and escalating stakes."
-        ],
+        intro: ["A story divided into Setup, Confrontation, and Resolution. It\u2019s the most common modern narrative skeleton because it aligns with audience attention and escalating stakes."],
         stepsTitle: "Steps (typical beats)",
         numberedSteps: true,
         steps: [
@@ -10727,20 +9863,14 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "12. Denouement \u2014 Aftermath: new equilibrium; consequences; thematic closure."
         ],
         examplesTitle: "Three Act Examples",
-        examples: [
-          "Most Hollywood films",
-          "Contemporary commercial novels",
-          "Studio-driven storytelling"
-        ]
+        examples: ["Most Hollywood films", "Contemporary commercial novels", "Studio-driven storytelling"]
       });
       return;
     }
-    if (title === "Freytag\u2019s Pyramid") {
+    if (title === "Freytag's Pyramid") {
       renderStructureDetail(container, {
         introTitle: "What is Freytag\u2019s Pyramid?",
-        intro: [
-          "A classical five-part model of dramatic tension, often associated with tragedy. It formalizes a rise to climax followed by a decline into resolution."
-        ],
+        intro: ["A classical five-part model of dramatic tension, often associated with tragedy. It formalizes a rise to climax followed by a decline into resolution."],
         stepsTitle: "Steps (5-part model)",
         steps: [
           "1. Exposition \u2014 Introduce setting, characters, and the initial balance.",
@@ -10750,20 +9880,14 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "5. Denouement / Catastrophe \u2014 Final resolution, often with moral or tragic closure."
         ],
         examplesTitle: "Freytag Examples",
-        examples: [
-          "Classical tragedies",
-          "Shakespearean drama",
-          "Traditional stage plays"
-        ]
+        examples: ["Classical tragedies", "Shakespearean drama", "Traditional stage plays"]
       });
       return;
     }
     if (title === "Fichtean Curve") {
       renderStructureDetail(container, {
         introTitle: "What is the Fichtean Curve?",
-        intro: [
-          "A structure built from a chain of escalating crises with minimal exposition. The story begins close to conflict and continues increasing pressure until climax."
-        ],
+        intro: ["A structure built from a chain of escalating crises with minimal exposition. The story begins close to conflict and continues increasing pressure until climax."],
         stepsTitle: "Steps (crisis chain)",
         steps: [
           "1. Immediate Hook / First Crisis \u2014 Start near a problem, not far before it.",
@@ -10775,20 +9899,14 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "7. Short Resolution \u2014 Quick wrap-up; consequences and new stability."
         ],
         examplesTitle: "Fichtean Curve Examples",
-        examples: [
-          "Thrillers",
-          "Page-turner genre fiction",
-          "Serialized storytelling"
-        ]
+        examples: ["Thrillers", "Page-turner genre fiction", "Serialized storytelling"]
       });
       return;
     }
     if (title === "Kish\u014Dtenketsu") {
       renderStructureDetail(container, {
         introTitle: "What is Kish\u014Dtenketsu?",
-        intro: [
-          "Kish\u014Dtenketsu is a four-part structure that emphasizes development and contrast rather than conflict. It\u2019s common in East Asian storytelling and works well for narratives driven by discovery, theme, or perspective."
-        ],
+        intro: ["Kish\u014Dtenketsu is a four-part structure that emphasizes development and contrast rather than conflict. It\u2019s common in East Asian storytelling and works well for narratives driven by discovery, theme, or perspective."],
         stepsTitle: "Steps (4-part model)",
         steps: [
           "1. Ki (Introduction) \u2014 Establish the situation, characters, and core idea.",
@@ -10797,27 +9915,15 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "4. Ketsu (Conclusion) \u2014 Synthesize: show how the contrast changes meaning; resolve by integration rather than victory."
         ],
         examplesTitle: "Kish\u014Dtenketsu Examples",
-        examples: [
-          "Many slice-of-life stories",
-          "Certain anime and manga arcs",
-          "Essays or thematic short fiction",
-          "Some puzzle-like narratives"
-        ]
+        examples: ["Many slice-of-life stories", "Certain anime and manga arcs", "Essays or thematic short fiction", "Some puzzle-like narratives"]
       });
       return;
     }
     if (title === "Save the Cat") {
       renderStructureDetail(container, {
         introTitle: "What is Save the Cat?",
-        intro: [
-          "Save the Cat is a commercial beat sheet designed to maximize audience engagement. It focuses on emotional timing, clarity, and likeability, especially for film and genre fiction."
-        ],
-        core: [
-          "Strong emotional beats",
-          "Clear pacing",
-          "Audience empathy",
-          "Market-tested structure"
-        ],
+        intro: ["Save the Cat is a commercial beat sheet designed to maximize audience engagement. It focuses on emotional timing, clarity, and likeability, especially for film and genre fiction."],
+        core: ["Strong emotional beats", "Clear pacing", "Audience empathy", "Market-tested structure"],
         stepsTitle: "Steps (15-beat model)",
         steps: [
           "1. Opening Image \u2014 A snapshot of the protagonist\u2019s world before change.",
@@ -10837,26 +9943,15 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "15. Final Image \u2014 A mirror of the opening image, showing change."
         ],
         examplesTitle: "Save the Cat Examples",
-        examples: [
-          "Most studio films",
-          "Romantic comedies",
-          "High-concept genre movies",
-          "Animated features"
-        ]
+        examples: ["Most studio films", "Romantic comedies", "High-concept genre movies", "Animated features"]
       });
       return;
     }
     if (title === "Seven Point Structure") {
       renderStructureDetail(container, {
         introTitle: "What is the Seven Point Structure?",
-        intro: [
-          "A clean, flexible structure focused on cause-and-effect turning points. It emphasizes clarity and momentum."
-        ],
-        core: [
-          "Fewer beats, higher impact",
-          "Clear reversals",
-          "Strong midpoint logic"
-        ],
+        intro: ["A clean, flexible structure focused on cause-and-effect turning points. It emphasizes clarity and momentum."],
+        core: ["Fewer beats, higher impact", "Clear reversals", "Strong midpoint logic"],
         stepsTitle: "Steps (7-point model)",
         numberedSteps: true,
         steps: [
@@ -10869,26 +9964,15 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "7. Resolution \u2014 Conflict concludes; new status quo established."
         ],
         examplesTitle: "Seven Point Examples",
-        examples: [
-          "Fantasy and sci-fi novels",
-          "Plot-driven fiction",
-          "Serialized narratives"
-        ]
+        examples: ["Fantasy and sci-fi novels", "Plot-driven fiction", "Serialized narratives"]
       });
       return;
     }
     if (title === "Pulp Formula") {
       renderStructureDetail(container, {
         introTitle: "What is the Pulp Formula?",
-        intro: [
-          "A fast-paced structure designed for entertainment, clarity, and momentum. It prioritizes action, stakes, and accessibility over thematic subtlety."
-        ],
-        core: [
-          "Immediate engagement",
-          "Clear heroes and villains",
-          "Escalating danger",
-          "High momentum"
-        ],
+        intro: ["A fast-paced structure designed for entertainment, clarity, and momentum. It prioritizes action, stakes, and accessibility over thematic subtlety."],
+        core: ["Immediate engagement", "Clear heroes and villains", "Escalating danger", "High momentum"],
         stepsTitle: "Steps (common pulp rhythm)",
         steps: [
           "1. Immediate Hook \u2014 Start with action or danger.",
@@ -10900,27 +9984,15 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "7. Swift Resolution \u2014 Loose ends tied quickly."
         ],
         examplesTitle: "Pulp Examples",
-        examples: [
-          "Adventure serials",
-          "Noir fiction",
-          "Action thrillers",
-          "Comic storytelling"
-        ]
+        examples: ["Adventure serials", "Noir fiction", "Action thrillers", "Comic storytelling"]
       });
       return;
     }
     if (title === "McKee Story paradigm") {
       renderStructureDetail(container, {
         introTitle: "What is the McKee Paradigm?",
-        intro: [
-          "Robert McKee\u2019s model emphasizes story as a sequence of value changes driven by conflict and choice. It focuses on scene design and narrative causality."
-        ],
-        core: [
-          "Value shifts",
-          "Progressive complications",
-          "Scene-level causality",
-          "Strong climax logic"
-        ],
+        intro: ["Robert McKee\u2019s model emphasizes story as a sequence of value changes driven by conflict and choice. It focuses on scene design and narrative causality."],
+        core: ["Value shifts", "Progressive complications", "Scene-level causality", "Strong climax logic"],
         stepsTitle: "Structural principles",
         steps: [
           "1. Inciting Incident \u2014 A radical change disrupts balance.",
@@ -10930,26 +10002,15 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "5. Resolution \u2014 The world stabilizes in a new form."
         ],
         examplesTitle: "McKee Examples",
-        examples: [
-          "Prestige drama",
-          "Character-driven films",
-          "Serious literary narratives"
-        ]
+        examples: ["Prestige drama", "Character-driven films", "Serious literary narratives"]
       });
       return;
     }
     if (title === "Into the Woods structure") {
       renderStructureDetail(container, {
         introTitle: "What is the Into the Woods structure?",
-        intro: [
-          "John Yorke\u2019s model views story as a five-act, fractal pattern: order, disorder, repair, collapse, and transformation. It emphasizes repetition at multiple scales."
-        ],
-        core: [
-          "Five-part rhythm",
-          "Fractal repetition",
-          "Moral consequence",
-          "Thematic depth"
-        ],
+        intro: ["John Yorke\u2019s model views story as a five-act, fractal pattern: order, disorder, repair, collapse, and transformation. It emphasizes repetition at multiple scales."],
+        core: ["Five-part rhythm", "Fractal repetition", "Moral consequence", "Thematic depth"],
         stepsTitle: "Steps (5-act pattern)",
         steps: [
           "1. Order \u2014 Establish a flawed equilibrium.",
@@ -10959,25 +10020,15 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "5. New Order \u2014 A transformed equilibrium emerges."
         ],
         examplesTitle: "Into the Woods Examples",
-        examples: [
-          "British television drama",
-          "Prestige serialized storytelling",
-          "Thematic narratives"
-        ]
+        examples: ["British television drama", "Prestige serialized storytelling", "Thematic narratives"]
       });
       return;
     }
     if (title === "Frame Narrative") {
       renderStructureDetail(container, {
         introTitle: "What is a Frame Narrative?",
-        intro: [
-          "A story within a story. An outer narrative contextualizes or reframes an inner narrative."
-        ],
-        core: [
-          "Nested storytelling",
-          "Perspective mediation",
-          "Interpretive distance"
-        ],
+        intro: ["A story within a story. An outer narrative contextualizes or reframes an inner narrative."],
+        core: ["Nested storytelling", "Perspective mediation", "Interpretive distance"],
         stepsTitle: "Structural layers",
         steps: [
           "1. Outer Frame \u2014 Establish the narrator or context.",
@@ -10986,82 +10037,39 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "4. Return to Frame \u2014 The story closes with new understanding."
         ],
         examplesTitle: "Frame Narrative Examples",
-        examples: [
-          "Frankenstein",
-          "The Princess Bride",
-          "Heart of Darkness",
-          "Arabian Nights"
-        ]
+        examples: ["Frankenstein", "The Princess Bride", "Heart of Darkness", "Arabian Nights"]
       });
       return;
     }
     if (title === "Nonlinear Structure") {
       renderStructureDetail(container, {
         introTitle: "What is a Nonlinear Structure?",
-        intro: [
-          "A narrative told out of chronological order. Meaning emerges from juxtaposition rather than sequence."
-        ],
-        core: [
-          "Fragmented timeline",
-          "Pattern recognition",
-          "Active audience participation"
-        ],
+        intro: ["A narrative told out of chronological order. Meaning emerges from juxtaposition rather than sequence."],
+        core: ["Fragmented timeline", "Pattern recognition", "Active audience participation"],
         stepsTitle: "Common nonlinear patterns",
-        steps: [
-          "Reverse chronology",
-          "Interwoven timelines",
-          "Fragmented memory",
-          "Circular narratives"
-        ],
+        steps: ["Reverse chronology", "Interwoven timelines", "Fragmented memory", "Circular narratives"],
         examplesTitle: "Nonlinear Examples",
-        examples: [
-          "Memento",
-          "Pulp Fiction",
-          "Westworld",
-          "Slaughterhouse-Five"
-        ]
+        examples: ["Memento", "Pulp Fiction", "Westworld", "Slaughterhouse-Five"]
       });
       return;
     }
     if (title === "Rashomon Structure") {
       renderStructureDetail(container, {
         introTitle: "What is a Rashomon Structure?",
-        intro: [
-          "A narrative that presents multiple, conflicting perspectives of the same event, emphasizing subjectivity and truth ambiguity."
-        ],
-        core: [
-          "Multiple narrators",
-          "Contradictory accounts",
-          "Truth as unstable"
-        ],
+        intro: ["A narrative that presents multiple, conflicting perspectives of the same event, emphasizing subjectivity and truth ambiguity."],
+        core: ["Multiple narrators", "Contradictory accounts", "Truth as unstable"],
         stepsTitle: "Structural pattern",
-        steps: [
-          "1. Single event",
-          "2. Multiple retellings",
-          "3. Contradictions revealed",
-          "4. Ambiguity preserved"
-        ],
+        steps: ["1. Single event", "2. Multiple retellings", "3. Contradictions revealed", "4. Ambiguity preserved"],
         examplesTitle: "Rashomon Examples",
-        examples: [
-          "Rashomon",
-          "Hero",
-          "The Affair",
-          "Gone Girl (partial)"
-        ]
+        examples: ["Rashomon", "Hero", "The Affair", "Gone Girl (partial)"]
       });
       return;
     }
     if (title === "In Medias Res") {
       renderStructureDetail(container, {
         introTitle: "What is In Medias Res?",
-        intro: [
-          "A narrative that begins in the middle of action, then later provides context for how events reached that point."
-        ],
-        core: [
-          "Immediate engagement",
-          "Delayed exposition",
-          "Momentum-first storytelling"
-        ],
+        intro: ["A narrative that begins in the middle of action, then later provides context for how events reached that point."],
+        core: ["Immediate engagement", "Delayed exposition", "Momentum-first storytelling"],
         stepsTitle: "Structural pattern",
         steps: [
           "1. Mid-action opening",
@@ -11071,45 +10079,8 @@ var WriterToolsView = class extends import_obsidian15.ItemView {
           "5. Continuation to resolution"
         ],
         examplesTitle: "In Medias Res Examples",
-        examples: [
-          "The Odyssey",
-          "Breaking Bad (cold opens)",
-          "Mad Max: Fury Road",
-          "Fight Club"
-        ]
+        examples: ["The Odyssey", "Breaking Bad (cold opens)", "Mad Max: Fury Road", "Fight Club"]
       });
-      return;
-    }
-    if (title === "The Mentor") {
-      renderMentorDetail(container);
-      return;
-    }
-    if (title === "The Herald") {
-      renderHeraldDetail(container);
-      return;
-    }
-    if (title === "The Shadow") {
-      renderShadowDetail(container);
-      return;
-    }
-    if (title === "The Trickster") {
-      renderTricksterDetail(container);
-      return;
-    }
-    if (title === "The Ally") {
-      renderAllyDetail(container);
-      return;
-    }
-    if (title === "The Shapeshifter") {
-      renderShapeshifterDetail(container);
-      return;
-    }
-    if (title === "The Threshold Guardian") {
-      renderThresholdGuardianDetail(container);
-      return;
-    }
-    if (title === "The Caregiver") {
-      renderCaregiverDetail(container);
       return;
     }
     container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
@@ -12291,8 +11262,8 @@ var IconPickerModal = class extends import_obsidian16.Modal {
       });
       iconOption.title = iconName;
       (0, import_obsidian16.setIcon)(iconOption, iconName);
-      const label = iconOption.createSpan({ cls: "folio-icon-picker-label" });
-      label.textContent = iconName;
+      const label2 = iconOption.createSpan({ cls: "folio-icon-picker-label" });
+      label2.textContent = iconName;
       iconOption.onclick = () => {
         this.onSelect(iconName);
         this.close();

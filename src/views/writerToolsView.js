@@ -5,7 +5,8 @@
 import { ItemView, Modal, Notice, setIcon } from 'obsidian';
 import { ConfirmModal } from '../modals/confirmModal.js';
 import { FocusModeStatsModal } from '../modals/focusModeStatsModal.js';
-import { createResourceSubheading, renderCalloutItem, renderHeroDetail, renderMentorDetail, renderHeraldDetail, renderShadowDetail, renderTricksterDetail, renderAllyDetail, renderShapeshifterDetail, renderThresholdGuardianDetail, renderCaregiverDetail, renderCreatorDetail, renderEverymanDetail, renderExplorerDetail, renderHeroJungDetail, renderInnocentDetail, renderJesterDetail, renderLoverDetail, renderMagicianDetail, renderOutlawDetail, renderRulerDetail, renderSageDetail, renderMoralAscentDetail, renderMoralDescentDetail, renderFlatMoralDetail, renderMoralTransformationDetail, renderPitfallsDetail, renderTipsDetail, renderTechniqueDetail, renderStructureDetail } from '../writer-tools/referenceDetails.js';
+import { renderArchetypeDetail, renderCharacterArcDetail, renderPitfallsDetail, renderTipsDetail, renderTechniqueDetail, renderStructureDetail } from '../writer-tools/referenceDetails.js';
+import { ui, label, TECHNIQUE_DATA, TIPS_DATA, PITFALLS_DATA } from '../writer-tools/resourcesI18n.js';
 
 /**
  * @typedef {Object} ExportPdfSettings
@@ -77,6 +78,7 @@ export class WriterToolsView extends ItemView {
     this.pdfExportStateUpdater = null;
     this.isPdfExporting = false;
     this.pdfExportAbortController = null;
+    this.resourceLanguage = 'en';
   }
 
   getViewType() {
@@ -92,6 +94,9 @@ export class WriterToolsView extends ItemView {
   }
 
   async onOpen() {
+    // Load persisted language preference
+    this.resourceLanguage = this.plugin.settings?.resourceLanguage || 'en';
+
     const container = this.containerEl.children[1];
     container.empty();
     container.removeClass("folio-focus-mode");
@@ -1896,1146 +1901,511 @@ export class WriterToolsView extends ItemView {
   }
 
   renderResourcesSection() {
+    const lang = this.resourceLanguage;
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "RESOURCES" });
 
     const resourcesGrid = section.createDiv({ cls: "writer-tools-resources-grid" });
 
     const resources = [
-      { icon: "user", label: "Character", tooltip: "Character development resources" },
-      { icon: "bookmark", label: "Narrative", tooltip: "Narrative techniques" },
-      { icon: "layout-grid", label: "Structure", tooltip: "Story structure guides" },
-      { icon: "lightbulb", label: "Tips", tooltip: "Writing tips" }
+      { icon: "user", key: "character", label: ui(lang, "characterResources"), action: () => this.showCharacterResources() },
+      { icon: "bookmark", key: "narrative", label: ui(lang, "narrativeResources"), action: () => this.showNarrativeResources() },
+      { icon: "layout-grid", key: "structure", label: ui(lang, "structureResources"), action: () => this.showStructureResources() },
+      { icon: "lightbulb", key: "tips", label: ui(lang, "tipsResources"), action: () => this.showTipsResources() }
     ];
 
     resources.forEach(resource => {
-      const resourceItem = resourcesGrid.createDiv({ cls: "writer-tools-resource-item" });
-      resourceItem.setAttribute("aria-label", resource.tooltip);
-      
-      const iconWrapper = resourceItem.createDiv({ cls: "writer-tools-resource-icon" });
-      setIcon(iconWrapper, resource.icon);
-      
-      resourceItem.createDiv({ cls: "writer-tools-resource-label", text: resource.label });
+      const resourceItem = resourcesGrid.createDiv({ cls: "writer-tools-item" });
+      resourceItem.setAttribute("role", "button");
+      resourceItem.setAttribute("tabindex", "0");
+      resourceItem.setAttribute("aria-label", resource.label);
 
-      resourceItem.addEventListener("click", () => {
-        if (resource.label === "Character") {
-          this.showCharacterResources();
-          return;
-        }
-        if (resource.label === "Narrative") {
-          this.showNarrativeResources();
-          return;
-        }
-        if (resource.label === "Structure") {
-          this.showStructureResources();
-          return;
-        }
-        if (resource.label === "Tips") {
-          this.showTipsResources();
-          return;
-        }
-        // TODO: Implement resource functionality
-        console.log(`${resource.label} clicked`);
+      const iconWrapper = resourceItem.createDiv({ cls: "writer-tools-item-icon" });
+      setIcon(iconWrapper, resource.icon);
+
+      resourceItem.createDiv({ cls: "writer-tools-item-text", text: resource.label });
+
+      const activate = () => resource.action();
+      resourceItem.addEventListener("click", activate);
+      resourceItem.addEventListener("keydown", evt => {
+        if (evt.key === "Enter" || evt.key === " ") { evt.preventDefault(); activate(); }
       });
+    });
+  }
+
+  // ── Language toggle helper ─────────────────────────────────────────────────
+
+  /**
+   * Creates an ES/EN language toggle and appends it to the given container.
+   * Returns the toggle element.
+   */
+  createLangToggle(parent, onToggle) {
+    const toggle = parent.createDiv({ cls: "resource-lang-toggle" });
+    toggle.setAttribute("role", "group");
+    toggle.setAttribute("aria-label", "Language");
+
+    const langOptions = [
+      { code: "en", label: "EN" },
+      { code: "es", label: "ES" }
+    ];
+
+    langOptions.forEach(opt => {
+      const btn = toggle.createEl("button", {
+        cls: "resource-lang-btn" + (this.resourceLanguage === opt.code ? " is-active" : ""),
+        text: opt.label
+      });
+      btn.setAttribute("aria-pressed", String(this.resourceLanguage === opt.code));
+      btn.addEventListener("click", async () => {
+        if (this.resourceLanguage === opt.code) return;
+        this.resourceLanguage = opt.code;
+        // Persist
+        if (this.plugin.settings) {
+          this.plugin.settings.resourceLanguage = opt.code;
+          await this.plugin.saveSettings?.();
+        }
+        onToggle(opt.code);
+      });
+    });
+
+    return toggle;
+  }
+
+  /** Shared header builder for all resource category views. */
+  buildResourceViewHeader(container, iconName, titleText, onBack, onLangToggle) {
+    const header = container.createDiv({ cls: "folio-resource-view-header" });
+
+    const left = header.createDiv({ cls: "folio-resource-view-header-left" });
+    const iconEl = left.createSpan({ cls: "folio-resource-view-header-icon" });
+    setIcon(iconEl, iconName);
+    left.createSpan({ cls: "folio-resource-view-header-title", text: titleText });
+
+    const right = header.createDiv({ cls: "folio-resource-view-header-right" });
+    this.createLangToggle(right, onLangToggle);
+
+    const backButton = right.createEl("button", { cls: "folio-resource-view-back" });
+    const backIcon = backButton.createSpan({ cls: "folio-resource-view-back-icon" });
+    setIcon(backIcon, "chevron-left");
+    backButton.createSpan({ text: ui(this.resourceLanguage, "back") });
+    backButton.addEventListener("click", onBack);
+
+    return header;
+  }
+
+  /** Make a div act as an accessible interactive card. */
+  makeInteractive(el, action) {
+    el.setAttribute("role", "button");
+    el.setAttribute("tabindex", "0");
+    el.addEventListener("click", action);
+    el.addEventListener("keydown", evt => {
+      if (evt.key === "Enter" || evt.key === " ") { evt.preventDefault(); action(); }
     });
   }
 
   showCharacterResources() {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("folio-character-resources");
+    container.addClass("folio-resource-view");
 
     const applyIcon = (el, iconName) => {
       setIcon(el, iconName);
-      if (!el.querySelector("svg")) {
-        setIcon(el, "circle-dot");
-      }
+      if (!el.querySelector("svg")) setIcon(el, "circle-dot");
     };
 
-    const header = container.createDiv({ cls: "character-resources-header" });
-    const headerIcon = header.createSpan({ cls: "character-resources-header-icon" });
-    applyIcon(headerIcon, "user");
-    header.createSpan({ cls: "character-resources-header-title", text: "Character resources" });
+    this.buildResourceViewHeader(
+      container, "user",
+      ui(lang, "characterResources"),
+      () => this.onOpen(),
+      () => this.showCharacterResources()
+    );
 
-    const backButton = header.createEl("button", { cls: "character-resources-back", text: "Back" });
-    backButton.addEventListener("click", () => this.exitCharacterResources());
+    // Character arcs
+    const arcsSection = container.createDiv({ cls: "resource-view-section" });
+    arcsSection.createDiv({ cls: "resource-view-section-title", text: ui(lang, "characterArcs") });
+    const arcsGrid = arcsSection.createDiv({ cls: "resource-view-arc-grid" });
 
-    const arcsSection = container.createDiv({ cls: "character-resources-section" });
-    arcsSection.createDiv({ cls: "character-resources-section-title", text: "Character arcs" });
-    const arcsGrid = arcsSection.createDiv({ cls: "character-resources-arc-grid" });
     const arcs = [
-      { label: "Moral Ascent", icon: "trending-up" },
-      { label: "Moral Descent", icon: "trending-down" },
-      { label: "Flat Moral", icon: "minus" },
-      { label: "Moral Transformation", icon: "trending-up-down" }
+      { key: "Moral Ascent", icon: "trending-up" },
+      { key: "Moral Descent", icon: "trending-down" },
+      { key: "Flat Moral", icon: "minus" },
+      { key: "Moral Transformation", icon: "trending-up-down" }
     ];
-    arcs.forEach((arc) => {
-      const item = arcsGrid.createDiv({ cls: "character-resources-arc-item" });
-      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+    arcs.forEach(arc => {
+      const item = arcsGrid.createDiv({ cls: "resource-view-arc-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, arc.icon);
-      item.createDiv({ cls: "character-resources-arc-label", text: arc.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(arc.label, () => this.showCharacterResources());
-      });
+      item.createDiv({ cls: "resource-view-item-label", text: label(lang, arc.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(arc.key, () => this.showCharacterResources()));
     });
 
-    const archetypesSection = container.createDiv({ cls: "character-resources-section is-separated" });
-    archetypesSection.createDiv({ cls: "character-resources-section-title", text: "Character archetypes" });
+    // Character archetypes
+    const archetypesSection = container.createDiv({ cls: "resource-view-section is-separated" });
+    archetypesSection.createDiv({ cls: "resource-view-section-title", text: ui(lang, "characterArchetypes") });
 
-    const campbellSection = archetypesSection.createDiv({ cls: "character-resources-subsection" });
-    campbellSection.createDiv({ cls: "character-resources-subtitle", text: "Campbell archetypes" });
-    const campbellGrid = campbellSection.createDiv({ cls: "character-resources-grid" });
+    const campbellSection = archetypesSection.createDiv({ cls: "resource-view-subsection" });
+    campbellSection.createDiv({ cls: "resource-view-subtitle", text: ui(lang, "campbellArchetypes") });
+    const campbellGrid = campbellSection.createDiv({ cls: "resource-view-grid" });
+
     const campbellArchetypes = [
-      { label: "The Ally", icon: "handshake" },
-      { label: "The Herald", icon: "bell" },
-      { label: "The Hero (Jung)", icon: "sword" },
-      { label: "The Mentor", icon: "graduation-cap" },
-      { label: "The Shadow", icon: "moon" },
-      { label: "The Shapeshifter", icon: "hat-glasses" },
-      { label: "The Threshold Guardian", icon: "shield" },
-      { label: "The Trickster", icon: "dice" }
+      { key: "The Ally", icon: "handshake" },
+      { key: "The Herald", icon: "bell" },
+      { key: "The Hero (Jung)", icon: "sword" },
+      { key: "The Mentor", icon: "graduation-cap" },
+      { key: "The Shadow", icon: "moon" },
+      { key: "The Shapeshifter", icon: "hat-glasses" },
+      { key: "The Threshold Guardian", icon: "shield" },
+      { key: "The Trickster", icon: "dice" }
     ];
-    campbellArchetypes.forEach((itemData) => {
-      const item = campbellGrid.createDiv({ cls: "character-resources-card" });
-      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+    campbellArchetypes.forEach(itemData => {
+      const item = campbellGrid.createDiv({ cls: "resource-view-card" });
+      const icon = item.createSpan({ cls: "resource-view-card-icon" });
       applyIcon(icon, itemData.icon);
-      item.createDiv({ cls: "character-resources-card-label", text: itemData.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(itemData.label, () => this.showCharacterResources());
-      });
+      item.createDiv({ cls: "resource-view-card-label", text: label(lang, itemData.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
     });
 
-    const jungSection = archetypesSection.createDiv({ cls: "character-resources-subsection" });
-    jungSection.createDiv({ cls: "character-resources-subtitle", text: "Jung archetypes" });
-    const jungGrid = jungSection.createDiv({ cls: "character-resources-grid" });
+    const jungSection = archetypesSection.createDiv({ cls: "resource-view-subsection" });
+    jungSection.createDiv({ cls: "resource-view-subtitle", text: ui(lang, "jungArchetypes") });
+    const jungGrid = jungSection.createDiv({ cls: "resource-view-grid" });
+
     const jungArchetypes = [
-      { label: "The Caregiver", icon: "heart-handshake" },
-      { label: "The Creator", icon: "paintbrush" },
-      { label: "The Everyman", icon: "users" },
-      { label: "The Explorer", icon: "compass" },
-      { label: "The Hero", icon: "sword" },
-      { label: "The Innocent", icon: "baby" },
-      { label: "The Jester", icon: "party-popper" },
-      { label: "The Lover", icon: "heart" },
-      { label: "The Magician", icon: "wand-2" },
-      { label: "The Outlaw", icon: "flame-kindling" },
-      { label: "The Ruler", icon: "crown" },
-      { label: "The Sage", icon: "book-open" }
+      { key: "The Caregiver", icon: "heart-handshake" },
+      { key: "The Creator", icon: "paintbrush" },
+      { key: "The Everyman", icon: "users" },
+      { key: "The Explorer", icon: "compass" },
+      { key: "The Hero", icon: "sword" },
+      { key: "The Innocent", icon: "baby" },
+      { key: "The Jester", icon: "party-popper" },
+      { key: "The Lover", icon: "heart" },
+      { key: "The Magician", icon: "wand-2" },
+      { key: "The Outlaw", icon: "flame-kindling" },
+      { key: "The Ruler", icon: "crown" },
+      { key: "The Sage", icon: "book-open" }
     ];
-    jungArchetypes.forEach((itemData) => {
-      const item = jungGrid.createDiv({ cls: "character-resources-card" });
-      const icon = item.createSpan({ cls: "character-resources-card-icon" });
+    jungArchetypes.forEach(itemData => {
+      const item = jungGrid.createDiv({ cls: "resource-view-card" });
+      const icon = item.createSpan({ cls: "resource-view-card-icon" });
       applyIcon(icon, itemData.icon);
-      item.createDiv({ cls: "character-resources-card-label", text: itemData.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(itemData.label, () => this.showCharacterResources());
-      });
+      item.createDiv({ cls: "resource-view-card-label", text: label(lang, itemData.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
     });
-  }
-
-  exitCharacterResources() {
-    const container = this.containerEl.children[1];
-    container.removeClass("folio-character-resources");
-    this.onOpen();
   }
 
   showNarrativeResources() {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("folio-narrative-resources");
+    container.addClass("folio-resource-view");
 
     const applyIcon = (el, iconName) => {
       setIcon(el, iconName);
-      if (!el.querySelector("svg")) {
-        setIcon(el, "circle-dot");
-      }
+      if (!el.querySelector("svg")) setIcon(el, "circle-dot");
     };
 
-    const header = container.createDiv({ cls: "narrative-resources-header" });
-    const headerIcon = header.createSpan({ cls: "narrative-resources-header-icon" });
-    applyIcon(headerIcon, "bookmark");
-    header.createSpan({ cls: "narrative-resources-header-title", text: "Narrative resources" });
+    this.buildResourceViewHeader(
+      container, "bookmark",
+      ui(lang, "narrativeResources"),
+      () => this.onOpen(),
+      () => this.showNarrativeResources()
+    );
 
-    const backButton = header.createEl("button", { cls: "narrative-resources-back", text: "Back" });
-    backButton.addEventListener("click", () => this.exitNarrativeResources());
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "narrativeTechniques") });
 
-    const intro = container.createDiv({ cls: "narrative-resources-intro" });
-    intro.createSpan({ text: "Narrative techniques" });
-
-    const groups = [
-      {
-        title: "Structural Time Manipulation",
-        subtitle: "Techniques that reorganize chronology to control information flow.",
-        items: [
-          { label: "Flashback", icon: "rewind" },
-          { label: "Flashforward", icon: "fast-forward" },
-          { label: "Foreshadowing", icon: "scan-eye" }
-        ],
-        note: "These operate on the temporal axis of the narrative. They don’t change events — they change when the audience receives them."
-      },
-      {
-        title: "Setup / Payoff Mechanics",
-        subtitle: "Techniques about planting and resolving narrative information. They’re all about audience prediction vs outcome.",
-        items: [
-          { label: "Chekhov’s Gun", icon: "bomb" },
-          { label: "Red Herring", icon: "fish" },
-          { label: "Plot Twist", icon: "rotate-3d" }
-        ],
-        note: ""
-      },
-      {
-        title: "Resolution Devices",
-        subtitle: "Techniques that control how conflict is concluded. Think of these as ending logic frameworks.",
-        items: [
-          { label: "Deus Ex Machina", icon: "wand-2" },
-          { label: "Eucatastrophe", icon: "mountain" },
-          { label: "Poetic Justice", icon: "scale" }
-        ],
-        note: ""
-      },
-      {
-        title: "Style & Delivery Techniques",
-        subtitle: "These shape how information is expressed rather than plot structure. These affect reader experience, not plot mechanics.",
-        items: [
-          { label: "“Show, Don’t Tell”", icon: "eye" },
-          { label: "Quibble (Wordplay)", icon: "quote" }
-        ],
-        note: ""
-      }
+    const groups = ui(lang, "narrativeGroups");
+    const groupItems = [
+      [
+        { key: "Flashback", icon: "rewind" },
+        { key: "Flashforward", icon: "fast-forward" },
+        { key: "Foreshadowing", icon: "scan-eye" }
+      ],
+      [
+        { key: "Chekhov's Gun", icon: "bomb" },
+        { key: "Red Herring", icon: "fish" },
+        { key: "Plot Twist", icon: "rotate-3d" }
+      ],
+      [
+        { key: "Deus Ex Machina", icon: "wand-2" },
+        { key: "Eucatastrophe", icon: "mountain" },
+        { key: "Poetic Justice", icon: "scale" }
+      ],
+      [
+        { key: "“Show, Don’t Tell”", icon: "eye" },
+        { key: "Quibble (Wordplay)", icon: "quote" }
+      ]
     ];
 
-    groups.forEach((group) => {
-      const card = container.createDiv({ cls: "narrative-resources-card" });
-      card.createDiv({ cls: "narrative-resources-card-title", text: group.title });
-      card.createDiv({ cls: "narrative-resources-card-subtitle", text: group.subtitle });
-
-      const grid = card.createDiv({ cls: "narrative-resources-grid" });
-      group.items.forEach((label) => {
-        const item = grid.createDiv({ cls: "narrative-resources-item" });
-        const icon = item.createSpan({ cls: "narrative-resources-item-icon" });
-        applyIcon(icon, label.icon);
-        item.createSpan({ cls: "narrative-resources-item-text", text: label.label });
-        item.addEventListener("click", () => {
-          this.showResourceDetail(label.label, () => this.showNarrativeResources());
-        });
+    groups.forEach((group, i) => {
+      const card = container.createDiv({ cls: "resource-view-group-card" });
+      card.createDiv({ cls: "resource-view-group-title", text: group.title });
+      if (group.subtitle) {
+        card.createDiv({ cls: "resource-view-group-subtitle", text: group.subtitle });
+      }
+      const grid = card.createDiv({ cls: "resource-view-group-grid" });
+      groupItems[i].forEach(itemData => {
+        const item = grid.createDiv({ cls: "resource-view-item" });
+        const icon = item.createSpan({ cls: "resource-view-item-icon" });
+        applyIcon(icon, itemData.icon);
+        item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+        this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showNarrativeResources()));
       });
-
       if (group.note) {
-        const note = card.createDiv({ cls: "narrative-resources-note" });
-        group.note.split("\n").forEach((line, index) => {
-          if (index > 0) note.createEl("br");
-          note.createSpan({ text: line });
-        });
+        card.createDiv({ cls: "resource-view-group-note", text: group.note });
       }
     });
-  }
-
-  exitNarrativeResources() {
-    const container = this.containerEl.children[1];
-    container.removeClass("folio-narrative-resources");
-    this.onOpen();
   }
 
   showStructureResources() {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("folio-structure-resources");
+    container.addClass("folio-resource-view");
 
     const applyIcon = (el, iconName) => {
       setIcon(el, iconName);
-      if (!el.querySelector("svg")) {
-        setIcon(el, "circle-dot");
-      }
+      if (!el.querySelector("svg")) setIcon(el, "circle-dot");
     };
 
-    const header = container.createDiv({ cls: "structure-resources-header" });
-    const headerIcon = header.createSpan({ cls: "structure-resources-header-icon" });
-    applyIcon(headerIcon, "layout-grid");
-    header.createSpan({ cls: "structure-resources-header-title", text: "Structure resources" });
+    this.buildResourceViewHeader(
+      container, "layout-grid",
+      ui(lang, "structureResources"),
+      () => this.onOpen(),
+      () => this.showStructureResources()
+    );
 
-    const backButton = header.createEl("button", { cls: "structure-resources-back", text: "Back" });
-    backButton.addEventListener("click", () => this.exitStructureResources());
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "storyArchitecture") });
 
-    const intro = container.createDiv({ cls: "structure-resources-intro" });
-    intro.createSpan({ text: "Story architecture" });
-
-    const groups = [
-      {
-        title: "Archetypal Character Journeys",
-        subtitle: "Frameworks that model internal transformation and mythic character evolution rather than strict plot beats.",
-        items: [
-          { label: "The Hero’s Journey", icon: "map" },
-          { label: "Dan Harmon Story Circle", icon: "orbit" }
-        ]
-      },
-      {
-        title: "Dramatic Tension Architectures",
-        subtitle: "Models that describe how narrative pressure rises and falls across the story.",
-        items: [
-          { label: "Freytag’s Pyramid", icon: "triangle" },
-          { label: "Fichtean Curve", icon: "line-chart" },
-          { label: "Three Act Structure", icon: "columns-3" },
-          { label: "Kishōtenketsu", icon: "route" }
-        ]
-      },
-      {
-        title: "Commercial Beat Frameworks",
-        subtitle: "Prescriptive systems designed for audience engagement, genre expectations, and market-friendly pacing.",
-        items: [
-          { label: "Save the Cat", icon: "cat" },
-          { label: "Seven Point Structure", icon: "wheat" },
-          { label: "Pulp Formula", icon: "book" },
-          { label: "McKee Story paradigm", icon: "book-open" },
-          { label: "Into the Woods structure", icon: "trees" }
-        ]
-      },
-      {
-        title: "Narrative Geometry / Experimental Structures",
-        subtitle: "Architectural choices that shape how perspective, time, or reality are presented.",
-        items: [
-          { label: "Frame Narrative", icon: "scan" },
-          { label: "Nonlinear Structure", icon: "line-squiggle" },
-          { label: "Rashomon Structure", icon: "shrink" },
-          { label: "In Medias Res", icon: "git-commit-horizontal" }
-        ]
-      }
+    const groups = ui(lang, "structureGroups");
+    const groupItems = [
+      [
+        { key: "The Hero's Journey", icon: "map" },
+        { key: "Dan Harmon Story Circle", icon: "orbit" }
+      ],
+      [
+        { key: "Freytag's Pyramid", icon: "triangle" },
+        { key: "Fichtean Curve", icon: "line-chart" },
+        { key: "Three Act Structure", icon: "columns-3" },
+        { key: "Kishōtenketsu", icon: "route" }
+      ],
+      [
+        { key: "Save the Cat", icon: "cat" },
+        { key: "Seven Point Structure", icon: "wheat" },
+        { key: "Pulp Formula", icon: "book" },
+        { key: "McKee Story paradigm", icon: "book-open" },
+        { key: "Into the Woods structure", icon: "trees" }
+      ],
+      [
+        { key: "Frame Narrative", icon: "scan" },
+        { key: "Nonlinear Structure", icon: "line-squiggle" },
+        { key: "Rashomon Structure", icon: "shrink" },
+        { key: "In Medias Res", icon: "git-commit-horizontal" }
+      ]
     ];
 
-    groups.forEach((group) => {
-      const card = container.createDiv({ cls: "structure-resources-card" });
-      card.createDiv({ cls: "structure-resources-card-title", text: group.title });
-      card.createDiv({ cls: "structure-resources-card-subtitle", text: group.subtitle });
-
-      const grid = card.createDiv({ cls: "structure-resources-grid" });
-      group.items.forEach((itemData) => {
-        const item = grid.createDiv({ cls: "structure-resources-item" });
-        const icon = item.createSpan({ cls: "structure-resources-item-icon" });
+    groups.forEach((group, i) => {
+      const card = container.createDiv({ cls: "resource-view-group-card" });
+      card.createDiv({ cls: "resource-view-group-title", text: group.title });
+      if (group.subtitle) {
+        card.createDiv({ cls: "resource-view-group-subtitle", text: group.subtitle });
+      }
+      const grid = card.createDiv({ cls: "resource-view-group-grid" });
+      groupItems[i].forEach(itemData => {
+        const item = grid.createDiv({ cls: "resource-view-item" });
+        const icon = item.createSpan({ cls: "resource-view-item-icon" });
         applyIcon(icon, itemData.icon);
-        item.createSpan({ cls: "structure-resources-item-text", text: itemData.label });
-        item.addEventListener("click", () => {
-          this.showResourceDetail(itemData.label, () => this.showStructureResources());
-        });
+        item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+        this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showStructureResources()));
       });
     });
-  }
-
-  exitStructureResources() {
-    const container = this.containerEl.children[1];
-    container.removeClass("folio-structure-resources");
-    this.onOpen();
   }
 
   showTipsResources() {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
-    container.addClass("folio-tips-resources");
+    container.addClass("folio-resource-view");
 
     const applyIcon = (el, iconName) => {
       setIcon(el, iconName);
-      if (!el.querySelector("svg")) {
-        setIcon(el, "circle-dot");
-      }
+      if (!el.querySelector("svg")) setIcon(el, "circle-dot");
     };
 
-    const header = container.createDiv({ cls: "tips-resources-header" });
-    const headerIcon = header.createSpan({ cls: "tips-resources-header-icon" });
-    applyIcon(headerIcon, "lightbulb");
-    header.createSpan({ cls: "tips-resources-header-title", text: "Writing tips" });
+    this.buildResourceViewHeader(
+      container, "lightbulb",
+      ui(lang, "tipsResources"),
+      () => this.onOpen(),
+      () => this.showTipsResources()
+    );
 
-    const backButton = header.createEl("button", { cls: "tips-resources-back", text: "Back" });
-    backButton.addEventListener("click", () => this.exitTipsResources());
+    container.createDiv({ cls: "resource-view-description", text: ui(lang, "tipsIntro") });
 
-    const intro = container.createDiv({ cls: "tips-resources-intro" });
-    intro.createSpan({ text: "Writing tips" });
-
-    const description = container.createDiv({ cls: "tips-resources-description" });
-    description.createSpan({
-      text: "Practical craft guidance focused on sentence-level execution, clarity of communication, and reader impact. Unlike structural frameworks, this category deals with how language operates moment to moment — voice, rhythm, precision, and rhetorical control. These tips refine technique inside paragraphs rather than shaping the macro architecture of a story."
-    });
-
-    const gridCard = container.createDiv({ cls: "tips-resources-card" });
-    const grid = gridCard.createDiv({ cls: "tips-resources-grid" });
+    const tipsCard = container.createDiv({ cls: "resource-view-group-card" });
+    const tipsGrid = tipsCard.createDiv({ cls: "resource-view-group-grid" });
 
     const tips = [
-      { label: "Argumentation (tips)", icon: "scale" },
-      { label: "Description (tips)", icon: "image" },
-      { label: "Dialogue (tips)", icon: "message-circle" },
-      { label: "Exposition (tips)", icon: "file-text" },
-      { label: "Narration (tips)", icon: "book-open" },
-      { label: "Persuasion (tips)", icon: "megaphone" }
+      { key: "Argumentation (tips)", icon: "scale" },
+      { key: "Description (tips)", icon: "image" },
+      { key: "Dialogue (tips)", icon: "message-circle" },
+      { key: "Exposition (tips)", icon: "file-text" },
+      { key: "Narration (tips)", icon: "book-open" },
+      { key: "Persuasion (tips)", icon: "megaphone" }
     ];
 
-    tips.forEach((tip) => {
-      const item = grid.createDiv({ cls: "tips-resources-item" });
-      const icon = item.createSpan({ cls: "tips-resources-item-icon" });
+    tips.forEach(tip => {
+      const item = tipsGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, tip.icon);
-      item.createSpan({ cls: "tips-resources-item-text", text: tip.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(tip.label, () => this.showTipsResources());
-      });
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, tip.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(tip.key, () => this.showTipsResources()));
     });
 
-    container.createDiv({ cls: "tips-resources-divider" });
-    container.createDiv({ cls: "tips-resources-subtitle", text: "Common pitfalls" });
+    container.createDiv({ cls: "resource-view-divider" });
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "commonPitfalls") });
 
-    const pitfallsCard = container.createDiv({ cls: "tips-resources-card" });
-    const pitfallsGrid = pitfallsCard.createDiv({ cls: "tips-resources-grid" });
+    const pitfallsCard = container.createDiv({ cls: "resource-view-group-card" });
+    const pitfallsGrid = pitfallsCard.createDiv({ cls: "resource-view-group-grid" });
+
     const pitfalls = [
-      { label: "Character Pitfalls", icon: "user" },
-      { label: "Character Arc Pitfalls", icon: "route" },
-      { label: "Narrative Technique Pitfalls", icon: "book-open" },
-      { label: "Structure Pitfalls", icon: "layout-grid" },
-      { label: "Writing-Level Pitfalls", icon: "pen-line" }
+      { key: "Character Pitfalls", icon: "user" },
+      { key: "Character Arc Pitfalls", icon: "route" },
+      { key: "Narrative Technique Pitfalls", icon: "book-open" },
+      { key: "Structure Pitfalls", icon: "layout-grid" },
+      { key: "Writing-Level Pitfalls", icon: "pen-line" }
     ];
 
-    pitfalls.forEach((pitfall) => {
-      const item = pitfallsGrid.createDiv({ cls: "tips-resources-item" });
-      const icon = item.createSpan({ cls: "tips-resources-item-icon" });
+    pitfalls.forEach(pitfall => {
+      const item = pitfallsGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, pitfall.icon);
-      item.createSpan({ cls: "tips-resources-item-text", text: pitfall.label });
-      item.addEventListener("click", () => {
-        this.showResourceDetail(pitfall.label, () => this.showTipsResources());
-      });
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, pitfall.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(pitfall.key, () => this.showTipsResources()));
     });
-  }
-
-  exitTipsResources() {
-    const container = this.containerEl.children[1];
-    container.removeClass("folio-tips-resources");
-    this.onOpen();
   }
 
   showResourceDetail(title, onBack) {
+    const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
     container.addClass("folio-resource-detail");
 
-    const header = container.createDiv({ cls: "resource-detail-header" });
-    const headingText = this.getResourceHeading(title);
-    const headingIcon = header.createSpan({ cls: "resource-detail-heading-icon" });
-    setIcon(headingIcon, this.getResourceIcon(title));
-    header.createSpan({ cls: "resource-detail-heading", text: headingText });
-    const backButton = header.createEl("button", { cls: "resource-detail-back", text: "Back" });
-    backButton.addEventListener("click", () => {
-      container.removeClass("folio-resource-detail");
-      onBack();
-    });
+    this.buildResourceViewHeader(
+      container,
+      this.getResourceIcon(title),
+      label(lang, title),
+      () => {
+        container.removeClass("folio-resource-detail");
+        onBack();
+      },
+      () => this.showResourceDetail(title, onBack)
+    );
 
-    if (title === "The Hero") {
-      renderHeroDetail(container);
+    // ── Archetype routing ────────────────────────────────────────────────────
+    const archetypeKeyMap = {
+      "The Ally": "ally",
+      "The Herald": "herald",
+      "The Hero (Jung)": "heroJung",
+      "The Mentor": "mentor",
+      "The Shadow": "shadow",
+      "The Shapeshifter": "shapeshifter",
+      "The Threshold Guardian": "thresholdGuardian",
+      "The Trickster": "trickster",
+      "The Caregiver": "caregiver",
+      "The Creator": "creator",
+      "The Everyman": "everyman",
+      "The Explorer": "explorer",
+      "The Hero": "hero",
+      "The Innocent": "innocent",
+      "The Jester": "jester",
+      "The Lover": "lover",
+      "The Magician": "magician",
+      "The Outlaw": "outlaw",
+      "The Ruler": "ruler",
+      "The Sage": "sage"
+    };
+
+    if (archetypeKeyMap[title]) {
+      renderArchetypeDetail(container, archetypeKeyMap[title], lang);
       return;
     }
-    if (title === "The Caregiver") {
-      renderCaregiverDetail(container);
+
+    // ── Character arc routing ────────────────────────────────────────────────
+    const arcKeyMap = {
+      "Moral Ascent": "moralAscent",
+      "Moral Descent": "moralDescent",
+      "Flat Moral": "flatMoral",
+      "Moral Transformation": "moralTransformation"
+    };
+
+    if (arcKeyMap[title]) {
+      renderCharacterArcDetail(container, arcKeyMap[title], lang);
       return;
     }
-    if (title === "The Creator") {
-      renderCreatorDetail(container);
+
+    // ── Narrative technique routing ──────────────────────────────────────────
+    if (TECHNIQUE_DATA[title]) {
+      renderTechniqueDetail(container, TECHNIQUE_DATA[title][lang] ?? TECHNIQUE_DATA[title].en);
       return;
     }
-    if (title === "The Everyman") {
-      renderEverymanDetail(container);
+
+    // ── Writing tips routing ─────────────────────────────────────────────────
+    if (TIPS_DATA[title]) {
+      renderTipsDetail(container, TIPS_DATA[title][lang] ?? TIPS_DATA[title].en);
       return;
     }
-    if (title === "The Explorer") {
-      renderExplorerDetail(container);
+
+    // ── Pitfalls routing ─────────────────────────────────────────────────────
+    if (PITFALLS_DATA[title]) {
+      const data = PITFALLS_DATA[title][lang] ?? PITFALLS_DATA[title].en;
+      renderPitfallsDetail(container, data.title, data.items);
       return;
     }
-    if (title === "The Hero (Jung)") {
-      renderHeroJungDetail(container);
-      return;
-    }
-    if (title === "The Innocent") {
-      renderInnocentDetail(container);
-      return;
-    }
-    if (title === "The Jester") {
-      renderJesterDetail(container);
-      return;
-    }
-    if (title === "The Lover") {
-      renderLoverDetail(container);
-      return;
-    }
-    if (title === "The Magician") {
-      renderMagicianDetail(container);
-      return;
-    }
-    if (title === "The Outlaw") {
-      renderOutlawDetail(container);
-      return;
-    }
-    if (title === "The Ruler") {
-      renderRulerDetail(container);
-      return;
-    }
-    if (title === "The Sage") {
-      renderSageDetail(container);
-      return;
-    }
-    if (title === "Moral Ascent") {
-      renderMoralAscentDetail(container);
-      return;
-    }
-    if (title === "Moral Descent") {
-      renderMoralDescentDetail(container);
-      return;
-    }
-    if (title === "Flat Moral") {
-      renderFlatMoralDetail(container);
-      return;
-    }
-    if (title === "Moral Transformation") {
-      renderMoralTransformationDetail(container);
-      return;
-    }
-    if (title === "Character Pitfalls") {
-      renderPitfallsDetail(container, "Character Pitfalls", [
-        "Flat characters",
-        "Inconsistent motivation",
-        "Unearned redemption",
-        "Passive protagonists",
-        "Villain without agency",
-        "Archetype clichés"
-      ]);
-      return;
-    }
-    if (title === "Character Arc Pitfalls") {
-      renderPitfallsDetail(container, "Character Arc Pitfalls", [
-        "No real change",
-        "Change without cause",
-        "Moral whiplash",
-        "Transformation too late",
-        "Arc contradicts theme"
-      ]);
-      return;
-    }
-    if (title === "Narrative Technique Pitfalls") {
-      renderPitfallsDetail(container, "Narrative Technique Pitfalls", [
-        "Foreshadowing too obvious",
-        "Plot twists without setup",
-        "Red herrings that waste time",
-        "Deus ex machina abuse",
-        "Flashbacks killing momentum"
-      ]);
-      return;
-    }
-    if (title === "Structure Pitfalls") {
-      renderPitfallsDetail(container, "Structure Pitfalls", [
-        "Act breaks without tension",
-        "Sagging middle",
-        "Climax too early / too late",
-        "Resolution without consequence",
-        "Structure fighting the story"
-      ]);
-      return;
-    }
-    if (title === "Writing-Level Pitfalls") {
-      renderPitfallsDetail(container, "Writing-Level Pitfalls", [
-        "Over-exposition",
-        "On-the-nose dialogue",
-        "Telling instead of showing",
-        "Purple prose",
-        "Inconsistent tone"
-      ]);
-      return;
-    }
-    if (title === "Argumentation (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is argumentative writing?",
-        intro: [
-          "Argumentative writing focuses on presenting, supporting, and defending a position with the goal of persuading the reader through reasoned discourse.",
-          "It is essential for essays, opinion pieces, critical analysis, and persuasive nonfiction."
-        ],
-        techniques: [
-          "Logical reasoning — Use deductive, inductive, or analogical reasoning to support claims and conclusions.",
-          "Evidence and examples — Support arguments with facts, data, statistics, real-world examples, or credible sources.",
-          "Counterarguments and refutation — Anticipate opposing views and address them directly to strengthen overall credibility.",
-          "Emotional appeal — Engage the reader’s emotions, values, or beliefs to reinforce logical points.",
-          "Rhetorical strategies — Apply ethos (credibility), pathos (emotion), and logos (logic) strategically.",
-          "Clear structure and organization — Present arguments in a coherent order with clear topic sentences and conclusions.",
-          "Clarity and concision — Avoid unnecessary complexity; express ideas precisely and directly.",
-          "Ethical responsibility — Ground arguments in honesty and respect for the audience’s values and intelligence."
-        ]
-      });
-      return;
-    }
-    if (title === "Description (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is descriptive writing?",
-        intro: [
-          "Descriptive writing creates vivid mental images by engaging the reader’s senses, emotions, and imagination. Its purpose is immersion rather than explanation."
-        ],
-        techniques: [
-          "Sensory imagery — Appeal to sight, sound, touch, taste, and smell to create a multidimensional experience.",
-          "Figurative language — Use metaphor, simile, personification, and imagery to enrich atmosphere and tone.",
-          "Specificity and detail — Favor precise, concrete details over generic or abstract descriptions.",
-          "Show, don’t tell — Convey meaning through action, sensory detail, and implication rather than direct explanation.",
-          "Point of view awareness — Filter description through the narrator’s perspective, biases, and limitations.",
-          "Emotional resonance — Connect description to characters’ internal reactions and emotional states.",
-          "Narrative pacing — Balance descriptive passages with action and dialogue to maintain momentum.",
-          "Symbolism and motifs — Use recurring imagery to reinforce theme and meaning."
-        ]
-      });
-      return;
-    }
-    if (title === "Dialogue (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is effective dialogue?",
-        intro: [
-          "Effective dialogue creates believable conversations that reveal character, advance plot, and convey subtext without sounding artificial or expository."
-        ],
-        techniques: [
-          "Distinct character voice — Give each character unique speech patterns, vocabulary, and tone.",
-          "Subtext — Allow meaning to exist beneath the spoken words through implication and tension.",
-          "Natural flow — Imitate real conversational rhythm without reproducing real speech verbatim.",
-          "Rhythm and cadence — Vary sentence length and pacing to reflect emotional intensity.",
-          "Conflict and tension — Use disagreement, power imbalance, or competing goals to energize exchanges.",
-          "Show, don’t tell — Reveal emotion and motivation through what is said — and what is avoided.",
-          "Subtle exposition — Embed necessary information naturally within conversation.",
-          "Authenticity and realism — Reflect cultural, social, and contextual speech patterns appropriately."
-        ]
-      });
-      return;
-    }
-    if (title === "Exposition (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is exposition?",
-        intro: [
-          "Exposition provides essential background information, context, or history needed for the audience to understand the story world without disrupting narrative flow."
-        ],
-        techniques: [
-          "Narrative summary — Compress complex information into concise overviews.",
-          "Flashbacks — Reveal past events that directly inform present actions or motivations.",
-          "Dialogue-based exposition — Deliver information through natural conversation rather than narration.",
-          "Descriptive context — Use sensory detail to establish setting, culture, or historical background.",
-          "Prologues or introductory sections — Present foundational information before the main narrative begins.",
-          "Gradual information release — Distribute exposition strategically to avoid overload.",
-          "Integrated backstory — Weave background details into character thoughts or actions.",
-          "Worldbuilding — Establish social, political, cultural, or historical frameworks that support the story."
-        ]
-      });
-      return;
-    }
-    if (title === "Narration (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is narration?",
-        intro: [
-          "Narration refers to how a story is told: the voice, perspective, structure, and style that shape how the reader experiences events."
-        ],
-        techniques: [
-          "Point of view — Choose first person, second person, or third person (limited or omniscient) deliberately.",
-          "Narrative structure — Organize events using linear, nonlinear, framed, or experimental sequencing.",
-          "Tone and atmosphere — Establish emotional mood through diction, imagery, and rhythm.",
-          "Characterization — Reveal character through actions, internal thought, and reaction.",
-          "Foreshadowing and suspense — Plant hints and manage anticipation to sustain engagement.",
-          "Symbolism and imagery — Use recurring symbols to convey deeper meaning.",
-          "Voice and style — Develop a distinctive narrative presence consistent with theme and perspective.",
-          "Narrative pacing — Control speed and tension through sentence structure, scene length, and transitions."
-        ]
-      });
-      return;
-    }
-    if (title === "Persuasion (tips)") {
-      renderTipsDetail(container, {
-        introTitle: "What is persuasive writing?",
-        intro: [
-          "Persuasive writing aims to influence beliefs, attitudes, or actions by combining logic, emotion, credibility, and narrative clarity."
-        ],
-        techniques: [
-          "Emotional appeal — Engage feelings such as empathy, fear, hope, or desire.",
-          "Storytelling — Use anecdotes or narratives to humanize abstract ideas.",
-          "Social proof — Reference collective agreement, trends, or testimonials.",
-          "Authority — Establish credibility through expertise or reputable sources.",
-          "Repetition — Reinforce key ideas to increase memorability.",
-          "Persuasive language — Choose words that convey urgency, clarity, and emotional weight.",
-          "Call to action — Direct the reader toward a specific response or behavior.",
-          "Addressing counterarguments — Acknowledge and refute opposing views to strengthen trust."
-        ]
-      });
-      return;
-    }
-    if (title === "Flashback") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Flashback?",
-        intro: [
-          "A flashback interrupts the present narrative to show events from the past. It provides context, emotional depth, or critical information that reshapes how the audience understands current events."
-        ],
-        core: [
-          "Temporal shift to the past",
-          "Reveals backstory",
-          "Adds emotional or thematic weight",
-          "Recontextualizes present actions"
-        ],
-        coreNote: "Flashbacks change understanding, not events.",
-        narrativeFunction: [
-          "Reveal motivation",
-          "Explain relationships",
-          "Deepen character psychology",
-          "Withhold and release information strategically"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Interrupting narrative momentum",
-          "Overexplaining",
-          "Redundancy with present action"
-        ],
-        examplesTitle: "Flashback Examples",
-        examples: [
-          "Lost",
-          "The Godfather Part II",
-          "Citizen Kane",
-          "Arrow",
-          "Eternal Sunshine of the Spotless Mind"
-        ]
-      });
-      return;
-    }
-    if (title === "Flashforward") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Flashforward?",
-        intro: [
-          "A flashforward reveals events that will occur later in the story. It creates anticipation, tension, or dramatic irony by showing consequences before causes."
-        ],
-        core: [
-          "Temporal jump to the future",
-          "Creates suspense",
-          "Reframes current decisions",
-          "Often partial or ambiguous"
-        ],
-        narrativeFunction: [
-          "Build anticipation",
-          "Signal inevitability",
-          "Create dramatic irony",
-          "Frame the narrative outcome"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Spoiling tension",
-          "Removing mystery",
-          "Confusing chronology"
-        ],
-        examplesTitle: "Flashforward Examples",
-        examples: [
-          "Breaking Bad (cold opens)",
-          "How to Get Away with Murder",
-          "Arrival",
-          "Six Feet Under",
-          "The Book Thief"
-        ]
-      });
-      return;
-    }
-    if (title === "Foreshadowing") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Foreshadowing?",
-        intro: [
-          "Foreshadowing plants subtle hints about future events. These clues may be symbolic, visual, verbal, or thematic.",
-          "The goal is preparation, not prediction."
-        ],
-        core: [
-          "Early setup",
-          "Subtlety",
-          "Payoff later in the story",
-          "Often unnoticed on first read"
-        ],
-        narrativeFunction: [
-          "Create cohesion",
-          "Make twists feel earned",
-          "Build subconscious anticipation",
-          "Reinforce themes"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Being too obvious",
-          "Making outcomes predictable",
-          "Heavy-handed symbolism"
-        ],
-        examplesTitle: "Foreshadowing Examples",
-        examples: [
-          "Romeo and Juliet",
-          "Jaws (early warnings)",
-          "Breaking Bad (visual cues)",
-          "Of Mice and Men",
-          "The Sixth Sense"
-        ]
-      });
-      return;
-    }
-    if (title === "Chekhov’s Gun") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Chekhov’s Gun?",
-        intro: [
-          "Chekhov’s Gun states that every significant element introduced in a story should have a purpose. If a detail is highlighted, it must eventually matter."
-        ],
-        core: [
-          "Meaningful setup",
-          "Inevitable payoff",
-          "Narrative economy",
-          "Focused attention"
-        ],
-        narrativeFunction: [
-          "Eliminate filler",
-          "Create satisfying resolutions",
-          "Train audience attention",
-          "Strengthen narrative cohesion"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Over-signaling importance",
-          "Forced payoff",
-          "Red herrings mistaken for setup"
-        ],
-        examplesTitle: "Chekhov’s Gun Examples",
-        examples: [
-          "The rifle in Chekhov’s plays",
-          "The ring in Lord of the Rings",
-          "The knife in Psycho",
-          "The coin in No Country for Old Men"
-        ]
-      });
-      return;
-    }
-    if (title === "Red Herring") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Red Herring?",
-        intro: [
-          "A red herring is a deliberate misdirection that leads the audience to form false assumptions. It distracts from the true narrative outcome."
-        ],
-        core: [
-          "False emphasis",
-          "Misdirection",
-          "Plausibility",
-          "Temporary relevance"
-        ],
-        narrativeFunction: [
-          "Create mystery",
-          "Increase suspense",
-          "Hide twists",
-          "Manipulate expectations"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Feeling unfair",
-          "Wasting narrative time",
-          "Breaking trust with the audience"
-        ],
-        examplesTitle: "Red Herring Examples",
-        examples: [
-          "Murder mystery suspects",
-          "Knives Out",
-          "Sherlock Holmes stories",
-          "Gone Girl",
-          "The Girl with the Dragon Tattoo"
-        ]
-      });
-      return;
-    }
-    if (title === "Plot Twist") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Plot Twist?",
-        intro: [
-          "A plot twist is an unexpected development that recontextualizes the story. It surprises the audience while remaining logically consistent."
-        ],
-        core: [
-          "Surprise",
-          "Retrospective logic",
-          "Setup and payoff",
-          "Shift in perspective"
-        ],
-        narrativeFunction: [
-          "Reframe the story",
-          "Shock the audience",
-          "Elevate stakes",
-          "Reveal hidden truth"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Twist for shock only",
-          "Lack of setup",
-          "Undermining character logic"
-        ],
-        examplesTitle: "Plot Twist Examples",
-        examples: [
-          "The Sixth Sense",
-          "Fight Club",
-          "The Others",
-          "Oldboy",
-          "Shutter Island"
-        ]
-      });
-      return;
-    }
-    if (title === "Deus Ex Machina") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Deus Ex Machina?",
-        intro: [
-          "Deus ex Machina resolves conflict through an external, unexpected intervention that is not properly set up within the story."
-        ],
-        core: [
-          "Sudden resolution",
-          "External force",
-          "Minimal foreshadowing",
-          "Breaks causality"
-        ],
-        narrativeFunction: [
-          "Resolve unsolvable conflicts",
-          "Deliver moral or divine judgment"
-        ],
-        narrativeNote: "In modern storytelling, it is often discouraged.",
-        risksTitle: "Common risks",
-        risks: [
-          "Undermining stakes",
-          "Invalidating character effort",
-          "Breaking narrative credibility"
-        ],
-        examplesTitle: "Deus Ex Machina Examples",
-        examples: [
-          "Ancient Greek theater",
-          "War of the Worlds (original ending)",
-          "Certain superhero rescues",
-          "Mythological interventions"
-        ]
-      });
-      return;
-    }
-    if (title === "Eucatastrophe") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Eucatastrophe?",
-        intro: [
-          "Eucatastrophe is a sudden positive reversal at the story’s darkest moment. Unlike Deus ex Machina, it feels meaningful and earned.",
-          "The term was coined by J.R.R. Tolkien."
-        ],
-        core: [
-          "Sudden hope",
-          "Emotional release",
-          "Moral or thematic payoff",
-          "Earned resolution"
-        ],
-        narrativeFunction: [
-          "Affirm hope",
-          "Deliver catharsis",
-          "Reinforce moral order",
-          "Reward endurance"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Confusing it with Deus ex Machina",
-          "Insufficient setup",
-          "Over-sentimentality"
-        ],
-        examplesTitle: "Eucatastrophe Examples",
-        examples: [
-          "The Lord of the Rings",
-          "The Lion, the Witch and the Wardrobe",
-          "It’s a Wonderful Life",
-          "Harry Potter finales"
-        ]
-      });
-      return;
-    }
-    if (title === "Poetic Justice") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is Poetic Justice?",
-        intro: [
-          "Poetic Justice ensures that characters receive outcomes that fittingly reflect their actions, values, or flaws."
-        ],
-        core: [
-          "Moral symmetry",
-          "Cause-and-effect resolution",
-          "Thematic reinforcement",
-          "Emotional satisfaction"
-        ],
-        narrativeFunction: [
-          "Reinforce theme",
-          "Deliver moral closure",
-          "Satisfy audience expectations",
-          "Balance narrative consequences"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Predictability",
-          "Moral simplification",
-          "Heavy-handed messaging"
-        ],
-        examplesTitle: "Poetic Justice Examples",
-        examples: [
-          "Villains undone by their own schemes",
-          "Fables and fairy tales",
-          "Crime fiction endings",
-          "Shakespearean punishment arcs"
-        ]
-      });
-      return;
-    }
-    if (title === "“Show, Don’t Tell”") {
-      renderTechniqueDetail(container, {
-        introTitle: "What does “Show, Don’t Tell” mean?",
-        intro: [
-          "This principle encourages conveying information through action, dialogue, and sensory detail rather than direct explanation."
-        ],
-        core: [
-          "Implicit storytelling",
-          "Sensory detail",
-          "Active scenes",
-          "Reader inference"
-        ],
-        narrativeFunction: [
-          "Increase immersion",
-          "Engage the reader",
-          "Strengthen emotional impact",
-          "Avoid exposition overload"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Obscuring clarity",
-          "Over-description",
-          "Avoiding necessary exposition"
-        ],
-        examplesTitle: "Show, Don’t Tell Examples",
-        examples: [
-          "Character emotion shown through action",
-          "Visual storytelling in film",
-          "Minimalist prose styles",
-          "Hemingway’s writing"
-        ]
-      });
-      return;
-    }
-    if (title === "Quibble (Wordplay)") {
-      renderTechniqueDetail(container, {
-        introTitle: "What is a Quibble?",
-        intro: [
-          "A quibble is playful or clever use of language, often relying on ambiguity, double meanings, or rhetorical tricks."
-        ],
-        core: [
-          "Linguistic play",
-          "Humor or irony",
-          "Verbal agility",
-          "Ambiguity"
-        ],
-        narrativeFunction: [
-          "Add wit",
-          "Reveal character intelligence",
-          "Create tonal contrast",
-          "Engage the audience linguistically"
-        ],
-        risksTitle: "Common risks",
-        risks: [
-          "Overuse",
-          "Breaking tone",
-          "Confusing meaning"
-        ],
-        examplesTitle: "Quibble Examples",
-        examples: [
-          "Shakespearean wordplay",
-          "Oscar Wilde",
-          "Legal or political dialogue",
-          "Screwball comedies"
-        ]
-      });
-      return;
-    }
-    if (title === "The Hero’s Journey") {
+
+    // ── Story structure routing ──────────────────────────────────────────────
+    if (title === "The Hero's Journey") {
       renderStructureDetail(container, {
-        introTitle: "What is the Hero’s Journey?",
+        introTitle: "What is the Hero\u2019s Journey?",
         intro: [
-          "The Hero’s Journey is a mythic structure that frames story as transformation: a character leaves the familiar, faces trials, dies symbolically, and returns changed. It’s less a rigid formula than a map for meaning and growth."
+          "The Hero\u2019s Journey is a mythic structure that frames story as transformation: a character leaves the familiar, faces trials, dies symbolically, and returns changed. It\u2019s less a rigid formula than a map for meaning and growth."
         ],
         core: [
           "A movement from comfort to challenge to return",
           "External trials that force internal change",
           "Symbolic death and rebirth",
-          "A concluding “gift” brought back to the world"
+          "A concluding \u201cgift\u201d brought back to the world"
         ],
         stepsTitle: "Steps (classic model)",
         stepGroups: [
           {
             title: "ACT I",
             items: [
-              {
-                title: "Ordinary World",
-                body: "Establish the Hero’s baseline life, limitations, and unmet need.",
-                icon: "earth"
-              },
-              {
-                title: "Call to Adventure",
-                body: "A disruption offers a mission, opportunity, or threat that demands response.",
-                icon: "phone-incoming"
-              },
-              {
-                title: "Refusal of the Call",
-                body: "Fear, duty, or doubt causes hesitation; the Hero resists change.",
-                icon: "phone-off"
-              },
-              {
-                title: "Meeting the Mentor",
-                body: "Guidance appears: training, tools, wisdom, or encouragement.",
-                icon: "graduation-cap"
-              },
-              {
-                title: "Crossing the First Threshold",
-                body: "The Hero commits and enters the “special world,” leaving the old life behind.",
-                icon: "brick-wall"
-              }
+              { title: "Ordinary World", body: "Establish the Hero\u2019s baseline life, limitations, and unmet need.", icon: "earth" },
+              { title: "Call to Adventure", body: "A disruption offers a mission, opportunity, or threat that demands response.", icon: "phone-incoming" },
+              { title: "Refusal of the Call", body: "Fear, duty, or doubt causes hesitation; the Hero resists change.", icon: "phone-off" },
+              { title: "Meeting the Mentor", body: "Guidance appears: training, tools, wisdom, or encouragement.", icon: "graduation-cap" },
+              { title: "Crossing the First Threshold", body: "The Hero commits and enters the \u201cspecial world,\u201d leaving the old life behind.", icon: "brick-wall" }
             ]
           },
           {
             title: "ACT II",
             items: [
-              {
-                title: "Tests, Allies, Enemies",
-                body: "The rules of the new world are learned; relationships and rivalries form.",
-                icon: "line-squiggle"
-              },
-              {
-                title: "Approach to the Inmost Cave",
-                body: "Preparation for the central crisis; tensions tighten and stakes clarify.",
-                icon: "mountain"
-              },
-              {
-                title: "Ordeal",
-                body: "A major confrontation with death, failure, or the deepest fear.",
-                icon: "swords"
-              },
-              {
-                title: "Reward (Seizing the Sword)",
-                body: "The Hero gains something: knowledge, power, object, love, or self-belief.",
-                icon: "trophy"
-              }
+              { title: "Tests, Allies, Enemies", body: "The rules of the new world are learned; relationships and rivalries form.", icon: "line-squiggle" },
+              { title: "Approach to the Inmost Cave", body: "Preparation for the central crisis; tensions tighten and stakes clarify.", icon: "mountain" },
+              { title: "Ordeal", body: "A major confrontation with death, failure, or the deepest fear.", icon: "swords" },
+              { title: "Reward (Seizing the Sword)", body: "The Hero gains something: knowledge, power, object, love, or self-belief.", icon: "trophy" }
             ]
           },
           {
             title: "ACT III",
             items: [
-              {
-                title: "The Road Back",
-                body: "Consequences arrive; the Hero must return with the reward under pressure.",
-                icon: "arrow-big-left"
-              },
-              {
-                title: "Resurrection",
-                body: "A final test proves transformation. The Hero confronts the core flaw one last time.",
-                icon: "user-round-plus"
-              },
-              {
-                title: "Return with the Elixir",
-                body: "The Hero returns changed, bringing value to others: healing, truth, freedom, hope.",
-                icon: "gem"
-              }
+              { title: "The Road Back", body: "Consequences arrive; the Hero must return with the reward under pressure.", icon: "arrow-big-left" },
+              { title: "Resurrection", body: "A final test proves transformation. The Hero confronts the core flaw one last time.", icon: "user-round-plus" },
+              { title: "Return with the Elixir", body: "The Hero returns changed, bringing value to others: healing, truth, freedom, hope.", icon: "gem" }
             ]
           }
         ],
         whyTitle: "Why this works",
         why: "These steps externalize inner change: the world forces the Hero to become someone new.",
-        examplesTitle: "Hero’s Journey Examples",
-        examples: [
-          "Star Wars",
-          "The Matrix",
-          "The Lord of the Rings",
-          "Moana",
-          "Harry Potter"
-        ]
+        examplesTitle: "Hero\u2019s Journey Examples",
+        examples: ["Star Wars", "The Matrix", "The Lord of the Rings", "Moana", "Harry Potter"]
       });
       return;
     }
@@ -3043,7 +2413,7 @@ export class WriterToolsView extends ItemView {
       renderStructureDetail(container, {
         introTitle: "What is the Story Circle?",
         intro: [
-          "The Story Circle compresses transformation into a repeatable loop: a character wants something, leaves comfort, pays a price, and returns changed. It’s designed to be practical for episodes as well as features."
+          "The Story Circle compresses transformation into a repeatable loop: a character wants something, leaves comfort, pays a price, and returns changed. It\u2019s designed to be practical for episodes as well as features."
         ],
         core: [
           "Motivation-driven steps",
@@ -3053,386 +2423,251 @@ export class WriterToolsView extends ItemView {
         ],
         stepsTitle: "Steps (8-step circle)",
         steps: [
-          { title: "YOU (COMFORT)", body: "Establish the character’s normal world and identity.", icon: "fish" },
+          { title: "YOU (COMFORT)", body: "Establish the character\u2019s normal world and identity.", icon: "fish" },
           { title: "NEED (DESIRE)", body: "The character wants or needs something that disrupts balance.", icon: "candy" },
           { title: "GO (ENTER UNFAMILIAR)", body: "The character leaves comfort and enters a new situation.", icon: "log-in" },
           { title: "SEARCH (ADAPT)", body: "The character explores the new world and tries strategies that may fail.", icon: "map" },
-          { title: "FIND (GET WHAT THEY WANTED)", body: "The character achieves the goal—or seems to.", icon: "search-check" },
+          { title: "FIND (GET WHAT THEY WANTED)", body: "The character achieves the goal\u2014or seems to.", icon: "search-check" },
           { title: "TAKE (PAY A PRICE)", body: "There is a cost: sacrifice, loss, compromise, or consequence.", icon: "hand-coins" },
           { title: "RETURN (BACK TO FAMILIAR)", body: "The character returns to a version of their old world.", icon: "arrow-big-left" },
           { title: "CHANGE (TRANSFORMED)", body: "The character is different: wiser, broken, empowered, humbled, etc.", icon: "user-pen" }
         ],
         examplesTitle: "Story Circle Examples",
-        examples: [
-          "Episodic TV arcs",
-          "Community",
-          "Rick and Morty",
-          "Character-centered short stories"
-        ]
+        examples: ["Episodic TV arcs", "Community", "Rick and Morty", "Character-centered short stories"]
       });
       return;
     }
     if (title === "Three Act Structure") {
       renderStructureDetail(container, {
         introTitle: "What is the Three Act Structure?",
-        intro: [
-          "A story divided into Setup, Confrontation, and Resolution. It’s the most common modern narrative skeleton because it aligns with audience attention and escalating stakes."
-        ],
+        intro: ["A story divided into Setup, Confrontation, and Resolution. It\u2019s the most common modern narrative skeleton because it aligns with audience attention and escalating stakes."],
         stepsTitle: "Steps (typical beats)",
         numberedSteps: true,
         steps: [
-          "ACT I — Setup",
-          "1. Opening / Status Quo — Introduce the protagonist, their world, and the core problem-space.",
-          "2. Inciting Incident — A disruption creates a new problem or opportunity.",
-          "3. Debate / Refusal — The protagonist hesitates, resists, or explores alternatives.",
-          "4. Act I Break (Commitment) — The protagonist commits and can’t go back.",
-          "ACT II — Confrontation",
-          "5. Rising Complications — Obstacles escalate; stakes increase; plans fail.",
-          "6. Midpoint Shift — A major reveal or reversal changes the story’s direction and intensity.",
-          "7. Bad Guys Close In / Pressure Peaks — Consequences compound; resources thin; relationships strain.",
-          "8. All Is Lost — The lowest point; apparent defeat or devastating cost.",
-          "9. Dark Night of the Soul — Reflection and decision: who will the protagonist become?",
-          "ACT III — Resolution",
-          "10. Act III Break (New plan) — The protagonist acts with new clarity, courage, or strategy.",
-          "11. Climax — The decisive confrontation that resolves the central conflict.",
-          "12. Denouement — Aftermath: new equilibrium; consequences; thematic closure."
+          "ACT I \u2014 Setup",
+          "1. Opening / Status Quo \u2014 Introduce the protagonist, their world, and the core problem-space.",
+          "2. Inciting Incident \u2014 A disruption creates a new problem or opportunity.",
+          "3. Debate / Refusal \u2014 The protagonist hesitates, resists, or explores alternatives.",
+          "4. Act I Break (Commitment) \u2014 The protagonist commits and can\u2019t go back.",
+          "ACT II \u2014 Confrontation",
+          "5. Rising Complications \u2014 Obstacles escalate; stakes increase; plans fail.",
+          "6. Midpoint Shift \u2014 A major reveal or reversal changes the story\u2019s direction and intensity.",
+          "7. Bad Guys Close In / Pressure Peaks \u2014 Consequences compound; resources thin; relationships strain.",
+          "8. All Is Lost \u2014 The lowest point; apparent defeat or devastating cost.",
+          "9. Dark Night of the Soul \u2014 Reflection and decision: who will the protagonist become?",
+          "ACT III \u2014 Resolution",
+          "10. Act III Break (New plan) \u2014 The protagonist acts with new clarity, courage, or strategy.",
+          "11. Climax \u2014 The decisive confrontation that resolves the central conflict.",
+          "12. Denouement \u2014 Aftermath: new equilibrium; consequences; thematic closure."
         ],
         examplesTitle: "Three Act Examples",
-        examples: [
-          "Most Hollywood films",
-          "Contemporary commercial novels",
-          "Studio-driven storytelling"
-        ]
+        examples: ["Most Hollywood films", "Contemporary commercial novels", "Studio-driven storytelling"]
       });
       return;
     }
-    if (title === "Freytag’s Pyramid") {
+    if (title === "Freytag's Pyramid") {
       renderStructureDetail(container, {
-        introTitle: "What is Freytag’s Pyramid?",
-        intro: [
-          "A classical five-part model of dramatic tension, often associated with tragedy. It formalizes a rise to climax followed by a decline into resolution."
-        ],
+        introTitle: "What is Freytag\u2019s Pyramid?",
+        intro: ["A classical five-part model of dramatic tension, often associated with tragedy. It formalizes a rise to climax followed by a decline into resolution."],
         stepsTitle: "Steps (5-part model)",
         steps: [
-          "1. Exposition — Introduce setting, characters, and the initial balance.",
-          "2. Rising Action — Complications build; conflict intensifies; choices narrow.",
-          "3. Climax — The turning point—the peak tension where fate changes direction.",
-          "4. Falling Action — Consequences unfold; momentum turns toward inevitable outcome.",
-          "5. Denouement / Catastrophe — Final resolution, often with moral or tragic closure."
+          "1. Exposition \u2014 Introduce setting, characters, and the initial balance.",
+          "2. Rising Action \u2014 Complications build; conflict intensifies; choices narrow.",
+          "3. Climax \u2014 The turning point\u2014the peak tension where fate changes direction.",
+          "4. Falling Action \u2014 Consequences unfold; momentum turns toward inevitable outcome.",
+          "5. Denouement / Catastrophe \u2014 Final resolution, often with moral or tragic closure."
         ],
         examplesTitle: "Freytag Examples",
-        examples: [
-          "Classical tragedies",
-          "Shakespearean drama",
-          "Traditional stage plays"
-        ]
+        examples: ["Classical tragedies", "Shakespearean drama", "Traditional stage plays"]
       });
       return;
     }
     if (title === "Fichtean Curve") {
       renderStructureDetail(container, {
         introTitle: "What is the Fichtean Curve?",
-        intro: [
-          "A structure built from a chain of escalating crises with minimal exposition. The story begins close to conflict and continues increasing pressure until climax."
-        ],
+        intro: ["A structure built from a chain of escalating crises with minimal exposition. The story begins close to conflict and continues increasing pressure until climax."],
         stepsTitle: "Steps (crisis chain)",
         steps: [
-          "1. Immediate Hook / First Crisis — Start near a problem, not far before it.",
-          "2. Crisis Escalation 1 — The protagonist responds; the response creates new complications.",
-          "3. Crisis Escalation 2 — Stakes rise; setbacks compound; options shrink.",
-          "4. Crisis Escalation 3 — Pressure intensifies; emotional and practical costs deepen.",
-          "5. Major Crisis / Low Point — A near-defeat moment that forces a decisive shift.",
-          "6. Climax — The protagonist commits fully and confronts the core conflict.",
-          "7. Short Resolution — Quick wrap-up; consequences and new stability."
+          "1. Immediate Hook / First Crisis \u2014 Start near a problem, not far before it.",
+          "2. Crisis Escalation 1 \u2014 The protagonist responds; the response creates new complications.",
+          "3. Crisis Escalation 2 \u2014 Stakes rise; setbacks compound; options shrink.",
+          "4. Crisis Escalation 3 \u2014 Pressure intensifies; emotional and practical costs deepen.",
+          "5. Major Crisis / Low Point \u2014 A near-defeat moment that forces a decisive shift.",
+          "6. Climax \u2014 The protagonist commits fully and confronts the core conflict.",
+          "7. Short Resolution \u2014 Quick wrap-up; consequences and new stability."
         ],
         examplesTitle: "Fichtean Curve Examples",
-        examples: [
-          "Thrillers",
-          "Page-turner genre fiction",
-          "Serialized storytelling"
-        ]
+        examples: ["Thrillers", "Page-turner genre fiction", "Serialized storytelling"]
       });
       return;
     }
-    if (title === "Kishōtenketsu") {
+    if (title === "Kish\u014dtenketsu") {
       renderStructureDetail(container, {
-        introTitle: "What is Kishōtenketsu?",
-        intro: [
-          "Kishōtenketsu is a four-part structure that emphasizes development and contrast rather than conflict. It’s common in East Asian storytelling and works well for narratives driven by discovery, theme, or perspective."
-        ],
+        introTitle: "What is Kish\u014dtenketsu?",
+        intro: ["Kish\u014dtenketsu is a four-part structure that emphasizes development and contrast rather than conflict. It\u2019s common in East Asian storytelling and works well for narratives driven by discovery, theme, or perspective."],
         stepsTitle: "Steps (4-part model)",
         steps: [
-          "1. Ki (Introduction) — Establish the situation, characters, and core idea.",
-          "2. Shō (Development) — Expand the situation; deepen detail and context without major disruption.",
-          "3. Ten (Turn / Twist) — Introduce a surprising contrast or shift: a new angle, reveal, or reframing event.",
-          "4. Ketsu (Conclusion) — Synthesize: show how the contrast changes meaning; resolve by integration rather than victory."
+          "1. Ki (Introduction) \u2014 Establish the situation, characters, and core idea.",
+          "2. Sh\u014d (Development) \u2014 Expand the situation; deepen detail and context without major disruption.",
+          "3. Ten (Turn / Twist) \u2014 Introduce a surprising contrast or shift: a new angle, reveal, or reframing event.",
+          "4. Ketsu (Conclusion) \u2014 Synthesize: show how the contrast changes meaning; resolve by integration rather than victory."
         ],
-        examplesTitle: "Kishōtenketsu Examples",
-        examples: [
-          "Many slice-of-life stories",
-          "Certain anime and manga arcs",
-          "Essays or thematic short fiction",
-          "Some puzzle-like narratives"
-        ]
+        examplesTitle: "Kish\u014dtenketsu Examples",
+        examples: ["Many slice-of-life stories", "Certain anime and manga arcs", "Essays or thematic short fiction", "Some puzzle-like narratives"]
       });
       return;
     }
     if (title === "Save the Cat") {
       renderStructureDetail(container, {
         introTitle: "What is Save the Cat?",
-        intro: [
-          "Save the Cat is a commercial beat sheet designed to maximize audience engagement. It focuses on emotional timing, clarity, and likeability, especially for film and genre fiction."
-        ],
-        core: [
-          "Strong emotional beats",
-          "Clear pacing",
-          "Audience empathy",
-          "Market-tested structure"
-        ],
+        intro: ["Save the Cat is a commercial beat sheet designed to maximize audience engagement. It focuses on emotional timing, clarity, and likeability, especially for film and genre fiction."],
+        core: ["Strong emotional beats", "Clear pacing", "Audience empathy", "Market-tested structure"],
         stepsTitle: "Steps (15-beat model)",
         steps: [
-          "1. Opening Image — A snapshot of the protagonist’s world before change.",
-          "2. Theme Stated — A line or moment hints at the story’s central lesson.",
-          "3. Setup — Introduce characters, flaws, relationships, and stakes.",
-          "4. Catalyst — The inciting incident that disrupts normal life.",
-          "5. Debate — The protagonist hesitates and weighs options.",
-          "6. Break into Act II — Commitment to the journey.",
-          "7. B Story — A secondary plot, often emotional or relational.",
-          "8. Fun and Games — The “promise of the premise”; the story delivers on genre.",
-          "9. Midpoint — A major reversal: false victory or false defeat.",
-          "10. Bad Guys Close In — Pressure increases; plans unravel.",
-          "11. All Is Lost — Apparent defeat; emotional or literal low point.",
-          "12. Dark Night of the Soul — Reflection and internal reckoning.",
-          "13. Break into Act III — New insight leads to decisive action.",
-          "14. Finale — The protagonist applies what they’ve learned to win or lose meaningfully.",
-          "15. Final Image — A mirror of the opening image, showing change."
+          "1. Opening Image \u2014 A snapshot of the protagonist\u2019s world before change.",
+          "2. Theme Stated \u2014 A line or moment hints at the story\u2019s central lesson.",
+          "3. Setup \u2014 Introduce characters, flaws, relationships, and stakes.",
+          "4. Catalyst \u2014 The inciting incident that disrupts normal life.",
+          "5. Debate \u2014 The protagonist hesitates and weighs options.",
+          "6. Break into Act II \u2014 Commitment to the journey.",
+          "7. B Story \u2014 A secondary plot, often emotional or relational.",
+          "8. Fun and Games \u2014 The \u201cpromise of the premise\u201d; the story delivers on genre.",
+          "9. Midpoint \u2014 A major reversal: false victory or false defeat.",
+          "10. Bad Guys Close In \u2014 Pressure increases; plans unravel.",
+          "11. All Is Lost \u2014 Apparent defeat; emotional or literal low point.",
+          "12. Dark Night of the Soul \u2014 Reflection and internal reckoning.",
+          "13. Break into Act III \u2014 New insight leads to decisive action.",
+          "14. Finale \u2014 The protagonist applies what they\u2019ve learned to win or lose meaningfully.",
+          "15. Final Image \u2014 A mirror of the opening image, showing change."
         ],
         examplesTitle: "Save the Cat Examples",
-        examples: [
-          "Most studio films",
-          "Romantic comedies",
-          "High-concept genre movies",
-          "Animated features"
-        ]
+        examples: ["Most studio films", "Romantic comedies", "High-concept genre movies", "Animated features"]
       });
       return;
     }
     if (title === "Seven Point Structure") {
       renderStructureDetail(container, {
         introTitle: "What is the Seven Point Structure?",
-        intro: [
-          "A clean, flexible structure focused on cause-and-effect turning points. It emphasizes clarity and momentum."
-        ],
-        core: [
-          "Fewer beats, higher impact",
-          "Clear reversals",
-          "Strong midpoint logic"
-        ],
+        intro: ["A clean, flexible structure focused on cause-and-effect turning points. It emphasizes clarity and momentum."],
+        core: ["Fewer beats, higher impact", "Clear reversals", "Strong midpoint logic"],
         stepsTitle: "Steps (7-point model)",
         numberedSteps: true,
         steps: [
-          "1. Hook — Introduce the protagonist and the central problem.",
-          "2. Plot Turn 1 — An event pushes the protagonist into action.",
-          "3. Pinch Point 1 — Pressure reveals the antagonist’s power.",
-          "4. Midpoint — The protagonist shifts from reactive to proactive.",
-          "5. Pinch Point 2 — Stakes intensify; consequences loom.",
-          "6. Plot Turn 2 — Final commitment toward resolution.",
-          "7. Resolution — Conflict concludes; new status quo established."
+          "1. Hook \u2014 Introduce the protagonist and the central problem.",
+          "2. Plot Turn 1 \u2014 An event pushes the protagonist into action.",
+          "3. Pinch Point 1 \u2014 Pressure reveals the antagonist\u2019s power.",
+          "4. Midpoint \u2014 The protagonist shifts from reactive to proactive.",
+          "5. Pinch Point 2 \u2014 Stakes intensify; consequences loom.",
+          "6. Plot Turn 2 \u2014 Final commitment toward resolution.",
+          "7. Resolution \u2014 Conflict concludes; new status quo established."
         ],
         examplesTitle: "Seven Point Examples",
-        examples: [
-          "Fantasy and sci-fi novels",
-          "Plot-driven fiction",
-          "Serialized narratives"
-        ]
+        examples: ["Fantasy and sci-fi novels", "Plot-driven fiction", "Serialized narratives"]
       });
       return;
     }
     if (title === "Pulp Formula") {
       renderStructureDetail(container, {
         introTitle: "What is the Pulp Formula?",
-        intro: [
-          "A fast-paced structure designed for entertainment, clarity, and momentum. It prioritizes action, stakes, and accessibility over thematic subtlety."
-        ],
-        core: [
-          "Immediate engagement",
-          "Clear heroes and villains",
-          "Escalating danger",
-          "High momentum"
-        ],
+        intro: ["A fast-paced structure designed for entertainment, clarity, and momentum. It prioritizes action, stakes, and accessibility over thematic subtlety."],
+        core: ["Immediate engagement", "Clear heroes and villains", "Escalating danger", "High momentum"],
         stepsTitle: "Steps (common pulp rhythm)",
         steps: [
-          "1. Immediate Hook — Start with action or danger.",
-          "2. Clear Goal — The protagonist knows what must be done.",
-          "3. Obstacle Chain — Continuous challenges and reversals.",
-          "4. Escalation — Stakes increase rapidly.",
-          "5. Cliffhanger or Crisis — A major setback or revelation.",
-          "6. Final Confrontation — Direct clash with the antagonist.",
-          "7. Swift Resolution — Loose ends tied quickly."
+          "1. Immediate Hook \u2014 Start with action or danger.",
+          "2. Clear Goal \u2014 The protagonist knows what must be done.",
+          "3. Obstacle Chain \u2014 Continuous challenges and reversals.",
+          "4. Escalation \u2014 Stakes increase rapidly.",
+          "5. Cliffhanger or Crisis \u2014 A major setback or revelation.",
+          "6. Final Confrontation \u2014 Direct clash with the antagonist.",
+          "7. Swift Resolution \u2014 Loose ends tied quickly."
         ],
         examplesTitle: "Pulp Examples",
-        examples: [
-          "Adventure serials",
-          "Noir fiction",
-          "Action thrillers",
-          "Comic storytelling"
-        ]
+        examples: ["Adventure serials", "Noir fiction", "Action thrillers", "Comic storytelling"]
       });
       return;
     }
     if (title === "McKee Story paradigm") {
       renderStructureDetail(container, {
         introTitle: "What is the McKee Paradigm?",
-        intro: [
-          "Robert McKee’s model emphasizes story as a sequence of value changes driven by conflict and choice. It focuses on scene design and narrative causality."
-        ],
-        core: [
-          "Value shifts",
-          "Progressive complications",
-          "Scene-level causality",
-          "Strong climax logic"
-        ],
+        intro: ["Robert McKee\u2019s model emphasizes story as a sequence of value changes driven by conflict and choice. It focuses on scene design and narrative causality."],
+        core: ["Value shifts", "Progressive complications", "Scene-level causality", "Strong climax logic"],
         stepsTitle: "Structural principles",
         steps: [
-          "1. Inciting Incident — A radical change disrupts balance.",
-          "2. Progressive Complications — Each action leads to greater difficulty.",
-          "3. Crisis — A decision between irreconcilable values.",
-          "4. Climax — Action that resolves the crisis.",
-          "5. Resolution — The world stabilizes in a new form."
+          "1. Inciting Incident \u2014 A radical change disrupts balance.",
+          "2. Progressive Complications \u2014 Each action leads to greater difficulty.",
+          "3. Crisis \u2014 A decision between irreconcilable values.",
+          "4. Climax \u2014 Action that resolves the crisis.",
+          "5. Resolution \u2014 The world stabilizes in a new form."
         ],
         examplesTitle: "McKee Examples",
-        examples: [
-          "Prestige drama",
-          "Character-driven films",
-          "Serious literary narratives"
-        ]
+        examples: ["Prestige drama", "Character-driven films", "Serious literary narratives"]
       });
       return;
     }
     if (title === "Into the Woods structure") {
       renderStructureDetail(container, {
         introTitle: "What is the Into the Woods structure?",
-        intro: [
-          "John Yorke’s model views story as a five-act, fractal pattern: order, disorder, repair, collapse, and transformation. It emphasizes repetition at multiple scales."
-        ],
-        core: [
-          "Five-part rhythm",
-          "Fractal repetition",
-          "Moral consequence",
-          "Thematic depth"
-        ],
+        intro: ["John Yorke\u2019s model views story as a five-act, fractal pattern: order, disorder, repair, collapse, and transformation. It emphasizes repetition at multiple scales."],
+        core: ["Five-part rhythm", "Fractal repetition", "Moral consequence", "Thematic depth"],
         stepsTitle: "Steps (5-act pattern)",
         steps: [
-          "1. Order — Establish a flawed equilibrium.",
-          "2. Disruption — A desire or problem breaks order.",
-          "3. Attempted Repair — Characters try to fix things.",
-          "4. Collapse — Efforts fail; chaos peaks.",
-          "5. New Order — A transformed equilibrium emerges."
+          "1. Order \u2014 Establish a flawed equilibrium.",
+          "2. Disruption \u2014 A desire or problem breaks order.",
+          "3. Attempted Repair \u2014 Characters try to fix things.",
+          "4. Collapse \u2014 Efforts fail; chaos peaks.",
+          "5. New Order \u2014 A transformed equilibrium emerges."
         ],
         examplesTitle: "Into the Woods Examples",
-        examples: [
-          "British television drama",
-          "Prestige serialized storytelling",
-          "Thematic narratives"
-        ]
+        examples: ["British television drama", "Prestige serialized storytelling", "Thematic narratives"]
       });
       return;
     }
     if (title === "Frame Narrative") {
       renderStructureDetail(container, {
         introTitle: "What is a Frame Narrative?",
-        intro: [
-          "A story within a story. An outer narrative contextualizes or reframes an inner narrative."
-        ],
-        core: [
-          "Nested storytelling",
-          "Perspective mediation",
-          "Interpretive distance"
-        ],
+        intro: ["A story within a story. An outer narrative contextualizes or reframes an inner narrative."],
+        core: ["Nested storytelling", "Perspective mediation", "Interpretive distance"],
         stepsTitle: "Structural layers",
         steps: [
-          "1. Outer Frame — Establish the narrator or context.",
-          "2. Inner Story — The primary narrative is told.",
-          "3. Interruption or Commentary — The frame reacts or reframes meaning.",
-          "4. Return to Frame — The story closes with new understanding."
+          "1. Outer Frame \u2014 Establish the narrator or context.",
+          "2. Inner Story \u2014 The primary narrative is told.",
+          "3. Interruption or Commentary \u2014 The frame reacts or reframes meaning.",
+          "4. Return to Frame \u2014 The story closes with new understanding."
         ],
         examplesTitle: "Frame Narrative Examples",
-        examples: [
-          "Frankenstein",
-          "The Princess Bride",
-          "Heart of Darkness",
-          "Arabian Nights"
-        ]
+        examples: ["Frankenstein", "The Princess Bride", "Heart of Darkness", "Arabian Nights"]
       });
       return;
     }
     if (title === "Nonlinear Structure") {
       renderStructureDetail(container, {
         introTitle: "What is a Nonlinear Structure?",
-        intro: [
-          "A narrative told out of chronological order. Meaning emerges from juxtaposition rather than sequence."
-        ],
-        core: [
-          "Fragmented timeline",
-          "Pattern recognition",
-          "Active audience participation"
-        ],
+        intro: ["A narrative told out of chronological order. Meaning emerges from juxtaposition rather than sequence."],
+        core: ["Fragmented timeline", "Pattern recognition", "Active audience participation"],
         stepsTitle: "Common nonlinear patterns",
-        steps: [
-          "Reverse chronology",
-          "Interwoven timelines",
-          "Fragmented memory",
-          "Circular narratives"
-        ],
+        steps: ["Reverse chronology", "Interwoven timelines", "Fragmented memory", "Circular narratives"],
         examplesTitle: "Nonlinear Examples",
-        examples: [
-          "Memento",
-          "Pulp Fiction",
-          "Westworld",
-          "Slaughterhouse-Five"
-        ]
+        examples: ["Memento", "Pulp Fiction", "Westworld", "Slaughterhouse-Five"]
       });
       return;
     }
     if (title === "Rashomon Structure") {
       renderStructureDetail(container, {
         introTitle: "What is a Rashomon Structure?",
-        intro: [
-          "A narrative that presents multiple, conflicting perspectives of the same event, emphasizing subjectivity and truth ambiguity."
-        ],
-        core: [
-          "Multiple narrators",
-          "Contradictory accounts",
-          "Truth as unstable"
-        ],
+        intro: ["A narrative that presents multiple, conflicting perspectives of the same event, emphasizing subjectivity and truth ambiguity."],
+        core: ["Multiple narrators", "Contradictory accounts", "Truth as unstable"],
         stepsTitle: "Structural pattern",
-        steps: [
-          "1. Single event",
-          "2. Multiple retellings",
-          "3. Contradictions revealed",
-          "4. Ambiguity preserved"
-        ],
+        steps: ["1. Single event", "2. Multiple retellings", "3. Contradictions revealed", "4. Ambiguity preserved"],
         examplesTitle: "Rashomon Examples",
-        examples: [
-          "Rashomon",
-          "Hero",
-          "The Affair",
-          "Gone Girl (partial)"
-        ]
+        examples: ["Rashomon", "Hero", "The Affair", "Gone Girl (partial)"]
       });
       return;
     }
     if (title === "In Medias Res") {
       renderStructureDetail(container, {
         introTitle: "What is In Medias Res?",
-        intro: [
-          "A narrative that begins in the middle of action, then later provides context for how events reached that point."
-        ],
-        core: [
-          "Immediate engagement",
-          "Delayed exposition",
-          "Momentum-first storytelling"
-        ],
+        intro: ["A narrative that begins in the middle of action, then later provides context for how events reached that point."],
+        core: ["Immediate engagement", "Delayed exposition", "Momentum-first storytelling"],
         stepsTitle: "Structural pattern",
         steps: [
           "1. Mid-action opening",
@@ -3442,45 +2677,8 @@ export class WriterToolsView extends ItemView {
           "5. Continuation to resolution"
         ],
         examplesTitle: "In Medias Res Examples",
-        examples: [
-          "The Odyssey",
-          "Breaking Bad (cold opens)",
-          "Mad Max: Fury Road",
-          "Fight Club"
-        ]
+        examples: ["The Odyssey", "Breaking Bad (cold opens)", "Mad Max: Fury Road", "Fight Club"]
       });
-      return;
-    }
-    if (title === "The Mentor") {
-      renderMentorDetail(container);
-      return;
-    }
-    if (title === "The Herald") {
-      renderHeraldDetail(container);
-      return;
-    }
-    if (title === "The Shadow") {
-      renderShadowDetail(container);
-      return;
-    }
-    if (title === "The Trickster") {
-      renderTricksterDetail(container);
-      return;
-    }
-    if (title === "The Ally") {
-      renderAllyDetail(container);
-      return;
-    }
-    if (title === "The Shapeshifter") {
-      renderShapeshifterDetail(container);
-      return;
-    }
-    if (title === "The Threshold Guardian") {
-      renderThresholdGuardianDetail(container);
-      return;
-    }
-    if (title === "The Caregiver") {
-      renderCaregiverDetail(container);
       return;
     }
 
