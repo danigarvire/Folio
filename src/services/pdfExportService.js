@@ -1,5 +1,4 @@
 import { Component, FileSystemAdapter, MarkdownRenderer, Notice } from "obsidian";
-import { SCREENPLAY_SNIPPET_CSS } from "../constants/screenplaySnippet.js";
 
 export class PdfExportService {
   constructor(app, configService) {
@@ -272,7 +271,7 @@ export class PdfExportService {
     } catch (error) {
       console.warn("Screenplay CSS snippet not loaded.", error);
     }
-    return SCREENPLAY_SNIPPET_CSS || "";
+    return "";
   }
 
   async renderMarkdownToHtml(markdown, sourcePath) {
@@ -579,9 +578,10 @@ export class PdfExportService {
     const win = new BrowserWindow({
       show: false,
       webPreferences: {
-        sandbox: false,
+        sandbox: true,
         contextIsolation: true,
-        nodeIntegration: false
+        nodeIntegration: false,
+        javascript: false
       }
     });
 

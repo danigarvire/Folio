@@ -13,6 +13,7 @@
   box-sizing: border-box;
   overflow-x: hidden; /* prevent horizontal scrollbar from small overflows */
   container-type: inline-size;
+  min-height: 0;
 }
 
 /* Novelist theme tints (single source of truth for cover/header/stats) */
@@ -28,6 +29,9 @@
   --folio-cover-width: 75px;
   --folio-header-gap: 14px;
   --folio-label-offset: calc(var(--folio-padding) + var(--folio-label-width) + var(--folio-col-gap));
+  --tree-icon-size: 16px;
+  --tree-icon-color: var(--text-muted);
+  --tree-icon-color-active: var(--interactive-accent);
 }
 
 /* Neutralize outer workspace padding so our block paddings control layout
@@ -53,18 +57,10 @@
   overflow-x: hidden; /* ensure the immediate child also hides horizontal overflow */
 }
 
-.folio-view {
-  min-height: 0;
-}
-
-.folio-structure,
-.folio-tree {
-  min-height: 0; /* allow these to shrink inside flex parents */
-}
-
 .folio-tree {
   /* ensure tree fills remaining space and scrolls */
   flex: 1 1 auto;
+  min-height: 0; /* allow tree to shrink inside flex parents */
   overflow-y: auto;
 }
 
@@ -205,7 +201,7 @@
 }
 
 .folio-book-cover-icon {
-  color: var(--text-muted) !important;
+  color: var(--text-muted);
   opacity: 0.6;
   width: 48px;
   height: 48px;
@@ -240,7 +236,7 @@
   /* slightly reduced top/bottom padding to remove the large bottom gap */
   padding: 14px 14px 8px; /* top 14, bottom 8 */
   margin-bottom: 4px;
-  background-color: var(--background-secondary) !important;
+  background-color: var(--background-secondary);
   border-top: none; /* remove explicit top border to avoid stacked lines */
   box-sizing: border-box;
   overflow: hidden;
@@ -265,19 +261,46 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-muted);
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center; /* vertically center label with icon */
+  line-height: 1; /* ensure consistent baseline */
 }
 
 .folio-stat-value {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: var(--text-normal);
+  font-weight: 600;
+  font-size: 13px;
+  flex: 0 0 auto; /* do not let value shrink below its content size */
+  margin-left: 8px;
 }
 
 /* ensure tree sits above stats to receive clicks */
-.folio-tree { z-index: 2; overflow: visible; }
+.folio-view .folio-tree {
+  z-index: 2;
+  overflow: visible;
+  border-bottom: 1px solid rgba(var(--background-modifier-border-rgb, 0,0,0), 0.35);
+  /* Align tree to the start of the label column (the "Description" title)
+     instead of the value column. */
+  padding-left: var(--folio-padding);
+  padding-top: 10px; /* shift tree content down by 10px as requested */
+}
 .folio-structure {
   position: relative;
   z-index: 3;
+  /* Grow to fill the panel so the stats footer is pushed to the bottom, and
+     scroll internally when the tree is long. The 8px gap together with the row
+     padding below reproduces the original tree spacing. */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* stat row icon layout */
@@ -338,21 +361,6 @@
   border-bottom: none;
   padding-bottom: 2px;
 }
-.folio-stat-label {
-  color: var(--text-muted);
-  font-size: 12px;
-  display: inline-flex;
-  align-items: center; /* vertically center label with icon */
-  line-height: 1; /* ensure consistent baseline */
-}
-.folio-stat-value {
-  color: var(--text-normal);
-  font-weight: 600;
-  font-size: 13px;
-  flex: 0 0 auto; /* do not let value shrink below its content size */
-  margin-left: 8px;
-}
-
 /* make sure icons and text align precisely */
 .folio-stat-icon svg,
 .folio-top-icon svg {
@@ -374,6 +382,7 @@
   align-items: center;
   gap: 6px;
   font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -397,12 +406,6 @@
   font-size: 14px;
   opacity: 0.8;
 }
-.folio-volume-title {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-
 /* ===============================================================
    VOLUME CONTROLS
 =============================================================== */
@@ -489,7 +492,6 @@
   white-space: normal;
   overflow: hidden;
   display: -webkit-box;
-  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   margin-top: 4px;
@@ -849,12 +851,6 @@ body.theme-dark .modal .folio-modal-row { border-bottom: 1px solid rgba(255,255,
   box-shadow:
     inset 0 0 0 1px rgba(255,255,255,0.03),
     0 4px 12px rgba(0,0,0,0.2);
-
-  margin-bottom: 12px;
-}
-
-/* Custom dropdown arrow */
-.folio-view select {
   background-image:
     linear-gradient(45deg, transparent 50%, var(--text-muted) 50%),
     linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
@@ -865,6 +861,8 @@ body.theme-dark .modal .folio-modal-row { border-bottom: 1px solid rgba(255,255,
     6px 6px,
     6px 6px;
   background-repeat: no-repeat;
+
+  margin-bottom: 12px;
 }
 
 /* Hover */
@@ -911,12 +909,16 @@ body.theme-dark .folio-book-cover::after {
 }
 
 /* Ensure the stats zone doesn't inherit patterned backgrounds from the workspace */
-.folio-stats {
+.folio-book > .folio-stats {
+  margin-top: auto;
+  padding: 12px 16px;
+  background: var(--background-secondary);
   background-image: none !important;
+  border-top: 1px solid var(--background-modifier-border);
 }
 
 /* Header overlay so the entire cover+title area tints like the stats zone */
-.folio-book-header {
+.folio-book > .folio-book-header {
   position: relative;
   overflow: hidden;
 }
@@ -935,23 +937,6 @@ body.theme-light .folio-book-header::after {
 
 body.theme-dark .folio-book-header::after {
   background-color: var(--folio-tint-dark);
-}
-
-/* make divider between tree and stats explicit and slightly more visible */
-.folio-tree {
-  border-bottom: 1px solid rgba(var(--background-modifier-border-rgb, 0,0,0), 0.35);
-}
-
-/* Reduce tree baseline padding so tree isn't overly centered */
-.folio-tree {
-  /* Align tree to the start of the label column (the "Description" title)
-     instead of the value column. */
-  padding-left: var(--folio-padding);
-  padding-top: 10px; /* shift tree content down by 10px as requested */
-}
-
-.folio-stats {
-  border-top: 1px solid var(--background-modifier-border);
 }
 
 /* Topbar button icon spacing */
@@ -1091,7 +1076,7 @@ body.theme-dark .folio-book-header::after {
    STRUCTURE TREE
 =============================================================== */
 
-.folio-structure {
+.folio-book .folio-structure {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1099,10 +1084,12 @@ body.theme-dark .folio-book-header::after {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  position: relative;
+  z-index: 3;
 }
 
 /* Structure container baseline padding (reduced) */
-.folio-structure {
+.folio-book .folio-structure {
   padding-left: var(--folio-padding);
   padding-top: 10px; /* nudge tree content down */
   /* Structure aligned to label column start */
@@ -1116,7 +1103,7 @@ body.theme-dark .folio-book-header::after {
   gap: 4px;
 }
 
-.folio-volume-header {
+.folio-volume-row > .folio-volume-header {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1124,7 +1111,7 @@ body.theme-dark .folio-book-header::after {
   user-select: none;
 }
 
-.folio-volume-toggle {
+.folio-volume-row > .folio-volume-header .folio-volume-toggle {
   width: 16px;
   text-align: center;
   font-size: 13px;
@@ -1132,14 +1119,14 @@ body.theme-dark .folio-book-header::after {
   cursor: pointer;
 }
 
-.folio-volume-title {
+.folio-volume-row > .folio-volume-header .folio-volume-title {
   font-weight: 600;
   font-size: 1em;
 }
 
 /* CHAPTERS */
 
-.folio-chapter-list {
+.folio-volume-row > .folio-chapter-list {
   display: flex;
   flex-direction: column;
   padding-left: 12px;
@@ -1169,7 +1156,11 @@ body.theme-dark .folio-book-header::after {
 }
 
 .folio-book-meta {
-  /* Use a two-column grid for label/value so alignment is exact and stable */
+  /* Use a two-column grid for label/value so alignment is exact and stable.
+     NOTE: keep this UNSCOPED — the meta block is a sibling of .folio-book-header
+     (created via el.createDiv), not a child, so scoping it to
+     `.folio-book-header .folio-book-meta` stops it matching and the rows
+     collapse to a centered single column. */
   display: grid;
   grid-template-columns: 84px 1fr;
   column-gap: 12px;
@@ -1181,7 +1172,7 @@ body.theme-dark .folio-book-header::after {
   padding-left: 16px;
 }
 
-.folio-book-title {
+.folio-book-title-block .folio-book-title {
   font-size: 17px;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -1190,7 +1181,7 @@ body.theme-dark .folio-book-header::after {
   margin-bottom: 4px;
 }
 
-.folio-book-subtitle {
+.folio-book-title-block .folio-book-subtitle {
   font-size: 12px;
   opacity: 0.7;
 }
@@ -1252,28 +1243,6 @@ body.theme-dark .folio-book-header::after {
    EDITORIAL TREE STYLES
 =============================================================== */
 
-.folio-tree-file,
-.folio-tree-folder {
-  padding: 4px 6px;
-  cursor: pointer;
-  border-radius: 4px;
-}
-
-.folio-tree-file:hover,
-.folio-tree-folder:hover {
-  background: var(--background-modifier-hover);
-}
-
-.folio-tree-file.is-active,
-.folio-tree-folder.is-active {
-  background: var(--background-modifier-active-hover);
-  color: var(--text-normal);
-}
-
-.folio-tree-folder.has-active-descendant > .folio-tree-label {
-  color: var(--text-normal);
-}
-
 .folio-tree-children {
   /* Indent children so their labels line up with the parent folder label
      We base this on the tree icon size + spacing so alignment stays consistent. */
@@ -1312,35 +1281,7 @@ body.theme-light .folio-tree-children::before {
 }
 
 /* Icon next to file/folder name */
-.folio-tree-icon {
-  width: 18px;
-  display: inline-block;
-  text-align: center;
-  margin-right: 8px;
-  flex-shrink: 0;
-}
-
-/* Toggle caret for folders */
-.folio-tree-toggle {
-  width: 18px;
-  display: inline-block;
-  text-align: center;
-  margin-right: 8px;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.folio-tree-folder > .folio-tree-toggle {
-  transform-origin: center;
-}
-
 /* Use Obsidian's native Lucide icons via setIcon; keep minimal sizing rules for SVGs */
-:root {
-  --tree-icon-size: 16px;
-  --tree-icon-color: var(--text-muted);
-  --tree-icon-color-active: var(--interactive-accent);
-}
-
 body.theme-dark {
   --tree-icon-color: rgba(255,255,255,0.75);
 }
@@ -1360,6 +1301,10 @@ body.theme-light {
   margin-right: 8px;
 }
 
+.folio-tree-folder > .folio-tree-toggle {
+  transform-origin: center;
+}
+
 .folio-tree-icon svg,
 .folio-tree-toggle svg {
   width: var(--tree-icon-size);
@@ -1371,6 +1316,9 @@ body.theme-light {
 .folio-tree-file,
 .folio-tree-folder {
   color: var(--text-normal);
+  /* Row padding restores the original (taller) row height/spacing. */
+  padding: 4px 6px;
+  border-radius: 4px;
 }
 
 .folio-tree-file:hover,
@@ -1455,12 +1403,6 @@ body.theme-light {
   min-width: 110px;
 }
 
-.folio-stats {
-  margin-top: auto;
-  padding: 12px 16px;
-  background: var(--background-secondary);
-  border-top: 1px solid var(--background-modifier-border);
-}
 /* cleaned stray tokens above; switch row hover defined elsewhere */
 
 /* ===============================================================
@@ -1489,55 +1431,22 @@ body.theme-light {
 }
 
 /* Manage modal: subtitle inline with title but visually aligned with meta values */
-.folio-manage-title-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-}
-.folio-manage-subtitle-right {
-  font-size: 12px;
-  color: var(--text-muted);
-  margin-left: 8px;
-  margin-top: 10px; /* nudge down to visually align with Author/Description text */
-  line-height: 1.2;
-}
-.folio-manage-meta-grid {
-  display: flex;
-  gap: 12px;
-  margin-top: 6px;
-}
-.folio-manage-labels {
-  width: var(--folio-label-width);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  color: var(--text-muted);
-  font-size: 13px;
-}
-.folio-manage-values {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Layout tweaks to ensure subtitle sits inline with the title without pushing values */
-.folio-manage-card {
+.folio-manage-list .folio-manage-card {
   display: flex;
   gap: 16px;
   align-items: flex-start;
   padding: 14px 18px;
   border-radius: 8px;
 }
-.folio-manage-left {
+.folio-manage-list .folio-manage-left {
   flex: 0 0 var(--folio-cover-width);
 }
-.folio-manage-right {
+.folio-manage-list .folio-manage-right {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
 }
-.folio-manage-title-row {
+.folio-manage-list .folio-manage-title-row {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -1549,12 +1458,32 @@ body.theme-light {
   margin-right: 8px;
   flex: 0 1 auto;
 }
-.folio-manage-subtitle-right {
+.folio-manage-list .folio-manage-subtitle-right {
   font-size: 12px;
   color: var(--text-muted);
+  margin-left: 8px;
   margin-top: 6px; /* smaller nudge to align with meta values */
   line-height: 1.2;
   white-space: nowrap;
+}
+.folio-manage-list .folio-manage-meta-grid {
+  display: flex;
+  gap: 12px;
+  margin-top: 6px;
+}
+.folio-manage-list .folio-manage-labels {
+  width: var(--folio-label-width);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+.folio-manage-list .folio-manage-values {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 /* ===============================================================
@@ -1924,15 +1853,29 @@ body.theme-light {
   padding: 6px 6px 2px;
 }
 
+/* Title row with the EN/ES language toggle on the right. */
+.folio-help-modal .help-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.folio-help-modal .help-header h2 {
+  margin: 0;
+}
+
 .folio-help-modal .help-lead {
   color: var(--text-muted);
   margin: 6px 0 18px;
   max-width: 760px;
+  font-size: 0.98rem;
+  line-height: 1.55;
 }
 
 .help-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 14px;
   margin: 12px 0 6px;
 }
@@ -1974,21 +1917,38 @@ body.theme-light {
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 12px;
-  padding: 14px 14px 12px;
+  padding: 16px 16px 14px;
   box-shadow: var(--shadow-s);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.help-card:hover {
+  border-color: var(--interactive-accent);
 }
 
 .help-card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 6px;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
+/* Icon chip with a subtle accent background. */
 .help-card-icon {
-  width: 18px;
-  height: 18px;
-  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+  flex-shrink: 0;
+}
+
+.help-card-icon svg {
+  width: 17px;
+  height: 17px;
 }
 
 .help-card h3 {
@@ -1999,18 +1959,63 @@ body.theme-light {
 .help-card p {
   margin: 0 0 8px;
   color: var(--text-muted);
+  line-height: 1.5;
 }
 
 .help-card ul {
-  margin: 6px 0 0 18px;
-}
-
-.help-card ol {
-  margin: 6px 0 0 18px;
+  margin: 6px 0 0;
+  padding-left: 18px;
 }
 
 .help-card li {
-  margin: 2px 0;
+  margin: 3px 0;
+  line-height: 1.45;
+}
+
+/* Numbered steps rendered as accent circles instead of plain digits. */
+.help-card ol {
+  margin: 8px 0 0;
+  padding-left: 0;
+  list-style: none;
+  counter-reset: help-step;
+}
+
+.help-card ol li {
+  counter-increment: help-step;
+  position: relative;
+  padding-left: 28px;
+  margin: 7px 0;
+  line-height: 1.45;
+}
+
+.help-card ol li::before {
+  content: counter(help-step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Per-card highlighted tip. */
+.help-card .help-tip {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  border-left: 2px solid var(--interactive-accent);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-muted);
 }
 
 .help-note {
@@ -2030,13 +2035,30 @@ body.theme-light {
 }
 
 .help-footer-note {
-  margin-top: 10px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-left: 3px solid var(--interactive-accent);
+  border-radius: 10px;
   color: var(--text-muted);
   font-size: 0.9rem;
 }
 
+.help-footer-note .help-footer-title {
+  margin: 0 0 6px;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
 .help-footer-note ul {
-  margin: 6px 0 0 18px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.help-footer-note li {
+  margin: 3px 0;
+  line-height: 1.45;
 }
 
 .contact-view-list {
@@ -3057,23 +3079,23 @@ body.theme-light {
   align-items: center;
 }
 
-.modal-container:has(.pdf-settings-modal) {
+.modal-container.pdf-settings-modal-container {
   align-items: stretch;
   justify-content: stretch;
   padding: 0;
 }
 
-.modal-container:has(.pdf-settings-modal) .modal {
+.modal-container.pdf-settings-modal-container .modal {
   margin: 0;
 }
 
-.modal-container:has(.pdf-preview-modal) {
+.modal-container.pdf-preview-modal-container {
   align-items: stretch;
   justify-content: stretch;
   padding: 0;
 }
 
-.modal-container:has(.pdf-preview-modal) .modal {
+.modal-container.pdf-preview-modal-container .modal {
   margin: 0;
 }
 
@@ -5391,7 +5413,135 @@ body.theme-light {
   height: 100%;
   border-radius: 6px;
   background: var(--interactive-accent);
-  transition: width 0.18s ease;
+  transition: width 0.18s ease, box-shadow 0.18s ease;
+}
+
+/* Live pace metrics (words this session / pace / words to goal). */
+.focus-mode-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: min(280px, 100%);
+  margin: 14px 0 4px;
+}
+
+.focus-mode-metric {
+  text-align: center;
+  padding: 8px 6px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 10px;
+}
+
+.focus-mode-metric-value {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+.focus-mode-metric-label {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Quick sprint presets. */
+.focus-mode-presets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.focus-mode-preset-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.focus-mode-preset-caption {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  width: 56px;
+  flex-shrink: 0;
+}
+
+.focus-mode-preset-chip {
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: border-color 120ms ease, color 120ms ease;
+}
+
+.focus-mode-preset-chip:hover {
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+}
+
+/* Goal-reached celebration. */
+.is-goal-reached .focus-mode-word-progress-fill {
+  box-shadow: 0 0 10px var(--interactive-accent);
+}
+
+.is-goal-reached .focus-mode-metric:last-child .focus-mode-metric-value {
+  color: var(--interactive-accent);
+}
+
+/* Pomodoro + sound options. */
+.focus-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.focus-mode-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: var(--text-normal);
+  cursor: pointer;
+}
+
+.focus-mode-option input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.focus-mode-option-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.focus-mode-option-field.is-hidden {
+  display: none;
+}
+
+.focus-mode-option-field-label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.focus-mode-option-field .focus-mode-setup-input {
+  width: 64px;
+}
+
+/* Pomodoro break phase. */
+.is-break .focus-mode-timer-state,
+.focus-mode-timer-circle.is-break .focus-mode-timer-state {
+  color: var(--text-accent, var(--interactive-accent));
 }
 
 .focus-mode-buttons {
@@ -6651,7 +6801,7 @@ body.folio-focus-quiet-workspace .mod-root .workspace-sidedock-vault-profile {
   z-index: 1000;
 }
 
-.modal-container:has(.folio-icon-picker-modal) {
+.modal-container.folio-icon-picker-modal-container {
   z-index: 999;
 }
 

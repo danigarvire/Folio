@@ -47,6 +47,16 @@ export class WriterToolsView extends ItemView {
     this.quietWorkspaceActive = false;
     this.restoreLeftSidebarAfterFocus = false;
     this.focusSetupExpanded = false;
+    this._focusGoalReached = false;
+    this._audioCtx = null;
+    // Pomodoro + sound preferences (hydrated from settings when Focus Mode opens).
+    this.focusSoundEnabled = true;
+    this.pomodoroEnabled = false;
+    this.focusBreakMinutes = 5;
+    this.focusLongBreakMinutes = 15;
+    this.pomodoroCount = 0;
+    this.focusPhase = "work"; // "work" | "break"
+    this.phaseTotalSeconds = 0;
     this.focusStats = {
       sessions: 0,
       interruptions: 0,
@@ -73,8 +83,8 @@ export class WriterToolsView extends ItemView {
     this.pdfPreviewRenderToken = 0;
     this.pdfPreviewScaleObserver = null;
     this.pdfPreviewUrl = null;
-    this.pdfInlinePreviewContainer = null;
     this.pdfPreviewWebview = null;
+    this.pdfInlinePreviewContainer = null;
     this.pdfExportStateUpdater = null;
     this.isPdfExporting = false;
     this.pdfExportAbortController = null;
@@ -121,10 +131,24 @@ export class WriterToolsView extends ItemView {
   }
 
   async onClose() {
-    this.setQuietWorkspace(false);
+    try {
+      this.setQuietWorkspace(false);
+    } catch (e) {
+      console.warn('onClose: setQuietWorkspace failed', e);
+    }
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
+    }
+    this.timerRunning = false;
+    // Clear pending PDF debounce timers so they can't fire after the view is gone
+    if (this.pdfPreviewTimeout) {
+      clearTimeout(this.pdfPreviewTimeout);
+      this.pdfPreviewTimeout = null;
+    }
+    if (this.pdfSaveTimeout) {
+      clearTimeout(this.pdfSaveTimeout);
+      this.pdfSaveTimeout = null;
     }
   }
 
@@ -268,8 +292,10 @@ export class WriterToolsView extends ItemView {
     const formatGrid = formatSection.createDiv({ cls: "export-settings-format-grid" });
 
     const formats = [
-      { id: "pdf", title: "PDF", subtitle: "Portable document format", icon: "file-text" }
+      { id: "pdf", title: "PDF", subtitle: "Portable document format", icon: "file-text" },
+      { id: "fdx", title: "Final Draft", subtitle: "Final Draft screenplay (.fdx)", icon: "clapperboard" }
     ];
+    const isScreenplayFormat = (id) => id === "fdx";
 
     const pdfLauncher = content.createDiv({ cls: "export-settings-section" });
     const pdfLauncherLabel = pdfLauncher.createDiv({ cls: "export-settings-section-label" });
@@ -281,7 +307,13 @@ export class WriterToolsView extends ItemView {
       text: "Open PDF settings to customize layout, cover and font."
     });
     const pdfLauncherBtn = pdfLauncherBody.createEl("button", { cls: "export-settings-btn", text: "Open Settings" });
-    pdfLauncherBtn.addEventListener("click", () => this.openPdfSettingsModal());
+    pdfLauncherBtn.addEventListener("click", () => {
+      if (isScreenplayFormat(this.exportFormat)) {
+        this.runScreenplayExport();
+      } else {
+        this.openPdfSettingsModal();
+      }
+    });
 
     const statusRow = content.createDiv({ cls: "export-settings-status" });
     const statusIcon = statusRow.createSpan({ cls: "export-settings-status-icon" });
@@ -293,8 +325,16 @@ export class WriterToolsView extends ItemView {
       const formatLabel = hasFormat ? this.exportFormat.toUpperCase() : "PDF";
       statusText.textContent = hasFormat ? `Selected format: ${formatLabel}` : "Please choose an export format first.";
 
-      pdfLauncherTitle.textContent = `${formatLabel} Settings`;
-      pdfLauncherText.textContent = `Open ${formatLabel} settings to customize layout, cover and font.`;
+      if (isScreenplayFormat(this.exportFormat)) {
+        // Screenplay text formats have no layout settings — offer a direct export.
+        pdfLauncherTitle.textContent = `${formatLabel} export`;
+        pdfLauncherText.textContent = "Screenplay text export — no extra settings needed.";
+        pdfLauncherBtn.textContent = "Export";
+      } else {
+        pdfLauncherTitle.textContent = `${formatLabel} Settings`;
+        pdfLauncherText.textContent = `Open ${formatLabel} settings to customize layout, cover and font.`;
+        pdfLauncherBtn.textContent = "Open Settings";
+      }
     };
 
     formats.forEach((format) => {
@@ -327,6 +367,33 @@ export class WriterToolsView extends ItemView {
     if (!this.exportProject) return;
     const modal = new PdfSettingsModal(this.app, this);
     modal.open();
+  }
+
+  /* One-click screenplay export (Fountain / Final Draft) for the project shown
+     in the Export Assistant. Reuses the PDF service's ordered file collection.
+     The save location is chosen via the native dialog inside the service. */
+  async runScreenplayExport() {
+    try {
+      const project = this.exportProject;
+      if (!project) { new Notice("No active project selected."); return; }
+
+      const cfg = this.exportConfig || {};
+      const meta = this.exportMeta || {};
+      // Screenplay export includes ALL markdown in tree order — the PDF "scriptOnly"
+      // heuristic excludes files that aren't named like scenes, which surprises users.
+      const settings = { ...(cfg.export || {}), content: { ...((cfg.export || {}).content || {}), mode: 'allIncluded' } };
+
+      const collected = await this.plugin.pdfExportService.collectOrderedMarkdownFiles(project, cfg, settings, meta);
+      const files = (collected || []).filter((f) => f && f.extension === "md");
+      if (files.length === 0) { new Notice("No markdown files to export."); return; }
+
+      const path = await this.plugin.fdxExportService.exportProject(project, meta, files);
+      // path is null when the user cancels the save dialog.
+      if (path) new Notice(`Exported Final Draft to ${path}`);
+    } catch (e) {
+      console.error("runScreenplayExport failed", e);
+      new Notice("Final Draft export failed. See console for details.");
+    }
   }
 
   async handleExportAction(options = {}) {
@@ -599,6 +666,8 @@ export class WriterToolsView extends ItemView {
         ? `${pdfDataUrl}#page=1&zoom=page-fit&navpanes=0`
         : "";
 
+      // Render the PDF in an Electron <webview> — a sandboxed <iframe> does not
+      // display PDF data URLs in Electron, which left the preview blank.
       const encoded = encodeURIComponent(html);
       const dataUrl = `data:text/html;charset=utf-8,${encoded}`;
       const canUseWebview = typeof document !== "undefined" && typeof document.createElement === "function" && !this.app?.isMobile;
@@ -1355,6 +1424,11 @@ export class WriterToolsView extends ItemView {
   renderFocusModeUI(container, project) {
     this.focusModeProject = project;
     this.focusModeContainer = container;
+    // Hydrate persisted preferences.
+    const s = this.plugin.settings || {};
+    this.focusSoundEnabled = s.focusSoundEnabled !== false;
+    this.pomodoroEnabled = !!s.focusPomodoroEnabled;
+    this.focusBreakMinutes = Math.min(60, Math.max(1, Math.round(Number(s.focusBreakMinutes || 5))));
     container.empty();
     ["is-ready", "is-running", "is-paused", "is-completed", "is-ended"].forEach(cls => container.removeClass(cls));
 
@@ -1404,6 +1478,12 @@ export class WriterToolsView extends ItemView {
     const progressTrack = progress.createDiv({ cls: "focus-mode-word-progress-track" });
     this.wordProgressBar = progressTrack.createDiv({ cls: "focus-mode-word-progress-fill" });
 
+    // Live pace metrics: words this session, current writing pace, words to goal.
+    const metrics = sessionPanel.createDiv({ cls: "focus-mode-metrics" });
+    this.metricSession = this.createFocusMetric(metrics, "Session", "0");
+    this.metricPace = this.createFocusMetric(metrics, "Pace", "—");
+    this.metricToGoal = this.createFocusMetric(metrics, "To goal", "—");
+
     this.setupSummary = sessionPanel.createEl("button", { cls: "focus-mode-setup-summary" });
     this.setupSummaryLabel = this.setupSummary.createSpan({ cls: "focus-mode-setup-summary-label", text: "Sprint setup" });
     this.setupSummaryValue = this.setupSummary.createSpan({ cls: "focus-mode-setup-summary-value", text: "25 min / 500 words" });
@@ -1439,6 +1519,63 @@ export class WriterToolsView extends ItemView {
     this.wordGoalInput.setAttr("max", "99999");
     this.wordGoalInput.setAttr("step", "50");
     this.wordGoalInput.addEventListener("change", () => this.updateFocusSessionSetup(project));
+
+    // Quick presets — set a sprint in one click instead of typing numbers.
+    const presets = this.setupPanel.createDiv({ cls: "focus-mode-presets" });
+    const addPresetGroup = (caption, values, apply) => {
+      const group = presets.createDiv({ cls: "focus-mode-preset-group" });
+      group.createSpan({ cls: "focus-mode-preset-caption", text: caption });
+      values.forEach((value) => {
+        const chip = group.createEl("button", { cls: "focus-mode-preset-chip", text: String(value) });
+        chip.addEventListener("click", () => {
+          if (this.hasFocusSessionInProgress()) return;
+          apply(value);
+          this.updateFocusSessionSetup(project);
+        });
+      });
+    };
+    addPresetGroup("Minutes", [15, 25, 45, 60], (v) => { if (this.durationInput) this.durationInput.value = String(v); });
+    addPresetGroup("Words", [250, 500, 1000], (v) => { if (this.wordGoalInput) this.wordGoalInput.value = String(v); });
+
+    // Options: Pomodoro cycles, break length, and completion sound.
+    const options = this.setupPanel.createDiv({ cls: "focus-mode-options" });
+
+    const pomodoroLabel = options.createEl("label", { cls: "focus-mode-option" });
+    const pomodoroCb = pomodoroLabel.createEl("input", { type: "checkbox" });
+    pomodoroCb.checked = this.pomodoroEnabled;
+    pomodoroLabel.createSpan({ text: "Pomodoro (auto breaks)" });
+
+    const breakField = options.createDiv({ cls: "focus-mode-option-field" });
+    breakField.createSpan({ cls: "focus-mode-option-field-label", text: "Break (min)" });
+    this.breakInput = breakField.createEl("input", { type: "number", cls: "focus-mode-setup-input", value: String(this.focusBreakMinutes) });
+    this.breakInput.setAttr("min", "1");
+    this.breakInput.setAttr("max", "60");
+    this.breakInput.setAttr("step", "1");
+    breakField.toggleClass("is-hidden", !this.pomodoroEnabled);
+    this.breakInput.addEventListener("change", () => {
+      this.focusBreakMinutes = Math.min(60, Math.max(1, Math.round(Number(this.breakInput.value || 5))));
+      this.breakInput.value = String(this.focusBreakMinutes);
+      this.plugin.settings.focusBreakMinutes = this.focusBreakMinutes;
+      this.plugin.saveSettings?.();
+    });
+
+    pomodoroCb.addEventListener("change", () => {
+      this.pomodoroEnabled = pomodoroCb.checked;
+      this.plugin.settings.focusPomodoroEnabled = this.pomodoroEnabled;
+      this.plugin.saveSettings?.();
+      breakField.toggleClass("is-hidden", !this.pomodoroEnabled);
+    });
+
+    const soundLabel = options.createEl("label", { cls: "focus-mode-option" });
+    const soundCb = soundLabel.createEl("input", { type: "checkbox" });
+    soundCb.checked = this.focusSoundEnabled;
+    soundLabel.createSpan({ text: "Completion sound" });
+    soundCb.addEventListener("change", () => {
+      this.focusSoundEnabled = soundCb.checked;
+      this.plugin.settings.focusSoundEnabled = this.focusSoundEnabled;
+      this.plugin.saveSettings?.();
+      if (this.focusSoundEnabled) this.playFocusChime("goal");
+    });
 
     const buttonsContainer = sessionPanel.createDiv({ cls: "focus-mode-buttons" });
     this.startButton = buttonsContainer.createEl("button", { cls: "focus-mode-btn-primary", text: "Start session" });
@@ -1497,27 +1634,36 @@ export class WriterToolsView extends ItemView {
     const minutes = Math.floor(this.timerSeconds / 60);
     const seconds = this.timerSeconds % 60;
     this.timerDisplay.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-    const elapsed = Math.max(0, this.focusSessionDurationSeconds - this.timerSeconds);
-    const progress = this.focusSessionDurationSeconds > 0 ? elapsed / this.focusSessionDurationSeconds : 0;
+    const total = this.phaseTotalSeconds || this.focusSessionDurationSeconds;
+    const elapsed = Math.max(0, total - this.timerSeconds);
+    const progress = total > 0 ? elapsed / total : 0;
+    const onBreak = this.focusPhase === "break";
     if (this.timerCircle) {
       this.timerCircle.style.setProperty("--focus-progress", `${Math.min(360, Math.max(0, progress * 360))}deg`);
       this.timerCircle.toggleClass("is-running", this.timerRunning);
       this.timerCircle.toggleClass("is-paused", this.focusSessionState === "paused");
       this.timerCircle.toggleClass("is-completed", this.focusSessionState === "completed");
+      this.timerCircle.toggleClass("is-break", onBreak);
     }
     if (this.timerCaption) {
-      this.timerCaption.textContent = this.focusSessionState === "running"
-        ? "left in this sprint"
-        : this.focusSessionState === "paused"
-          ? "Paused"
-          : this.focusSessionState === "completed"
-            ? "Session complete"
-            : `${this.focusSessionDurationMinutes}-minute session`;
+      this.timerCaption.textContent = onBreak
+        ? "left on your break"
+        : this.focusSessionState === "running"
+          ? "left in this sprint"
+          : this.focusSessionState === "paused"
+            ? "Paused"
+            : this.focusSessionState === "completed"
+              ? "Session complete"
+              : `${this.focusSessionDurationMinutes}-minute session`;
     }
     this.updateFocusProgress();
   }
 
   toggleTimer() {
+    if (this.focusPhase === "break") {
+      this.endBreak(); // primary button acts as "Skip break"
+      return;
+    }
     if (this.timerRunning) {
       this.pauseTimer();
     } else {
@@ -1525,7 +1671,7 @@ export class WriterToolsView extends ItemView {
     }
   }
 
-  startTimer() {
+  startTimer({ continueCycle = false } = {}) {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
@@ -1538,10 +1684,18 @@ export class WriterToolsView extends ItemView {
       this.focusPauseStartWords = null;
     }
     this.focusSetupExpanded = false;
+    this.focusPhase = "work";
     this.timerRunning = true;
     this.focusSessionState = "running";
+    this.phaseTotalSeconds = this.focusSessionDurationSeconds;
     if (shouldStartFresh) {
       this.timerSeconds = this.focusSessionDurationSeconds;
+      this._focusGoalReached = false;
+      if (!continueCycle) this.pomodoroCount = 0;
+      if (this.focusModeContainer) {
+        this.focusModeContainer.removeClass("is-goal-reached");
+        this.focusModeContainer.removeClass("is-break");
+      }
     }
     if (this.timerSeconds === this.focusSessionDurationSeconds || this.sessionStartWords === null) {
       this.focusSessionStartedAt = new Date().toISOString();
@@ -1550,15 +1704,66 @@ export class WriterToolsView extends ItemView {
       this.refreshFocusStats();
     }
     this.updateFocusControls();
-    this.timerInterval = setInterval(() => {
+    this._startCountdown();
+  }
+
+  /* Phase-aware countdown shared by work sprints and Pomodoro breaks.
+     registerInterval ties it to the view lifecycle; we also clearInterval on
+     pause/complete/break transitions. */
+  _startCountdown() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.timerInterval = this.registerInterval(setInterval(() => {
       if (this.timerSeconds > 0) {
         this.timerSeconds--;
         this.updateTimerDisplay();
+        this.updateFocusProgress();
       }
       if (this.timerSeconds <= 0) {
-        this.completeSession();
+        if (this.focusPhase === "break") this.endBreak();
+        else this.completeSession();
       }
-    }, 1000);
+    }, 1000));
+  }
+
+  /* Pomodoro: start an automatic break after a completed work sprint. */
+  startBreak() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.focusPhase = "break";
+    this.focusSessionState = "break";
+    this.timerRunning = true;
+    const isLong = this.pomodoroCount > 0 && this.pomodoroCount % 4 === 0;
+    const mins = isLong ? this.focusLongBreakMinutes : this.focusBreakMinutes;
+    this.timerSeconds = Math.max(1, Math.round(mins)) * 60;
+    this.phaseTotalSeconds = this.timerSeconds;
+    if (this.focusModeContainer) this.focusModeContainer.addClass("is-break");
+    this.updateTimerDisplay();
+    this.updateFocusControls();
+    // completeSession already played the completion chime; just announce the break.
+    new Notice(isLong ? `Long break — ${mins} min. Step away.` : `Break — ${mins} min.`);
+    this._startCountdown();
+  }
+
+  /* Pomodoro: break finished — chime and auto-start the next work sprint. */
+  endBreak() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+    this.focusPhase = "work";
+    if (this.focusModeContainer) this.focusModeContainer.removeClass("is-break");
+    this.playFocusChime("goal");
+    new Notice("Break over — back to writing.");
+    // Force a fresh work sprint, keeping the Pomodoro count so long breaks land.
+    this.timerSeconds = 0;
+    this.focusSessionState = "ready";
+    this.sessionStartWords = null;
+    this.startTimer({ continueCycle: true });
   }
 
   pauseTimer() {
@@ -1597,10 +1802,18 @@ export class WriterToolsView extends ItemView {
     this.focusPauseStartWords = null;
     this.sessionStartWords = null;
     this.updateTimerDisplay();
+    this.pomodoroCount = (this.pomodoroCount || 0) + 1;
+    const wordsWritten = Number(this.focusStats.currentWords || 0);
     const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
     if (project) this.saveFocusStats(project);
     this.refreshFocusStats();
     this.updateFocusControls();
+    this.playFocusChime("complete");
+    new Notice(wordsWritten > 0
+      ? `Focus session complete — ${wordsWritten} words written.`
+      : "Focus session complete.");
+    // Pomodoro: roll straight into an automatic break.
+    if (this.pomodoroEnabled) this.startBreak();
   }
 
   async endFocusSession({ exitAfter = false } = {}) {
@@ -1611,6 +1824,21 @@ export class WriterToolsView extends ItemView {
     if (this.timerInterval) {
       clearInterval(this.timerInterval);
       this.timerInterval = null;
+    }
+    // Ending during a Pomodoro break: the work block was already logged, so just
+    // stop cleanly without recording a bogus interruption.
+    if (this.focusPhase === "break") {
+      this.focusPhase = "work";
+      this.timerRunning = false;
+      this.focusSessionState = "ended";
+      this.timerSeconds = this.focusSessionDurationSeconds;
+      this.phaseTotalSeconds = this.focusSessionDurationSeconds;
+      if (this.focusModeContainer) this.focusModeContainer.removeClass("is-break");
+      this.updateTimerDisplay();
+      this.refreshFocusStats();
+      this.updateFocusControls();
+      if (exitAfter) this.closeFocusModeView();
+      return;
     }
     const elapsedSeconds = Math.max(0, this.focusSessionDurationSeconds - this.timerSeconds);
     this.timerRunning = false;
@@ -1645,6 +1873,7 @@ export class WriterToolsView extends ItemView {
 
   updateFocusControls() {
     const hasSession = this.hasFocusSessionInProgress();
+    const onBreak = this.focusPhase === "break";
     const visualState = this.timerRunning
       ? "running"
       : this.focusSessionState === "paused"
@@ -1660,9 +1889,12 @@ export class WriterToolsView extends ItemView {
       this.focusModeContainer.toggleClass("is-paused", visualState === "paused");
       this.focusModeContainer.toggleClass("is-completed", visualState === "completed");
       this.focusModeContainer.toggleClass("is-ended", visualState === "ended");
+      this.focusModeContainer.toggleClass("is-break", onBreak);
     }
     if (this.timerStateLabel) {
-      this.timerStateLabel.textContent = visualState === "running"
+      this.timerStateLabel.textContent = onBreak
+        ? "Break"
+        : visualState === "running"
         ? "Writing"
         : visualState === "paused"
           ? "Paused"
@@ -1688,26 +1920,32 @@ export class WriterToolsView extends ItemView {
       this.setupPanel.toggleClass("is-open", this.focusSetupExpanded && !hasSession);
     }
     if (this.startButton) {
-      this.startButton.textContent = this.timerRunning
+      this.startButton.textContent = onBreak
+        ? "Skip break"
+        : this.timerRunning
         ? "Pause session"
         : hasSession
           ? "Resume session"
           : this.focusSessionState === "completed"
             ? "Start another"
             : "Start session";
-      this.startButton.toggleClass("is-running", this.timerRunning);
+      this.startButton.toggleClass("is-running", this.timerRunning && !onBreak);
     }
     if (this.endButton) {
-      this.endButton.disabled = !hasSession;
-      this.endButton.toggleClass("is-disabled", !hasSession);
-      this.endButton.toggleClass("is-hidden", !hasSession);
+      const canEnd = hasSession || onBreak;
+      this.endButton.disabled = !canEnd;
+      this.endButton.toggleClass("is-disabled", !canEnd);
+      this.endButton.toggleClass("is-hidden", !canEnd);
     }
     if (this.quietButton) {
       this.quietButton.textContent = this.quietWorkspaceActive ? "Restore" : "Quiet";
       this.quietButton.toggleClass("is-active", this.quietWorkspaceActive);
     }
     if (this.statusText && this.statusHint) {
-      if (this.timerRunning) {
+      if (onBreak) {
+        this.statusText.textContent = "On a break";
+        this.statusHint.textContent = "Step away for a moment — the next writing sprint starts automatically.";
+      } else if (this.timerRunning) {
         this.statusText.textContent = "Writing session active";
         this.statusHint.textContent = "Stay with the draft. Words and time are being tracked.";
       } else if (this.focusSessionState === "paused") {
@@ -1745,6 +1983,78 @@ export class WriterToolsView extends ItemView {
         : timeLabel;
     }
     this.wordProgressBar.style.width = `${percent}%`;
+    this.updateFocusMetrics();
+  }
+
+  createFocusMetric(parent, label, value) {
+    const cell = parent.createDiv({ cls: "focus-mode-metric" });
+    const valueEl = cell.createDiv({ cls: "focus-mode-metric-value", text: value });
+    cell.createDiv({ cls: "focus-mode-metric-label", text: label });
+    return valueEl;
+  }
+
+  updateFocusMetrics() {
+    const words = Number(this.focusStats.currentWords || 0);
+    const goal = Number(this.focusStats.wordGoal || 0);
+    const elapsedSeconds = Math.max(0, this.focusSessionDurationSeconds - this.timerSeconds);
+    const active = this.timerRunning || this.focusSessionState === "paused" || this.focusSessionState === "completed";
+
+    if (this.metricSession) this.metricSession.textContent = String(words);
+
+    if (this.metricPace) {
+      const minutes = elapsedSeconds / 60;
+      const wpm = minutes > 0.05 ? Math.round(words / minutes) : 0;
+      const showPace = active && elapsedSeconds > 0 && this.focusPhase === "work";
+      this.metricPace.textContent = showPace ? `${wpm} wpm` : "—";
+    }
+
+    if (this.metricToGoal) {
+      if (goal > 0) {
+        const left = Math.max(0, goal - words);
+        this.metricToGoal.textContent = left > 0 ? String(left) : "✓";
+      } else {
+        this.metricToGoal.textContent = "—";
+      }
+    }
+  }
+
+  maybeCelebrateGoal() {
+    const goal = Number(this.focusStats.wordGoal || 0);
+    if (goal <= 0 || this._focusGoalReached) return;
+    if (Number(this.focusStats.currentWords || 0) >= goal) {
+      this._focusGoalReached = true;
+      if (this.focusModeContainer) this.focusModeContainer.addClass("is-goal-reached");
+      this.playFocusChime("goal");
+      new Notice(`Word goal reached — ${goal} words! 🎉`);
+    }
+  }
+
+  playFocusChime(kind = "complete") {
+    try {
+      if (!this.focusSoundEnabled) return;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      if (!this._audioCtx) this._audioCtx = new Ctx();
+      const ctx = this._audioCtx;
+      if (ctx.state === "suspended" && ctx.resume) ctx.resume();
+      const now = ctx.currentTime;
+      const notes = kind === "goal" ? [523.25, 659.25, 783.99] : [659.25, 880.0];
+      notes.forEach((freq, i) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        const t = now + i * 0.14;
+        gain.gain.setValueAtTime(0.0001, t);
+        gain.gain.exponentialRampToValueAtTime(0.12, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.32);
+      });
+    } catch (e) {
+      // audio feedback is a nicety; ignore failures (e.g. autoplay policy)
+    }
   }
 
   formatFocusClock(totalSeconds) {
@@ -1853,6 +2163,7 @@ export class WriterToolsView extends ItemView {
   updateFocusSessionWordsFromEditor(text, file) {
     if (!this.focusModeActive) return;
     if (!this.timerRunning) return;
+    if (this.focusPhase === "break") return; // don't count words during breaks
     const project = this.focusModeProject || this.plugin.activeProject || this.plugin.activeBook;
     if (!project || !file?.path || !file.path.startsWith(project.path + "/")) return;
     const total = this.plugin.statsService.countWords(text);
@@ -1864,6 +2175,7 @@ export class WriterToolsView extends ItemView {
       this.focusStats.currentWords = current;
       this.refreshFocusStats();
       this.updateFocusControls();
+      this.maybeCelebrateGoal();
     }
   }
 
@@ -1894,6 +2206,9 @@ export class WriterToolsView extends ItemView {
     this.focusSessionStartedAt = null;
     this.focusPauseStartWords = null;
     this.sessionStartWords = null;
+    this._focusGoalReached = false;
+    this.focusPhase = "work";
+    this.pomodoroCount = 0;
     this.setQuietWorkspace(false);
     const container = this.containerEl.children[1];
     container.removeClass("folio-focus-mode");
@@ -2840,7 +3155,7 @@ export class WriterToolsView extends ItemView {
     });
     const donateBtn = card.createEl("button", { cls: "donate-view-button", text: "Buy Me a Coffee" });
     donateBtn.addEventListener("click", () => {
-      window.open("https://buymeacoffee.com/danielgarvire", "_blank");
+      window.open("https://buymeacoffee.com/danielgarvire", "_blank", "noopener,noreferrer");
     });
   }
 
@@ -2881,7 +3196,7 @@ export class WriterToolsView extends ItemView {
       const text = row.createDiv({ cls: "contact-view-item-text" });
       text.createDiv({ cls: "contact-view-item-title", text: item.label });
       text.createDiv({ cls: "contact-view-item-subtext", text: item.url });
-      row.addEventListener("click", () => window.open(item.url, "_blank"));
+      row.addEventListener("click", () => window.open(item.url, "_blank", "noopener,noreferrer"));
     });
   }
 
@@ -2889,10 +3204,6 @@ export class WriterToolsView extends ItemView {
     const container = this.containerEl.children[1];
     container.removeClass("folio-contact-view");
     this.onOpen();
-  }
-
-  async onClose() {
-    // Cleanup if needed
   }
 }
 
@@ -2907,6 +3218,7 @@ class PdfPreviewModal extends Modal {
     contentEl.empty();
     contentEl.addClass("pdf-preview-modal");
     this.modalEl?.addClass("pdf-preview-modal-shell");
+    this.modalEl?.closest(".modal-container")?.classList.add("pdf-preview-modal-container");
 
     const header = contentEl.createDiv({ cls: "pdf-settings-modal-header" });
     header.createDiv({ cls: "pdf-settings-modal-title", text: "PDF Preview" });
@@ -2921,6 +3233,7 @@ class PdfPreviewModal extends Modal {
   onClose() {
     const { contentEl } = this;
     contentEl.empty();
+    this.modalEl?.closest(".modal-container")?.classList.remove("pdf-preview-modal-container");
     this.modalEl?.removeClass("pdf-preview-modal-shell");
     if (this.view.pdfPreviewContainer === this.contentEl.querySelector(".pdf-preview-modal-preview")) {
       this.view.pdfPreviewContainer = this.view.pdfInlinePreviewContainer || null;
@@ -2942,6 +3255,7 @@ class PdfSettingsModal extends Modal {
     contentEl.empty();
     contentEl.addClass("pdf-settings-modal");
     this.modalEl?.addClass("pdf-settings-modal-shell");
+    this.modalEl?.closest(".modal-container")?.classList.add("pdf-settings-modal-container");
     this.applyCenteredPaneLayout();
 
     const header = contentEl.createDiv({ cls: "pdf-settings-modal-header" });
@@ -3012,6 +3326,7 @@ class PdfSettingsModal extends Modal {
       this.view.pdfExportAbortController.abort();
     }
     contentEl.empty();
+    this.modalEl?.closest(".modal-container")?.classList.remove("pdf-settings-modal-container");
     this.modalEl?.removeClass("pdf-settings-modal-shell");
     this.resetCenteredPaneLayout();
     this.view.pdfExportStateUpdater = null;

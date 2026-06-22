@@ -307,7 +307,7 @@ export class FolioView extends ItemView {
           childrenEl.classList.toggle("is-open", isHidden);
           if (isHidden) this.plugin.expandedFolders.add(fullPath);
           else this.plugin.expandedFolders.delete(fullPath);
-          try { 
+          try {
             // Use custom icon if defined, otherwise use getCustomIcon
             const iconName = node.icon || this.getCustomIcon(node.title, isHidden, 'folder');
             setIcon(folderIcon, iconName); 
@@ -474,7 +474,7 @@ export class FolioView extends ItemView {
       };
 
       row('pencil', 'Today', `${formatCount(todayCount)} words`);
-      row('file', 'Total', `${formatCount(totalWords)} / ${formatTarget(targetWords)}`);
+      row('file', 'Total words', `${formatCount(totalWords)} / ${formatTarget(targetWords)}`);
       row('target', 'Completion', formatPercent(completionPct));
       row('clock', 'Writing days', `${writingDays} days`);
       row('calendar-clock', 'Daily average', `${formatCount(dailyAvg)} words`);

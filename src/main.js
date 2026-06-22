@@ -20,8 +20,8 @@ import { TreeService } from './services/treeService.js';
 import { StatsService } from './services/statsService.js';
 import { BookService } from './services/bookService.js';
 import { PdfExportService } from './services/pdfExportService.js';
+import { FdxExportService } from './services/fdxExportService.js';
 import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, DEFAULT_SETTINGS, PROJECT_TYPES } from './constants/index.js';
-import { SCREENPLAY_SNIPPET_CSS } from './constants/screenplaySnippet.js';
 
 import { FolioView } from './views/folioView.js';
 import { WriterToolsView } from './views/writerToolsView.js';
@@ -44,6 +44,7 @@ export default class FolioPlugin extends Plugin {
     this.statsService = new StatsService(this.app, this.configService);
     this.bookService = new BookService(this.app, this.configService);
     this.pdfExportService = new PdfExportService(this.app, this.configService);
+    this.fdxExportService = new FdxExportService(this.app);
     this.screenplayStyleEl = null;
 
     this.booksIndex = [];
@@ -62,7 +63,9 @@ export default class FolioPlugin extends Plugin {
       }
     } catch {}
 
-    this.expandedFolders = new Set();
+    this.expandedFolders = new Set(
+      Array.isArray(this.settings?.expandedFolders) ? this.settings.expandedFolders : []
+    );
     this.activeFilePath = null;
 
     this.registerView(VIEW_TYPE, (leaf) => new FolioView(leaf, this));
@@ -73,6 +76,11 @@ export default class FolioPlugin extends Plugin {
       id: "open-focus-mode",
       name: "Open Focus Mode",
       callback: () => this.openFocusMode(),
+    });
+    this.addCommand({
+      id: "export-fdx",
+      name: "Export current project to Final Draft (.fdx)",
+      callback: () => this.exportActiveProjectToFdx(),
     });
     this.addSettingTab(new FolioSettingTab(this.app, this));
 
@@ -238,11 +246,11 @@ export default class FolioPlugin extends Plugin {
           const name = file instanceof TFolder ? `folder "${file.name}"` : `"${file.name}"`;
           new ConfirmModal(this.app, {
             title: "Delete",
-            message: `Delete ${name}? This cannot be undone.`,
+            message: `Delete ${name}? It will be moved to trash.`,
             confirmText: "Delete",
             onConfirm: async () => {
               try {
-                await this.app.vault.delete(file, file instanceof TFolder);
+                await this.app.fileManager.trashFile(file);
                 await this.refresh();
                 this.rerenderViews();
               } catch (e) { console.error(e); }
@@ -365,11 +373,11 @@ export default class FolioPlugin extends Plugin {
         it.setTitle("Delete").setIcon("trash").onClick(() => {
           new ConfirmModal(this.app, {
             title: "Delete folder",
-            message: `Delete folder "${folder.name}" and all its contents? This cannot be undone.`,
+            message: `Delete folder "${folder.name}" and all its contents? It will be moved to trash.`,
             confirmText: "Delete",
             onConfirm: async () => {
               try {
-                await this.app.vault.delete(folder, folder instanceof TFolder);
+                await this.app.fileManager.trashFile(folder);
                 await this.refresh();
                 this.rerenderViews();
               } catch (e) { console.error(e); }
@@ -424,7 +432,7 @@ export default class FolioPlugin extends Plugin {
     const file = this.app.vault.getAbstractFileByPath(filePath);
     if (!file) return;
     try {
-      await this.app.vault.delete(file, file instanceof TFolder);
+      await this.app.fileManager.trashFile(file);
       await this.refresh();
       this.rerenderViews();
     } catch (e) { console.error(e); }
@@ -522,6 +530,45 @@ export default class FolioPlugin extends Plugin {
     await this.openWriterTools();
   }
 
+  /* Collect the active project's ordered markdown for screenplay export.
+     Returns { book, meta, files } or null (with a Notice) when nothing usable. */
+  async _collectScreenplayExport() {
+    const book = this.activeBook;
+    if (!book) { new Notice("Open or create a project first."); return null; }
+
+    const cfg = (await this.loadBookConfig(book)) || {};
+    const meta = (await this.loadBookMeta(book)) || {};
+    // Screenplay export includes ALL markdown in tree order — the PDF "scriptOnly"
+    // heuristic excludes files that aren't named like scenes, which surprises users.
+    const settings = { ...(cfg.export || {}), content: { ...((cfg.export || {}).content || {}), mode: 'allIncluded' } };
+
+    const collected = await this.pdfExportService.collectOrderedMarkdownFiles(book, cfg, settings, meta);
+    // Screenplay formats are text-only: skip canvases, keep ordered markdown.
+    const files = (collected || []).filter(f => f && f.extension === "md");
+    if (files.length === 0) { new Notice("No markdown files to export."); return null; }
+
+    return { book, meta, files };
+  }
+
+  async exportActiveProjectToFdx() {
+    try {
+      const ctx = await this._collectScreenplayExport();
+      if (!ctx) return;
+      const path = await this.fdxExportService.exportProject(ctx.book, ctx.meta, ctx.files);
+      this._announceExport(path, "Final Draft");
+    } catch (e) {
+      console.error("exportActiveProjectToFdx failed", e);
+      new Notice("Final Draft export failed. See console for details.");
+    }
+  }
+
+  _announceExport(path, formatLabel) {
+    // path is null when the user cancels the save dialog — stay silent then.
+    if (path) {
+      new Notice(`Exported ${formatLabel} to ${path}`);
+    }
+  }
+
   async openFocusMode() {
     const leaf = await this.openWriterTools();
     const view = leaf?.view;
@@ -579,10 +626,7 @@ export default class FolioPlugin extends Plugin {
   }
 
   loadScreenplaySnippetCss() {
-    // Try to load from the bundled constant first, then fall back to filesystem
-    // All fs operations are wrapped safely — failure is non-fatal
     try {
-      // Use dynamic require only if available (desktop), wrapped in try/catch
       const requireFn = typeof __non_webpack_require__ !== 'undefined' ? __non_webpack_require__ : null;
       if (requireFn) {
         const fs = requireFn("fs");
@@ -599,9 +643,9 @@ export default class FolioPlugin extends Plugin {
         }
       }
     } catch (error) {
-      // fs/path unavailable (mobile) or snippet not found — fall through to bundled CSS
+      // fs/path unavailable (mobile) or snippet not found
     }
-    return SCREENPLAY_SNIPPET_CSS || "";
+    return "";
   }
 
   injectScreenplaySnippetCss() {
@@ -694,13 +738,13 @@ export default class FolioPlugin extends Plugin {
 
   async deleteVolume(folder) {
     const af = this.app.vault.getAbstractFileByPath(folder.path) || folder;
-    await this.app.vault.delete(af, true);
+    await this.app.fileManager.trashFile(af);
     await this.refresh();
   }
 
   async deleteChapter(file) {
     const af = this.app.vault.getAbstractFileByPath(file.path) || file;
-    await this.app.vault.delete(af);
+    await this.app.fileManager.trashFile(af);
     await this.refresh();
     try {
       const book = this.booksIndex.find(b => file.path.startsWith(b.path));
@@ -714,7 +758,7 @@ export default class FolioPlugin extends Plugin {
     try {
       const af = this.app.vault.getAbstractFileByPath(filePath);
       if (!af) return;
-      await this.app.vault.trash(af, true);
+      await this.app.fileManager.trashFile(af);
     } catch (e) {
       console.warn('deleteFolderRecursive (trash) failed', filePath, e);
     }
@@ -786,6 +830,21 @@ export default class FolioPlugin extends Plugin {
 
   async saveSettings() {
     await this.saveData(this.settings);
+  }
+
+  /* Persist the expanded-folders set so the tree keeps its open/closed state
+     across reloads. Debounced to avoid a disk write on every toggle. */
+  persistExpandedFolders() {
+    if (this._expandedFoldersSaveTimer) clearTimeout(this._expandedFoldersSaveTimer);
+    this._expandedFoldersSaveTimer = setTimeout(() => {
+      this._expandedFoldersSaveTimer = null;
+      try {
+        this.settings.expandedFolders = Array.from(this.expandedFolders);
+        this.saveSettings();
+      } catch (e) {
+        console.warn('persistExpandedFolders failed', e);
+      }
+    }, 300);
   }
 
   async loadBookConfig(book) {

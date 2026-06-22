@@ -19,6 +19,10 @@ export const DEFAULT_SETTINGS = {
   defaultAuthor: "",
   defaultProjectType: "book",
   resourceLanguage: "en",
+  expandedFolders: [],
+  focusSoundEnabled: true,
+  focusPomodoroEnabled: false,
+  focusBreakMinutes: 5,
   projectTemplates: [
     { 
       id: "book", 

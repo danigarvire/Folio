@@ -154,7 +154,7 @@ export class FolioSettingTab extends PluginSettingTab {
     const supportLink = supportSection.createEl('a', { cls: 'folio-settings-support-link', text: 'Buy Me a Coffee' });
     supportLink.href = 'https://buymeacoffee.com/danielgarvire';
     supportLink.target = '_blank';
-    supportLink.rel = 'noopener';
+    supportLink.rel = 'noopener noreferrer';
   }
 
   renderTemplatesList(container) {

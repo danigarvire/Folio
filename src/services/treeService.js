@@ -184,6 +184,24 @@ export class TreeService {
         return false;
       }
 
+      // Guard against circular moves: dropping a node onto itself, or moving a
+      // folder into one of its own descendants, would create a self-referential
+      // path (e.g. "A/Sub/A") and physically move files into themselves. Reject.
+      const draggedPath = draggedInfo.node.path;
+      const targetPath = targetInfo.node.path;
+      const isSelfOrDescendant = (ancestorPath, candidatePath) =>
+        candidatePath === ancestorPath ||
+        candidatePath.startsWith(ancestorPath + '/');
+
+      if (draggedNodeId === targetNodeId || isSelfOrDescendant(draggedPath, targetPath)) {
+        console.warn('Ignored circular reorder (cannot move a node into itself or a descendant)', {
+          draggedPath,
+          targetPath,
+          position,
+        });
+        return false;
+      }
+
       // Remove dragged node from its current position
       draggedInfo.siblings.splice(draggedInfo.index, 1);
 

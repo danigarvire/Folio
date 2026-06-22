@@ -6,3 +6,4 @@ export const Plugin = class Plugin {};
 export const ItemView = class ItemView {};
 export const Modal = class Modal {};
 export const setIcon = () => {};
+export const FileSystemAdapter = class FileSystemAdapter {};
