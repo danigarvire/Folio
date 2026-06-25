@@ -26,7 +26,7 @@ import { SpineService } from './services/spineService.js';
 import { ReorderService } from './services/reorderService.js';
 import { OutlineEditorService } from './services/outlineEditorService.js';
 import { getProfile } from './services/formatProfiles.js';
-import { findDrafts, draftScopeNodes, resolveCurrentDraft, draftShelfNode } from './services/draftModel.js';
+import { findDrafts, draftScopeNodes, resolveCurrentDraft, draftShelfNode, draftNodeForFile } from './services/draftModel.js';
 import { FolioBeatBoardView } from './views/beatBoardView.js';
 import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, BEAT_BOARD_VIEW_TYPE, DEFAULT_SETTINGS, PROJECT_TYPES, SCENE_STATUSES, nextSceneStatus } from './constants/index.js';
 
@@ -1390,12 +1390,16 @@ export default class FolioPlugin extends Plugin {
 
   async getNewFileFrontmatter(destPath, fileName, explicitScreenplay = false) {
     let projectType = null;
+    let inDraft = false;
     const book = this.booksIndex.find(b => destPath.startsWith(b.path));
     if (book) {
       const cfg = (await this.loadBookConfig(book)) || {};
       projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
+      // A new file created inside a draft (the manuscript) inherits its formatting,
+      // so e.g. a new "Episode 2" in a TV draft is screenplay-formatted too.
+      try { inDraft = !!draftNodeForFile(cfg.structure?.tree || [], destPath.slice(book.path.length + 1)); } catch (e) { inDraft = false; }
     }
-    const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, explicitScreenplay);
+    const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, inDraft, explicitScreenplay);
     if (!useScreenplay) return "";
     return this.bookService.buildFrontmatter({ projectType, screenplay: true });
   }

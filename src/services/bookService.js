@@ -35,11 +35,15 @@ export class BookService {
     return base === "scene" || base.startsWith("scene ");
   }
 
-  shouldUseScreenplayClass(projectType, title, explicit = false) {
-    if (explicit) return true;
+  shouldUseScreenplayClass(projectType, title, inDraft = false, explicit = false) {
+    if (explicit) return true; // user toggled "Screenplay formatting" — force it on
     if (!projectType) return false;
     const isScript = projectType === PROJECT_TYPES.SCRIPT || projectType === PROJECT_TYPES.FILM;
-    return isScript && this.isSceneTitle(title);
+    // Script/film manuscripts are screenplay-formatted. The manuscript is the
+    // draft, so any file inside the draft qualifies (regardless of its name —
+    // "Screenplay", "Episode 1", etc.); reference files (bible, characters) and
+    // legacy "Scene N" titles are covered too. Prose types are never screenplay.
+    return isScript && (inDraft || this.isSceneTitle(title));
   }
 
   buildFrontmatter({ projectType, screenplay = false }) {
@@ -299,10 +303,16 @@ export class BookService {
   async createStructureFromTemplate(bookFolder, structure, projectType) {
     const vault = this.app.vault;
     
-    const createItems = async (items, parentPath) => {
+    const createItems = async (items, parentPath, inDraft = false, inScreenplay = false) => {
       for (const item of items) {
         const itemPath = `${parentPath}/${item.title}`;
-        
+        // A file/folder counts as "in the draft" (the manuscript) once we hit a
+        // draft-flagged node. `screenplay: true` is a template-driven, inheritable
+        // flag — set it on a node (or a folder, to cover all its files) and every
+        // file beneath it is screenplay-formatted, so custom templates persist it.
+        const itemInDraft = inDraft || item.draft === true;
+        const itemScreenplay = inScreenplay || item.screenplay === true;
+
         if (item.type === 'folder') {
           // Create folder
           if (!vault.getAbstractFileByPath(itemPath)) {
@@ -310,7 +320,7 @@ export class BookService {
           }
           // Create children
           if (item.children && item.children.length > 0) {
-            await createItems(item.children, itemPath);
+            await createItems(item.children, itemPath, itemInDraft, itemScreenplay);
           }
         } else if (item.type === 'canvas') {
           // Create canvas file
@@ -322,14 +332,16 @@ export class BookService {
           // Create markdown file
           const filePath = `${itemPath}.md`;
           if (!vault.getAbstractFileByPath(filePath)) {
-            const isScreenplay = this.shouldUseScreenplayClass(projectType, item.title);
+            // The template flag wins; otherwise fall back to the project-type /
+            // draft heuristic so existing templates keep working.
+            const isScreenplay = itemScreenplay || this.shouldUseScreenplayClass(projectType, item.title, itemInDraft);
             const frontmatter = this.buildFrontmatter({ projectType, screenplay: isScreenplay });
             await vault.create(filePath, frontmatter);
           }
         }
       }
     };
-    
+
     await createItems(structure, bookFolder.path);
   }
 

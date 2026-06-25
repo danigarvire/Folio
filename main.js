@@ -132,7 +132,9 @@ var init_constants = __esm({
             ] },
             { title: "Outline", type: "file", icon: "list" },
             { title: "Drafts", type: "folder", icon: "layers", shelf: true, children: [
-              { title: "Draft 1", type: "folder", icon: "clapperboard", draft: true, children: [
+              // screenplay:true on the draft folder → every episode inside it is
+              // screenplay-formatted (md-screenplay), and the flag persists in the template.
+              { title: "Draft 1", type: "folder", icon: "clapperboard", draft: true, screenplay: true, children: [
                 { title: "Episode 1", type: "file", icon: "file" }
               ] }
             ] }
@@ -152,7 +154,7 @@ var init_constants = __esm({
             ] },
             // A film is one screenplay file → a single-file draft on the shelf.
             { title: "Drafts", type: "folder", icon: "layers", shelf: true, children: [
-              { title: "Screenplay", type: "file", icon: "film", draft: true }
+              { title: "Screenplay", type: "file", icon: "film", draft: true, screenplay: true }
             ] }
           ]
         },
@@ -2588,13 +2590,13 @@ var BookService = class {
     const base = (title || "").toLowerCase().replace(/\.md$/, "");
     return base === "scene" || base.startsWith("scene ");
   }
-  shouldUseScreenplayClass(projectType, title, explicit = false) {
+  shouldUseScreenplayClass(projectType, title, inDraft = false, explicit = false) {
     if (explicit)
       return true;
     if (!projectType)
       return false;
     const isScript = projectType === PROJECT_TYPES.SCRIPT || projectType === PROJECT_TYPES.FILM;
-    return isScript && this.isSceneTitle(title);
+    return isScript && (inDraft || this.isSceneTitle(title));
   }
   buildFrontmatter({ projectType, screenplay = false }) {
     if (!projectType && !screenplay)
@@ -2828,15 +2830,17 @@ var BookService = class {
    */
   async createStructureFromTemplate(bookFolder, structure, projectType) {
     const vault = this.app.vault;
-    const createItems = async (items, parentPath) => {
+    const createItems = async (items, parentPath, inDraft = false, inScreenplay = false) => {
       for (const item of items) {
         const itemPath = `${parentPath}/${item.title}`;
+        const itemInDraft = inDraft || item.draft === true;
+        const itemScreenplay = inScreenplay || item.screenplay === true;
         if (item.type === "folder") {
           if (!vault.getAbstractFileByPath(itemPath)) {
             await vault.createFolder(itemPath);
           }
           if (item.children && item.children.length > 0) {
-            await createItems(item.children, itemPath);
+            await createItems(item.children, itemPath, itemInDraft, itemScreenplay);
           }
         } else if (item.type === "canvas") {
           const canvasPath = `${itemPath}.canvas`;
@@ -2846,7 +2850,7 @@ var BookService = class {
         } else {
           const filePath = `${itemPath}.md`;
           if (!vault.getAbstractFileByPath(filePath)) {
-            const isScreenplay = this.shouldUseScreenplayClass(projectType, item.title);
+            const isScreenplay = itemScreenplay || this.shouldUseScreenplayClass(projectType, item.title, itemInDraft);
             const frontmatter = this.buildFrontmatter({ projectType, screenplay: isScreenplay });
             await vault.create(filePath, frontmatter);
           }
@@ -4948,6 +4952,42 @@ function findDrafts(tree) {
   };
   walk(tree || []);
   return out;
+}
+function findGroupByPath(tree, path) {
+  let found = null;
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (found)
+        return;
+      if (n.type === "group" && n.path === path) {
+        found = n;
+        return;
+      }
+      if (n.children)
+        walk(n.children);
+    }
+  };
+  walk(tree || []);
+  return found;
+}
+var isAncestorPath = (folder, file) => file === folder || file.startsWith(folder + "/");
+function draftNodeForFile(tree, relPath) {
+  if (!relPath)
+    return null;
+  const drafts = findDrafts(tree);
+  let best = null;
+  for (const d of drafts) {
+    if (d.path && isAncestorPath(d.path, relPath) && (!best || d.path.length > best.path.length))
+      best = d;
+  }
+  if (best)
+    return best;
+  if (drafts.length)
+    return null;
+  const i = relPath.indexOf("/");
+  if (i === -1)
+    return null;
+  return findGroupByPath(tree, relPath.slice(0, i));
 }
 function draftScopeNodes(draftNode) {
   if (!draftNode)
@@ -13188,6 +13228,47 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
         targets[idx].node.draft = true;
       renderStructureTree();
     };
+    const spRow = document.createElement("div");
+    spRow.className = "folio-template-editor-row";
+    const spLabel = document.createElement("label");
+    spLabel.textContent = "Screenplay format";
+    const spSelect = document.createElement("select");
+    spSelect.className = "folio-template-editor-input";
+    spRow.appendChild(spLabel);
+    spRow.appendChild(spSelect);
+    modal.appendChild(spRow);
+    const spHint = document.createElement("div");
+    spHint.className = "folio-template-editor-hint";
+    spHint.textContent = "Files here are written as a screenplay (the md-screenplay style: # scene heading, ## character, ### parenthetical\u2026). Pick a folder to format every file inside it, or a single file. Leave as \u201CNone\u201D for prose. Usually this is the same place as the Draft.";
+    modal.appendChild(spHint);
+    const refreshScreenplaySelect = () => {
+      const targets = collectDraftTargets(editData.structure);
+      spSelect._targets = targets;
+      spSelect.innerHTML = "";
+      const none = document.createElement("option");
+      none.value = "";
+      none.textContent = targets.length ? "\u2014 None (prose) \u2014" : "\u2014 Add a folder or file first \u2014";
+      spSelect.appendChild(none);
+      targets.forEach((f, i) => {
+        const o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = f.label;
+        if (f.node.screenplay)
+          o.selected = true;
+        spSelect.appendChild(o);
+      });
+      spSelect.disabled = targets.length === 0;
+    };
+    spSelect.onchange = () => {
+      (spSelect._targets || []).forEach((f) => {
+        delete f.node.screenplay;
+      });
+      const idx = spSelect.value === "" ? -1 : Number(spSelect.value);
+      const targets = spSelect._targets || [];
+      if (idx >= 0 && targets[idx])
+        targets[idx].node.screenplay = true;
+      renderStructureTree();
+    };
     const structureSection = document.createElement("div");
     structureSection.className = "folio-template-structure-section";
     const structureHeader = document.createElement("div");
@@ -13349,6 +13430,12 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
           draftBadge.textContent = "DRAFT";
           nodeRow.appendChild(draftBadge);
         }
+        if (node.screenplay) {
+          const spBadge = document.createElement("span");
+          spBadge.className = "folio-template-structure-node-screenplay";
+          spBadge.textContent = "SCREENPLAY";
+          nodeRow.appendChild(spBadge);
+        }
         const nodeActions = document.createElement("div");
         nodeActions.className = "folio-template-structure-node-actions";
         if (node.type === "folder") {
@@ -13422,6 +13509,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
         });
       }
       refreshDraftSelect();
+      refreshScreenplaySelect();
     };
     renderStructureTree();
     modal.appendChild(structureSection);
@@ -14975,14 +15063,20 @@ ${(beat.notes || "").trim()}
     return this.configService.loadProjectMeta(book);
   }
   async getNewFileFrontmatter(destPath, fileName, explicitScreenplay = false) {
-    var _a;
+    var _a, _b;
     let projectType = null;
+    let inDraft = false;
     const book = this.booksIndex.find((b) => destPath.startsWith(b.path));
     if (book) {
       const cfg = await this.loadBookConfig(book) || {};
       projectType = ((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
+      try {
+        inDraft = !!draftNodeForFile(((_b = cfg.structure) == null ? void 0 : _b.tree) || [], destPath.slice(book.path.length + 1));
+      } catch (e) {
+        inDraft = false;
+      }
     }
-    const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, explicitScreenplay);
+    const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, inDraft, explicitScreenplay);
     if (!useScreenplay)
       return "";
     return this.bookService.buildFrontmatter({ projectType, screenplay: true });

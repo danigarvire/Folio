@@ -358,6 +358,45 @@ export class FolioSettingTab extends PluginSettingTab {
       renderStructureTree();
     };
 
+    // Screenplay selector — which folder OR file is screenplay-formatted. Same
+    // explicit single control as Draft, with a SCREENPLAY badge on the chosen node.
+    const spRow = document.createElement('div');
+    spRow.className = 'folio-template-editor-row';
+    const spLabel = document.createElement('label');
+    spLabel.textContent = 'Screenplay format';
+    const spSelect = document.createElement('select');
+    spSelect.className = 'folio-template-editor-input';
+    spRow.appendChild(spLabel);
+    spRow.appendChild(spSelect);
+    modal.appendChild(spRow);
+    const spHint = document.createElement('div');
+    spHint.className = 'folio-template-editor-hint';
+    spHint.textContent = 'Files here are written as a screenplay (the md-screenplay style: # scene heading, ## character, ### parenthetical…). Pick a folder to format every file inside it, or a single file. Leave as “None” for prose. Usually this is the same place as the Draft.';
+    modal.appendChild(spHint);
+
+    const refreshScreenplaySelect = () => {
+      const targets = collectDraftTargets(editData.structure);
+      spSelect._targets = targets;
+      spSelect.innerHTML = '';
+      const none = document.createElement('option');
+      none.value = ''; none.textContent = targets.length ? '— None (prose) —' : '— Add a folder or file first —';
+      spSelect.appendChild(none);
+      targets.forEach((f, i) => {
+        const o = document.createElement('option');
+        o.value = String(i); o.textContent = f.label;
+        if (f.node.screenplay) o.selected = true;
+        spSelect.appendChild(o);
+      });
+      spSelect.disabled = targets.length === 0;
+    };
+    spSelect.onchange = () => {
+      (spSelect._targets || []).forEach((f) => { delete f.node.screenplay; });
+      const idx = spSelect.value === '' ? -1 : Number(spSelect.value);
+      const targets = spSelect._targets || [];
+      if (idx >= 0 && targets[idx]) targets[idx].node.screenplay = true;
+      renderStructureTree();
+    };
+
     // Structure section
     const structureSection = document.createElement('div');
     structureSection.className = 'folio-template-structure-section';
@@ -561,7 +600,15 @@ export class FolioSettingTab extends PluginSettingTab {
           draftBadge.textContent = 'DRAFT';
           nodeRow.appendChild(draftBadge);
         }
-        
+        // Screenplay badge — files here (and under here, for folders) get the
+        // md-screenplay cssclass. Toggled with the clapperboard action.
+        if (node.screenplay) {
+          const spBadge = document.createElement('span');
+          spBadge.className = 'folio-template-structure-node-screenplay';
+          spBadge.textContent = 'SCREENPLAY';
+          nodeRow.appendChild(spBadge);
+        }
+
         // Node actions
         const nodeActions = document.createElement('div');
         nodeActions.className = 'folio-template-structure-node-actions';
@@ -642,7 +689,8 @@ export class FolioSettingTab extends PluginSettingTab {
           renderNode(node, editData.structure, index, 0);
         });
       }
-      refreshDraftSelect(); // keep the Draft folder dropdown in sync with the structure
+      refreshDraftSelect(); // keep the Draft dropdown in sync with the structure
+      refreshScreenplaySelect(); // …and the Screenplay dropdown
     };
 
     renderStructureTree();

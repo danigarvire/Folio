@@ -67,7 +67,9 @@ export const DEFAULT_SETTINGS = {
         ] },
         { title: "Outline", type: "file", icon: "list" },
         { title: "Drafts", type: "folder", icon: "layers", shelf: true, children: [
-          { title: "Draft 1", type: "folder", icon: "clapperboard", draft: true, children: [
+          // screenplay:true on the draft folder → every episode inside it is
+          // screenplay-formatted (md-screenplay), and the flag persists in the template.
+          { title: "Draft 1", type: "folder", icon: "clapperboard", draft: true, screenplay: true, children: [
             { title: "Episode 1", type: "file", icon: "file" }
           ] }
         ] }
@@ -87,7 +89,7 @@ export const DEFAULT_SETTINGS = {
         ] },
         // A film is one screenplay file → a single-file draft on the shelf.
         { title: "Drafts", type: "folder", icon: "layers", shelf: true, children: [
-          { title: "Screenplay", type: "file", icon: "film", draft: true }
+          { title: "Screenplay", type: "file", icon: "film", draft: true, screenplay: true }
         ] }
       ]
     },
