@@ -1281,6 +1281,21 @@ var init_helpModal = __esm({
             ]
           },
           {
+            icon: "layers",
+            title: "Drafts & the current draft",
+            blocks: [
+              { type: "p", text: "A draft is the manuscript you write in \u2014 a folder of chapters or episodes, or a single screenplay/essay file. A project can hold several drafts." },
+              { type: "ul", items: [
+                "Drafts live together on a \u201CDrafts\u201D shelf folder, so your project root stays tidy.",
+                "Exactly one draft is the current draft \u2014 it drives the outline strip, beats and timeline.",
+                "The current draft shows a CURRENT badge in the tree; other drafts show a quiet dot.",
+                "Switch with the draft dropdown in the strip toolbar, or right-click a draft \u2192 \u201CSet as current draft\u201D.",
+                "Mark any folder or file as a draft by right-clicking it, or set the draft target when editing a template."
+              ] },
+              { type: "tip", text: "Everything outside the current draft \u2014 characters, research, notes \u2014 stays out of the outline and stats workflow, so the strip only ever shows your manuscript." }
+            ]
+          },
+          {
             icon: "circle-dot",
             title: "Track scene status",
             blocks: [
@@ -1324,17 +1339,44 @@ var init_helpModal = __esm({
             ]
           },
           {
-            icon: "layout-dashboard",
-            title: "Beat board (Canvas timeline)",
+            icon: "gantt-chart",
+            title: "The outline strip",
             blocks: [
-              { type: "p", text: "Turn your scenes into a native Obsidian Canvas you can rearrange like index cards:" },
+              { type: "p", text: "A page-scaled strip sits above your script (and at the top of the Beat Board), mirroring Final Draft's Outline Editor:" },
               { type: "ul", items: [
-                "Run \u201CBuild / refresh beat board\u201D from the command palette.",
-                "Folio lays every scene out as a horizontal timeline of cards, in outline order.",
-                "Cards are coloured by their writing status.",
-                "Rearrange or add free-form beats freely \u2014 refreshing keeps your layout and only updates colours and new scenes."
+                "Planning lanes (Outline 1, Outline 2\u2026) hold free beats \u2014 arcs and subplots you position and resize over the page scale. Double-click a lane to add one, drag to move, drag an edge to resize, click to edit (title, goal, notes, colour).",
+                "The Script lane below is built from the current draft's scenes, sized by length \u2014 a live map of the manuscript.",
+                "A playhead follows your cursor and the ruler marks pages; drag the zoom slider to rescale.",
+                "Toolbar (left): open Folio split, open the draft script (file view), open the Beat Board, build the outline, Writer Tools and Focus Mode \u2014 plus \u201C+ lane\u201D and the current-draft switcher."
               ] },
-              { type: "tip", text: "The board is a normal .canvas file in your project, so all of Obsidian's Canvas tools (zoom, groups, connections) work on it." }
+              { type: "tip", text: "Beats are saved per draft, so each draft keeps its own planning. The strip follows the current draft no matter which file you have open." }
+            ]
+          },
+          {
+            icon: "layout-dashboard",
+            title: "Beat board",
+            blocks: [
+              { type: "p", text: "A freeform corkboard of the same beats as the strip \u2014 for brainstorming structure as movable cards:" },
+              { type: "ul", items: [
+                "Open it from the strip's dashboard button, or run \u201COpen Beat Board\u201D.",
+                "Drag cards anywhere, drag a corner to resize, click to edit, and use \u201C+ Beat\u201D to add.",
+                "Cards are coloured and grouped by lane (Outline 1, Outline 2\u2026), matching the strip.",
+                "The outline strip is pinned at the top of the board too, so structure stays in view while you think."
+              ] },
+              { type: "tip", text: "Edits sync both ways with the strip in real time. From a beat you can \u201CSend to script\u201D to drop an arc marker into the manuscript." }
+            ]
+          },
+          {
+            icon: "arrow-left-right",
+            title: "Outline \u21C4 draft, both ways",
+            blocks: [
+              { type: "p", text: "Move between planning and prose without losing work \u2014 both directions are non-destructive:" },
+              { type: "ul", items: [
+                "\u201CBuild outline from draft\u201D writes every scene heading of the current draft into your Outline file as editable headers. Write notes under each; re-running keeps them.",
+                "\u201CBuild new draft from outline\u201D does the reverse: it turns the Outline file into a brand-new draft on the Drafts shelf and makes it current \u2014 your original draft is untouched.",
+                "A single outline group becomes a single-file draft; several groups become a folder of files."
+              ] },
+              { type: "tip", text: "Run both from the command palette, or use the list-tree button in the strip toolbar." }
             ]
           },
           {
@@ -1424,6 +1466,21 @@ var init_helpModal = __esm({
             ]
           },
           {
+            icon: "layers",
+            title: "Borradores y el borrador actual",
+            blocks: [
+              { type: "p", text: "Un borrador es el manuscrito en el que escribes: una carpeta de cap\xEDtulos o episodios, o un \xFAnico archivo de guion/ensayo. Un proyecto puede tener varios borradores." },
+              { type: "ul", items: [
+                "Los borradores conviven en una carpeta \xABDrafts\xBB (estante), as\xED la ra\xEDz del proyecto queda ordenada.",
+                "Solo un borrador es el borrador actual: es el que alimenta la tira de esquema, los beats y la l\xEDnea de tiempo.",
+                "El borrador actual muestra una insignia CURRENT en el \xE1rbol; los dem\xE1s muestran un punto discreto.",
+                "C\xE1mbialo con el desplegable de borrador en la barra de la tira, o haz clic derecho en un borrador \u2192 \xABSet as current draft\xBB.",
+                "Marca cualquier carpeta o archivo como borrador con clic derecho, o fija el borrador objetivo al editar una plantilla."
+              ] },
+              { type: "tip", text: "Todo lo que est\xE1 fuera del borrador actual \u2014personajes, documentaci\xF3n, notas\u2014 queda fuera del flujo de esquema y estad\xEDsticas, as\xED que la tira solo muestra tu manuscrito." }
+            ]
+          },
+          {
             icon: "circle-dot",
             title: "Estado de cada escena",
             blocks: [
@@ -1467,17 +1524,44 @@ var init_helpModal = __esm({
             ]
           },
           {
-            icon: "layout-dashboard",
-            title: "Beat board (l\xEDnea de tiempo en Canvas)",
+            icon: "gantt-chart",
+            title: "La tira de esquema",
             blocks: [
-              { type: "p", text: "Convierte tus escenas en un Canvas nativo de Obsidian que puedes reorganizar como fichas:" },
+              { type: "p", text: "Una tira escalada por p\xE1ginas se sit\xFAa sobre tu guion (y en la parte superior del Beat Board), inspirada en el Editor de esquema de Final Draft:" },
               { type: "ul", items: [
-                "Ejecuta \xABBuild / refresh beat board\xBB desde la paleta de comandos.",
-                "Folio coloca cada escena como una l\xEDnea de tiempo horizontal de tarjetas, en el orden del esquema.",
-                "Las tarjetas se colorean seg\xFAn su estado de escritura.",
-                "Reorganiza o a\xF1ade beats libres a tu gusto \u2014 al refrescar se conserva tu disposici\xF3n y solo se actualizan colores y escenas nuevas."
+                "Los carriles de planificaci\xF3n (Outline 1, Outline 2\u2026) contienen beats libres: arcos y subtramas que colocas y redimensionas sobre la escala de p\xE1ginas. Doble clic en un carril para a\xF1adir, arrastra para mover, arrastra un borde para redimensionar, clic para editar (t\xEDtulo, objetivo, notas, color).",
+                "El carril Script de abajo se construye con las escenas del borrador actual, dimensionadas por longitud: un mapa vivo del manuscrito.",
+                "Un cursor (playhead) sigue tu posici\xF3n y la regla marca las p\xE1ginas; arrastra el control de zoom para reescalar.",
+                "Barra (izquierda): abrir Folio en split, abrir el guion del borrador (vista de archivo), abrir el Beat Board, construir el esquema, Herramientas de escritura y Modo enfoque \u2014 adem\xE1s de \xAB+ lane\xBB y el selector de borrador actual."
               ] },
-              { type: "tip", text: "El tablero es un archivo .canvas normal de tu proyecto, as\xED que funcionan todas las herramientas de Canvas de Obsidian (zoom, grupos, conexiones)." }
+              { type: "tip", text: "Los beats se guardan por borrador, as\xED cada borrador conserva su planificaci\xF3n. La tira sigue al borrador actual sin importar qu\xE9 archivo tengas abierto." }
+            ]
+          },
+          {
+            icon: "layout-dashboard",
+            title: "Beat board",
+            blocks: [
+              { type: "p", text: "Un tablero libre con los mismos beats que la tira \u2014 para idear la estructura como tarjetas movibles:" },
+              { type: "ul", items: [
+                "\xC1brelo desde el bot\xF3n de panel de la tira, o ejecuta \xABOpen Beat Board\xBB.",
+                "Arrastra las tarjetas a cualquier sitio, arrastra una esquina para redimensionar, clic para editar y usa \xAB+ Beat\xBB para a\xF1adir.",
+                "Las tarjetas se colorean y agrupan por carril (Outline 1, Outline 2\u2026), igual que la tira.",
+                "La tira de esquema tambi\xE9n queda fijada arriba del tablero, as\xED la estructura permanece a la vista mientras piensas."
+              ] },
+              { type: "tip", text: "Las ediciones se sincronizan en ambos sentidos con la tira en tiempo real. Desde un beat puedes \xABSend to script\xBB para insertar un marcador de arco en el manuscrito." }
+            ]
+          },
+          {
+            icon: "arrow-left-right",
+            title: "Esquema \u21C4 borrador, en ambos sentidos",
+            blocks: [
+              { type: "p", text: "Mu\xE9vete entre la planificaci\xF3n y la prosa sin perder trabajo \u2014 ambas direcciones son no destructivas:" },
+              { type: "ul", items: [
+                "\xABBuild outline from draft\xBB escribe cada encabezado de escena del borrador actual en tu archivo Outline como encabezados editables. Escribe notas bajo cada uno; al repetir se conservan.",
+                "\xABBuild new draft from outline\xBB hace lo contrario: convierte el archivo Outline en un borrador nuevo en el estante \xABDrafts\xBB y lo marca como actual \u2014 tu borrador original queda intacto.",
+                "Un solo grupo del esquema crea un borrador de un archivo; varios grupos crean una carpeta de archivos."
+              ] },
+              { type: "tip", text: "Ejecuta ambos desde la paleta de comandos, o usa el bot\xF3n de \xE1rbol (list-tree) en la barra de la tira." }
             ]
           },
           {
