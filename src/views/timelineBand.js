@@ -186,6 +186,7 @@ export class TimelineBand {
       b.addEventListener("click", () => { try { fn(); } catch (e) { console.warn(e); } });
     };
     viewBtn("columns-2", "Open Folio (split)", () => this.plugin.activateFolio());
+    viewBtn("file-text", "Open draft script", () => this.plugin.openDraftScript());
     viewBtn("layout-dashboard", "Open Beat Board", () => this.plugin.openBeatBoard());
     viewBtn("list-tree", "Build outline from draft", () => this.plugin.buildOutlineFromDraft());
     viewBtn("pencil-ruler", "Writer Tools", () => this.plugin.openWriterTools());

@@ -11617,6 +11617,7 @@ var TimelineBand = class {
       });
     };
     viewBtn("columns-2", "Open Folio (split)", () => this.plugin.activateFolio());
+    viewBtn("file-text", "Open draft script", () => this.plugin.openDraftScript());
     viewBtn("layout-dashboard", "Open Beat Board", () => this.plugin.openBeatBoard());
     viewBtn("list-tree", "Build outline from draft", () => this.plugin.buildOutlineFromDraft());
     viewBtn("pencil-ruler", "Writer Tools", () => this.plugin.openWriterTools());
@@ -14447,6 +14448,60 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     } catch (e) {
       console.error("toggleDraftFolder failed", e);
       new import_obsidian22.Notice("Couldn't toggle draft. See console for details.");
+    }
+  }
+  /** Open (or reveal) the current draft's script — the manuscript "file view". */
+  async openDraftScript() {
+    var _a, _b, _c;
+    try {
+      const book = this.activeBook;
+      if (!book) {
+        new import_obsidian22.Notice("Open or create a project first.");
+        return;
+      }
+      const cfg = await this.loadBookConfig(book) || {};
+      const draft = resolveCurrentDraft(((_a = cfg.structure) == null ? void 0 : _a.tree) || [], cfg.currentDraftPath);
+      if (!draft) {
+        new import_obsidian22.Notice("No draft found. Mark a folder or file as a draft first.");
+        return;
+      }
+      const find = (nodes) => {
+        for (const n of nodes || []) {
+          if (n.type === "file")
+            return n;
+          if (n.children) {
+            const r = find(n.children);
+            if (r)
+              return r;
+          }
+        }
+        return null;
+      };
+      const first = find(draftScopeNodes(draft) || []);
+      if (!first) {
+        new import_obsidian22.Notice("This draft has no script file yet.");
+        return;
+      }
+      const path = `${book.path}/${first.path}`;
+      for (const leaf2 of this.app.workspace.getLeavesOfType("markdown")) {
+        if (((_c = (_b = leaf2.view) == null ? void 0 : _b.file) == null ? void 0 : _c.path) === path) {
+          this.app.workspace.revealLeaf(leaf2);
+          return;
+        }
+      }
+      const file = this.app.vault.getAbstractFileByPath(path);
+      if (!file) {
+        new import_obsidian22.Notice("Script file not found.");
+        return;
+      }
+      const leaf = this.app.workspace.getLeaf("tab");
+      if (leaf) {
+        await leaf.openFile(file);
+        this.app.workspace.revealLeaf(leaf);
+      }
+    } catch (e) {
+      console.error("openDraftScript failed", e);
+      new import_obsidian22.Notice("Couldn't open the draft script. See console for details.");
     }
   }
   /** Open (or reveal) the Beat Board as a standalone view (it carries its own strip). */

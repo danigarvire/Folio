@@ -974,6 +974,32 @@ export default class FolioPlugin extends Plugin {
     }
   }
 
+  /** Open (or reveal) the current draft's script — the manuscript "file view". */
+  async openDraftScript() {
+    try {
+      const book = this.activeBook;
+      if (!book) { new Notice("Open or create a project first."); return; }
+      const cfg = (await this.loadBookConfig(book)) || {};
+      const draft = resolveCurrentDraft(cfg.structure?.tree || [], cfg.currentDraftPath);
+      if (!draft) { new Notice("No draft found. Mark a folder or file as a draft first."); return; }
+      const find = (nodes) => { for (const n of nodes || []) { if (n.type === "file") return n; if (n.children) { const r = find(n.children); if (r) return r; } } return null; };
+      const first = find(draftScopeNodes(draft) || []);
+      if (!first) { new Notice("This draft has no script file yet."); return; }
+      const path = `${book.path}/${first.path}`;
+      // Reveal it if already open; otherwise open it in a tab.
+      for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+        if (leaf.view?.file?.path === path) { this.app.workspace.revealLeaf(leaf); return; }
+      }
+      const file = this.app.vault.getAbstractFileByPath(path);
+      if (!file) { new Notice("Script file not found."); return; }
+      const leaf = this.app.workspace.getLeaf("tab");
+      if (leaf) { await leaf.openFile(file); this.app.workspace.revealLeaf(leaf); }
+    } catch (e) {
+      console.error("openDraftScript failed", e);
+      new Notice("Couldn't open the draft script. See console for details.");
+    }
+  }
+
   /** Open (or reveal) the Beat Board as a standalone view (it carries its own strip). */
   async openBeatBoard() {
     const { workspace } = this.app;
