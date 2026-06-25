@@ -3,7 +3,8 @@
  */
 
 import { ItemView, TFolder, Menu, setIcon } from 'obsidian';
-import { VIEW_TYPE, PROJECT_TYPES } from '../constants/index.js';
+import { VIEW_TYPE, PROJECT_TYPES, sceneStatusLabel } from '../constants/index.js';
+import { resolveCurrentDraft } from '../services/draftModel.js';
 
 // Helper to get icon from settings templates
 function getProjectTypeIcon(plugin, projectType) {
@@ -118,6 +119,7 @@ export class FolioView extends ItemView {
     // while preserving existing order and metadata (Book-Smith pattern)
     let configTree = [];
     let useConfigTree = false;
+    let currentDraftPath = null; // cfg pointer to the current draft
 
     try {
       // Build/sync tree from filesystem (merges with existing config)
@@ -127,6 +129,7 @@ export class FolioView extends ItemView {
         // Only persist when the tree actually changed — avoids a vault.modify
         // write (and the resulting event chain) on every render.
         const cfg = (await this.plugin.loadBookConfig(book)) || {};
+        currentDraftPath = cfg.currentDraftPath || null;
         const existingTree = cfg.structure?.tree;
         const treeChanged = JSON.stringify(existingTree) !== JSON.stringify(configTree);
         if (treeChanged) {
@@ -139,6 +142,11 @@ export class FolioView extends ItemView {
     } catch (e) {
       console.warn('Failed to build/sync tree from filesystem', e);
     }
+
+    // Which draft is "current" — the one that drives the strip/beats. Exactly one
+    // gets the CURRENT badge; other drafts get a quiet dot.
+    const currentDraftNode = resolveCurrentDraft(configTree, currentDraftPath);
+    const currentDraftResolvedPath = currentDraftNode ? currentDraftNode.path : null;
 
     // Drag and drop state
     let draggedElement = null;
@@ -280,10 +288,24 @@ export class FolioView extends ItemView {
         } catch {}
         
         const titleSpan = folderRow.createSpan({ text: node.title, cls: "folio-tree-label" });
-        
+
         // Add visual indicator if folder is excluded
         if (node.exclude) {
           titleSpan.classList.add('exclude-from-stats');
+        }
+
+        // Draft marker. The CURRENT draft (drives the strip/beats) gets a badge;
+        // other drafts get a quiet dot. `node._isCurrentDraft` is read by the
+        // right-click menu (same node object).
+        if (node.draft) {
+          node._isCurrentDraft = node.path === currentDraftResolvedPath;
+          if (node._isCurrentDraft) {
+            const badge = folderRow.createSpan({ cls: "folio-tree-draft-badge", text: "CURRENT" });
+            badge.setAttribute("aria-label", "Current draft — drives the outline strip");
+          } else {
+            const dot = folderRow.createSpan({ cls: "folio-tree-draft-dot" });
+            dot.setAttribute("aria-label", "Draft (not current) — right-click to make it current");
+          }
         }
 
         setupDragEvents(folderRow, node.id, 'group');
@@ -335,14 +357,37 @@ export class FolioView extends ItemView {
         } catch {}
         
         const label = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });
-        
+
         if (node.exclude) {
           label.classList.add('exclude-from-stats');
         }
-        if (node.completed) {
-          label.classList.add('is-done');
+
+        // Writing-status dot (To-do / Draft / Revised / Final). Click cycles it.
+        if (node.type === 'file') {
+          const status = node.status || (node.completed ? 'final' : null);
+          const dot = fileRow.createSpan({ cls: `folio-tree-status-dot is-${status || 'none'}` });
+          const statusLabel = sceneStatusLabel(status);
+          const dotTitle = statusLabel ? `Status: ${statusLabel} (click to change)` : 'Set writing status';
+          dot.setAttribute('title', dotTitle);
+          dot.setAttribute('aria-label', dotTitle);
+          dot.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.plugin.cycleNodeStatus?.(vaultItem, status);
+          });
         }
-        
+
+        // Single-file draft marker (CURRENT badge / quiet dot), same as folders.
+        if (node.draft) {
+          node._isCurrentDraft = node.path === currentDraftResolvedPath;
+          if (node._isCurrentDraft) {
+            const badge = fileRow.createSpan({ cls: "folio-tree-draft-badge", text: "CURRENT" });
+            badge.setAttribute("aria-label", "Current draft — drives the outline strip");
+          } else {
+            const ddot = fileRow.createSpan({ cls: "folio-tree-draft-dot" });
+            ddot.setAttribute("aria-label", "Draft (not current) — right-click to make it current");
+          }
+        }
+
         fileRow.onclick = (e) => {
           e.stopPropagation();
           this.plugin.activeFilePath = fullPath;

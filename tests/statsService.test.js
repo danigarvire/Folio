@@ -69,6 +69,13 @@ describe('StatsService.countWords()', () => {
     expect(svc.countWords('## Section Two\nSome text.')).toBe(4);
   });
 
+  test('strips Folio Unit block ids, keeps the body words', () => {
+    // " ^folio…" is not a word: "A man enters." = 3
+    expect(svc.countWords('# INT. ROOM - DAY\nA man enters. ^folioab12cd')).toBe(7);
+    // bare line with only the body + id → 3 words, id dropped
+    expect(svc.countWords('Una silla vacía. ^folio7a3c')).toBe(3);
+  });
+
   test('strips bold/italic markers, keeps content words', () => {
     // "**bold**" → "bold", "*italic*" → "italic" → "bold and italic words" = 4
     expect(svc.countWords('**bold** and *italic* words')).toBe(4);

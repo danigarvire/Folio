@@ -38,7 +38,9 @@ export function parseScreenplayElements(markdown) {
   let inDialogue = false;
 
   for (const rawLine of lines) {
-    const line = rawLine.replace(/\s+$/, "");
+    // Strip a trailing folio block id (our stable Unit anchor) so it never
+    // leaks into exported action/dialogue text.
+    const line = rawLine.replace(/\s+$/, "").replace(/\s\^folio[A-Za-z0-9]+$/, "");
 
     if (line.trim() === "") {
       // Blank line ends any dialogue block.

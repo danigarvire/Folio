@@ -59,11 +59,20 @@ function makeDefaultBookConfig() {
     }
   };
 }
-var VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, PROJECT_TYPES, DEFAULT_SETTINGS, DEFAULT_BOOK_CONFIG;
+function nextSceneStatus(current) {
+  const i = SCENE_STATUS_CYCLE.indexOf(current || null);
+  return SCENE_STATUS_CYCLE[(i + 1) % SCENE_STATUS_CYCLE.length];
+}
+function sceneStatusLabel(id) {
+  var _a;
+  return ((_a = SCENE_STATUSES.find((s) => s.id === id)) == null ? void 0 : _a.label) || null;
+}
+var VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, BEAT_BOARD_VIEW_TYPE, PROJECT_TYPES, DEFAULT_SETTINGS, DEFAULT_BOOK_CONFIG, SCENE_STATUSES, SCENE_STATUS_CYCLE;
 var init_constants = __esm({
   "src/constants/index.js"() {
     VIEW_TYPE = "folio-view";
     WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
+    BEAT_BOARD_VIEW_TYPE = "folio-beat-board";
     PROJECT_TYPES = {
       BOOK: "book",
       SCRIPT: "script",
@@ -87,15 +96,22 @@ var init_constants = __esm({
           name: "Book",
           icon: "book",
           order: 1,
-          description: "Novel or written work",
+          description: "Novel or long-form prose",
           structure: [
             { title: "Moodboard", type: "canvas", icon: "layout-dashboard" },
-            { title: "Preface", type: "file", icon: "file" },
             { title: "Outline", type: "file", icon: "list" },
-            { title: "Volume 1", type: "folder", icon: "folder-open", children: [
-              { title: "Chapter 1", type: "file", icon: "file" }
+            { title: "Characters", type: "folder", icon: "users", children: [
+              { title: "Character 1", type: "file", icon: "user" }
             ] },
-            { title: "Afterword", type: "file", icon: "file" }
+            { title: "Research", type: "folder", icon: "archive", children: [
+              { title: "Note 1", type: "file", icon: "file" }
+            ] },
+            // The "Drafts" shelf holds every draft; one is current (drives the strip).
+            { title: "Drafts", type: "folder", icon: "layers", shelf: true, children: [
+              { title: "Draft 1", type: "folder", icon: "book", draft: true, children: [
+                { title: "Chapter 1", type: "file", icon: "file" }
+              ] }
+            ] }
           ]
         },
         {
@@ -103,36 +119,22 @@ var init_constants = __esm({
           name: "TV Show",
           icon: "tv",
           order: 2,
-          description: "Series with episodes and sequences",
+          description: "Series \u2014 bible, outline, and episode drafts",
           structure: [
-            {
-              title: "Show Dossier",
-              type: "folder",
-              icon: "folder-open",
-              children: [
-                { title: "Concept", type: "folder", icon: "lightbulb", children: [
-                  { title: "Logline", type: "file", icon: "file" },
-                  { title: "Synopsis", type: "file", icon: "file" }
-                ] },
-                { title: "Structure", type: "folder", icon: "list-tree", children: [
-                  { title: "Beat Sheet", type: "file", icon: "file" }
-                ] },
-                { title: "Faces", type: "folder", icon: "users", children: [
-                  { title: "Character 1", type: "file", icon: "file" }
-                ] },
-                { title: "Places", type: "folder", icon: "map-pin", children: [
-                  { title: "Location 1", type: "file", icon: "file" }
-                ] },
-                { title: "Objects", type: "folder", icon: "box", children: [
-                  { title: "Prop 1", type: "file", icon: "file" }
-                ] },
-                { title: "Documentation", type: "folder", icon: "archive", children: [
-                  { title: "Research", type: "file", icon: "file" }
-                ] }
-              ]
-            },
-            { title: "Episode 1", type: "folder", icon: "clapperboard", children: [
-              { title: "Scene 1", type: "file", icon: "file" }
+            { title: "Show Bible", type: "folder", icon: "book-open", children: [
+              { title: "Logline & Synopsis", type: "file", icon: "file" },
+              { title: "Characters", type: "folder", icon: "users", children: [
+                { title: "Character 1", type: "file", icon: "user" }
+              ] },
+              { title: "World", type: "folder", icon: "map-pin", children: [
+                { title: "Location 1", type: "file", icon: "file" }
+              ] }
+            ] },
+            { title: "Outline", type: "file", icon: "list" },
+            { title: "Drafts", type: "folder", icon: "layers", shelf: true, children: [
+              { title: "Draft 1", type: "folder", icon: "clapperboard", draft: true, children: [
+                { title: "Episode 1", type: "file", icon: "file" }
+              ] }
             ] }
           ]
         },
@@ -145,8 +147,12 @@ var init_constants = __esm({
           structure: [
             { title: "Moodboard", type: "canvas", icon: "layout-dashboard" },
             { title: "Outline", type: "file", icon: "list" },
-            { title: "Sequence 1", type: "folder", icon: "film", children: [
-              { title: "Scene 1", type: "file", icon: "file" }
+            { title: "Characters", type: "folder", icon: "users", children: [
+              { title: "Character 1", type: "file", icon: "user" }
+            ] },
+            // A film is one screenplay file → a single-file draft on the shelf.
+            { title: "Drafts", type: "folder", icon: "layers", shelf: true, children: [
+              { title: "Screenplay", type: "file", icon: "film", draft: true }
             ] }
           ]
         },
@@ -155,32 +161,38 @@ var init_constants = __esm({
           name: "Essay",
           icon: "newspaper",
           order: 4,
-          description: "Essay or short nonfiction piece",
+          description: "Essay or short nonfiction",
           structure: [
-            {
-              title: "Research",
-              type: "folder",
-              icon: "archive",
-              children: [
-                { title: "Document 1", type: "file", icon: "file" }
-              ]
-            },
+            { title: "Research", type: "folder", icon: "archive", children: [
+              { title: "Source 1", type: "file", icon: "file" }
+            ] },
             { title: "Outline", type: "file", icon: "list" },
-            { title: "Manuscript", type: "file", icon: "scroll-text" }
+            { title: "Drafts", type: "folder", icon: "layers", shelf: true, children: [
+              { title: "Manuscript", type: "file", icon: "scroll-text", draft: true }
+            ] }
           ]
         }
       ]
     };
     DEFAULT_BOOK_CONFIG = makeDefaultBookConfig();
+    SCENE_STATUSES = [
+      { id: "todo", label: "To-do" },
+      // id stays "draft" (colours/frontmatter/defaults unchanged); label avoids
+      // clashing with the "Draft" manuscript folder.
+      { id: "draft", label: "In progress" },
+      { id: "revised", label: "Revised" },
+      { id: "final", label: "Final" }
+    ];
+    SCENE_STATUS_CYCLE = [null, "todo", "draft", "revised", "final"];
   }
 });
 
 // src/modals/projectTypeSelectorModal.js
-var import_obsidian5, ProjectTypeSelectorModal;
+var import_obsidian7, ProjectTypeSelectorModal;
 var init_projectTypeSelectorModal = __esm({
   "src/modals/projectTypeSelectorModal.js"() {
-    import_obsidian5 = require("obsidian");
-    ProjectTypeSelectorModal = class extends import_obsidian5.Modal {
+    import_obsidian7 = require("obsidian");
+    ProjectTypeSelectorModal = class extends import_obsidian7.Modal {
       constructor(app, onSelect, templates = null) {
         super(app);
         this.onSelect = onSelect;
@@ -210,7 +222,7 @@ var init_projectTypeSelectorModal = __esm({
       createProjectOption(container, { title, description, icon, value }) {
         const option = container.createDiv({ cls: "folio-project-type-option" });
         const iconEl = option.createDiv({ cls: "folio-project-type-icon" });
-        (0, import_obsidian5.setIcon)(iconEl, icon);
+        (0, import_obsidian7.setIcon)(iconEl, icon);
         const content = option.createDiv({ cls: "folio-project-type-content" });
         content.createEl("div", { text: title, cls: "folio-project-type-title" });
         content.createEl("div", { text: description, cls: "folio-project-type-description" });
@@ -232,13 +244,13 @@ var newBookModal_exports = {};
 __export(newBookModal_exports, {
   NewBookModal: () => NewBookModal
 });
-var import_obsidian6, NewBookModal;
+var import_obsidian8, NewBookModal;
 var init_newBookModal = __esm({
   "src/modals/newBookModal.js"() {
-    import_obsidian6 = require("obsidian");
+    import_obsidian8 = require("obsidian");
     init_constants();
     init_projectTypeSelectorModal();
-    NewBookModal = class extends import_obsidian6.Modal {
+    NewBookModal = class extends import_obsidian8.Modal {
       constructor(plugin) {
         var _a;
         super(plugin.app);
@@ -387,12 +399,12 @@ var init_newBookModal = __esm({
           var _a2, _b2;
           const title = titleInput.value.trim();
           if (!title) {
-            new import_obsidian6.Notice("Please enter a project title.");
+            new import_obsidian8.Notice("Please enter a project title.");
             return;
           }
           const nameError = (_b2 = (_a2 = this.plugin.bookService) == null ? void 0 : _a2.validateName) == null ? void 0 : _b2.call(_a2, title);
           if (nameError) {
-            new import_obsidian6.Notice(`Invalid project name: ${nameError}`);
+            new import_obsidian8.Notice(`Invalid project name: ${nameError}`);
             return;
           }
           let projectType = this.selectedProjectType;
@@ -418,7 +430,7 @@ var init_newBookModal = __esm({
           try {
             await this.plugin.createBook(title, projectType, templateStructure);
           } catch (e) {
-            new import_obsidian6.Notice(`Failed to create project: ${e.message || e}`);
+            new import_obsidian8.Notice(`Failed to create project: ${e.message || e}`);
             return;
           }
           const basePath = this.plugin.settings && this.plugin.settings.basePath ? String(this.plugin.settings.basePath).replace(/\/+/g, "/") : "projects";
@@ -624,12 +636,12 @@ var switchBookModal_exports = {};
 __export(switchBookModal_exports, {
   SwitchBookModal: () => SwitchBookModal
 });
-var import_obsidian7, SwitchBookModal;
+var import_obsidian9, SwitchBookModal;
 var init_switchBookModal = __esm({
   "src/modals/switchBookModal.js"() {
-    import_obsidian7 = require("obsidian");
+    import_obsidian9 = require("obsidian");
     init_projectListUtils();
-    SwitchBookModal = class extends import_obsidian7.Modal {
+    SwitchBookModal = class extends import_obsidian9.Modal {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -667,7 +679,7 @@ var init_switchBookModal = __esm({
             const rightCol = row.createDiv({ cls: "folio-switch-right" });
             const titleRow = leftCol.createDiv({ cls: "folio-switch-title-row" });
             const iconEl = titleRow.createSpan({ cls: "folio-switch-icon" });
-            (0, import_obsidian7.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
+            (0, import_obsidian9.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
             titleRow.createSpan({ text: summary.displayTitle || book.name || "Untitled", cls: "folio-switch-title" });
             if (summary.subtitle) {
               titleRow.createSpan({ text: " - ", cls: "folio-switch-dash" });
@@ -718,11 +730,11 @@ var init_switchBookModal = __esm({
 });
 
 // src/modals/confirmModal.js
-var import_obsidian8, ConfirmModal;
+var import_obsidian10, ConfirmModal;
 var init_confirmModal = __esm({
   "src/modals/confirmModal.js"() {
-    import_obsidian8 = require("obsidian");
-    ConfirmModal = class extends import_obsidian8.Modal {
+    import_obsidian10 = require("obsidian");
+    ConfirmModal = class extends import_obsidian10.Modal {
       constructor(app, { title, message, confirmText, onConfirm }) {
         super(app);
         this.title = title;
@@ -752,11 +764,11 @@ var init_confirmModal = __esm({
 });
 
 // src/modals/editBookModal.js
-var import_obsidian9, EditBookModal;
+var import_obsidian11, EditBookModal;
 var init_editBookModal = __esm({
   "src/modals/editBookModal.js"() {
-    import_obsidian9 = require("obsidian");
-    EditBookModal = class extends import_obsidian9.Modal {
+    import_obsidian11 = require("obsidian");
+    EditBookModal = class extends import_obsidian11.Modal {
       constructor(plugin, book) {
         super(plugin.app);
         this.plugin = plugin;
@@ -1088,14 +1100,14 @@ var manageBooksModal_exports = {};
 __export(manageBooksModal_exports, {
   ManageBooksModal: () => ManageBooksModal
 });
-var import_obsidian10, ManageBooksModal;
+var import_obsidian12, ManageBooksModal;
 var init_manageBooksModal = __esm({
   "src/modals/manageBooksModal.js"() {
-    import_obsidian10 = require("obsidian");
+    import_obsidian12 = require("obsidian");
     init_confirmModal();
     init_editBookModal();
     init_projectListUtils();
-    ManageBooksModal = class extends import_obsidian10.Modal {
+    ManageBooksModal = class extends import_obsidian12.Modal {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -1134,19 +1146,19 @@ var init_manageBooksModal = __esm({
             const right = card.createDiv({ cls: "folio-manage-right" });
             const coverWrap = left.createDiv({ cls: "folio-manage-cover" });
             try {
-              const coverFile = book.cover instanceof import_obsidian10.TFile ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
-              if (coverFile instanceof import_obsidian10.TFile) {
+              const coverFile = book.cover instanceof import_obsidian12.TFile ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
+              if (coverFile instanceof import_obsidian12.TFile) {
                 const url = this.plugin.app.vault.getResourcePath(coverFile);
                 coverWrap.style.backgroundImage = `url("${url}")`;
               }
             } catch (e) {
             }
             try {
-              const coverFile = book.cover instanceof import_obsidian10.TFile ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
-              if (!(coverFile instanceof import_obsidian10.TFile)) {
+              const coverFile = book.cover instanceof import_obsidian12.TFile ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
+              if (!(coverFile instanceof import_obsidian12.TFile)) {
                 coverWrap.addClass("folio-manage-cover-placeholder");
                 const iconEl = coverWrap.createDiv({ cls: "folio-manage-cover-icon" });
-                (0, import_obsidian10.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
+                (0, import_obsidian12.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
               }
             } catch (e) {
             }
@@ -1216,10 +1228,10 @@ var helpModal_exports = {};
 __export(helpModal_exports, {
   HelpModal: () => HelpModal
 });
-var import_obsidian11, HELP_CONTENT, HelpModal;
+var import_obsidian13, HELP_CONTENT, HelpModal;
 var init_helpModal = __esm({
   "src/modals/helpModal.js"() {
-    import_obsidian11 = require("obsidian");
+    import_obsidian13 = require("obsidian");
     HELP_CONTENT = {
       en: {
         title: "Help",
@@ -1269,6 +1281,20 @@ var init_helpModal = __esm({
             ]
           },
           {
+            icon: "circle-dot",
+            title: "Track scene status",
+            blocks: [
+              { type: "p", text: "Give each scene or chapter a writing status so you can see progress at a glance:" },
+              { type: "ul", items: [
+                "A coloured dot sits at the end of each file row.",
+                "Click the dot to cycle: To-do \u2192 Draft \u2192 Revised \u2192 Final \u2192 none.",
+                "Or right-click a file and pick a Status.",
+                "Colours: To-do (grey), Draft (amber), Revised (blue), Final (green)."
+              ] },
+              { type: "tip", text: "The status is saved to the file's frontmatter (status:), so it travels with the file and survives reordering." }
+            ]
+          },
+          {
             icon: "focus",
             title: "Drafting with Focus Mode",
             blocks: [
@@ -1295,6 +1321,20 @@ var init_helpModal = __esm({
                 "Choose exactly which files to include, in outline order."
               ] },
               { type: "tip", text: "You can also run \u201CExport current project to Final Draft\u201D straight from the command palette." }
+            ]
+          },
+          {
+            icon: "layout-dashboard",
+            title: "Beat board (Canvas timeline)",
+            blocks: [
+              { type: "p", text: "Turn your scenes into a native Obsidian Canvas you can rearrange like index cards:" },
+              { type: "ul", items: [
+                "Run \u201CBuild / refresh beat board\u201D from the command palette.",
+                "Folio lays every scene out as a horizontal timeline of cards, in outline order.",
+                "Cards are coloured by their writing status.",
+                "Rearrange or add free-form beats freely \u2014 refreshing keeps your layout and only updates colours and new scenes."
+              ] },
+              { type: "tip", text: "The board is a normal .canvas file in your project, so all of Obsidian's Canvas tools (zoom, groups, connections) work on it." }
             ]
           },
           {
@@ -1384,6 +1424,20 @@ var init_helpModal = __esm({
             ]
           },
           {
+            icon: "circle-dot",
+            title: "Estado de cada escena",
+            blocks: [
+              { type: "p", text: "Asigna a cada escena o cap\xEDtulo un estado de escritura para ver tu progreso de un vistazo:" },
+              { type: "ul", items: [
+                "Un punto de color aparece al final de cada fila de archivo.",
+                "Haz clic en el punto para ciclar: To-do \u2192 Draft \u2192 Revised \u2192 Final \u2192 ninguno.",
+                "O haz clic derecho en un archivo y elige un Estado.",
+                "Colores: To-do (gris), Draft (\xE1mbar), Revised (azul), Final (verde)."
+              ] },
+              { type: "tip", text: "El estado se guarda en el frontmatter del archivo (status:), as\xED que viaja con \xE9l y sobrevive al reordenar." }
+            ]
+          },
+          {
             icon: "focus",
             title: "Escribir con el Modo enfoque",
             blocks: [
@@ -1410,6 +1464,20 @@ var init_helpModal = __esm({
                 "Eliges exactamente qu\xE9 archivos incluir, en el orden del esquema."
               ] },
               { type: "tip", text: "Tambi\xE9n puedes ejecutar \xABExportar el proyecto actual a Final Draft\xBB directamente desde la paleta de comandos." }
+            ]
+          },
+          {
+            icon: "layout-dashboard",
+            title: "Beat board (l\xEDnea de tiempo en Canvas)",
+            blocks: [
+              { type: "p", text: "Convierte tus escenas en un Canvas nativo de Obsidian que puedes reorganizar como fichas:" },
+              { type: "ul", items: [
+                "Ejecuta \xABBuild / refresh beat board\xBB desde la paleta de comandos.",
+                "Folio coloca cada escena como una l\xEDnea de tiempo horizontal de tarjetas, en el orden del esquema.",
+                "Las tarjetas se colorean seg\xFAn su estado de escritura.",
+                "Reorganiza o a\xF1ade beats libres a tu gusto \u2014 al refrescar se conserva tu disposici\xF3n y solo se actualizan colores y escenas nuevas."
+              ] },
+              { type: "tip", text: "El tablero es un archivo .canvas normal de tu proyecto, as\xED que funcionan todas las herramientas de Canvas de Obsidian (zoom, grupos, conexiones)." }
             ]
           },
           {
@@ -1452,7 +1520,7 @@ var init_helpModal = __esm({
         ]
       }
     };
-    HelpModal = class extends import_obsidian11.Modal {
+    HelpModal = class extends import_obsidian13.Modal {
       constructor(plugin) {
         var _a;
         super(plugin.app);
@@ -1510,7 +1578,7 @@ var init_helpModal = __esm({
         const cardHeader = el.createDiv({ cls: "help-card-header" });
         const icon = cardHeader.createSpan({ cls: "help-card-icon" });
         try {
-          (0, import_obsidian11.setIcon)(icon, card.icon);
+          (0, import_obsidian13.setIcon)(icon, card.icon);
         } catch (e) {
         }
         cardHeader.createEl("h3", { text: card.title });
@@ -1562,11 +1630,11 @@ var textInputModal_exports = {};
 __export(textInputModal_exports, {
   TextInputModal: () => TextInputModal
 });
-var import_obsidian12, TextInputModal;
+var import_obsidian14, TextInputModal;
 var init_textInputModal = __esm({
   "src/modals/textInputModal.js"() {
-    import_obsidian12 = require("obsidian");
-    TextInputModal = class extends import_obsidian12.Modal {
+    import_obsidian14 = require("obsidian");
+    TextInputModal = class extends import_obsidian14.Modal {
       constructor(app, {
         title,
         placeholder,
@@ -1634,7 +1702,7 @@ __export(main_exports, {
   default: () => FolioPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian19 = require("obsidian");
+var import_obsidian22 = require("obsidian");
 
 // src/services/configService.js
 init_constants();
@@ -1872,6 +1940,10 @@ var TreeService = class {
           };
           if (existing == null ? void 0 : existing.icon)
             node.icon = existing.icon;
+          if (existing == null ? void 0 : existing.status)
+            node.status = existing.status;
+          if (existing == null ? void 0 : existing.draft)
+            node.draft = true;
           return node;
         } else if (item instanceof import_obsidian.TFolder) {
           const folderChildren = (item.children || []).filter((child) => !(child instanceof import_obsidian.TFolder && child.name === "misc"));
@@ -1915,6 +1987,10 @@ var TreeService = class {
           };
           if (existing == null ? void 0 : existing.icon)
             node.icon = existing.icon;
+          if (existing == null ? void 0 : existing.draft)
+            node.draft = true;
+          if (existing == null ? void 0 : existing.shelf)
+            node.shelf = true;
           return node;
         }
       };
@@ -2125,6 +2201,49 @@ var TreeService = class {
     }
   }
   /**
+   * Set the writing status for a file node (To-do / Draft / Revised / Final, or
+   * null to clear). Updates both the config tree node and the file frontmatter,
+   * mirroring the exclude/include override pattern.
+   */
+  async setNodeStatus(book, file, status) {
+    var _a;
+    try {
+      if (file.extension === "md") {
+        await this.app.fileManager.processFrontMatter(file, (fm) => {
+          if (status)
+            fm.status = status;
+          else
+            delete fm.status;
+        });
+      }
+      const cfg = await this.configService.loadBookConfig(book) || {};
+      if (!((_a = cfg.structure) == null ? void 0 : _a.tree))
+        return;
+      const relativePath = file.path.replace(book.path + "/", "");
+      const updateNode = (nodes) => {
+        for (const node of nodes) {
+          if (node.path === relativePath) {
+            if (status)
+              node.status = status;
+            else
+              delete node.status;
+            node.completed = status === "final";
+            node.last_modified = new Date().toISOString();
+            return true;
+          }
+          if (node.children && updateNode(node.children))
+            return true;
+        }
+        return false;
+      };
+      if (updateNode(cfg.structure.tree)) {
+        await this.configService.saveBookConfig(book, cfg);
+      }
+    } catch (e) {
+      console.warn("setNodeStatus failed", e);
+    }
+  }
+  /**
    * Helper: Mark all children nodes as excluded/included in config
    */
   markAllChildrenExcluded(children, exclude) {
@@ -2169,7 +2288,7 @@ var StatsService = class {
     let content = text;
     const frontmatterRegex = /^---\s*\n[\s\S]*?\n---\s*(\n|$)/;
     content = content.replace(frontmatterRegex, "");
-    content = content.replace(/^#{1,6}\s+/gm, "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\*([^*]+)\*/g, "$1").replace(/\_\_([^_]+)\_\_/g, "$1").replace(/\_([^_]+)\_/g, "$1").replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/`([^`]+)`/g, "$1").replace(/^\s*[-*+]\s+/gm, "").replace(/^\s*\d+\.\s+/gm, "").replace(/^>\s+/gm, "");
+    content = content.replace(/\s\^folio[A-Za-z0-9]+$/gm, "").replace(/^#{1,6}\s+/gm, "").replace(/\*\*([^*]+)\*\*/g, "$1").replace(/\*([^*]+)\*/g, "$1").replace(/\_\_([^_]+)\_\_/g, "$1").replace(/\_([^_]+)\_/g, "$1").replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1").replace(/```[\s\S]*?```/g, "").replace(/`([^`]+)`/g, "$1").replace(/^\s*[-*+]\s+/gm, "").replace(/^\s*\d+\.\s+/gm, "").replace(/^>\s+/gm, "");
     const parts = content.replace(/\n/g, " ").split(/\s+/).filter(Boolean);
     return parts.length;
   }
@@ -2582,6 +2701,10 @@ var BookService = class {
         };
         if (item.icon)
           node.icon = item.icon;
+        if (item.draft)
+          node.draft = true;
+        if (item.shelf)
+          node.shelf = true;
         return node;
       } else if (item.type === "canvas") {
         const node = {
@@ -2610,6 +2733,8 @@ var BookService = class {
         };
         if (item.icon)
           node.icon = item.icon;
+        if (item.draft)
+          node.draft = true;
         return node;
       }
     });
@@ -3158,22 +3283,22 @@ var PdfExportService = class {
   buildPrintCss(settings) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y;
     const toc = (settings == null ? void 0 : settings.toc) || {};
-    const layout = (settings == null ? void 0 : settings.layout) || {};
-    const margins = layout.margins || {};
+    const layout2 = (settings == null ? void 0 : settings.layout) || {};
+    const margins = layout2.margins || {};
     const marginTop = Number.isFinite(margins.top) ? margins.top : 20;
     const marginRight = Number.isFinite(margins.right) ? margins.right : 20;
     const marginBottom = Number.isFinite(margins.bottom) ? margins.bottom : 20;
     const marginLeft = Number.isFinite(margins.left) ? margins.left : 20;
-    const bleed = Number.isFinite(layout.bleed) ? layout.bleed : 0;
+    const bleed = Number.isFinite(layout2.bleed) ? layout2.bleed : 0;
     const padTop = marginTop + bleed;
     const padRight = marginRight + bleed;
     const padBottom = marginBottom + bleed;
     const padLeft = marginLeft + bleed;
-    const bodyFontFamily = layout.fontFamily && layout.fontFamily.trim() ? layout.fontFamily : "var(--font-text, Georgia, serif)";
-    const fontSize = Number.isFinite(layout.fontSize) ? layout.fontSize : 12;
-    const lineHeight = Number.isFinite(layout.lineHeight) ? layout.lineHeight : 1.4;
-    const capitalizeHeadings = layout.capitalizeHeadings !== false;
-    const includePageNumbers = layout.includePageNumbers !== false;
+    const bodyFontFamily = layout2.fontFamily && layout2.fontFamily.trim() ? layout2.fontFamily : "var(--font-text, Georgia, serif)";
+    const fontSize = Number.isFinite(layout2.fontSize) ? layout2.fontSize : 12;
+    const lineHeight = Number.isFinite(layout2.lineHeight) ? layout2.lineHeight : 1.4;
+    const capitalizeHeadings = layout2.capitalizeHeadings !== false;
+    const includePageNumbers = layout2.includePageNumbers !== false;
     const tocFontFamily = toc.fontStyle === "Sans" ? "var(--font-interface, Arial, sans-serif)" : toc.fontStyle === "Mono" ? "var(--font-monospace, Menlo, monospace)" : "var(--font-text, Georgia, serif)";
     const tocFontSize = toc.fontSize || 12;
     const tocLineHeight = toc.lineHeight || 1.4;
@@ -3746,7 +3871,7 @@ function parseScreenplayElements(markdown) {
   const elements = [];
   let inDialogue = false;
   for (const rawLine of lines) {
-    const line = rawLine.replace(/\s+$/, "");
+    const line = rawLine.replace(/\s+$/, "").replace(/\s\^folio[A-Za-z0-9]+$/, "");
     if (line.trim() === "") {
       inDialogue = false;
       continue;
@@ -3971,11 +4096,1234 @@ ${paras.join("\n")}
   }
 };
 
+// src/services/outlineService.js
+var OUTLINE_BASENAME = "Outline";
+function buildOutlineLine(basename, heading) {
+  return heading ? `- [[${basename}#${heading}]]` : `- [[${basename}]]`;
+}
+function parseOutlineSceneLinks(text) {
+  const out = [];
+  if (!text)
+    return out;
+  const re = /\[\[([^\[\]#|]+)(?:#([^\[\]|]+))?(?:\|[^\[\]]+)?\]\]/g;
+  let m;
+  while ((m = re.exec(text)) !== null) {
+    out.push({
+      file: (m[1] || "").trim(),
+      heading: m[2] ? m[2].trim() : null,
+      raw: m[0]
+    });
+  }
+  return out;
+}
+function sceneLinkKey(file, heading) {
+  return `${(file || "").trim().toLowerCase()}::${(heading || "").trim().toLowerCase()}`;
+}
+var OutlineService = class {
+  constructor(app, configService) {
+    this.app = app;
+    this.configService = configService;
+  }
+  getOutlinePath(book) {
+    return `${book.path}/${OUTLINE_BASENAME}.md`;
+  }
+  /**
+   * Parse the project's scenes from script files' level-1 headings, in outline
+   * order. Files with no headings count as a single scene (the file itself).
+   * The Outline file itself is skipped.
+   * @returns {Array<{basename:string, path:string, heading:(string|null), line:number}>}
+   */
+  getProjectScenes(book, sceneFiles) {
+    var _a, _b, _c;
+    const scenes = [];
+    for (const file of sceneFiles || []) {
+      if (!file || file.extension !== "md")
+        continue;
+      if (file.basename && file.basename.toLowerCase() === OUTLINE_BASENAME.toLowerCase())
+        continue;
+      const cache = this.app.metadataCache.getFileCache(file);
+      const headings = ((cache == null ? void 0 : cache.headings) || []).filter((h) => h.level === 1);
+      if (headings.length) {
+        for (const h of headings) {
+          scenes.push({ basename: file.basename, path: file.path, heading: h.heading, line: (_c = (_b = (_a = h.position) == null ? void 0 : _a.start) == null ? void 0 : _b.line) != null ? _c : 0 });
+        }
+      } else {
+        scenes.push({ basename: file.basename, path: file.path, heading: null, line: 0 });
+      }
+    }
+    return scenes;
+  }
+  /**
+   * Append outline links for every scene not already present. Preserves order
+   * and any manual edits. Creates Outline.md if missing.
+   * @returns {Promise<{added:number, outlinePath:(string|null)}>}
+   */
+  async syncOutlineFromScenes(book, sceneFiles) {
+    try {
+      const scenes = this.getProjectScenes(book, sceneFiles);
+      const outlinePath = this.getOutlinePath(book);
+      let outlineFile = this.app.vault.getAbstractFileByPath(outlinePath);
+      let text = "";
+      if (outlineFile)
+        text = await this.app.vault.read(outlineFile);
+      const existing = new Set(parseOutlineSceneLinks(text).map((l) => sceneLinkKey(l.file, l.heading)));
+      const toAppend = [];
+      for (const s of scenes) {
+        if (!existing.has(sceneLinkKey(s.basename, s.heading))) {
+          toAppend.push(buildOutlineLine(s.basename, s.heading));
+          existing.add(sceneLinkKey(s.basename, s.heading));
+        }
+      }
+      if (!toAppend.length) {
+        return { added: 0, outlinePath: outlineFile ? outlineFile.path : null };
+      }
+      const needsHeader = !text.trim();
+      const sep = text && !text.endsWith("\n") ? "\n" : "";
+      const body = (needsHeader ? "# Outline\n\n" : "") + toAppend.join("\n") + "\n";
+      const newText = text + sep + body;
+      if (outlineFile) {
+        await this.app.vault.modify(outlineFile, newText);
+      } else {
+        outlineFile = await this.app.vault.create(outlinePath, newText);
+      }
+      return { added: toAppend.length, outlinePath: outlineFile.path };
+    } catch (e) {
+      console.warn("syncOutlineFromScenes failed", e);
+      return { added: 0, outlinePath: null };
+    }
+  }
+};
+
+// src/services/parseUnits.js
+var HEADING_RE = /^(#{1,6})\s+(.*\S)\s*$/;
+var HEADING_PREFIX_RE = /^#{1,6}\s/;
+var BLOCK_ID_RE = /(?:^|\s)\^(folio[A-Za-z0-9]+)\s*$/;
+function parseBlockId(line) {
+  if (!line)
+    return null;
+  const m = BLOCK_ID_RE.exec(line);
+  return m ? m[1] : null;
+}
+function parseHeadings(text) {
+  const lines = (text || "").split("\n");
+  const out = [];
+  let inFence = false;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*```/.test(lines[i])) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence)
+      continue;
+    const m = HEADING_RE.exec(lines[i]);
+    if (m)
+      out.push({ level: m[1].length, text: m[2], line: i });
+  }
+  return out;
+}
+function unitsFromHeadings(headings, totalLines, profile) {
+  const units = [];
+  let current = null;
+  const groupStack = [];
+  const roleOf = (lvl) => {
+    var _a;
+    return (_a = profile.headingRoles[lvl]) != null ? _a : "unknown";
+  };
+  const closeUnit = (endExclusive) => {
+    if (current) {
+      current.endLine = endExclusive;
+      units.push(current);
+      current = null;
+    }
+  };
+  for (const head of headings || []) {
+    const role = roleOf(head.level);
+    const isGrouper = Object.prototype.hasOwnProperty.call(profile.grouperTiers, role);
+    const isUnit = role === profile.unitRole;
+    if (isGrouper) {
+      closeUnit(head.line);
+      const tier = profile.grouperTiers[role];
+      while (groupStack.length && groupStack[groupStack.length - 1].tier >= tier)
+        groupStack.pop();
+      groupStack.push({ role, tier, text: head.text });
+    } else if (isUnit) {
+      closeUnit(head.line);
+      current = {
+        role,
+        title: head.text,
+        startLine: head.line,
+        endLine: null,
+        groups: groupStack.map((g) => ({ role: g.role, text: g.text }))
+      };
+    }
+  }
+  closeUnit(totalLines);
+  return units;
+}
+function parseUnits(text, profile) {
+  var _a;
+  const lines = (text || "").split("\n");
+  const headings = parseHeadings(text);
+  const units = unitsFromHeadings(headings, lines.length, profile);
+  for (const u of units) {
+    u.id = null;
+    const end = (_a = u.endLine) != null ? _a : lines.length;
+    for (let i = u.startLine; i < end; i++) {
+      const id = parseBlockId(lines[i]);
+      if (id) {
+        u.id = id;
+        break;
+      }
+    }
+    u.beats = extractBeats(lines, u);
+  }
+  return units;
+}
+var BEAT_CALLOUT_RE = /^>\s*\[!beat\]/i;
+var CALLOUT_BODY_RE = /^>\s?(.*)$/;
+var LIST_ITEM_RE = /^[-*+]\s+(.*\S)\s*$/;
+function extractBeats(lines, unit) {
+  var _a;
+  const end = (_a = unit.endLine) != null ? _a : lines.length;
+  let i = unit.startLine;
+  while (i < end && !BEAT_CALLOUT_RE.test(lines[i]))
+    i++;
+  if (i >= end)
+    return [];
+  const beats = [];
+  for (i = i + 1; i < end; i++) {
+    const m = CALLOUT_BODY_RE.exec(lines[i]);
+    if (!m)
+      break;
+    const item = LIST_ITEM_RE.exec(m[1].trim());
+    if (item)
+      beats.push(item[1]);
+  }
+  return beats;
+}
+function firstBodyLine(lines, unit) {
+  var _a;
+  const end = (_a = unit.endLine) != null ? _a : lines.length;
+  for (let i = unit.startLine + 1; i < end; i++) {
+    const l = lines[i];
+    if (!l || l.trim() === "")
+      continue;
+    if (HEADING_PREFIX_RE.test(l))
+      continue;
+    return i;
+  }
+  return -1;
+}
+function ensureUnitIds(text, profile, genId) {
+  const units = parseUnits(text, profile);
+  const lines = (text || "").split("\n");
+  const assigned = [];
+  for (const u of units) {
+    if (u.id)
+      continue;
+    const target = firstBodyLine(lines, u);
+    if (target === -1)
+      continue;
+    const id = genId();
+    lines[target] = lines[target].replace(/\s+$/, "") + ` ^${id}`;
+    assigned.push({ title: u.title, id });
+  }
+  return { text: assigned.length ? lines.join("\n") : text, assignedCount: assigned.length, assigned };
+}
+
+// src/services/spineService.js
+function generateUnitId() {
+  return "folio" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+}
+function buildSpine(cfg, profile, readUnits) {
+  var _a;
+  const tree = ((_a = cfg == null ? void 0 : cfg.structure) == null ? void 0 : _a.tree) || [];
+  const sortByOrder = (nodes) => [...nodes].sort((a, b) => (a.order || 0) - (b.order || 0));
+  const spine = [];
+  const visit = (nodes) => {
+    for (const node of sortByOrder(nodes)) {
+      if (node.type === "group") {
+        if (node.children)
+          visit(node.children);
+      } else if (node.type === "file") {
+        appendFileUnits(node);
+      }
+    }
+  };
+  const appendFileUnits = (node) => {
+    const status = node.status || (node.completed ? "final" : null);
+    const units = readUnits(node) || [];
+    if (units.length === 0) {
+      spine.push({
+        role: profile.unitRole,
+        title: node.title || node.path,
+        file: node.path,
+        fileNodeId: node.id,
+        startLine: 0,
+        endLine: null,
+        groups: [],
+        status,
+        synthetic: true
+      });
+      return;
+    }
+    for (const u of units) {
+      spine.push({ ...u, file: node.path, fileNodeId: node.id, status });
+    }
+  };
+  visit(tree);
+  return spine;
+}
+var SpineService = class {
+  constructor(app) {
+    this.app = app;
+  }
+  /** The Editor for an open markdown leaf showing `path`, or null. */
+  openEditor(path) {
+    try {
+      for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+        const v = leaf.view;
+        if (v && v.file && v.file.path === path && v.editor)
+          return v.editor;
+      }
+    } catch (e) {
+    }
+    return null;
+  }
+  /**
+   * Read a file's current text, preferring the OPEN EDITOR's buffer over disk so
+   * the Spine reflects exactly what the writer sees (avoids disk/buffer drift —
+   * the source of band-vs-document desync after a reorder). Returns null for a
+   * missing / non-markdown file.
+   */
+  async readText(fullPath) {
+    const ed = this.openEditor(fullPath);
+    if (ed)
+      return ed.getValue();
+    const file = this.app.vault.getAbstractFileByPath(fullPath);
+    return file && file.extension === "md" ? await this.app.vault.read(file) : null;
+  }
+  /**
+   * Build the Spine for a project (production path). Reads each file's live text
+   * so Units carry their stable id and accurate span lines — both required by the
+   * beat board (id matching) and reorder (span moves).
+   * @param {{path:string}} book
+   * @param {object} cfg project config
+   * @param {{headingRoles:object, unitRole:string, grouperTiers:object}} profile
+   * @returns {Promise<Array<object>>}
+   */
+  async buildSpine(book, cfg, profile) {
+    var _a;
+    const texts = /* @__PURE__ */ new Map();
+    const fileNodes = [];
+    const walk = (nodes) => {
+      for (const n of nodes || []) {
+        if (n.type === "file")
+          fileNodes.push(n);
+        if (n.children)
+          walk(n.children);
+      }
+    };
+    walk(((_a = cfg == null ? void 0 : cfg.structure) == null ? void 0 : _a.tree) || []);
+    for (const node of fileNodes) {
+      const text = await this.readText(`${book.path}/${node.path}`);
+      if (text != null)
+        texts.set(node.path, text);
+    }
+    const readUnits = (node) => {
+      const text = texts.get(node.path);
+      if (text == null)
+        return [];
+      const lines = text.split("\n");
+      const wordsIn = (s, e) => lines.slice(s, e == null ? lines.length : e).join(" ").replace(/\^folio[A-Za-z0-9]+/g, " ").replace(/[#>*_`-]/g, " ").split(/\s+/).filter(Boolean).length;
+      let units = parseUnits(text, profile);
+      if (units.length) {
+        for (const u of units) {
+          u.fromHeading = true;
+          u.words = wordsIn(u.startLine, u.endLine);
+        }
+        return units;
+      }
+      const headings = parseHeadings(text);
+      const fromHeading = headings.length > 0;
+      let id = null;
+      for (const l of lines) {
+        const b = parseBlockId(l);
+        if (b) {
+          id = b;
+          break;
+        }
+      }
+      const startLine = fromHeading ? headings[0].line : 0;
+      const title = fromHeading ? headings[0].text : node.title || node.path;
+      const unit = { role: profile.unitRole, title, startLine, endLine: lines.length, groups: [], id, fromHeading, beats: extractBeats(lines, { startLine, endLine: lines.length }) };
+      unit.words = wordsIn(startLine, lines.length);
+      return [unit];
+    };
+    return buildSpine(cfg, profile, readUnits);
+  }
+  /**
+   * Lazily assign stable ids to any Units in a single file that lack one. Writes
+   * through the open editor (one transaction) when the file is open, else atomic
+   * via vault.process with a read/modify fallback. Returns the number assigned.
+   */
+  async assignMissingIds(book, node, profile) {
+    const fullPath = `${book.path}/${node.path}`;
+    const ed = this.openEditor(fullPath);
+    if (ed) {
+      const res = ensureUnitIds(ed.getValue(), profile, generateUnitId);
+      if (res.assignedCount) {
+        const last = ed.lastLine();
+        ed.transaction({ changes: [{ from: { line: 0, ch: 0 }, to: { line: last, ch: ed.getLine(last).length }, text: res.text }] });
+      }
+      return res.assignedCount;
+    }
+    const file = this.app.vault.getAbstractFileByPath(fullPath);
+    if (!file || file.extension !== "md")
+      return 0;
+    let count = 0;
+    const apply = (data) => {
+      const res = ensureUnitIds(data, profile, generateUnitId);
+      count = res.assignedCount;
+      return count ? res.text : data;
+    };
+    if (typeof this.app.vault.process === "function") {
+      await this.app.vault.process(file, apply);
+    } else {
+      const data = await this.app.vault.read(file);
+      const next = apply(data);
+      if (next !== data)
+        await this.app.vault.modify(file, next);
+    }
+    return count;
+  }
+  /**
+   * Walk a project's tree and assign missing ids across every markdown file.
+   * Call before a feature that persists per-Unit state (beat board, reorder).
+   * @returns {Promise<number>} total ids assigned
+   */
+  async assignIdsForProject(book, cfg, profile) {
+    var _a;
+    const files = [];
+    const walk = (nodes) => {
+      for (const n of nodes || []) {
+        if (n.type === "file")
+          files.push(n);
+        if (n.children)
+          walk(n.children);
+      }
+    };
+    walk(((_a = cfg == null ? void 0 : cfg.structure) == null ? void 0 : _a.tree) || []);
+    let total = 0;
+    for (const node of files)
+      total += await this.assignMissingIds(book, node, profile);
+    return total;
+  }
+};
+
+// src/services/reorder.js
+var isBlank = (l) => !l || l.trim() === "";
+function blockStart(lines, unit) {
+  return unit.startLine;
+}
+function trimBlanks(block) {
+  let s = 0;
+  let e = block.length;
+  while (s < e && isBlank(block[s]))
+    s++;
+  while (e > s && isBlank(block[e - 1]))
+    e--;
+  return block.slice(s, e);
+}
+function normalizeBlankRuns(lines) {
+  const out = [];
+  let blank = false;
+  for (const l of lines) {
+    if (isBlank(l)) {
+      if (!blank && out.length)
+        out.push("");
+      blank = true;
+    } else {
+      out.push(l);
+      blank = false;
+    }
+  }
+  while (out.length && isBlank(out[out.length - 1]))
+    out.pop();
+  return out;
+}
+function join(lines, hadTrailingNewline) {
+  const text = lines.join("\n");
+  return hadTrailingNewline && text ? text + "\n" : text;
+}
+function moveUnitWithinText(text, fromUnit, beforeUnit) {
+  const src = text != null ? text : "";
+  const lines = src.split("\n");
+  const fromStart = blockStart(lines, fromUnit);
+  const fromEnd = fromUnit.endLine;
+  const block = trimBlanks(lines.slice(fromStart, fromEnd));
+  const removedLen = fromEnd - fromStart;
+  let rest = lines.slice(0, fromStart).concat([""], lines.slice(fromEnd));
+  let insertAt;
+  if (!beforeUnit) {
+    insertAt = rest.length;
+  } else {
+    let b = blockStart(lines, beforeUnit);
+    if (b >= fromEnd)
+      b = b - removedLen + 1;
+    insertAt = b;
+  }
+  rest = rest.slice(0, insertAt).concat([""], block, [""], rest.slice(insertAt));
+  return join(normalizeBlankRuns(rest), src.endsWith("\n"));
+}
+function removeUnitFromText(text, unit) {
+  const src = text != null ? text : "";
+  const lines = src.split("\n");
+  const start = blockStart(lines, unit);
+  const block = trimBlanks(lines.slice(start, unit.endLine));
+  const rest = lines.slice(0, start).concat([""], lines.slice(unit.endLine));
+  return { text: join(normalizeBlankRuns(rest), src.endsWith("\n")), block };
+}
+function insertBlockBeforeUnit(text, block, beforeUnit) {
+  const src = text != null ? text : "";
+  const lines = src.split("\n");
+  const trimmed = trimBlanks(block);
+  const insertAt = beforeUnit ? blockStart(lines, beforeUnit) : lines.length;
+  const rest = lines.slice(0, insertAt).concat([""], trimmed, [""], lines.slice(insertAt));
+  return join(normalizeBlankRuns(rest), src.endsWith("\n") || lines.length === 0);
+}
+
+// src/services/reorderService.js
+var ReorderService = class {
+  constructor(app, spineService, treeService) {
+    this.app = app;
+    this.spineService = spineService;
+    this.treeService = treeService;
+  }
+  fullPath(book, rel) {
+    return `${book.path}/${rel}`;
+  }
+  /** The Editor for an open markdown leaf showing `path`, or null. */
+  findOpenEditor(path) {
+    try {
+      const leaves = this.app.workspace.getLeavesOfType("markdown");
+      for (const leaf of leaves) {
+        const view = leaf.view;
+        if (view && view.file && view.file.path === path && view.editor)
+          return view.editor;
+      }
+    } catch (e) {
+    }
+    return null;
+  }
+  /** Read current text, preferring the open editor buffer over disk. */
+  async readText(book, rel) {
+    const path = this.fullPath(book, rel);
+    const editor = this.findOpenEditor(path);
+    if (editor)
+      return editor.getValue();
+    const file = this.app.vault.getAbstractFileByPath(path);
+    return file ? await this.app.vault.read(file) : "";
+  }
+  /** Write text atomically; through the editor when the file is open. */
+  async writeText(book, rel, text) {
+    const path = this.fullPath(book, rel);
+    const editor = this.findOpenEditor(path);
+    if (editor) {
+      const last = editor.lastLine();
+      const end = { line: last, ch: editor.getLine(last).length };
+      editor.transaction({ changes: [{ from: { line: 0, ch: 0 }, to: end, text }] });
+      return;
+    }
+    const file = this.app.vault.getAbstractFileByPath(path);
+    if (!file)
+      return;
+    if (typeof this.app.vault.process === "function")
+      await this.app.vault.process(file, () => text);
+    else
+      await this.app.vault.modify(file, text);
+  }
+  /**
+   * Move by Spine position rather than id — the natural entry point for drag UI.
+   * Spine order is stable across id assignment (adding a block id never reorders
+   * Units), so the caller can capture indices at render time. Assigns missing ids
+   * first, then delegates to applyMove.
+   * @param {number} fromIndex 0-based Spine index of the dragged Unit
+   * @param {number|null} beforeIndex index to land before, or null for the end
+   */
+  async applyMoveByIndex(book, cfg, profile, fromIndex, beforeIndex) {
+    await this.spineService.assignIdsForProject(book, cfg, profile);
+    const spine = await this.spineService.buildSpine(book, cfg, profile);
+    const from = spine[fromIndex];
+    if (!from)
+      return { ok: false, reason: "from-not-found" };
+    if (!from.id)
+      return { ok: false, reason: "no-id" };
+    const before = beforeIndex == null || beforeIndex < 0 || beforeIndex >= spine.length ? null : spine[beforeIndex];
+    if (before && before.id === from.id)
+      return { ok: true, kind: "noop" };
+    return this.applyMove(book, cfg, profile, from.id, before ? before.id : null);
+  }
+  /**
+   * Move the Unit with id `fromId` so it sits immediately before the Unit with
+   * id `beforeId` (or to the end of the project when `beforeId` is null).
+   * @returns {Promise<{ok:boolean, kind?:string, reason?:string}>}
+   */
+  async applyMove(book, cfg, profile, fromId, beforeId) {
+    if (fromId === beforeId)
+      return { ok: true, kind: "noop" };
+    const spine = await this.spineService.buildSpine(book, cfg, profile);
+    const fromUnit = spine.find((u) => u.id === fromId);
+    const beforeUnit = beforeId ? spine.find((u) => u.id === beforeId) : null;
+    if (!fromUnit)
+      return { ok: false, reason: "from-not-found" };
+    if (beforeId && !beforeUnit)
+      return { ok: false, reason: "before-not-found" };
+    const counts = /* @__PURE__ */ new Map();
+    for (const u of spine)
+      counts.set(u.file, (counts.get(u.file) || 0) + 1);
+    const unitsInFile = (f) => counts.get(f) || 0;
+    const fromWhole = fromUnit.synthetic || unitsInFile(fromUnit.file) === 1;
+    const targetWhole = !beforeUnit || unitsInFile(beforeUnit.file) === 1;
+    if (fromWhole && targetWhole) {
+      if (beforeUnit) {
+        const ok2 = await this.treeService.reorderTreeNodes(book, fromUnit.fileNodeId, beforeUnit.fileNodeId, "before");
+        return { ok: !!ok2, kind: "tree" };
+      }
+      const last = [...spine].reverse().find((u) => u.fileNodeId !== fromUnit.fileNodeId);
+      if (!last)
+        return { ok: true, kind: "noop" };
+      const ok = await this.treeService.reorderTreeNodes(book, fromUnit.fileNodeId, last.fileNodeId, "after");
+      return { ok: !!ok, kind: "tree" };
+    }
+    const dstRel = beforeUnit ? beforeUnit.file : spine[spine.length - 1].file;
+    const beforeDstId = beforeUnit ? beforeUnit.id : null;
+    if (dstRel === fromUnit.file) {
+      const text = await this.readText(book, fromUnit.file);
+      const units = parseUnits(text, profile);
+      const from2 = units.find((u) => u.id === fromId);
+      const before2 = beforeDstId ? units.find((u) => u.id === beforeDstId) : null;
+      if (!from2 || beforeDstId && !before2)
+        return { ok: false, reason: "stale-spans" };
+      await this.writeText(book, fromUnit.file, moveUnitWithinText(text, from2, before2));
+      return { ok: true, kind: "within-file" };
+    }
+    const srcText = await this.readText(book, fromUnit.file);
+    const dstText = await this.readText(book, dstRel);
+    const from = parseUnits(srcText, profile).find((u) => u.id === fromId);
+    const before = beforeDstId ? parseUnits(dstText, profile).find((u) => u.id === beforeDstId) : null;
+    if (!from || beforeDstId && !before)
+      return { ok: false, reason: "stale-spans" };
+    const { text: newSrc, block } = removeUnitFromText(srcText, from);
+    const newDst = insertBlockBeforeUnit(dstText, block, before);
+    await this.writeText(book, dstRel, newDst);
+    await this.writeText(book, fromUnit.file, newSrc);
+    return { ok: true, kind: "cross-file" };
+  }
+};
+
+// src/services/outlineModel.js
+var DEFAULT_PER_PAGE = 280;
+var DEFAULT_LANES = [
+  { id: "lane-1", name: "Outline 1" },
+  { id: "lane-2", name: "Outline 2" }
+];
+var DEFAULT_ZOOM = 120;
+var MIN_ZOOM = 40;
+var MAX_ZOOM = 600;
+function clampZoom(z) {
+  const n = Number(z) || DEFAULT_ZOOM;
+  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, n));
+}
+function normalizeOutline(outline) {
+  const lanes = (outline && Array.isArray(outline.lanes) && outline.lanes.length ? outline.lanes : DEFAULT_LANES).map((l) => ({ ...l }));
+  const beats = (outline && Array.isArray(outline.beats) ? outline.beats : []).map((b) => ({ ...b }));
+  const zoom = clampZoom(outline && outline.zoom);
+  return { lanes, beats, zoom };
+}
+var DEFAULT_DRAFT_KEY = "__default__";
+function readDraftOutline(cfg, draftPath) {
+  const key = draftPath || DEFAULT_DRAFT_KEY;
+  const drafts = cfg && cfg.drafts || {};
+  if (drafts[key])
+    return normalizeOutline(drafts[key]);
+  if (cfg && cfg.outline)
+    return normalizeOutline(cfg.outline);
+  return normalizeOutline(null);
+}
+function writeDraftOutline(cfg, draftPath, outline) {
+  const key = draftPath || DEFAULT_DRAFT_KEY;
+  const next = { ...cfg || {} };
+  next.drafts = { ...next.drafts || {} };
+  next.drafts[key] = normalizeOutline(outline);
+  if (next.outline)
+    delete next.outline;
+  return next;
+}
+function beatsInLane(outline, laneIndex) {
+  return (outline.beats || []).filter((b) => (b.lane || 0) === laneIndex).sort((a, b) => (a.order || 0) - (b.order || 0));
+}
+function addBeat(outline, beat) {
+  const next = normalizeOutline(outline);
+  const lane = beat.lane || 0;
+  const laneBeats = beatsInLane(next, lane);
+  const order = laneBeats.length;
+  const start = beat.start != null ? beat.start : laneBeats.reduce((m, b) => Math.max(m, (b.start || 0) + (b.span || 1)), 0);
+  next.beats.push({
+    id: beat.id,
+    lane,
+    title: beat.title || "New beat",
+    notes: beat.notes || "",
+    color: beat.color || null,
+    goal: beat.goal || "",
+    order,
+    start,
+    span: beat.span != null ? beat.span : 1
+  });
+  return next;
+}
+function addLane(outline, name) {
+  const next = normalizeOutline(outline);
+  next.lanes.push({ id: "lane-" + (next.lanes.length + 1) + "-" + Math.random().toString(36).slice(2, 5), name: name || `Outline ${next.lanes.length + 1}` });
+  return next;
+}
+function renameLane(outline, laneIndex, name) {
+  const next = normalizeOutline(outline);
+  if (next.lanes[laneIndex])
+    next.lanes[laneIndex].name = name;
+  return next;
+}
+function removeLane(outline, laneIndex) {
+  const next = normalizeOutline(outline);
+  if (next.lanes.length <= 1)
+    return next;
+  next.lanes.splice(laneIndex, 1);
+  next.beats = next.beats.filter((b) => (b.lane || 0) !== laneIndex).map((b) => (b.lane || 0) > laneIndex ? { ...b, lane: (b.lane || 0) - 1 } : b);
+  return next;
+}
+function updateBeat(outline, id, patch) {
+  const next = normalizeOutline(outline);
+  const beat = next.beats.find((b) => b.id === id);
+  if (beat)
+    Object.assign(beat, patch);
+  return next;
+}
+function removeBeat(outline, id) {
+  const next = normalizeOutline(outline);
+  const beat = next.beats.find((b) => b.id === id);
+  next.beats = next.beats.filter((b) => b.id !== id);
+  if (beat)
+    renumber(next, beat.lane || 0);
+  return next;
+}
+function moveBeat(outline, id, toLane, toIndex) {
+  const next = normalizeOutline(outline);
+  const beat = next.beats.find((b) => b.id === id);
+  if (!beat)
+    return next;
+  const fromLane = beat.lane || 0;
+  beat.lane = toLane;
+  const laneBeats = next.beats.filter((b) => (b.lane || 0) === toLane && b.id !== id).sort((a, b) => (a.order || 0) - (b.order || 0));
+  const at = Math.max(0, Math.min(toIndex, laneBeats.length));
+  laneBeats.splice(at, 0, beat);
+  laneBeats.forEach((b, i) => {
+    b.order = i;
+  });
+  if (fromLane !== toLane)
+    renumber(next, fromLane);
+  return next;
+}
+function renumber(outline, laneIndex) {
+  outline.beats.filter((b) => (b.lane || 0) === laneIndex).sort((a, b) => (a.order || 0) - (b.order || 0)).forEach((b, i) => {
+    b.order = i;
+  });
+}
+function paginate(spine, perPage = DEFAULT_PER_PAGE) {
+  let offset = 0;
+  const scenes = (spine || []).map((u, i) => {
+    const endLine = u.endLine != null ? u.endLine : (u.startLine || 0) + 1;
+    const length = Math.max(1, u.words != null ? u.words : endLine - (u.startLine || 0));
+    const start = offset;
+    offset += length;
+    return { index: i, id: u.id || null, title: u.title, file: u.file, line: u.startLine || 0, end: endLine, status: u.status || null, length, start };
+  });
+  const total = offset || 1;
+  return { scenes, total, pages: Math.max(1, Math.ceil(total / perPage)), perPage };
+}
+
+// src/services/draftModel.js
+function findDrafts(tree) {
+  const out = [];
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (n.draft && (n.type === "group" || n.type === "file"))
+        out.push(n);
+      if (n.children)
+        walk(n.children);
+    }
+  };
+  walk(tree || []);
+  return out;
+}
+function draftScopeNodes(draftNode) {
+  if (!draftNode)
+    return null;
+  return draftNode.type === "file" ? [draftNode] : draftNode.children || [];
+}
+function resolveCurrentDraft(tree, currentDraftPath) {
+  const drafts = findDrafts(tree);
+  if (!drafts.length)
+    return null;
+  if (currentDraftPath) {
+    const match = drafts.find((d) => d.path === currentDraftPath);
+    if (match)
+      return match;
+  }
+  return drafts[0];
+}
+function draftShelfNode(tree) {
+  let found = null;
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (found)
+        return;
+      if (n.type === "group" && (n.shelf || /^drafts$/i.test(n.title || ""))) {
+        found = n;
+        return;
+      }
+      if (n.children)
+        walk(n.children);
+    }
+  };
+  walk(tree || []);
+  return found;
+}
+
+// src/services/outlineEditorService.js
+function newBeatId() {
+  return "beat-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+}
+function draftKeyFor(cfg) {
+  var _a;
+  const node = resolveCurrentDraft(((_a = cfg == null ? void 0 : cfg.structure) == null ? void 0 : _a.tree) || [], cfg == null ? void 0 : cfg.currentDraftPath);
+  return node ? node.path : "";
+}
+var OutlineEditorService = class {
+  constructor(app, configService) {
+    this.app = app;
+    this.configService = configService;
+  }
+  /** The current draft's outline (lanes + beats), normalised. */
+  async load(book) {
+    const cfg = await this.configService.loadBookConfig(book) || {};
+    return readDraftOutline(cfg, draftKeyFor(cfg));
+  }
+  /** Apply a pure outline transform to the current draft and persist. */
+  async _mutate(book, fn, ret) {
+    const cfg = await this.configService.loadBookConfig(book) || {};
+    const key = draftKeyFor(cfg);
+    const outline = readDraftOutline(cfg, key);
+    const next = fn(outline);
+    const cfg2 = writeDraftOutline(cfg, key, next);
+    await this.configService.saveBookConfig(book, cfg2);
+    return ret;
+  }
+  async save(book, outline) {
+    return this._mutate(book, () => normalizeOutline(outline));
+  }
+  /** Add a beat to a lane; returns its id. */
+  async addBeat(book, beat) {
+    const id = newBeatId();
+    await this._mutate(book, (o) => addBeat(o, { ...beat, id }));
+    return id;
+  }
+  async updateBeat(book, id, patch) {
+    return this._mutate(book, (o) => updateBeat(o, id, patch));
+  }
+  async removeBeat(book, id) {
+    return this._mutate(book, (o) => removeBeat(o, id));
+  }
+  async moveBeat(book, id, toLane, toIndex) {
+    return this._mutate(book, (o) => moveBeat(o, id, toLane, toIndex));
+  }
+  async addLane(book, name) {
+    return this._mutate(book, (o) => addLane(o, name));
+  }
+  async renameLane(book, laneIndex, name) {
+    return this._mutate(book, (o) => renameLane(o, laneIndex, name));
+  }
+  async removeLane(book, laneIndex) {
+    return this._mutate(book, (o) => removeLane(o, laneIndex));
+  }
+  async setZoom(book, zoom) {
+    return this._mutate(book, (o) => {
+      const n = normalizeOutline(o);
+      n.zoom = clampZoom(zoom);
+      return n;
+    });
+  }
+};
+
+// src/services/formatProfiles.js
+var SCREENPLAY_PROFILE = {
+  headingRoles: { 1: "scene", 2: "character", 3: "parenthetical", 4: "transition", 5: "act" },
+  unitRole: "scene",
+  grouperTiers: { act: 0 }
+};
+var FORMAT_PROFILES = {
+  script: SCREENPLAY_PROFILE,
+  film: SCREENPLAY_PROFILE,
+  book: {
+    headingRoles: { 1: "part", 2: "chapter", 3: "scene" },
+    unitRole: "scene",
+    grouperTiers: { part: 0, chapter: 1 }
+  },
+  essay: {
+    headingRoles: { 1: "title", 2: "section", 3: "subsection" },
+    unitRole: "section",
+    grouperTiers: {}
+  }
+};
+var DEFAULT_PROFILE = FORMAT_PROFILES.book;
+function getProfile(projectType) {
+  return FORMAT_PROFILES[projectType] || DEFAULT_PROFILE;
+}
+
+// src/views/beatBoardView.js
+var import_obsidian6 = require("obsidian");
+init_constants();
+
+// src/modals/beatModal.js
+var import_obsidian5 = require("obsidian");
+var COLORS = [
+  { hex: null, name: "None" },
+  { hex: "#e0a23b", name: "Amber" },
+  { hex: "#4a8fe0", name: "Blue" },
+  { hex: "#3fa45b", name: "Green" },
+  { hex: "#c0504d", name: "Red" },
+  { hex: "#8e6fc7", name: "Purple" },
+  { hex: "#9aa0a6", name: "Grey" }
+];
+var BeatModal = class extends import_obsidian5.Modal {
+  constructor(app, { beat, lanes, onSave, onSend, onDelete }) {
+    super(app);
+    this.beat = beat;
+    this.lanes = lanes || [];
+    this.onSave = onSave;
+    this.onSend = onSend;
+    this.onDelete = onDelete;
+    this.color = beat.color || null;
+  }
+  onOpen() {
+    const { contentEl } = this;
+    contentEl.empty();
+    contentEl.createEl("h2", { text: "Beat" });
+    const titleInput = contentEl.createEl("input", { type: "text", placeholder: "Title (e.g. First Day)" });
+    titleInput.value = this.beat.title || "";
+    titleInput.style.width = "100%";
+    const goalInput = contentEl.createEl("input", { type: "text", placeholder: "Goal (e.g. 1\u20132 pages)" });
+    goalInput.value = this.beat.goal || "";
+    goalInput.style.width = "100%";
+    goalInput.style.marginTop = "8px";
+    const notes = contentEl.createEl("textarea", { placeholder: "Notes / description\u2026" });
+    notes.value = this.beat.notes || "";
+    notes.style.width = "100%";
+    notes.style.minHeight = "120px";
+    notes.style.marginTop = "8px";
+    let laneSelect = null;
+    if (this.lanes.length > 1) {
+      laneSelect = contentEl.createEl("select");
+      laneSelect.style.width = "100%";
+      laneSelect.style.marginTop = "8px";
+      this.lanes.forEach((lane, i) => {
+        const opt = laneSelect.createEl("option", { text: lane.name || `Outline ${i + 1}`, value: String(i) });
+        if ((this.beat.lane || 0) === i)
+          opt.selected = true;
+      });
+    }
+    this._laneSelect = laneSelect;
+    const swatchRow = contentEl.createDiv({ cls: "folio-beat-swatches" });
+    const swatches = [];
+    COLORS.forEach((c) => {
+      const sw = swatchRow.createDiv({ cls: "folio-beat-swatch" });
+      sw.style.background = c.hex || "transparent";
+      if (!c.hex)
+        sw.setText("\u2205");
+      sw.setAttribute("title", c.name);
+      if ((this.color || null) === c.hex)
+        sw.addClass("is-selected");
+      sw.addEventListener("click", () => {
+        this.color = c.hex;
+        swatches.forEach((s) => s.removeClass("is-selected"));
+        sw.addClass("is-selected");
+      });
+      swatches.push(sw);
+    });
+    const actions = contentEl.createDiv({ cls: "modal-button-container" });
+    const del = actions.createEl("button", { text: "Delete" });
+    del.addEventListener("click", () => {
+      this.close();
+      this.onDelete && this.onDelete();
+    });
+    const send = actions.createEl("button", { text: "Send to script" });
+    send.addEventListener("click", () => {
+      this.commitInto();
+      this.close();
+      this.onSend && this.onSend({ ...this.beat });
+    });
+    const save = actions.createEl("button", { text: "Save", cls: "mod-cta" });
+    save.addEventListener("click", () => {
+      this.commitInto();
+      this.close();
+      const patch = { title: this.beat.title, goal: this.beat.goal, notes: this.beat.notes, color: this.color };
+      if (this._laneSelect)
+        patch.lane = Number(this._laneSelect.value);
+      this.onSave && this.onSave(patch);
+    });
+    this._titleInput = titleInput;
+    this._goalInput = goalInput;
+    this._notes = notes;
+    titleInput.focus();
+  }
+  commitInto() {
+    this.beat.title = (this._titleInput.value || "").trim() || "New beat";
+    this.beat.goal = (this._goalInput.value || "").trim();
+    this.beat.notes = this._notes.value || "";
+  }
+};
+
+// src/views/beatBoardView.js
+var CARD_W = 240;
+var CARD_H = 120;
+var COL = 270;
+var ROW = 140;
+var FolioBeatBoardView = class extends import_obsidian6.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+  }
+  getViewType() {
+    return BEAT_BOARD_VIEW_TYPE;
+  }
+  getDisplayText() {
+    return "Beat Board";
+  }
+  getIcon() {
+    return "layout-dashboard";
+  }
+  async onOpen() {
+    this.registerEvent(this.plugin.app.workspace.on("active-leaf-change", (leaf) => {
+      if (leaf && leaf.view === this)
+        this.render();
+    }));
+    await this.render();
+  }
+  async onClose() {
+  }
+  /**
+   * Serialised render. render() empties contentEl and then awaits (config + the
+   * strip) before appending — so two concurrent calls (onOpen + the
+   * active-leaf-change that fires as this leaf activates) would interleave and
+   * duplicate the strip/board. Guard against re-entrancy; coalesce extra requests
+   * into one trailing re-render.
+   */
+  async render() {
+    if (this._rendering) {
+      this._pending = true;
+      return;
+    }
+    this._rendering = true;
+    try {
+      do {
+        this._pending = false;
+        await this._renderImpl();
+      } while (this._pending);
+    } finally {
+      this._rendering = false;
+    }
+  }
+  async _renderImpl() {
+    var _a, _b;
+    const el = this.contentEl;
+    el.empty();
+    el.addClass("folio-bb-view");
+    const book = this.plugin.activeBook;
+    if (!book) {
+      this.renderEmpty(el, "No active project", "Open or create a Folio project to use the Beat Board.");
+      return;
+    }
+    this._book = book;
+    let outline = { lanes: [], beats: [] };
+    try {
+      outline = await this.plugin.outlineEditorService.load(book);
+    } catch (e) {
+    }
+    this._outline = outline;
+    let draftName = "";
+    try {
+      const cfg = await this.plugin.loadBookConfig(book) || {};
+      const d = resolveCurrentDraft(((_a = cfg.structure) == null ? void 0 : _a.tree) || [], cfg.currentDraftPath);
+      draftName = d ? d.title || d.path : "";
+    } catch (e) {
+    }
+    const stripHost = el.createDiv({ cls: "folio-bb-strip" });
+    try {
+      await ((_b = this.plugin.timelineBand) == null ? void 0 : _b.renderBandInto(stripHost, book));
+    } catch (e) {
+    }
+    const header = el.createDiv({ cls: "folio-bb-header" });
+    const titleWrap = header.createDiv({ cls: "folio-bb-title-wrap" });
+    try {
+      (0, import_obsidian6.setIcon)(titleWrap.createSpan({ cls: "folio-bb-title-icon" }), "layout-dashboard");
+    } catch (e) {
+    }
+    titleWrap.createSpan({ cls: "folio-bb-title", text: draftName ? `${draftName} \u2014 Beats` : `${book.name || "Beat Board"} \u2014 Beats` });
+    const addBtn = header.createEl("button", { cls: "folio-bb-add", text: "+ Beat" });
+    addBtn.addEventListener("click", () => this.addBeat());
+    const refreshBtn = header.createEl("button", { cls: "folio-bb-refresh", text: "Refresh" });
+    refreshBtn.addEventListener("click", () => this.render());
+    const surface = el.createDiv({ cls: "folio-bb-surface" });
+    for (const beat of outline.beats)
+      this.renderCard(surface, beat, outline);
+    if (!outline.beats.length) {
+      surface.createDiv({ cls: "folio-bb-hint", text: 'No beats yet. Click "+ Beat", or add beats from the outline strip.' });
+    }
+  }
+  renderCard(surface, beat, outline) {
+    const laneIndex = beat.lane || 0;
+    const laneBeats = beatsInLane(outline, laneIndex);
+    const idx = Math.max(0, laneBeats.findIndex((b) => b.id === beat.id));
+    const bx = beat.bx != null ? beat.bx : 20 + laneIndex * COL;
+    const by = beat.by != null ? beat.by : 20 + idx * ROW;
+    const card = surface.createDiv({ cls: "folio-bb-card" });
+    card.style.left = bx + "px";
+    card.style.top = by + "px";
+    card.style.width = (beat.bw || CARD_W) + "px";
+    card.style.minHeight = (beat.bh || CARD_H) + "px";
+    if (beat.color)
+      card.style.borderTopColor = beat.color;
+    const laneName = outline.lanes[laneIndex] && outline.lanes[laneIndex].name || `Outline ${laneIndex + 1}`;
+    const top = card.createDiv({ cls: "folio-bb-card-top" });
+    top.createSpan({ cls: "folio-bb-card-lane", text: laneName });
+    if (beat.goal)
+      top.createSpan({ cls: "folio-bb-card-goal", text: String(beat.goal) });
+    card.createDiv({ cls: "folio-bb-card-title", text: beat.title || "Beat" });
+    if (beat.notes)
+      card.createDiv({ cls: "folio-bb-card-notes", text: beat.notes });
+    this.cardPointer(card, beat);
+    const handle = card.createDiv({ cls: "folio-bb-resize" });
+    handle.addEventListener("mousedown", (e) => {
+      if (e.button !== 0)
+        return;
+      e.preventDefault();
+      e.stopPropagation();
+      this._moved = true;
+      const sx = e.clientX, sy = e.clientY;
+      const ow = card.offsetWidth, oh = card.offsetHeight;
+      const onMove = (ev) => {
+        card.style.width = Math.max(160, ow + (ev.clientX - sx)) + "px";
+        card.style.minHeight = Math.max(80, oh + (ev.clientY - sy)) + "px";
+      };
+      const onUp = async () => {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        const bw = parseFloat(card.style.width) || CARD_W;
+        const bh = parseFloat(card.style.minHeight) || CARD_H;
+        await this.plugin.outlineEditorService.updateBeat(this._book, beat.id, { bw, bh });
+        this.syncStrip();
+        setTimeout(() => {
+          this._moved = false;
+        }, 0);
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+    card.addEventListener("click", () => {
+      if (!this._moved)
+        this.editBeat(beat);
+    });
+  }
+  cardPointer(card, beat) {
+    card.addEventListener("mousedown", (e) => {
+      if (e.button !== 0)
+        return;
+      e.preventDefault();
+      this._moved = false;
+      const sx = e.clientX, sy = e.clientY;
+      const bx = parseFloat(card.style.left) || 0;
+      const by = parseFloat(card.style.top) || 0;
+      const onMove = (ev) => {
+        const dx = ev.clientX - sx, dy = ev.clientY - sy;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+          this._moved = true;
+          card.addClass("is-dragging");
+        }
+        card.style.left = Math.max(0, bx + dx) + "px";
+        card.style.top = Math.max(0, by + dy) + "px";
+      };
+      const onUp = async () => {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        card.removeClass("is-dragging");
+        if (!this._moved)
+          return;
+        const nbx = parseFloat(card.style.left) || 0;
+        const nby = parseFloat(card.style.top) || 0;
+        await this.plugin.outlineEditorService.updateBeat(this._book, beat.id, { bx: nbx, by: nby });
+        this.syncStrip();
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+  }
+  editBeat(beat) {
+    const modal = new BeatModal(this.plugin.app, {
+      beat: { ...beat },
+      lanes: this._outline.lanes,
+      onSave: async (patch) => {
+        await this.plugin.outlineEditorService.updateBeat(this._book, beat.id, patch);
+        await this.render();
+        this.syncStrip();
+      },
+      onDelete: async () => {
+        await this.plugin.outlineEditorService.removeBeat(this._book, beat.id);
+        await this.render();
+        this.syncStrip();
+      },
+      onSend: (b) => this.plugin.sendBeatTextToScript(this._book, b)
+    });
+    modal.open();
+  }
+  async addBeat() {
+    if (!this._book)
+      return;
+    await this.plugin.outlineEditorService.addBeat(this._book, { title: "New beat", lane: 0 });
+    await this.render();
+    this.syncStrip();
+  }
+  syncStrip() {
+    try {
+      this.plugin.timelineBand && this.plugin.timelineBand.refresh(true);
+    } catch (e) {
+    }
+  }
+  renderEmpty(el, title, subtitle) {
+    const empty = el.createDiv({ cls: "folio-bb-empty" });
+    const icon = empty.createDiv({ cls: "folio-bb-empty-icon" });
+    try {
+      (0, import_obsidian6.setIcon)(icon, "layout-dashboard");
+    } catch (e) {
+    }
+    empty.createDiv({ cls: "folio-bb-empty-title", text: title });
+    empty.createDiv({ cls: "folio-bb-empty-subtitle", text: subtitle });
+  }
+};
+
 // src/main.js
 init_constants();
 
 // src/views/folioView.js
-var import_obsidian13 = require("obsidian");
+var import_obsidian15 = require("obsidian");
 init_constants();
 function getProjectTypeIcon2(plugin, projectType) {
   var _a;
@@ -3993,7 +5341,7 @@ function getProjectTypeIcon2(plugin, projectType) {
     return "newspaper";
   return "book";
 }
-var FolioView = class extends import_obsidian13.ItemView {
+var FolioView = class extends import_obsidian15.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -4072,10 +5420,10 @@ var FolioView = class extends import_obsidian13.ItemView {
   async renderBookTree(container, bookFolder) {
     var _a, _b, _c;
     container.empty();
-    const folder = bookFolder instanceof import_obsidian13.TFolder ? bookFolder : this.plugin.app.vault.getAbstractFileByPath(
+    const folder = bookFolder instanceof import_obsidian15.TFolder ? bookFolder : this.plugin.app.vault.getAbstractFileByPath(
       (bookFolder == null ? void 0 : bookFolder.path) || bookFolder
     );
-    if (!(folder instanceof import_obsidian13.TFolder)) {
+    if (!(folder instanceof import_obsidian15.TFolder)) {
       console.error("Invalid book folder", bookFolder);
       return;
     }
@@ -4084,10 +5432,12 @@ var FolioView = class extends import_obsidian13.ItemView {
       return;
     let configTree = [];
     let useConfigTree = false;
+    let currentDraftPath = null;
     try {
       configTree = await this.plugin.buildTreeFromFilesystem(folder);
       if (configTree.length > 0) {
         const cfg = await this.plugin.loadBookConfig(book) || {};
+        currentDraftPath = cfg.currentDraftPath || null;
         const existingTree = (_a = cfg.structure) == null ? void 0 : _a.tree;
         const treeChanged = JSON.stringify(existingTree) !== JSON.stringify(configTree);
         if (treeChanged) {
@@ -4101,6 +5451,8 @@ var FolioView = class extends import_obsidian13.ItemView {
     } catch (e) {
       console.warn("Failed to build/sync tree from filesystem", e);
     }
+    const currentDraftNode = resolveCurrentDraft(configTree, currentDraftPath);
+    const currentDraftResolvedPath = currentDraftNode ? currentDraftNode.path : null;
     let draggedElement = null;
     let draggedNodeId = null;
     const setupDragEvents = (element, nodeId, nodeType) => {
@@ -4207,13 +5559,23 @@ var FolioView = class extends import_obsidian13.ItemView {
         try {
           const isExpanded = this.plugin.expandedFolders.has(fullPath);
           const iconName = node.icon || this.getCustomIcon(node.title, isExpanded, "folder");
-          (0, import_obsidian13.setIcon)(folderIcon, iconName);
-          (0, import_obsidian13.setIcon)(collapse, isExpanded ? "chevron-down" : "chevron-right");
+          (0, import_obsidian15.setIcon)(folderIcon, iconName);
+          (0, import_obsidian15.setIcon)(collapse, isExpanded ? "chevron-down" : "chevron-right");
         } catch (e) {
         }
         const titleSpan = folderRow.createSpan({ text: node.title, cls: "folio-tree-label" });
         if (node.exclude) {
           titleSpan.classList.add("exclude-from-stats");
+        }
+        if (node.draft) {
+          node._isCurrentDraft = node.path === currentDraftResolvedPath;
+          if (node._isCurrentDraft) {
+            const badge = folderRow.createSpan({ cls: "folio-tree-draft-badge", text: "CURRENT" });
+            badge.setAttribute("aria-label", "Current draft \u2014 drives the outline strip");
+          } else {
+            const dot = folderRow.createSpan({ cls: "folio-tree-draft-dot" });
+            dot.setAttribute("aria-label", "Draft (not current) \u2014 right-click to make it current");
+          }
         }
         setupDragEvents(folderRow, node.id, "group");
         try {
@@ -4239,8 +5601,8 @@ var FolioView = class extends import_obsidian13.ItemView {
             this.plugin.expandedFolders.delete(fullPath);
           try {
             const iconName = node.icon || this.getCustomIcon(node.title, isHidden, "folder");
-            (0, import_obsidian13.setIcon)(folderIcon, iconName);
-            (0, import_obsidian13.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
+            (0, import_obsidian15.setIcon)(folderIcon, iconName);
+            (0, import_obsidian15.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
           } catch (e2) {
           }
         };
@@ -4256,15 +5618,35 @@ var FolioView = class extends import_obsidian13.ItemView {
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
           const defaultIcon = node.type === "canvas" ? "layout-dashboard" : this.getCustomIcon(node.title, false, "file");
-          (0, import_obsidian13.setIcon)(icon, node.icon || defaultIcon);
+          (0, import_obsidian15.setIcon)(icon, node.icon || defaultIcon);
         } catch (e) {
         }
         const label2 = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });
         if (node.exclude) {
           label2.classList.add("exclude-from-stats");
         }
-        if (node.completed) {
-          label2.classList.add("is-done");
+        if (node.type === "file") {
+          const status = node.status || (node.completed ? "final" : null);
+          const dot = fileRow.createSpan({ cls: `folio-tree-status-dot is-${status || "none"}` });
+          const statusLabel = sceneStatusLabel(status);
+          const dotTitle = statusLabel ? `Status: ${statusLabel} (click to change)` : "Set writing status";
+          dot.setAttribute("title", dotTitle);
+          dot.setAttribute("aria-label", dotTitle);
+          dot.addEventListener("click", (e) => {
+            var _a3, _b3;
+            e.stopPropagation();
+            (_b3 = (_a3 = this.plugin).cycleNodeStatus) == null ? void 0 : _b3.call(_a3, vaultItem, status);
+          });
+        }
+        if (node.draft) {
+          node._isCurrentDraft = node.path === currentDraftResolvedPath;
+          if (node._isCurrentDraft) {
+            const badge = fileRow.createSpan({ cls: "folio-tree-draft-badge", text: "CURRENT" });
+            badge.setAttribute("aria-label", "Current draft \u2014 drives the outline strip");
+          } else {
+            const ddot = fileRow.createSpan({ cls: "folio-tree-draft-dot" });
+            ddot.setAttribute("aria-label", "Draft (not current) \u2014 right-click to make it current");
+          }
         }
         fileRow.onclick = (e) => {
           var _a3, _b3;
@@ -4386,13 +5768,13 @@ var FolioView = class extends import_obsidian13.ItemView {
             iconName.forEach((n, i) => {
               const s = iconSpan.createSpan({ cls: `folio-stat-icon-part part-${i}` });
               try {
-                (0, import_obsidian13.setIcon)(s, n);
+                (0, import_obsidian15.setIcon)(s, n);
               } catch (e) {
               }
             });
           } else {
             try {
-              (0, import_obsidian13.setIcon)(iconSpan, iconName);
+              (0, import_obsidian15.setIcon)(iconSpan, iconName);
             } catch (e) {
             }
           }
@@ -4419,7 +5801,7 @@ var FolioView = class extends import_obsidian13.ItemView {
   _showTreeAreaContextMenu(evt, book, TextInputModal2) {
     try {
       evt.preventDefault();
-      const menu = new import_obsidian13.Menu(this.plugin.app);
+      const menu = new import_obsidian15.Menu(this.plugin.app);
       menu.addItem(
         (it) => it.setTitle("New root canvas").setIcon("layout-dashboard").onClick(() => {
           new TextInputModal2(this.plugin.app, {
@@ -4524,7 +5906,7 @@ var FolioView = class extends import_obsidian13.ItemView {
       labelButton(newBtn, "New Project");
       const newIcon = newBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian13.setIcon)(newIcon, "edit");
+        (0, import_obsidian15.setIcon)(newIcon, "edit");
       } catch (e) {
       }
       newBtn.createSpan({ text: "New Project", cls: "folio-top-label" });
@@ -4532,7 +5914,7 @@ var FolioView = class extends import_obsidian13.ItemView {
       labelButton(switchBtn, "Switch");
       const switchIcon = switchBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian13.setIcon)(switchIcon, "repeat");
+        (0, import_obsidian15.setIcon)(switchIcon, "repeat");
       } catch (e) {
       }
       switchBtn.createSpan({ text: "Switch", cls: "folio-top-label" });
@@ -4540,7 +5922,7 @@ var FolioView = class extends import_obsidian13.ItemView {
       labelButton(manageBtn, "Manage");
       const manageIcon = manageBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian13.setIcon)(manageIcon, "library");
+        (0, import_obsidian15.setIcon)(manageIcon, "library");
       } catch (e) {
       }
       manageBtn.createSpan({ text: "Manage", cls: "folio-top-label" });
@@ -4548,7 +5930,7 @@ var FolioView = class extends import_obsidian13.ItemView {
       labelButton(helpBtn, "Help");
       const helpIcon = helpBtn.createSpan({ cls: "folio-help-icon" });
       try {
-        (0, import_obsidian13.setIcon)(helpIcon, "help");
+        (0, import_obsidian15.setIcon)(helpIcon, "help");
       } catch (e) {
       }
       newBtn.onclick = () => {
@@ -4571,7 +5953,7 @@ var FolioView = class extends import_obsidian13.ItemView {
         coverEl2.addClass("folio-book-cover-placeholder");
         try {
           const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
-          (0, import_obsidian13.setIcon)(iconEl, "book-open");
+          (0, import_obsidian15.setIcon)(iconEl, "book-open");
         } catch (e) {
         }
         const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
@@ -4588,7 +5970,7 @@ var FolioView = class extends import_obsidian13.ItemView {
         const emptyState = structureEl2.createDiv({ cls: "folio-empty-state" });
         const emptyIconEl = emptyState.createDiv({ cls: "folio-empty-icon" });
         try {
-          (0, import_obsidian13.setIcon)(emptyIconEl, "book-open");
+          (0, import_obsidian15.setIcon)(emptyIconEl, "book-open");
         } catch (e) {
         }
         emptyState.createDiv({ cls: "folio-empty-title", text: "No active project" });
@@ -4600,14 +5982,14 @@ var FolioView = class extends import_obsidian13.ItemView {
         return;
       }
       const bookFolderCheck = this.plugin.app.vault.getAbstractFileByPath(book.path);
-      if (!bookFolderCheck || !(bookFolderCheck instanceof import_obsidian13.TFolder)) {
+      if (!bookFolderCheck || !(bookFolderCheck instanceof import_obsidian15.TFolder)) {
         const headerEl2 = el.createDiv("folio-book-header");
         const coverCol2 = headerEl2.createDiv("folio-book-cover-col");
         const coverEl2 = coverCol2.createDiv("folio-book-cover");
         coverEl2.addClass("folio-book-cover-placeholder");
         try {
           const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
-          (0, import_obsidian13.setIcon)(iconEl, "alert-circle");
+          (0, import_obsidian15.setIcon)(iconEl, "alert-circle");
         } catch (e) {
         }
         const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
@@ -4624,7 +6006,7 @@ var FolioView = class extends import_obsidian13.ItemView {
         const missingState = structureEl2.createDiv({ cls: "folio-empty-state" });
         const missingIconEl = missingState.createDiv({ cls: "folio-empty-icon" });
         try {
-          (0, import_obsidian13.setIcon)(missingIconEl, "folder-x");
+          (0, import_obsidian15.setIcon)(missingIconEl, "folder-x");
         } catch (e) {
         }
         missingState.createDiv({ cls: "folio-empty-title", text: "Folder not found" });
@@ -4653,7 +6035,7 @@ var FolioView = class extends import_obsidian13.ItemView {
           const iconEl = coverEl.createDiv({ cls: "folio-book-cover-icon" });
           const projectType = (metadata == null ? void 0 : metadata.projectType) || PROJECT_TYPES.BOOK;
           const iconName = getProjectTypeIcon2(this.plugin, projectType);
-          (0, import_obsidian13.setIcon)(iconEl, iconName);
+          (0, import_obsidian15.setIcon)(iconEl, iconName);
         } catch (e) {
         }
       }
@@ -4684,7 +6066,7 @@ var FolioView = class extends import_obsidian13.ItemView {
       const bookFolder = this.plugin.app.vault.getAbstractFileByPath(book.path);
       if (this._renderCounter !== token)
         return;
-      if (bookFolder instanceof import_obsidian13.TFolder) {
+      if (bookFolder instanceof import_obsidian15.TFolder) {
         await this.renderBookTree(structureEl, bookFolder);
       } else {
         structureEl.createEl("p", { text: "(No folder found on disk)" });
@@ -4716,12 +6098,12 @@ var FolioView = class extends import_obsidian13.ItemView {
 };
 
 // src/views/writerToolsView.js
-var import_obsidian16 = require("obsidian");
+var import_obsidian18 = require("obsidian");
 init_confirmModal();
 
 // src/modals/focusModeStatsModal.js
-var import_obsidian14 = require("obsidian");
-var FocusModeStatsModal = class extends import_obsidian14.Modal {
+var import_obsidian16 = require("obsidian");
+var FocusModeStatsModal = class extends import_obsidian16.Modal {
   constructor(plugin, project) {
     super(plugin.app);
     this.plugin = plugin;
@@ -5008,7 +6390,7 @@ var FocusModeStatsModal = class extends import_obsidian14.Modal {
 };
 
 // src/writer-tools/referenceDetails.js
-var import_obsidian15 = require("obsidian");
+var import_obsidian17 = require("obsidian");
 
 // src/writer-tools/resourcesI18n.js
 var ARCHETYPE_DATA = {
@@ -6463,7 +7845,7 @@ var PITFALLS_DATA = {
 function createResourceSubheading(parent, iconName, text) {
   const heading = parent.createDiv({ cls: "resource-detail-subheading-row" });
   const icon = heading.createSpan({ cls: "resource-detail-subheading-icon" });
-  (0, import_obsidian15.setIcon)(icon, iconName);
+  (0, import_obsidian17.setIcon)(icon, iconName);
   heading.createSpan({ cls: "resource-detail-subheading", text });
 }
 function renderArchetypeDetail(container, archetypeKey, lang = "en") {
@@ -6525,7 +7907,7 @@ function renderArchetypeDetail(container, archetypeKey, lang = "en") {
     const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
     const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
     const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-    (0, import_obsidian15.setIcon)(examplesIcon, "bookmark");
+    (0, import_obsidian17.setIcon)(examplesIcon, "bookmark");
     examplesHeader.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
     const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
     data.examples.forEach((example) => {
@@ -6573,7 +7955,7 @@ function renderCharacterArcDetail(container, arcKey, lang = "en") {
     const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
     const header = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
     const icon = header.createSpan({ cls: "resource-detail-examples-icon" });
-    (0, import_obsidian15.setIcon)(icon, "bookmark");
+    (0, import_obsidian17.setIcon)(icon, "bookmark");
     header.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
     const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
     data.examples.forEach((example) => {
@@ -6608,7 +7990,7 @@ function renderTechniqueDetail(container, config) {
   const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
   const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
   const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian15.setIcon)(examplesIcon, "bookmark");
+  (0, import_obsidian17.setIcon)(examplesIcon, "bookmark");
   examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
   const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
   config.examples.forEach((example) => {
@@ -6706,7 +8088,7 @@ function renderCalloutItem(container, item) {
   const callout = container.createDiv({ cls: "resource-detail-callout" });
   if (iconName) {
     const icon = callout.createSpan({ cls: "resource-detail-callout-icon" });
-    (0, import_obsidian15.setIcon)(icon, iconName);
+    (0, import_obsidian17.setIcon)(icon, iconName);
   }
   callout.createSpan({ cls: "resource-detail-callout-title", text: title });
   if (body) {
@@ -6763,7 +8145,7 @@ function renderStructureDetail(container, config) {
   const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
   const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
   const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian15.setIcon)(examplesIcon, "bookmark");
+  (0, import_obsidian17.setIcon)(examplesIcon, "bookmark");
   examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
   const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
   config.examples.forEach((example) => {
@@ -6791,7 +8173,7 @@ function renderPitfallsDetail(container, title, items) {
 
 // src/views/writerToolsView.js
 var WRITER_TOOLS_VIEW_TYPE2 = "folio-writer-tools";
-var WriterToolsView = class extends import_obsidian16.ItemView {
+var WriterToolsView = class extends import_obsidian18.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -6905,7 +8287,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     focusItem.setAttr("tabindex", "0");
     focusItem.setAttr("aria-label", "Open Focus mode for a quiet timed writing session");
     const focusIcon = focusItem.createSpan({ cls: "writer-tools-item-icon" });
-    (0, import_obsidian16.setIcon)(focusIcon, "circle-dot");
+    (0, import_obsidian18.setIcon)(focusIcon, "circle-dot");
     focusItem.createSpan({ cls: "writer-tools-item-text", text: "Focus mode" });
     const openFocusMode = () => this.showFocusMode();
     focusItem.addEventListener("click", openFocusMode);
@@ -6917,7 +8299,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     });
     const exportItem = section.createDiv({ cls: "writer-tools-item" });
     const exportIcon = exportItem.createSpan({ cls: "writer-tools-item-icon" });
-    (0, import_obsidian16.setIcon)(exportIcon, "file-stack");
+    (0, import_obsidian18.setIcon)(exportIcon, "file-stack");
     exportItem.createSpan({ cls: "writer-tools-item-text", text: "Export assistant" });
     exportItem.addEventListener("click", () => this.showExportSettingsView());
   }
@@ -6949,7 +8331,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
       this.focusModeProject = null;
       const empty = container.createDiv({ cls: "focus-mode-empty-state" });
       const emptyIcon = empty.createSpan({ cls: "focus-mode-empty-icon" });
-      (0, import_obsidian16.setIcon)(emptyIcon, "circle-dot");
+      (0, import_obsidian18.setIcon)(emptyIcon, "circle-dot");
       empty.createDiv({ cls: "focus-mode-empty-title", text: "Choose a project first" });
       empty.createDiv({
         cls: "focus-mode-empty-subtitle",
@@ -6971,7 +8353,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     container.addClass("folio-export-settings");
     const header = container.createDiv({ cls: "export-settings-header" });
     const headerIcon = header.createSpan({ cls: "export-settings-header-icon" });
-    (0, import_obsidian16.setIcon)(headerIcon, "settings");
+    (0, import_obsidian18.setIcon)(headerIcon, "settings");
     header.createSpan({ cls: "export-settings-header-title", text: "Export project" });
     const backButton = header.createEl("button", { cls: "export-settings-back", text: "Back" });
     backButton.addEventListener("click", () => this.onOpen());
@@ -7014,7 +8396,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     const iconWrap = card.createDiv({ cls: "export-settings-book-icon" });
     const iconEl = iconWrap.createSpan({ cls: "export-settings-book-icon-svg" });
     const type = (meta == null ? void 0 : meta.projectType) || ((_f = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _f.projectType) || "book";
-    (0, import_obsidian16.setIcon)(iconEl, this.getProjectTypeIcon(type));
+    (0, import_obsidian18.setIcon)(iconEl, this.getProjectTypeIcon(type));
     const bookInfo = card.createDiv({ cls: "export-settings-book-info" });
     const displayTitle = (meta == null ? void 0 : meta.title) || (project == null ? void 0 : project.name) || "Untitled";
     bookInfo.createDiv({ cls: "export-settings-book-title", text: displayTitle });
@@ -7051,7 +8433,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     });
     const statusRow = content.createDiv({ cls: "export-settings-status" });
     const statusIcon = statusRow.createSpan({ cls: "export-settings-status-icon" });
-    (0, import_obsidian16.setIcon)(statusIcon, "settings");
+    (0, import_obsidian18.setIcon)(statusIcon, "settings");
     const statusText = statusRow.createSpan({ cls: "export-settings-status-text" });
     const refreshState = () => {
       const hasFormat = !!this.exportFormat;
@@ -7070,7 +8452,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     formats.forEach((format) => {
       const card2 = formatGrid.createDiv({ cls: "export-settings-format-card" });
       const icon = card2.createSpan({ cls: "export-settings-format-icon" });
-      (0, import_obsidian16.setIcon)(icon, format.icon);
+      (0, import_obsidian18.setIcon)(icon, format.icon);
       card2.createDiv({ cls: "export-settings-format-title", text: format.title });
       card2.createDiv({ cls: "export-settings-format-subtitle", text: format.subtitle });
       card2.addEventListener("click", () => {
@@ -7107,7 +8489,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     try {
       const project = this.exportProject;
       if (!project) {
-        new import_obsidian16.Notice("No active project selected.");
+        new import_obsidian18.Notice("No active project selected.");
         return;
       }
       const cfg = this.exportConfig || {};
@@ -7116,21 +8498,21 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
       const collected = await this.plugin.pdfExportService.collectOrderedMarkdownFiles(project, cfg, settings, meta);
       const files = (collected || []).filter((f) => f && f.extension === "md");
       if (files.length === 0) {
-        new import_obsidian16.Notice("No markdown files to export.");
+        new import_obsidian18.Notice("No markdown files to export.");
         return;
       }
       const path = await this.plugin.fdxExportService.exportProject(project, meta, files);
       if (path)
-        new import_obsidian16.Notice(`Exported Final Draft to ${path}`);
+        new import_obsidian18.Notice(`Exported Final Draft to ${path}`);
     } catch (e) {
       console.error("runScreenplayExport failed", e);
-      new import_obsidian16.Notice("Final Draft export failed. See console for details.");
+      new import_obsidian18.Notice("Final Draft export failed. See console for details.");
     }
   }
   async handleExportAction(options = {}) {
     var _a, _b;
     if (!this.exportProject) {
-      new import_obsidian16.Notice("No active project selected.");
+      new import_obsidian18.Notice("No active project selected.");
       return false;
     }
     if (!this.validatePdfExportSettings()) {
@@ -7141,7 +8523,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
         await this.plugin.pdfExportService.exportProject(this.exportProject, this.pdfSettings, options);
         return true;
       }
-      new import_obsidian16.Notice("PDF export is not wired yet. Settings are saved and preview updates are in place.");
+      new import_obsidian18.Notice("PDF export is not wired yet. Settings are saved and preview updates are in place.");
       return false;
     }
     if (this.exportFormat === "docx") {
@@ -7315,7 +8697,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
   validatePdfExportSettings(notify = true) {
     const state = this.getPdfExportReadiness();
     if (!state.canExport && notify) {
-      new import_obsidian16.Notice(state.message);
+      new import_obsidian18.Notice(state.message);
     }
     return state.canExport;
   }
@@ -7429,11 +8811,11 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
   renderPdfSettingsPanel(container) {
     if (!container)
       return;
-    let layout = this.pdfSettingsLayoutRoot;
+    let layout2 = this.pdfSettingsLayoutRoot;
     let controls = this.pdfSettingsControlsEl;
-    if (!layout || !container.contains(layout)) {
+    if (!layout2 || !container.contains(layout2)) {
       container.empty();
-      layout = container.createDiv({ cls: "pdf-settings-layout" });
+      layout2 = container.createDiv({ cls: "pdf-settings-layout" });
       let previewPane2 = this.pdfInlinePreviewContainer;
       if (!previewPane2) {
         previewPane2 = document.createElement("div");
@@ -7442,9 +8824,9 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
       } else {
         previewPane2.classList.add("pdf-settings-preview-pane");
       }
-      layout.appendChild(previewPane2);
-      controls = layout.createDiv({ cls: "pdf-settings-controls" });
-      this.pdfSettingsLayoutRoot = layout;
+      layout2.appendChild(previewPane2);
+      controls = layout2.createDiv({ cls: "pdf-settings-controls" });
+      this.pdfSettingsLayoutRoot = layout2;
       this.pdfSettingsControlsEl = controls;
     } else {
       controls.empty();
@@ -7845,7 +9227,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     const card = container.createDiv({ cls: "pdf-settings-card" });
     const header = card.createDiv({ cls: "pdf-settings-card-header" });
     const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    (0, import_obsidian16.setIcon)(icon, iconName);
+    (0, import_obsidian18.setIcon)(icon, iconName);
     const copy = header.createDiv({ cls: "pdf-settings-card-copy" });
     copy.createDiv({ cls: "pdf-settings-card-title", text: title });
     if (helper)
@@ -8143,7 +9525,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     ["is-ready", "is-running", "is-paused", "is-completed", "is-ended"].forEach((cls) => container.removeClass(cls));
     const header = container.createDiv({ cls: "focus-mode-header" });
     const headerIcon = header.createSpan({ cls: "focus-mode-header-icon" });
-    (0, import_obsidian16.setIcon)(headerIcon, "circle-dot");
+    (0, import_obsidian18.setIcon)(headerIcon, "circle-dot");
     const context = this.getFocusContext(project);
     const headerCopy = header.createDiv({ cls: "focus-mode-header-copy" });
     headerCopy.createSpan({ cls: "focus-mode-header-title", text: "Focus mode" });
@@ -8438,7 +9820,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
       this.focusModeContainer.addClass("is-break");
     this.updateTimerDisplay();
     this.updateFocusControls();
-    new import_obsidian16.Notice(isLong ? `Long break \u2014 ${mins} min. Step away.` : `Break \u2014 ${mins} min.`);
+    new import_obsidian18.Notice(isLong ? `Long break \u2014 ${mins} min. Step away.` : `Break \u2014 ${mins} min.`);
     this._startCountdown();
   }
   /* Pomodoro: break finished — chime and auto-start the next work sprint. */
@@ -8451,7 +9833,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     if (this.focusModeContainer)
       this.focusModeContainer.removeClass("is-break");
     this.playFocusChime("goal");
-    new import_obsidian16.Notice("Break over \u2014 back to writing.");
+    new import_obsidian18.Notice("Break over \u2014 back to writing.");
     this.timerSeconds = 0;
     this.focusSessionState = "ready";
     this.sessionStartWords = null;
@@ -8502,7 +9884,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     this.refreshFocusStats();
     this.updateFocusControls();
     this.playFocusChime("complete");
-    new import_obsidian16.Notice(wordsWritten > 0 ? `Focus session complete \u2014 ${wordsWritten} words written.` : "Focus session complete.");
+    new import_obsidian18.Notice(wordsWritten > 0 ? `Focus session complete \u2014 ${wordsWritten} words written.` : "Focus session complete.");
     if (this.pomodoroEnabled)
       this.startBreak();
   }
@@ -8683,7 +10065,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
       if (this.focusModeContainer)
         this.focusModeContainer.addClass("is-goal-reached");
       this.playFocusChime("goal");
-      new import_obsidian16.Notice(`Word goal reached \u2014 ${goal} words! \u{1F389}`);
+      new import_obsidian18.Notice(`Word goal reached \u2014 ${goal} words! \u{1F389}`);
     }
   }
   playFocusChime(kind = "complete") {
@@ -8888,7 +10270,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
       resourceItem.setAttribute("tabindex", "0");
       resourceItem.setAttribute("aria-label", resource.label);
       const iconWrapper = resourceItem.createDiv({ cls: "writer-tools-item-icon" });
-      (0, import_obsidian16.setIcon)(iconWrapper, resource.icon);
+      (0, import_obsidian18.setIcon)(iconWrapper, resource.icon);
       resourceItem.createDiv({ cls: "writer-tools-item-text", text: resource.label });
       const activate = () => resource.action();
       resourceItem.addEventListener("click", activate);
@@ -8938,13 +10320,13 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     const header = container.createDiv({ cls: "folio-resource-view-header" });
     const left = header.createDiv({ cls: "folio-resource-view-header-left" });
     const iconEl = left.createSpan({ cls: "folio-resource-view-header-icon" });
-    (0, import_obsidian16.setIcon)(iconEl, iconName);
+    (0, import_obsidian18.setIcon)(iconEl, iconName);
     left.createSpan({ cls: "folio-resource-view-header-title", text: titleText });
     const right = header.createDiv({ cls: "folio-resource-view-header-right" });
     this.createLangToggle(right, onLangToggle);
     const backButton = right.createEl("button", { cls: "folio-resource-view-back" });
     const backIcon = backButton.createSpan({ cls: "folio-resource-view-back-icon" });
-    (0, import_obsidian16.setIcon)(backIcon, "chevron-left");
+    (0, import_obsidian18.setIcon)(backIcon, "chevron-left");
     backButton.createSpan({ text: ui(this.resourceLanguage, "back") });
     backButton.addEventListener("click", onBack);
     return header;
@@ -8967,9 +10349,9 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     container.empty();
     container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
-      (0, import_obsidian16.setIcon)(el, iconName);
+      (0, import_obsidian18.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
-        (0, import_obsidian16.setIcon)(el, "circle-dot");
+        (0, import_obsidian18.setIcon)(el, "circle-dot");
     };
     this.buildResourceViewHeader(
       container,
@@ -9047,9 +10429,9 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     container.empty();
     container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
-      (0, import_obsidian16.setIcon)(el, iconName);
+      (0, import_obsidian18.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
-        (0, import_obsidian16.setIcon)(el, "circle-dot");
+        (0, import_obsidian18.setIcon)(el, "circle-dot");
     };
     this.buildResourceViewHeader(
       container,
@@ -9106,9 +10488,9 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     container.empty();
     container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
-      (0, import_obsidian16.setIcon)(el, iconName);
+      (0, import_obsidian18.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
-        (0, import_obsidian16.setIcon)(el, "circle-dot");
+        (0, import_obsidian18.setIcon)(el, "circle-dot");
     };
     this.buildResourceViewHeader(
       container,
@@ -9166,9 +10548,9 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     container.empty();
     container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
-      (0, import_obsidian16.setIcon)(el, iconName);
+      (0, import_obsidian18.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
-        (0, import_obsidian16.setIcon)(el, "circle-dot");
+        (0, import_obsidian18.setIcon)(el, "circle-dot");
     };
     this.buildResourceViewHeader(
       container,
@@ -9709,7 +11091,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     aboutItems.forEach((item) => {
       const aboutItem = section.createDiv({ cls: "writer-tools-item" });
       const iconSpan = aboutItem.createSpan({ cls: "writer-tools-item-icon" });
-      (0, import_obsidian16.setIcon)(iconSpan, item.icon);
+      (0, import_obsidian18.setIcon)(iconSpan, item.icon);
       aboutItem.createSpan({ cls: "writer-tools-item-text", text: item.label });
       aboutItem.addEventListener("click", item.action);
     });
@@ -9721,7 +11103,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     const header = container.createDiv({ cls: "donate-view-header" });
     const headerLeft = header.createDiv({ cls: "donate-view-header-left" });
     const headerHeart = headerLeft.createSpan({ cls: "donate-view-header-heart" });
-    (0, import_obsidian16.setIcon)(headerHeart, "heart");
+    (0, import_obsidian18.setIcon)(headerHeart, "heart");
     headerLeft.createSpan({ cls: "donate-view-header-title", text: "Support" });
     const backButton = header.createEl("button", { cls: "donate-view-back", text: "Back" });
     backButton.addEventListener("click", () => this.exitDonateView());
@@ -9729,7 +11111,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     const card = content.createDiv({ cls: "donate-view-card" });
     const cardHeader = card.createDiv({ cls: "donate-view-card-header" });
     const cardIcon = cardHeader.createSpan({ cls: "donate-view-card-icon" });
-    (0, import_obsidian16.setIcon)(cardIcon, "coffee");
+    (0, import_obsidian18.setIcon)(cardIcon, "coffee");
     cardHeader.createSpan({ cls: "donate-view-card-title", text: "Support Folio development" });
     const donateCopy = card.createDiv({ cls: "donate-view-card-text" });
     donateCopy.createSpan({
@@ -9760,7 +11142,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     container.addClass("folio-contact-view");
     const header = container.createDiv({ cls: "contact-view-header" });
     const headerIcon = header.createSpan({ cls: "contact-view-header-icon" });
-    (0, import_obsidian16.setIcon)(headerIcon, "mail");
+    (0, import_obsidian18.setIcon)(headerIcon, "mail");
     header.createSpan({ cls: "contact-view-header-title", text: "Contact" });
     const backButton = header.createEl("button", { cls: "contact-view-back", text: "Back" });
     backButton.addEventListener("click", () => this.exitContactView());
@@ -9776,7 +11158,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     links.forEach((item) => {
       const row = list.createDiv({ cls: "contact-view-item" });
       const icon = row.createSpan({ cls: "contact-view-item-icon" });
-      (0, import_obsidian16.setIcon)(icon, item.icon);
+      (0, import_obsidian18.setIcon)(icon, item.icon);
       const text = row.createDiv({ cls: "contact-view-item-text" });
       text.createDiv({ cls: "contact-view-item-title", text: item.label });
       text.createDiv({ cls: "contact-view-item-subtext", text: item.url });
@@ -9789,7 +11171,7 @@ var WriterToolsView = class extends import_obsidian16.ItemView {
     this.onOpen();
   }
 };
-var PdfPreviewModal = class extends import_obsidian16.Modal {
+var PdfPreviewModal = class extends import_obsidian18.Modal {
   constructor(app, view) {
     super(app);
     this.view = view;
@@ -9822,7 +11204,7 @@ var PdfPreviewModal = class extends import_obsidian16.Modal {
     }
   }
 };
-var PdfSettingsModal = class extends import_obsidian16.Modal {
+var PdfSettingsModal = class extends import_obsidian18.Modal {
   constructor(app, view) {
     super(app);
     this.view = view;
@@ -10015,11 +11397,657 @@ var PdfSettingsModal = class extends import_obsidian16.Modal {
   }
 };
 
+// src/views/timelineBand.js
+var import_obsidian19 = require("obsidian");
+init_constants();
+
+// src/services/outlineLayout.js
+var MIN_SCENE_PX = 10;
+function layout(paginated, beats, pxPerPage) {
+  const perPage = paginated.perPage || 280;
+  const pxPerUnit = pxPerPage / perPage;
+  const total = paginated.total || 1;
+  const width = Math.max(total * pxPerUnit, pxPerPage);
+  const scenes = (paginated.scenes || []).map((s) => ({
+    ...s,
+    px: (s.start || 0) * pxPerUnit,
+    w: Math.max(MIN_SCENE_PX, (s.length || 1) * pxPerUnit)
+  }));
+  const beatBars = (beats || []).map((b) => ({
+    ...b,
+    px: (b.start || 0) * pxPerPage,
+    w: Math.max(pxPerPage * 0.4, (b.span || 1) * pxPerPage)
+  }));
+  return { width, pxPerPage, pxPerUnit, perPage, total, pages: paginated.pages || 1, scenes, beatBars };
+}
+function pxToPage(px, pxPerPage) {
+  return Math.max(0, Math.round(px / pxPerPage * 4) / 4);
+}
+
+// src/views/timelineBand.js
+init_textInputModal();
+var BAND_CLASS = "folio-timeline-band";
+var HOST_CLASS = "folio-timeline-band-host";
+var PX_PER_PAGE = 120;
+var LABEL_W = 80;
+var TimelineBand = class {
+  constructor(plugin) {
+    this.plugin = plugin;
+    this._cache = /* @__PURE__ */ new Map();
+  }
+  register() {
+    const ws = this.plugin.app.workspace;
+    this.plugin.registerEvent(ws.on("active-leaf-change", () => this.refresh(false)));
+    this.plugin.registerEvent(ws.on("file-open", () => this.refresh(false)));
+    this.plugin.registerEvent(ws.on("layout-change", () => this.refresh(false)));
+    this.plugin.registerEvent(ws.on("editor-change", () => {
+      clearTimeout(this._editDebounce);
+      this._editDebounce = setTimeout(() => this.refresh(true), 500);
+    }));
+    this.plugin.register(() => {
+      clearTimeout(this._editDebounce);
+      clearTimeout(this._zoomDebounce);
+      this.removeAll();
+    });
+    this.plugin.registerInterval(window.setInterval(() => this.tick(), 150));
+    ws.onLayoutReady(() => this.refresh(true));
+  }
+  /** Cheap per-frame update: move the playhead + active-scene highlight to the caret. */
+  tick() {
+    try {
+      const av = this.plugin.app.workspace.activeEditor;
+      if (!av || !av.editor || !av.file || !av.contentEl)
+        return;
+      const band = av.contentEl.querySelector(":scope > ." + BAND_CLASS);
+      if (!band)
+        return;
+      const book = this.bookForFile(av.file);
+      if (!book)
+        return;
+      this.positionPlayhead(band, book, av.file);
+      this.updateHighlight(band, av.file.path, false);
+    } catch (e) {
+    }
+  }
+  removeAll() {
+    try {
+      document.querySelectorAll("." + HOST_CLASS).forEach((host) => {
+        host.classList.remove(HOST_CLASS);
+        const band = host.querySelector(":scope > ." + BAND_CLASS);
+        if (band)
+          band.remove();
+      });
+    } catch (e) {
+    }
+  }
+  bookForFile(file) {
+    if (!file || !file.path)
+      return null;
+    return (this.plugin.booksIndex || []).find((b) => file.path.startsWith(b.path + "/")) || null;
+  }
+  isScene(file, book) {
+    if (!file || file.extension !== "md")
+      return false;
+    const rel = file.path.replace(book.path + "/", "");
+    return !rel.startsWith("misc/");
+  }
+  async refresh(force = false) {
+    var _a, _b;
+    try {
+      const ws = this.plugin.app.workspace;
+      for (const leaf of ws.getLeavesOfType("markdown")) {
+        const view = leaf.view;
+        const contentEl = view == null ? void 0 : view.contentEl;
+        if (!contentEl)
+          continue;
+        const file = view.file;
+        const book = this.bookForFile(file);
+        if (book && this.isScene(file, book))
+          await this.renderBand(contentEl, book, file, force);
+        else
+          this.removeBand(contentEl);
+      }
+      for (const leaf of ws.getLeavesOfType(BEAT_BOARD_VIEW_TYPE)) {
+        const host = (_b = (_a = leaf.view) == null ? void 0 : _a.contentEl) == null ? void 0 : _b.querySelector(":scope > .folio-bb-strip");
+        const book = this.plugin.activeBook;
+        if (host && book)
+          await this.renderBand(host, book, null, force);
+      }
+    } catch (e) {
+      console.warn("TimelineBand.refresh failed", e);
+    }
+  }
+  /** Render the current draft's strip into an arbitrary host (e.g. the Beat Board). */
+  async renderBandInto(host, book, force = true) {
+    if (!host || !book)
+      return;
+    try {
+      await this.renderBand(host, book, null, force);
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+  removeBand(contentEl) {
+    const band = contentEl.querySelector(":scope > ." + BAND_CLASS);
+    if (band)
+      band.remove();
+    contentEl.classList.remove(HOST_CLASS);
+  }
+  async getData(book, file, force) {
+    var _a, _b;
+    let cfg = {};
+    try {
+      cfg = await this.plugin.loadBookConfig(book) || {};
+    } catch (e) {
+      cfg = {};
+    }
+    const profile = getProfile(((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK);
+    const tree = cfg.structure && cfg.structure.tree || [];
+    const draftNode = resolveCurrentDraft(tree, cfg.currentDraftPath);
+    const draftPath = draftNode ? draftNode.path : "";
+    const key = book.path + "::" + draftPath;
+    if (!force && this._cache.has(key))
+      return this._cache.get(key);
+    const scopedTree = draftNode ? draftScopeNodes(draftNode) : tree;
+    const scopedCfg = { ...cfg, structure: { ...cfg.structure || {}, tree: scopedTree } };
+    let spine = [];
+    try {
+      spine = await this.plugin.spineService.buildSpine(book, scopedCfg, profile);
+    } catch (e) {
+      spine = [];
+    }
+    let outline = { lanes: [], beats: [] };
+    try {
+      outline = await this.plugin.outlineEditorService.load(book);
+    } catch (e) {
+      outline = { lanes: [], beats: [] };
+    }
+    const pt = ((_b = cfg.basic) == null ? void 0 : _b.projectType) || PROJECT_TYPES.BOOK;
+    const perPage = pt === PROJECT_TYPES.SCRIPT || pt === PROJECT_TYPES.FILM ? 190 : 280;
+    const choices = findDrafts(tree).map((d) => ({ path: d.path, name: d.title || d.path }));
+    const draftName = draftNode ? draftNode.title || draftNode.path : "";
+    const data = { spine, outline, draftPath, draftName, choices, perPage };
+    this._cache.set(key, data);
+    return data;
+  }
+  async renderBand(contentEl, book, file, force) {
+    const existing = contentEl.querySelectorAll(":scope > ." + BAND_CLASS);
+    let band = existing[0] || null;
+    for (let i = 1; i < existing.length; i++)
+      existing[i].remove();
+    if (!band) {
+      band = createDiv({ cls: BAND_CLASS });
+      contentEl.prepend(band);
+    }
+    contentEl.classList.add(HOST_CLASS);
+    const { spine, outline, draftPath, draftName, choices, perPage } = await this.getData(book, file, force);
+    const draftKey = book.path + "::" + draftPath;
+    if (band.dataset.draftkey === draftKey && !force) {
+      this.updateHighlight(band, file ? file.path : null);
+      this.positionPlayhead(band, book, file);
+      return;
+    }
+    const paginated = paginate(spine, perPage);
+    const pxPerPage = outline.zoom || PX_PER_PAGE;
+    const view = layout(paginated, outline.beats, pxPerPage);
+    if (!this._views)
+      this._views = /* @__PURE__ */ new Map();
+    this._views.set(book.path, view);
+    band.empty();
+    band.dataset.book = book.path;
+    band.dataset.draftkey = draftKey;
+    band.dataset.pp = String(view.perPage);
+    band.dataset.total = String(view.total);
+    const toolbar = band.createDiv({ cls: "folio-tl-toolbar" });
+    const views = toolbar.createDiv({ cls: "folio-tl-views" });
+    const viewBtn = (icon, title, fn) => {
+      const b = views.createSpan({ cls: "folio-tl-viewbtn" });
+      try {
+        (0, import_obsidian19.setIcon)(b, icon);
+      } catch (e) {
+      }
+      b.setAttribute("aria-label", title);
+      b.setAttribute("title", title);
+      b.addEventListener("click", () => {
+        try {
+          fn();
+        } catch (e) {
+          console.warn(e);
+        }
+      });
+    };
+    viewBtn("columns-2", "Open Folio (split)", () => this.plugin.activateFolio());
+    viewBtn("layout-dashboard", "Open Beat Board", () => this.plugin.openBeatBoard());
+    viewBtn("list-tree", "Build outline from draft", () => this.plugin.buildOutlineFromDraft());
+    viewBtn("pencil-ruler", "Writer Tools", () => this.plugin.openWriterTools());
+    viewBtn("focus", "Focus Mode", () => this.plugin.openFocusMode());
+    if (choices && choices.length) {
+      const dwrap = toolbar.createDiv({ cls: "folio-tl-draftwrap" });
+      try {
+        (0, import_obsidian19.setIcon)(dwrap.createSpan({ cls: "folio-tl-draft-icon" }), "layers");
+      } catch (e) {
+      }
+      if (choices.length > 1) {
+        const sel = dwrap.createEl("select", { cls: "folio-tl-draftselect" });
+        for (const c of choices) {
+          const o = sel.createEl("option", { text: c.name });
+          o.value = c.path;
+          if (c.path === draftPath)
+            o.selected = true;
+        }
+        sel.setAttribute("title", "Current draft (drives the strip)");
+        sel.addEventListener("change", async () => {
+          await this.plugin.setCurrentDraft(book, sel.value);
+          this.refresh(true);
+        });
+      } else {
+        dwrap.createSpan({ cls: "folio-tl-draftname", text: draftName || choices[0].name });
+      }
+    }
+    const addLane2 = toolbar.createSpan({ cls: "folio-tl-addlane", text: "+ lane" });
+    addLane2.addEventListener("click", async () => {
+      await this.plugin.outlineEditorService.addLane(book);
+      this.refresh(true);
+    });
+    const zoomWrap = toolbar.createDiv({ cls: "folio-tl-zoomwrap" });
+    try {
+      (0, import_obsidian19.setIcon)(zoomWrap.createSpan({ cls: "folio-tl-zoom-icon" }), "zoom-in");
+    } catch (e) {
+    }
+    const slider = zoomWrap.createEl("input", { cls: "folio-tl-zoom-slider", type: "range" });
+    slider.min = String(MIN_ZOOM);
+    slider.max = String(MAX_ZOOM);
+    slider.step = "4";
+    slider.value = String(Math.round(pxPerPage));
+    slider.setAttribute("title", "Zoom timeline");
+    slider.addEventListener("input", () => this.applyZoomLive(band, Number(slider.value)));
+    slider.addEventListener("change", async () => {
+      await this.plugin.outlineEditorService.setZoom(book, Number(slider.value));
+      this.refresh(true);
+    });
+    const scroll = band.createDiv({ cls: "folio-tl-scroll" });
+    const inner = scroll.createDiv({ cls: "folio-tl-inner" });
+    const playhead = inner.createDiv({ cls: "folio-tl-playhead" });
+    playhead.style.display = "none";
+    this.renderRuler(inner, view);
+    outline.lanes.forEach((lane, i) => this.renderLane(inner, view, outline, lane, i, book));
+    this.renderFileLane(inner, view, book);
+    this.renderScriptLane(inner, view, book);
+    this.updateHighlight(band, file ? file.path : null);
+    this.positionPlayhead(band, book, file);
+  }
+  renderRuler(inner, view) {
+    const row = inner.createDiv({ cls: "folio-tl-row folio-tl-ruler" });
+    row.createSpan({ cls: "folio-tl-label" });
+    const track = row.createDiv({ cls: "folio-tl-track" });
+    track.style.width = view.width + "px";
+    for (let p = 0; p < view.pages; p++) {
+      const tick = track.createSpan({ cls: "folio-tl-page", text: String(p + 1) });
+      tick.dataset.page = String(p);
+      tick.style.left = p * view.pxPerPage + "px";
+    }
+  }
+  renderLane(inner, view, outline, lane, laneIndex, book) {
+    const row = inner.createDiv({ cls: "folio-tl-row folio-tl-lane" });
+    const label2 = row.createSpan({ cls: "folio-tl-label is-lane", text: lane.name || `Outline ${laneIndex + 1}` });
+    label2.setAttribute("title", "Click to rename");
+    label2.addEventListener("click", () => this.renameLane(book, laneIndex, lane.name));
+    if (outline.lanes.length > 1) {
+      const rm = label2.createSpan({ cls: "folio-tl-lane-remove", text: " \xD7" });
+      rm.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await this.plugin.outlineEditorService.removeLane(book, laneIndex);
+        this.refresh(true);
+      });
+    }
+    const track = row.createDiv({ cls: "folio-tl-track" });
+    track.style.width = view.width + "px";
+    for (const beat of beatsInLane(outline, laneIndex)) {
+      const bar = track.createDiv({ cls: "folio-tl-beat" });
+      bar.dataset.pstart = String(beat.start || 0);
+      bar.dataset.pspan = String(beat.span || 1);
+      bar.style.left = (beat.start || 0) * view.pxPerPage + "px";
+      bar.style.width = Math.max(view.pxPerPage * 0.4, (beat.span || 1) * view.pxPerPage) + "px";
+      if (beat.color)
+        bar.style.background = beat.color;
+      bar.createSpan({ cls: "folio-tl-beat-title", text: beat.title || "Beat" });
+      if (beat.goal)
+        bar.createSpan({ cls: "folio-tl-beat-goal", text: String(beat.goal) });
+      bar.setAttribute("title", beat.notes || beat.title || "");
+      const lh = bar.createDiv({ cls: "folio-tl-handle is-left" });
+      const rh = bar.createDiv({ cls: "folio-tl-handle is-right" });
+      bar.addEventListener("click", () => {
+        if (!this._beatMoved)
+          this.openBeatEditor(book, beat, outline.lanes);
+      });
+      this.beatPointer(bar, lh, rh, book, beat, view.pxPerPage);
+    }
+    track.addEventListener("dblclick", async (e) => {
+      if (e.target !== track)
+        return;
+      const start = pxToPage(e.offsetX, view.pxPerPage);
+      await this.plugin.outlineEditorService.addBeat(book, { title: "New beat", lane: laneIndex, start, span: 1 });
+      this.refresh(true);
+    });
+  }
+  /** Pointer-based move (body) + resize (edge handles); persists page start/span. */
+  beatPointer(bar, lh, rh, book, beat, pxPerPage) {
+    const begin = (e, mode) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._beatMoved = false;
+      const startX = e.clientX;
+      const origLeft = parseFloat(bar.style.left) || 0;
+      const origW = parseFloat(bar.style.width) || pxPerPage;
+      const minW = pxPerPage * 0.4;
+      const onMove = (ev) => {
+        const dx = ev.clientX - startX;
+        if (Math.abs(dx) > 3)
+          this._beatMoved = true;
+        if (mode === "move")
+          bar.style.left = Math.max(0, origLeft + dx) + "px";
+        else if (mode === "resize-r")
+          bar.style.width = Math.max(minW, origW + dx) + "px";
+        else {
+          const nl = Math.max(0, origLeft + dx);
+          bar.style.left = nl + "px";
+          bar.style.width = Math.max(minW, origW - (nl - origLeft)) + "px";
+        }
+      };
+      const onUp = async () => {
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        if (!this._beatMoved)
+          return;
+        const left = parseFloat(bar.style.left) || 0;
+        const w = parseFloat(bar.style.width) || pxPerPage;
+        await this.plugin.outlineEditorService.updateBeat(book, beat.id, {
+          start: pxToPage(left, pxPerPage),
+          span: Math.max(0.25, pxToPage(w, pxPerPage))
+        });
+        this.refresh(true);
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    };
+    bar.addEventListener("mousedown", (e) => {
+      if (e.target === lh || e.target === rh)
+        return;
+      begin(e, "move");
+    });
+    lh.addEventListener("mousedown", (e) => begin(e, "resize-l"));
+    rh.addEventListener("mousedown", (e) => begin(e, "resize-r"));
+  }
+  /** A grouping row showing each source file as a labeled segment over its scenes.
+   *  Only shown when the draft spans 2+ files (no point for a single-file script). */
+  renderFileLane(inner, view, book) {
+    const scenes = view.scenes || [];
+    if (new Set(scenes.map((s) => s.file)).size < 2)
+      return;
+    const groups = [];
+    for (const s of scenes) {
+      const last = groups[groups.length - 1];
+      if (last && last.file === s.file)
+        last.endWords = s.start + s.length;
+      else
+        groups.push({ file: s.file, startWords: s.start, endWords: s.start + s.length, line: s.line });
+    }
+    const row = inner.createDiv({ cls: "folio-tl-row folio-tl-filelane" });
+    row.createSpan({ cls: "folio-tl-label", text: "Files" });
+    const track = row.createDiv({ cls: "folio-tl-track" });
+    track.style.width = view.width + "px";
+    groups.forEach((g, i) => {
+      const lenWords = Math.max(1, g.endWords - g.startWords);
+      const seg = track.createDiv({ cls: "folio-tl-fileseg" + (i % 2 ? " is-alt" : "") });
+      seg.style.left = g.startWords * view.pxPerUnit + "px";
+      seg.style.width = lenWords * view.pxPerUnit + "px";
+      seg.dataset.sstart = String(g.startWords);
+      seg.dataset.slen = String(lenWords);
+      const base = g.file.split("/").pop().replace(/\.md$/, "");
+      seg.createSpan({ cls: "folio-tl-fileseg-label", text: base });
+      seg.setAttribute("title", base);
+      seg.addEventListener("click", () => this.revealAtLine(`${book.path}/${g.file}`, g.line));
+    });
+  }
+  renderScriptLane(inner, view, book) {
+    const row = inner.createDiv({ cls: "folio-tl-row folio-tl-script" });
+    row.createSpan({ cls: "folio-tl-label is-script", text: "Script" });
+    const track = row.createDiv({ cls: "folio-tl-track" });
+    track.style.width = view.width + "px";
+    for (const scene of view.scenes) {
+      const fullPath = `${book.path}/${scene.file}`;
+      const status = scene.status || null;
+      const bar = track.createDiv({ cls: `folio-tl-scene is-${status || "none"}` });
+      bar.style.left = scene.px + "px";
+      bar.style.width = scene.w + "px";
+      bar.dataset.sstart = String(scene.start || 0);
+      bar.dataset.slen = String(scene.length || 1);
+      bar.dataset.path = fullPath;
+      bar.dataset.line = String(scene.line || 0);
+      bar.dataset.end = scene.end != null ? String(scene.end) : "";
+      bar.dataset.index = String(scene.index);
+      bar.dataset.id = scene.id || "";
+      bar.createSpan({ cls: "folio-tl-scene-title", text: scene.title });
+      bar.setAttribute("title", scene.title);
+      bar.addEventListener("click", () => {
+        if (!this._dragging)
+          this.revealAtLine(fullPath, scene.line);
+      });
+      this.attachSceneDrag(bar, book, scene);
+    }
+    track.addEventListener("dragover", (e) => {
+      if (this._dragging && e.target === track)
+        e.preventDefault();
+    });
+    track.addEventListener("drop", (e) => {
+      if (!this._dragging || e.target !== track)
+        return;
+      e.preventDefault();
+      this.handleSceneDrop(book, { id: null, index: null });
+    });
+  }
+  // --- Scene reorder (HTML5 drag; prefers stable id, falls back to index) ---
+  attachSceneDrag(bar, book, scene) {
+    bar.setAttribute("draggable", "true");
+    bar.addEventListener("dragstart", (e) => {
+      this._dragging = true;
+      this._drag = { id: scene.id || null, index: scene.index };
+      bar.addClass("is-dragging");
+      try {
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", String(scene.index));
+      } catch (err) {
+      }
+    });
+    bar.addEventListener("dragend", () => {
+      bar.removeClass("is-dragging");
+      setTimeout(() => {
+        this._dragging = false;
+      }, 0);
+    });
+    bar.addEventListener("dragover", (e) => {
+      if (!this._dragging)
+        return;
+      e.preventDefault();
+      bar.addClass("is-drop-target");
+    });
+    bar.addEventListener("dragleave", () => bar.removeClass("is-drop-target"));
+    bar.addEventListener("drop", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      bar.removeClass("is-drop-target");
+      this.handleSceneDrop(book, { id: scene.id || null, index: scene.index });
+    });
+  }
+  async handleSceneDrop(book, target) {
+    var _a;
+    const from = this._drag;
+    if (!from || target.index != null && target.index === from.index)
+      return;
+    try {
+      let cfg = {};
+      try {
+        cfg = await this.plugin.loadBookConfig(book) || {};
+      } catch (e) {
+        cfg = {};
+      }
+      const profile = getProfile(((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK);
+      let res;
+      if (from.id && (target.id || target.id === null && target.index === null)) {
+        res = await this.plugin.reorderService.applyMove(book, cfg, profile, from.id, target.id);
+      } else {
+        res = await this.plugin.reorderService.applyMoveByIndex(book, cfg, profile, from.index, target.index);
+      }
+      if (!res || !res.ok) {
+        console.warn("scene reorder failed", res);
+        return;
+      }
+      this._cache.delete(book.path);
+      await this.refresh(true);
+    } catch (err) {
+      console.warn("handleSceneDrop failed", err);
+    }
+  }
+  renameLane(book, laneIndex, current) {
+    const modal = new TextInputModal(this.plugin.app, {
+      title: "Rename lane",
+      placeholder: current || "Lane name",
+      cta: "Rename",
+      onSubmit: async (value) => {
+        await this.plugin.outlineEditorService.renameLane(book, laneIndex, value);
+        this.refresh(true);
+      }
+    });
+    modal.open();
+  }
+  openBeatEditor(book, beat, lanes) {
+    const modal = new BeatModal(this.plugin.app, {
+      beat: { ...beat },
+      lanes,
+      onSave: async (patch) => {
+        await this.plugin.outlineEditorService.updateBeat(book, beat.id, patch);
+        this.refresh(true);
+      },
+      onDelete: async () => {
+        await this.plugin.outlineEditorService.removeBeat(book, beat.id);
+        this.refresh(true);
+      },
+      onSend: (b) => this.plugin.sendBeatTextToScript(book, b)
+    });
+    modal.open();
+  }
+  async revealAtLine(fullPath, line) {
+    try {
+      const file = this.plugin.app.vault.getAbstractFileByPath(fullPath);
+      if (!file)
+        return;
+      const leaf = this.plugin.app.workspace.getLeaf(false);
+      await leaf.openFile(file, { eState: { line: line || 0 } });
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+  activeCursorLine(path) {
+    try {
+      const av = this.plugin.app.workspace.activeEditor;
+      const editor = av && av.file && av.file.path === path && av.editor ? av.editor : null;
+      return editor ? editor.getCursor().line : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  updateHighlight(band, activePath, scroll = true) {
+    const cursor = this.activeCursorLine(activePath);
+    const scenes = [...band.querySelectorAll(".folio-tl-scene")].filter((c) => c.dataset.path === activePath);
+    let current = null;
+    if (cursor != null) {
+      for (const s of scenes) {
+        const start = Number(s.dataset.line || 0);
+        const end = s.dataset.end ? Number(s.dataset.end) : Infinity;
+        if (cursor >= start && cursor < end) {
+          current = s;
+          break;
+        }
+      }
+      if (!current && scenes.length)
+        current = scenes[0];
+    } else {
+      current = scenes[0] || null;
+    }
+    band.querySelectorAll(".folio-tl-scene").forEach((s) => s.classList.toggle("is-current", s === current));
+    if (scroll && current && typeof current.scrollIntoView === "function") {
+      try {
+        current.scrollIntoView({ inline: "center", block: "nearest" });
+      } catch (e) {
+      }
+    }
+  }
+  /** Pixel x (in track space) of the caret within the script timeline, or null. */
+  computePlayheadPx(view, book, filePath, line) {
+    const rel = filePath.slice(book.path.length + 1);
+    const fileScenes = view.scenes.filter((s) => s.file === rel);
+    if (!fileScenes.length)
+      return null;
+    const sc = fileScenes.find((s) => line >= s.line && line < (s.end != null ? s.end : Infinity)) || fileScenes[fileScenes.length - 1];
+    const spanLines = Math.max(1, (sc.end != null ? sc.end : sc.line + 1) - sc.line);
+    const frac = Math.min(1, Math.max(0, (line - sc.line) / spanLines));
+    return (sc.start + frac * (sc.length || 0)) * view.pxPerUnit;
+  }
+  /** Move the caret playhead to the cursor's page position (or hide it). */
+  positionPlayhead(band, book, file) {
+    const view = this._views && this._views.get(book.path);
+    const playhead = band.querySelector(".folio-tl-playhead");
+    if (!view || !playhead)
+      return;
+    if (!file) {
+      playhead.style.display = "none";
+      return;
+    }
+    const line = this.activeCursorLine(file.path);
+    if (line == null) {
+      playhead.style.display = "none";
+      return;
+    }
+    const px = this.computePlayheadPx(view, book, file.path, line);
+    if (px == null) {
+      playhead.style.display = "none";
+      return;
+    }
+    playhead.style.display = "";
+    playhead.style.left = LABEL_W + px + "px";
+    playhead.dataset.uoff = String(px / view.pxPerUnit);
+  }
+  /** Reposition all bars/ticks/playhead for a new zoom without a rebuild (live drag). */
+  applyZoomLive(band, v) {
+    const pp = Number(band.dataset.pp) || 280;
+    const total = Number(band.dataset.total) || 1;
+    const pxUnit = v / pp;
+    const width = Math.max(total * pxUnit, v) + "px";
+    band.querySelectorAll(".folio-tl-track").forEach((t) => {
+      t.style.width = width;
+    });
+    band.querySelectorAll(".folio-tl-scene, .folio-tl-fileseg").forEach((b) => {
+      b.style.left = (Number(b.dataset.sstart) || 0) * pxUnit + "px";
+      b.style.width = Math.max(10, (Number(b.dataset.slen) || 1) * pxUnit) + "px";
+    });
+    band.querySelectorAll(".folio-tl-beat").forEach((b) => {
+      b.style.left = (Number(b.dataset.pstart) || 0) * v + "px";
+      b.style.width = Math.max(v * 0.4, (Number(b.dataset.pspan) || 1) * v) + "px";
+    });
+    band.querySelectorAll(".folio-tl-page").forEach((t) => {
+      t.style.left = (Number(t.dataset.page) || 0) * v + "px";
+    });
+    const ph = band.querySelector(".folio-tl-playhead");
+    if (ph && ph.dataset.uoff != null && ph.style.display !== "none")
+      ph.style.left = LABEL_W + (Number(ph.dataset.uoff) || 0) * pxUnit + "px";
+  }
+};
+
 // src/views/folioSettingTab.js
-var import_obsidian18 = require("obsidian");
+var import_obsidian21 = require("obsidian");
 
 // src/modals/iconPickerModal.js
-var import_obsidian17 = require("obsidian");
+var import_obsidian20 = require("obsidian");
 var COMMON_ICONS = [
   // Books & Documents
   "book",
@@ -10728,7 +12756,7 @@ var COMMON_ICONS = [
   "wand-2",
   "crown"
 ];
-var IconPickerModal = class extends import_obsidian17.Modal {
+var IconPickerModal = class extends import_obsidian20.Modal {
   constructor(app, { title, currentIcon, onSelect }) {
     super(app);
     this.title = title || "Select Icon";
@@ -10781,7 +12809,7 @@ var IconPickerModal = class extends import_obsidian17.Modal {
         cls: "folio-icon-picker-option" + (iconName === this.currentIcon ? " is-selected" : "")
       });
       iconOption.title = iconName;
-      (0, import_obsidian17.setIcon)(iconOption, iconName);
+      (0, import_obsidian20.setIcon)(iconOption, iconName);
       const label2 = iconOption.createSpan({ cls: "folio-icon-picker-label" });
       label2.textContent = iconName;
       iconOption.onclick = () => {
@@ -10799,7 +12827,7 @@ var IconPickerModal = class extends import_obsidian17.Modal {
 
 // src/views/folioSettingTab.js
 init_constants();
-var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
+var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -10811,20 +12839,20 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     const basicSection = el.createDiv({ cls: "folio-settings-section" });
     const basicHeader = basicSection.createDiv({ cls: "folio-settings-section-header" });
     const basicToggle = basicHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian18.setIcon)(basicToggle, "chevron-down");
+    (0, import_obsidian21.setIcon)(basicToggle, "chevron-down");
     basicHeader.createSpan({ text: "Basic options", cls: "folio-settings-section-title" });
     const basicContent = basicSection.createDiv({ cls: "folio-settings-section-content" });
     basicHeader.onclick = () => {
       basicContent.classList.toggle("collapsed");
-      (0, import_obsidian18.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
+      (0, import_obsidian21.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
     };
-    new import_obsidian18.Setting(basicContent).setName("Default author").setDesc("Default author name for new projects").addText(
+    new import_obsidian21.Setting(basicContent).setName("Default author").setDesc("Default author name for new projects").addText(
       (text) => text.setPlaceholder("Author name").setValue(this.plugin.settings.defaultAuthor || "").onChange(async (value) => {
         this.plugin.settings.defaultAuthor = value.trim();
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian18.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText((text) => {
+    new import_obsidian21.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText((text) => {
       text.setPlaceholder("projects").setValue(this.plugin.settings.basePath || "projects").onChange(async (value) => {
         let normalizedPath = value.trim().replace(/^\/+|\/+$/g, "") || "projects";
         this.plugin.settings.basePath = normalizedPath;
@@ -10838,12 +12866,12 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     const templateSection = el.createDiv({ cls: "folio-settings-section" });
     const templateHeader = templateSection.createDiv({ cls: "folio-settings-section-header" });
     const templateToggle = templateHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian18.setIcon)(templateToggle, "chevron-right");
+    (0, import_obsidian21.setIcon)(templateToggle, "chevron-right");
     templateHeader.createSpan({ text: "Template options", cls: "folio-settings-section-title" });
     const templateContent = templateSection.createDiv({ cls: "folio-settings-section-content collapsed" });
     templateHeader.onclick = () => {
       templateContent.classList.toggle("collapsed");
-      (0, import_obsidian18.setIcon)(templateToggle, templateContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
+      (0, import_obsidian21.setIcon)(templateToggle, templateContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
     };
     if (!this.plugin.settings.projectTemplates) {
       this.plugin.settings.projectTemplates = [
@@ -10858,7 +12886,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     templates.sort((a, b) => a.order - b.order).forEach((t) => {
       defaultOptions[t.id] = t.name;
     });
-    new import_obsidian18.Setting(templateContent).setName("Default template").setDesc("Default template used when creating new projects").addDropdown(
+    new import_obsidian21.Setting(templateContent).setName("Default template").setDesc("Default template used when creating new projects").addDropdown(
       (dropdown) => dropdown.addOptions(defaultOptions).setValue(this.plugin.settings.defaultProjectType || "book").onChange(async (value) => {
         this.plugin.settings.defaultProjectType = value;
         await this.plugin.saveSettings();
@@ -10867,7 +12895,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     templateContent.createEl("h4", { text: "Project templates", cls: "folio-settings-subheader" });
     const templatesHeaderRow = templateContent.createDiv({ cls: "folio-templates-header-row" });
     const resetBtn = templatesHeaderRow.createEl("button", { cls: "folio-reset-templates-btn" });
-    (0, import_obsidian18.setIcon)(resetBtn, "rotate-ccw");
+    (0, import_obsidian21.setIcon)(resetBtn, "rotate-ccw");
     resetBtn.title = "Reset all templates to defaults";
     resetBtn.onclick = async () => {
       const confirmed = confirm("Are you sure you want to reset all templates to their default values? This will remove any custom templates and restore the original Book, TV Show, Film, and Essay templates.");
@@ -10876,7 +12904,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
         await this.plugin.saveSettings();
         this.renderTemplatesList(templatesListEl);
         this.plugin.rerenderViews();
-        new import_obsidian18.Notice("Templates reset to defaults");
+        new import_obsidian21.Notice("Templates reset to defaults");
       }
     };
     const templatesListEl = templateContent.createDiv({ cls: "folio-templates-list" });
@@ -10912,20 +12940,20 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     templates.forEach((template, index) => {
       const row = container.createDiv({ cls: "folio-template-row" });
       const iconEl = row.createDiv({ cls: "folio-template-icon" });
-      (0, import_obsidian18.setIcon)(iconEl, template.icon || "file");
+      (0, import_obsidian21.setIcon)(iconEl, template.icon || "file");
       const infoEl = row.createDiv({ cls: "folio-template-info" });
       infoEl.createDiv({ text: template.name, cls: "folio-template-name" });
       infoEl.createDiv({ text: template.description || "", cls: "folio-template-desc" });
       const actionsEl = row.createDiv({ cls: "folio-template-actions" });
       const editBtn = actionsEl.createEl("button", { cls: "folio-template-action-btn" });
-      (0, import_obsidian18.setIcon)(editBtn, "pencil");
+      (0, import_obsidian21.setIcon)(editBtn, "pencil");
       editBtn.title = "Edit template";
       editBtn.onclick = () => {
         this.openTemplateEditor(template, container);
       };
       if (templates.length > 1) {
         const deleteBtn = actionsEl.createEl("button", { cls: "folio-template-action-btn mod-danger" });
-        (0, import_obsidian18.setIcon)(deleteBtn, "trash");
+        (0, import_obsidian21.setIcon)(deleteBtn, "trash");
         deleteBtn.title = "Delete template";
         deleteBtn.onclick = async () => {
           this.plugin.settings.projectTemplates = templates.filter((t) => t.id !== template.id);
@@ -10993,9 +13021,9 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     const updateIconPreview = () => {
       iconPreview.innerHTML = "";
       try {
-        (0, import_obsidian18.setIcon)(iconPreview, iconInput.value || "file");
+        (0, import_obsidian21.setIcon)(iconPreview, iconInput.value || "file");
       } catch (e) {
-        (0, import_obsidian18.setIcon)(iconPreview, "file");
+        (0, import_obsidian21.setIcon)(iconPreview, "file");
       }
     };
     updateIconPreview();
@@ -11023,6 +13051,58 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     descRow.appendChild(descLabel);
     descRow.appendChild(descInput);
     modal.appendChild(descRow);
+    const draftRow = document.createElement("div");
+    draftRow.className = "folio-template-editor-row";
+    const draftLabel = document.createElement("label");
+    draftLabel.textContent = "Draft (manuscript)";
+    const draftSelect = document.createElement("select");
+    draftSelect.className = "folio-template-editor-input";
+    draftRow.appendChild(draftLabel);
+    draftRow.appendChild(draftSelect);
+    modal.appendChild(draftRow);
+    const draftHint = document.createElement("div");
+    draftHint.className = "folio-template-editor-hint";
+    draftHint.textContent = "The manuscript a draft is written in \u2014 a folder (many chapters/episodes) or a single file (one screenplay/essay). It drives the outline, beats and timeline; everything else (notes, characters, research\u2026) stays out of the way. Tip: name a folder \u201CDrafts\u201D to use it as the shelf where new drafts are created.";
+    modal.appendChild(draftHint);
+    const collectDraftTargets = (nodes, depth = 0, acc = []) => {
+      for (const n of nodes || []) {
+        if (n.type === "folder") {
+          acc.push({ node: n, label: `${"\u2014 ".repeat(depth)}${n.title}` });
+          collectDraftTargets(n.children, depth + 1, acc);
+        } else if (n.type === "file") {
+          acc.push({ node: n, label: `${"\u2014 ".repeat(depth)}${n.title} (file)` });
+        }
+      }
+      return acc;
+    };
+    const refreshDraftSelect = () => {
+      const targets = collectDraftTargets(editData.structure);
+      draftSelect._folders = targets;
+      draftSelect.innerHTML = "";
+      const none = document.createElement("option");
+      none.value = "";
+      none.textContent = targets.length ? "\u2014 None \u2014" : "\u2014 Add a folder or file first \u2014";
+      draftSelect.appendChild(none);
+      targets.forEach((f, i) => {
+        const o = document.createElement("option");
+        o.value = String(i);
+        o.textContent = f.label;
+        if (f.node.draft)
+          o.selected = true;
+        draftSelect.appendChild(o);
+      });
+      draftSelect.disabled = targets.length === 0;
+    };
+    draftSelect.onchange = () => {
+      (draftSelect._folders || []).forEach((f) => {
+        delete f.node.draft;
+      });
+      const idx = draftSelect.value === "" ? -1 : Number(draftSelect.value);
+      const targets = draftSelect._folders || [];
+      if (idx >= 0 && targets[idx])
+        targets[idx].node.draft = true;
+      renderStructureTree();
+    };
     const structureSection = document.createElement("div");
     structureSection.className = "folio-template-structure-section";
     const structureHeader = document.createElement("div");
@@ -11035,7 +13115,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     const addFileBtn = document.createElement("button");
     addFileBtn.className = "folio-template-structure-add-btn";
     addFileBtn.type = "button";
-    (0, import_obsidian18.setIcon)(addFileBtn, "file-plus");
+    (0, import_obsidian21.setIcon)(addFileBtn, "file-plus");
     addFileBtn.appendChild(document.createTextNode(" File"));
     addFileBtn.onclick = () => {
       editData.structure.push({ title: "New File", type: "file" });
@@ -11044,7 +13124,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     const addFolderBtn = document.createElement("button");
     addFolderBtn.className = "folio-template-structure-add-btn";
     addFolderBtn.type = "button";
-    (0, import_obsidian18.setIcon)(addFolderBtn, "folder-plus");
+    (0, import_obsidian21.setIcon)(addFolderBtn, "folder-plus");
     addFolderBtn.appendChild(document.createTextNode(" Folder"));
     addFolderBtn.onclick = () => {
       editData.structure.push({ title: "New Folder", type: "folder", children: [] });
@@ -11053,7 +13133,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     const addCanvasBtn = document.createElement("button");
     addCanvasBtn.className = "folio-template-structure-add-btn";
     addCanvasBtn.type = "button";
-    (0, import_obsidian18.setIcon)(addCanvasBtn, "layout-dashboard");
+    (0, import_obsidian21.setIcon)(addCanvasBtn, "layout-dashboard");
     addCanvasBtn.appendChild(document.createTextNode(" Canvas"));
     addCanvasBtn.onclick = () => {
       editData.structure.push({ title: "New Canvas", type: "canvas" });
@@ -11083,7 +13163,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
         const dragHandle = document.createElement("span");
         dragHandle.className = "folio-template-structure-node-drag-handle";
         dragHandle.title = "Drag to reorder";
-        (0, import_obsidian18.setIcon)(dragHandle, "grip-horizontal");
+        (0, import_obsidian21.setIcon)(dragHandle, "grip-horizontal");
         nodeRow.appendChild(dragHandle);
         nodeRow.addEventListener("dragstart", (e) => {
           draggedNode = node;
@@ -11126,7 +13206,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
           const toggleBtn = document.createElement("span");
           toggleBtn.className = "folio-template-structure-node-toggle";
           const isExpanded = expandedFolders.has(node);
-          (0, import_obsidian18.setIcon)(toggleBtn, isExpanded ? "chevron-down" : "chevron-right");
+          (0, import_obsidian21.setIcon)(toggleBtn, isExpanded ? "chevron-down" : "chevron-right");
           toggleBtn.onclick = () => {
             if (expandedFolders.has(node)) {
               expandedFolders.delete(node);
@@ -11145,7 +13225,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
         nodeIcon.className = "folio-template-structure-node-icon folio-icon-clickable";
         nodeIcon.title = "Click to change icon";
         const defaultIcon = node.type === "folder" ? "folder" : node.type === "canvas" ? "layout-dashboard" : "file";
-        (0, import_obsidian18.setIcon)(nodeIcon, node.icon || defaultIcon);
+        (0, import_obsidian21.setIcon)(nodeIcon, node.icon || defaultIcon);
         nodeIcon.onclick = (e) => {
           e.stopPropagation();
           new IconPickerModal(this.app, {
@@ -11178,6 +13258,12 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
         typeBadge.className = "folio-template-structure-node-type";
         typeBadge.textContent = node.type;
         nodeRow.appendChild(typeBadge);
+        if (node.draft) {
+          const draftBadge = document.createElement("span");
+          draftBadge.className = "folio-template-structure-node-draft";
+          draftBadge.textContent = "DRAFT";
+          nodeRow.appendChild(draftBadge);
+        }
         const nodeActions = document.createElement("div");
         nodeActions.className = "folio-template-structure-node-actions";
         if (node.type === "folder") {
@@ -11185,7 +13271,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
           addFileBtn2.className = "folio-template-structure-node-btn";
           addFileBtn2.type = "button";
           addFileBtn2.title = "Add file";
-          (0, import_obsidian18.setIcon)(addFileBtn2, "file-plus");
+          (0, import_obsidian21.setIcon)(addFileBtn2, "file-plus");
           addFileBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -11198,7 +13284,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
           addFolderBtn2.className = "folio-template-structure-node-btn";
           addFolderBtn2.type = "button";
           addFolderBtn2.title = "Add folder";
-          (0, import_obsidian18.setIcon)(addFolderBtn2, "folder-plus");
+          (0, import_obsidian21.setIcon)(addFolderBtn2, "folder-plus");
           addFolderBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -11211,7 +13297,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
           addCanvasBtn2.className = "folio-template-structure-node-btn";
           addCanvasBtn2.type = "button";
           addCanvasBtn2.title = "Add canvas";
-          (0, import_obsidian18.setIcon)(addCanvasBtn2, "layout-dashboard");
+          (0, import_obsidian21.setIcon)(addCanvasBtn2, "layout-dashboard");
           addCanvasBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -11225,7 +13311,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
         deleteBtn.className = "folio-template-structure-node-btn mod-danger";
         deleteBtn.type = "button";
         deleteBtn.title = "Delete";
-        (0, import_obsidian18.setIcon)(deleteBtn, "trash");
+        (0, import_obsidian21.setIcon)(deleteBtn, "trash");
         deleteBtn.onclick = () => {
           parentArray.splice(index, 1);
           renderStructureTree();
@@ -11250,6 +13336,7 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
           renderNode(node, editData.structure, index, 0);
         });
       }
+      refreshDraftSelect();
     };
     renderStructureTree();
     modal.appendChild(structureSection);
@@ -11293,7 +13380,34 @@ var FolioSettingTab = class extends import_obsidian18.PluginSettingTab {
     actions.appendChild(saveBtn);
     modal.appendChild(actions);
     overlay.appendChild(modal);
-    document.body.appendChild(overlay);
+    const host = this.containerEl.closest(".modal") || this.containerEl.closest(".modal-container") || this.containerEl || document.body;
+    host.appendChild(overlay);
+    const close = () => {
+      document.removeEventListener("keydown", onKey, true);
+      overlay.remove();
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        e.stopPropagation();
+        close();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    overlay.addEventListener("mousedown", (e) => {
+      if (e.target === overlay)
+        close();
+    });
+    cancelBtn.onclick = close;
+    const origSave = saveBtn.onclick;
+    saveBtn.onclick = async (e) => {
+      await origSave(e);
+      document.removeEventListener("keydown", onKey, true);
+    };
+    setTimeout(() => {
+      nameInput.focus();
+      nameInput.select();
+    }, 0);
     overlay.onclick = (e) => {
       if (e.target === overlay)
         overlay.remove();
@@ -11313,7 +13427,7 @@ init_editBookModal();
 init_helpModal();
 init_textInputModal();
 init_confirmModal();
-var FolioPlugin = class extends import_obsidian19.Plugin {
+var FolioPlugin = class extends import_obsidian22.Plugin {
   async onload() {
     var _a;
     await this.loadSettings();
@@ -11323,6 +13437,10 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     this.bookService = new BookService(this.app, this.configService);
     this.pdfExportService = new PdfExportService(this.app, this.configService);
     this.fdxExportService = new FdxExportService(this.app);
+    this.outlineService = new OutlineService(this.app, this.configService);
+    this.spineService = new SpineService(this.app);
+    this.reorderService = new ReorderService(this.app, this.spineService, this.treeService);
+    this.outlineEditorService = new OutlineEditorService(this.app, this.configService);
     this.screenplayStyleEl = null;
     this.booksIndex = [];
     this.activeBook = null;
@@ -11345,7 +13463,10 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     this.activeFilePath = null;
     this.registerView(VIEW_TYPE, (leaf) => new FolioView(leaf, this));
     this.registerView(WRITER_TOOLS_VIEW_TYPE, (leaf) => new WriterToolsView(leaf, this));
+    this.registerView(BEAT_BOARD_VIEW_TYPE, (leaf) => new FolioBeatBoardView(leaf, this));
     this.addRibbonIcon("book", "Open Folio", () => this.activateFolio());
+    this.timelineBand = new TimelineBand(this);
+    this.timelineBand.register();
     this.addCommand({
       id: "open-focus-mode",
       name: "Open Focus Mode",
@@ -11355,6 +13476,36 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
       id: "export-fdx",
       name: "Export current project to Final Draft (.fdx)",
       callback: () => this.exportActiveProjectToFdx()
+    });
+    this.addCommand({
+      id: "new-beat",
+      name: "New beat (outline editor)",
+      callback: () => this.addOutlineBeatForActiveProject()
+    });
+    this.addCommand({
+      id: "open-beat-board",
+      name: "Open Beat Board",
+      callback: () => this.openBeatBoard()
+    });
+    this.addCommand({
+      id: "toggle-draft-folder",
+      name: "Mark/unmark current file's folder as a draft",
+      callback: () => this.toggleDraftFolder()
+    });
+    this.addCommand({
+      id: "build-outline-from-draft",
+      name: "Build outline from draft",
+      callback: () => this.buildOutlineFromDraft()
+    });
+    this.addCommand({
+      id: "build-draft-from-outline",
+      name: "Build new draft from outline",
+      callback: () => this.buildDraftFromOutline()
+    });
+    this.addCommand({
+      id: "sync-outline",
+      name: "Sync outline from scene headings",
+      callback: () => this.syncOutlineForActiveProject()
     });
     this.addSettingTab(new FolioSettingTab(this.app, this));
     this._vaultChangeDebounceTimer = null;
@@ -11436,7 +13587,7 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     var _a, _b, _c;
     try {
       (_a = evt.preventDefault) == null ? void 0 : _a.call(evt);
-      const menu = new import_obsidian19.Menu(this.app);
+      const menu = new import_obsidian22.Menu(this.app);
       let shouldCount = !(node == null ? void 0 : node.exclude);
       try {
         const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
@@ -11493,6 +13644,38 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
         (it) => it.setTitle(shouldCount ? "Exclude from stats" : "Include in stats").setIcon(shouldCount ? "eye-off" : "eye").onClick(() => this.setStatsOverride(file, shouldCount ? "exclude" : "include"))
       );
       menu.addSeparator();
+      const currentStatus = (node == null ? void 0 : node.status) || ((node == null ? void 0 : node.completed) ? "final" : null);
+      SCENE_STATUSES.forEach((s) => {
+        menu.addItem((it) => {
+          var _a2;
+          it.setTitle(`Status: ${s.label}`).setIcon(s.id === "final" ? "check-circle" : "circle").onClick(() => this.setNodeStatus(file, s.id));
+          if (currentStatus === s.id)
+            (_a2 = it.setChecked) == null ? void 0 : _a2.call(it, true);
+        });
+      });
+      if (currentStatus) {
+        menu.addItem(
+          (it) => it.setTitle("Clear status").setIcon("circle-slash").onClick(() => this.setNodeStatus(file, null))
+        );
+      }
+      if (node && node.path) {
+        menu.addSeparator();
+        if (!node.draft) {
+          menu.addItem(
+            (it) => it.setTitle("Mark as draft").setIcon("layers").onClick(() => this.setDraftForFolderPath(node.path, true))
+          );
+        } else {
+          if (!node._isCurrentDraft) {
+            menu.addItem(
+              (it) => it.setTitle("Set as current draft").setIcon("check-circle").onClick(() => this.setCurrentDraft(this.activeBook, node.path))
+            );
+          }
+          menu.addItem(
+            (it) => it.setTitle("Unmark as draft").setIcon("layers").onClick(() => this.setDraftForFolderPath(node.path, false))
+          );
+        }
+      }
+      menu.addSeparator();
       menu.addItem(
         (it) => it.setTitle("Create copy").setIcon("copy").onClick(() => {
           try {
@@ -11513,7 +13696,7 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
       );
       menu.addItem(
         (it) => it.setTitle("Delete").setIcon("trash").onClick(() => {
-          const name = file instanceof import_obsidian19.TFolder ? `folder "${file.name}"` : `"${file.name}"`;
+          const name = file instanceof import_obsidian22.TFolder ? `folder "${file.name}"` : `"${file.name}"`;
           new ConfirmModal(this.app, {
             title: "Delete",
             message: `Delete ${name}? It will be moved to trash.`,
@@ -11539,12 +13722,12 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     var _a;
     try {
       (_a = evt.preventDefault) == null ? void 0 : _a.call(evt);
-      const menu = new import_obsidian19.Menu(this.app);
+      const menu = new import_obsidian22.Menu(this.app);
       menu.addItem(
         (it) => it.setTitle(isRoot ? "New root canvas" : "New canvas").setIcon("layout-dashboard").onClick(async () => {
           try {
-            const folderObj = folder instanceof import_obsidian19.TFolder ? folder : this.app.vault.getAbstractFileByPath((folder == null ? void 0 : folder.path) || folder);
-            if (!(folderObj instanceof import_obsidian19.TFolder))
+            const folderObj = folder instanceof import_obsidian22.TFolder ? folder : this.app.vault.getAbstractFileByPath((folder == null ? void 0 : folder.path) || folder);
+            if (!(folderObj instanceof import_obsidian22.TFolder))
               return;
             let base = "Canvas";
             let name = `${base}.canvas`;
@@ -11623,6 +13806,20 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
         menu.addItem(
           (it) => it.setTitle(isExcluded ? "Include in stats" : "Exclude from stats").setIcon(isExcluded ? "eye" : "eye-off").onClick(() => this.toggleExcludeFromStats(folder, !isExcluded))
         );
+        if (!node.draft) {
+          menu.addItem(
+            (it) => it.setTitle("Mark as draft").setIcon("layers").onClick(() => this.setDraftForFolderPath(node.path, true))
+          );
+        } else {
+          if (!node._isCurrentDraft) {
+            menu.addItem(
+              (it) => it.setTitle("Set as current draft").setIcon("check-circle").onClick(() => this.setCurrentDraft(this.activeBook, node.path))
+            );
+          }
+          menu.addItem(
+            (it) => it.setTitle("Unmark as draft").setIcon("layers").onClick(() => this.setDraftForFolderPath(node.path, false))
+          );
+        }
       }
       menu.addItem(
         (it) => it.setTitle("Create copy").setIcon("copy").onClick(() => {
@@ -11668,13 +13865,13 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
   }
   openFile(filePath) {
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (file && file instanceof import_obsidian19.TFile) {
+    if (file && file instanceof import_obsidian22.TFile) {
       this.app.workspace.openLinkText(file.path, "", false);
     }
   }
   openFileInNewTab(filePath) {
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (file && file instanceof import_obsidian19.TFile) {
+    if (file && file instanceof import_obsidian22.TFile) {
       try {
         this.app.workspace.openLinkText(file.path, "", true);
       } catch (e) {
@@ -11685,7 +13882,7 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
   }
   openFileInNewPane(filePath) {
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (file && file instanceof import_obsidian19.TFile) {
+    if (file && file instanceof import_obsidian22.TFile) {
       try {
         const leaf = this.app.workspace.getLeaf(true);
         leaf.openFile(file);
@@ -11722,9 +13919,9 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     if (!file)
       return;
     try {
-      if (file instanceof import_obsidian19.TFile) {
+      if (file instanceof import_obsidian22.TFile) {
         this.app.fileManager.duplicateFile(file);
-      } else if (file instanceof import_obsidian19.TFolder) {
+      } else if (file instanceof import_obsidian22.TFolder) {
         const parentPath = file.path.split("/").slice(0, -1).join("/") || "";
         const baseName = `${file.name} Copy`;
         let destPath = `${parentPath}/${baseName}`.replace(/\/+/g, "/");
@@ -11735,14 +13932,14 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
         const createFolderAndCopy = async (src, dest) => {
           await this.app.vault.createFolder(dest);
           const folder = this.app.vault.getAbstractFileByPath(src);
-          if (!(folder instanceof import_obsidian19.TFolder))
+          if (!(folder instanceof import_obsidian22.TFolder))
             return;
           for (const child of folder.children) {
             const childDest = `${dest}/${child.name}`;
-            if (child instanceof import_obsidian19.TFile) {
+            if (child instanceof import_obsidian22.TFile) {
               const content = await this.app.vault.read(child);
               await this.app.vault.create(childDest, content);
-            } else if (child instanceof import_obsidian19.TFolder) {
+            } else if (child instanceof import_obsidian22.TFolder) {
               await createFolderAndCopy(child.path, childDest);
             }
           }
@@ -11758,10 +13955,10 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
   async createNextChapterFile(folder) {
     var _a;
     try {
-      const folderObj = folder instanceof import_obsidian19.TFolder ? folder : this.app.vault.getAbstractFileByPath((folder == null ? void 0 : folder.path) || folder);
-      if (!(folderObj instanceof import_obsidian19.TFolder))
+      const folderObj = folder instanceof import_obsidian22.TFolder ? folder : this.app.vault.getAbstractFileByPath((folder == null ? void 0 : folder.path) || folder);
+      if (!(folderObj instanceof import_obsidian22.TFolder))
         return;
-      const existing = ((_a = folderObj.children) != null ? _a : []).filter((c) => c instanceof import_obsidian19.TFile && c.extension === "md").map((f) => f.basename);
+      const existing = ((_a = folderObj.children) != null ? _a : []).filter((c) => c instanceof import_obsidian22.TFile && c.extension === "md").map((f) => f.basename);
       let max = 0;
       for (const name of existing) {
         const match = name.match(/^Chapter (\d+)$/i);
@@ -11811,7 +14008,7 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
   async _collectScreenplayExport() {
     const book = this.activeBook;
     if (!book) {
-      new import_obsidian19.Notice("Open or create a project first.");
+      new import_obsidian22.Notice("Open or create a project first.");
       return null;
     }
     const cfg = await this.loadBookConfig(book) || {};
@@ -11820,7 +14017,7 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     const collected = await this.pdfExportService.collectOrderedMarkdownFiles(book, cfg, settings, meta);
     const files = (collected || []).filter((f) => f && f.extension === "md");
     if (files.length === 0) {
-      new import_obsidian19.Notice("No markdown files to export.");
+      new import_obsidian22.Notice("No markdown files to export.");
       return null;
     }
     return { book, meta, files };
@@ -11834,12 +14031,524 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
       this._announceExport(path, "Final Draft");
     } catch (e) {
       console.error("exportActiveProjectToFdx failed", e);
-      new import_obsidian19.Notice("Final Draft export failed. See console for details.");
+      new import_obsidian22.Notice("Final Draft export failed. See console for details.");
+    }
+  }
+  async syncOutlineForActiveProject() {
+    try {
+      const book = this.activeBook;
+      if (!book) {
+        new import_obsidian22.Notice("Open or create a project first.");
+        return;
+      }
+      const cfg = await this.loadBookConfig(book) || {};
+      const meta = await this.loadBookMeta(book) || {};
+      const settings = { ...cfg.export || {}, content: { ...(cfg.export || {}).content || {}, mode: "allIncluded" } };
+      const collected = await this.pdfExportService.collectOrderedMarkdownFiles(book, cfg, settings, meta);
+      const sceneFiles = (collected || []).filter((f) => f && f.extension === "md");
+      const res = await this.outlineService.syncOutlineFromScenes(book, sceneFiles);
+      await this.refresh();
+      this.rerenderViews();
+      if (res.added > 0) {
+        new import_obsidian22.Notice(`Outline updated \u2014 added ${res.added} scene${res.added === 1 ? "" : "s"}.`);
+        if (res.outlinePath) {
+          try {
+            this.app.workspace.openLinkText(res.outlinePath, "", false);
+          } catch (e) {
+            console.warn(e);
+          }
+        }
+      } else {
+        new import_obsidian22.Notice("Outline already up to date.");
+      }
+    } catch (e) {
+      console.error("syncOutlineForActiveProject failed", e);
+      new import_obsidian22.Notice("Outline sync failed. See console for details.");
+    }
+  }
+  /** Parse an outline into [{file, scenes:[{title, notes:[]}]}] for rebuilding a draft. */
+  _parseOutlineForRebuild(text) {
+    const lines = (text || "").split("\n");
+    const isAutoLink = (l) => /^\[\[.*\|Open( scene)? ›\]\]\s*$/.test(l.trim());
+    const groups = [];
+    let g = null, s = null, stop = false;
+    for (const l of lines) {
+      if (stop)
+        break;
+      const sm = /^###\s+(.*\S)\s*$/.exec(l);
+      if (sm) {
+        if (!g) {
+          g = { file: "Draft", scenes: [] };
+          groups.push(g);
+        }
+        s = { title: sm[1].trim(), notes: [] };
+        g.scenes.push(s);
+        continue;
+      }
+      const gm = /^##\s+(.*\S)\s*$/.exec(l);
+      if (gm) {
+        const t = gm[1].trim();
+        if (/^notes \(not in current draft\)/i.test(t)) {
+          stop = true;
+          continue;
+        }
+        g = { file: t, scenes: [] };
+        groups.push(g);
+        s = null;
+        continue;
+      }
+      if (/^#\s+/.test(l))
+        continue;
+      if (s && !isAutoLink(l))
+        s.notes.push(l);
+    }
+    const trim = (arr) => {
+      let a = 0, b = arr.length;
+      while (a < b && !arr[a].trim())
+        a++;
+      while (b > a && !arr[b - 1].trim())
+        b--;
+      return arr.slice(a, b);
+    };
+    for (const grp of groups)
+      for (const sc of grp.scenes)
+        sc.notes = trim(sc.notes);
+    return groups.filter((grp) => grp.scenes.length);
+  }
+  /** Compile the project's Outline file into a NEW draft folder (non-destructive). */
+  async buildDraftFromOutline() {
+    var _a, _b, _c;
+    try {
+      const book = this.activeBook;
+      if (!book) {
+        new import_obsidian22.Notice("Open or create a project first.");
+        return;
+      }
+      const cfg = await this.loadBookConfig(book) || {};
+      const profile = getProfile(((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK);
+      const pt = ((_b = cfg.basic) == null ? void 0 : _b.projectType) || PROJECT_TYPES.BOOK;
+      const tree = ((_c = cfg.structure) == null ? void 0 : _c.tree) || [];
+      const av = this.app.workspace.activeEditor;
+      let outlineFile = null;
+      if (av && av.file && av.file.path.startsWith(book.path + "/") && /outline/i.test(av.file.basename))
+        outlineFile = av.file;
+      if (!outlineFile) {
+        let rel = null;
+        const walk = (nodes) => {
+          for (const n of nodes || []) {
+            if (rel)
+              return;
+            if (n.type === "file" && /outline/i.test(n.title || ""))
+              rel = n.path;
+            if (n.children)
+              walk(n.children);
+          }
+        };
+        walk(tree);
+        if (rel)
+          outlineFile = this.app.vault.getAbstractFileByPath(`${book.path}/${rel}`);
+      }
+      if (!outlineFile) {
+        new import_obsidian22.Notice('No "Outline" file found to build from.');
+        return;
+      }
+      const groups = this._parseOutlineForRebuild(await this.app.vault.read(outlineFile));
+      if (!groups.length) {
+        new import_obsidian22.Notice("The outline has no scene headers (###) to build from.");
+        return;
+      }
+      const roles = profile.headingRoles || {};
+      const unitLevel = Number(Object.keys(roles).find((l) => roles[l] === profile.unitRole)) || 1;
+      const unitPrefix = "#".repeat(unitLevel);
+      const shelf = draftShelfNode(tree);
+      const parentRel = shelf ? shelf.path : "";
+      const single = groups.length === 1;
+      const fileContent = (bodyLines) => ["---", `projectType: ${pt}`, "---", "", ...bodyLines].join("\n").replace(/\s*$/, "") + "\n";
+      const sceneBody = (g) => {
+        const lines = [];
+        const wholeFile = g.scenes.length === 1 && g.scenes[0].title === g.file;
+        if (wholeFile) {
+          if (g.scenes[0].notes.length)
+            lines.push(...g.scenes[0].notes);
+        } else {
+          for (const s of g.scenes) {
+            lines.push(`${unitPrefix} ${s.title}`, "");
+            if (s.notes.length)
+              lines.push(...s.notes, "");
+          }
+        }
+        return lines;
+      };
+      const modal = new TextInputModal(this.app, {
+        title: "New draft from outline",
+        placeholder: single ? "New draft name (e.g. Draft 2)" : "New draft folder name (e.g. Draft 2)",
+        cta: "Create draft",
+        onSubmit: async (value) => {
+          try {
+            const name = (value || "").trim() || "Draft 2";
+            let draftRel;
+            if (single) {
+              draftRel = parentRel ? `${parentRel}/${name}.md` : `${name}.md`;
+              const abs = `${book.path}/${draftRel}`;
+              if (this.app.vault.getAbstractFileByPath(abs)) {
+                new import_obsidian22.Notice(`\u201C${name}\u201D already exists.`);
+                return;
+              }
+              await this.app.vault.create(abs, fileContent(sceneBody(groups[0])));
+            } else {
+              draftRel = parentRel ? `${parentRel}/${name}` : name;
+              const folderAbs = `${book.path}/${draftRel}`;
+              if (this.app.vault.getAbstractFileByPath(folderAbs)) {
+                new import_obsidian22.Notice(`\u201C${name}\u201D already exists.`);
+                return;
+              }
+              await this.app.vault.createFolder(folderAbs);
+              for (const g of groups)
+                await this.app.vault.create(`${folderAbs}/${g.file}.md`, fileContent(sceneBody(g)));
+            }
+            await this.refresh();
+            await this.setDraftForFolderPath(draftRel, true);
+            await this.setCurrentDraft(book, draftRel);
+            new import_obsidian22.Notice(`Created draft \u201C${name}\u201D${shelf ? " in Drafts" : ""}.`);
+          } catch (e) {
+            console.error("buildDraftFromOutline (create) failed", e);
+            new import_obsidian22.Notice("Couldn't create the draft. See console for details.");
+          }
+        }
+      });
+      modal.open();
+    } catch (e) {
+      console.error("buildDraftFromOutline failed", e);
+      new import_obsidian22.Notice("Couldn't build draft from outline. See console for details.");
+    }
+  }
+  /**
+   * Parse an outline file into title → queue of note-blocks (the user's prose
+   * under each `### heading`), dropping the auto-generated "Open scene" link and
+   * blank edges. A queue per title preserves order for repeated sluglines.
+   */
+  _parseOutlineNotes(text) {
+    const lines = (text || "").split("\n");
+    const sections = [];
+    let cur = null;
+    for (const l of lines) {
+      const m = /^###\s+(.*\S)\s*$/.exec(l);
+      if (m) {
+        cur = { title: m[1].trim(), body: [] };
+        sections.push(cur);
+        continue;
+      }
+      if (/^#{1,2}\s+/.test(l)) {
+        cur = null;
+        continue;
+      }
+      if (cur)
+        cur.body.push(l);
+    }
+    const isAutoLink = (l) => /^\[\[.*\|Open( scene)? ›\]\]\s*$/.test(l.trim());
+    const trimEdges = (arr) => {
+      let s = 0, e = arr.length;
+      while (s < e && !arr[s].trim())
+        s++;
+      while (e > s && !arr[e - 1].trim())
+        e--;
+      return arr.slice(s, e);
+    };
+    const map = /* @__PURE__ */ new Map();
+    for (const sec of sections) {
+      const body = trimEdges(sec.body.filter((l) => !isAutoLink(l)));
+      if (!map.has(sec.title))
+        map.set(sec.title, []);
+      map.get(sec.title).push(body);
+    }
+    return map;
+  }
+  /** Write the active draft's scene/chapter headings (as headers) into the project's Outline file. */
+  async buildOutlineFromDraft() {
+    var _a, _b;
+    try {
+      const book = this.activeBook;
+      if (!book) {
+        new import_obsidian22.Notice("Open or create a project first.");
+        return;
+      }
+      const cfg = await this.loadBookConfig(book) || {};
+      const profile = getProfile(((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK);
+      const tree = ((_b = cfg.structure) == null ? void 0 : _b.tree) || [];
+      const draftNode = resolveCurrentDraft(tree, cfg.currentDraftPath);
+      if (!draftNode) {
+        new import_obsidian22.Notice("No draft found. Mark a folder as a draft first.");
+        return;
+      }
+      const draftPrefix = draftNode.path + "/";
+      let outlineRel = null;
+      const walk = (nodes) => {
+        for (const n of nodes || []) {
+          if (outlineRel)
+            return;
+          if (n.type === "file" && /outline/i.test(n.title || "") && !(n.path === draftNode.path || n.path.startsWith(draftPrefix)))
+            outlineRel = n.path;
+          if (n.children)
+            walk(n.children);
+        }
+      };
+      walk(tree);
+      if (!outlineRel) {
+        new import_obsidian22.Notice('No "Outline" file in this project to write into.');
+        return;
+      }
+      const scopedCfg = { ...cfg, structure: { ...cfg.structure || {}, tree: draftScopeNodes(draftNode) } };
+      const spine = await this.spineService.buildSpine(book, scopedCfg, profile);
+      const file = this.app.vault.getAbstractFileByPath(`${book.path}/${outlineRel}`);
+      if (!file) {
+        new import_obsidian22.Notice("Outline file not found.");
+        return;
+      }
+      const prev = await this.app.vault.read(file);
+      const notesByTitle = this._parseOutlineNotes(prev);
+      const out = [`_Generated from \u201C${draftNode.title || "Draft"}\u201D. Your notes under each scene are kept on rebuild._`, ""];
+      let lastFile = null;
+      for (const u of spine) {
+        const base = u.file.split("/").pop().replace(/\.md$/, "");
+        if (u.file !== lastFile) {
+          lastFile = u.file;
+          out.push(`## ${base}`, "");
+        }
+        out.push(`### ${u.title}`);
+        out.push(u.fromHeading ? `[[${base}#${u.title}|Open scene \u203A]]` : `[[${base}|Open \u203A]]`, "");
+        const q = notesByTitle.get(u.title);
+        const body = q && q.length ? q.shift() : null;
+        if (body && body.length)
+          out.push(...body, "");
+      }
+      const orphans = [];
+      for (const [title, queue] of notesByTitle)
+        for (const body of queue)
+          if (body.length)
+            orphans.push({ title, body });
+      if (orphans.length) {
+        out.push("## Notes (not in current draft)", "");
+        for (const o of orphans)
+          out.push(`### ${o.title}`, ...o.body, "");
+      }
+      await this.app.vault.modify(file, out.join("\n") + "\n");
+      try {
+        this.app.workspace.openLinkText(file.path, "", false);
+      } catch (e) {
+        console.warn(e);
+      }
+      new import_obsidian22.Notice(`Outline updated (${spine.length} scenes) \u2192 ${outlineRel}.`);
+    } catch (e) {
+      console.error("buildOutlineFromDraft failed", e);
+      new import_obsidian22.Notice("Couldn't build outline. See console for details.");
+    }
+  }
+  /** Set/clear the draft flag on a folder node (book-relative path) in the active project. */
+  async setDraftForFolderPath(relPath, value) {
+    var _a, _b, _c;
+    try {
+      const book = this.activeBook;
+      if (!book || !relPath)
+        return;
+      const cfg = await this.configService.loadBookConfig(book) || {};
+      const find = (nodes) => {
+        for (const n of nodes || []) {
+          if ((n.type === "group" || n.type === "file") && n.path === relPath)
+            return n;
+          if (n.children) {
+            const r = find(n.children);
+            if (r)
+              return r;
+          }
+        }
+        return null;
+      };
+      const node = find(((_a = cfg.structure) == null ? void 0 : _a.tree) || []);
+      if (!node) {
+        new import_obsidian22.Notice("Couldn't find that folder.");
+        return;
+      }
+      node.draft = !!value;
+      if (node.draft) {
+        if (!cfg.currentDraftPath)
+          cfg.currentDraftPath = node.path;
+      } else if (cfg.currentDraftPath === node.path) {
+        const remaining = findDrafts(((_b = cfg.structure) == null ? void 0 : _b.tree) || []).filter((d) => d.path !== node.path);
+        cfg.currentDraftPath = ((_c = remaining[0]) == null ? void 0 : _c.path) || null;
+      }
+      await this.configService.saveBookConfig(book, cfg);
+      await this.refresh();
+      this.rerenderViews();
+      try {
+        this.timelineBand && this.timelineBand.refresh(true);
+      } catch (e) {
+        console.warn(e);
+      }
+      new import_obsidian22.Notice(node.draft ? `\u201C${node.title || relPath}\u201D is now a draft.` : `\u201C${node.title || relPath}\u201D is no longer a draft.`);
+    } catch (e) {
+      console.error("setDraftForFolderPath failed", e);
+    }
+  }
+  /** Make a draft (book-relative path) the project's CURRENT draft — what the strip/beats reflect. */
+  async setCurrentDraft(book, draftPath) {
+    try {
+      const bk = book || this.activeBook;
+      if (!bk || !draftPath)
+        return;
+      const cfg = await this.configService.loadBookConfig(bk) || {};
+      cfg.currentDraftPath = draftPath;
+      await this.configService.saveBookConfig(bk, cfg);
+      await this.refresh();
+      this.rerenderViews();
+      try {
+        this.timelineBand && this.timelineBand.refresh(true);
+      } catch (e) {
+        console.warn(e);
+      }
+    } catch (e) {
+      console.error("setCurrentDraft failed", e);
+    }
+  }
+  /** Toggle the draft flag on the active file's top-level folder (so the strip scopes to it). */
+  async toggleDraftFolder() {
+    var _a;
+    try {
+      const av = this.app.workspace.activeEditor;
+      if (!av || !av.file) {
+        new import_obsidian22.Notice("Open a file in a project folder first.");
+        return;
+      }
+      const book = (this.booksIndex || []).find((b) => av.file.path.startsWith(b.path + "/"));
+      if (!book) {
+        new import_obsidian22.Notice("Active file is not in a Folio project.");
+        return;
+      }
+      const rel = av.file.path.slice(book.path.length + 1);
+      const i = rel.indexOf("/");
+      if (i === -1) {
+        new import_obsidian22.Notice("This file isn't inside a folder to mark as a draft.");
+        return;
+      }
+      const topPath = rel.slice(0, i);
+      const cfg = await this.configService.loadBookConfig(book) || {};
+      const node = (((_a = cfg.structure) == null ? void 0 : _a.tree) || []).find((n) => n.type === "group" && n.path === topPath);
+      if (!node) {
+        new import_obsidian22.Notice("Couldn't find that folder in the project.");
+        return;
+      }
+      node.draft = !node.draft;
+      await this.configService.saveBookConfig(book, cfg);
+      try {
+        this.timelineBand && this.timelineBand.refresh(true);
+      } catch (e) {
+        console.warn(e);
+      }
+      new import_obsidian22.Notice(node.draft ? `\u201C${topPath}\u201D is now a draft.` : `\u201C${topPath}\u201D is no longer a draft.`);
+    } catch (e) {
+      console.error("toggleDraftFolder failed", e);
+      new import_obsidian22.Notice("Couldn't toggle draft. See console for details.");
+    }
+  }
+  /** Open (or reveal) the Beat Board as a standalone view (it carries its own strip). */
+  async openBeatBoard() {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(BEAT_BOARD_VIEW_TYPE);
+    if (existing.length > 0) {
+      workspace.revealLeaf(existing[0]);
+      return existing[0];
+    }
+    const leaf = workspace.getLeaf("tab");
+    if (!leaf)
+      return null;
+    await leaf.setViewState({ type: BEAT_BOARD_VIEW_TYPE, active: true });
+    workspace.revealLeaf(leaf);
+    return leaf;
+  }
+  /** Add a planning beat to the project's outline (lane 1) and refresh the strip. */
+  addOutlineBeatForActiveProject() {
+    const book = this.activeBook;
+    if (!book) {
+      new import_obsidian22.Notice("Open or create a project first.");
+      return;
+    }
+    const modal = new TextInputModal(this.app, {
+      title: "New beat",
+      placeholder: "Beat title (e.g. First Day)",
+      cta: "Add beat",
+      onSubmit: async (value) => {
+        try {
+          await this.outlineEditorService.addBeat(book, { title: value || "New beat", lane: 0 });
+          try {
+            this.timelineBand && this.timelineBand.refresh(true);
+          } catch (e) {
+            console.warn(e);
+          }
+          new import_obsidian22.Notice("Beat added to the outline.");
+        } catch (e) {
+          console.error("addBeat failed", e);
+          new import_obsidian22.Notice("Couldn't add beat. See console for details.");
+        }
+      }
+    });
+    modal.open();
+  }
+  /** Heading prefix for an arc = the profile's outermost grouper level (e.g. ##### for screenplay). */
+  _arcPrefix(profile) {
+    const tiers = profile && profile.grouperTiers || {};
+    const outerRole = Object.keys(tiers).find((r) => tiers[r] === 0) || Object.keys(tiers)[0];
+    const roles = profile && profile.headingRoles || {};
+    const level = outerRole ? Object.keys(roles).find((l) => roles[l] === outerRole) : null;
+    return "#".repeat(level ? Number(level) : 5);
+  }
+  /** One-way kickoff: drop a beat into the script as an arc (grouper) at the cursor, else at the end. */
+  async sendBeatTextToScript(book, beat) {
+    var _a, _b;
+    try {
+      const cfg = await this.loadBookConfig(book) || {};
+      const profile = getProfile(((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK);
+      const text = `${this._arcPrefix(profile)} ${beat.title || "New arc"}
+
+${(beat.notes || "").trim()}
+`;
+      const av = this.app.workspace.activeEditor;
+      if (av && av.editor && av.file && av.file.extension === "md" && av.file.path.startsWith(book.path + "/")) {
+        av.editor.replaceRange(text + "\n", av.editor.getCursor());
+        new import_obsidian22.Notice(`Sent \u201C${beat.title}\u201D as an arc at the cursor.`);
+        return;
+      }
+      const spine = await this.spineService.buildSpine(book, cfg, profile);
+      let rel = spine.length ? spine[spine.length - 1].file : null;
+      if (!rel) {
+        const walk = (nodes) => {
+          for (const n of nodes || []) {
+            if (rel)
+              return;
+            if (n.type === "file" && typeof n.path === "string" && n.path.endsWith(".md")) {
+              rel = n.path;
+              return;
+            }
+            if (n.children)
+              walk(n.children);
+          }
+        };
+        walk(((_b = cfg == null ? void 0 : cfg.structure) == null ? void 0 : _b.tree) || []);
+      }
+      if (!rel) {
+        new import_obsidian22.Notice("No script file to send the beat into.");
+        return;
+      }
+      const file = this.app.vault.getAbstractFileByPath(`${book.path}/${rel}`);
+      const existing = await this.app.vault.read(file);
+      await this.app.vault.modify(file, existing.replace(/\s*$/, "") + "\n\n" + text);
+      new import_obsidian22.Notice(`Sent \u201C${beat.title}\u201D to the end of ${rel}.`);
+    } catch (e) {
+      console.warn("sendBeatTextToScript failed", e);
+      new import_obsidian22.Notice("Send failed. See console for details.");
     }
   }
   _announceExport(path, formatLabel) {
     if (path) {
-      new import_obsidian19.Notice(`Exported ${formatLabel} to ${path}`);
+      new import_obsidian22.Notice(`Exported ${formatLabel} to ${path}`);
     }
   }
   async openFocusMode() {
@@ -11848,7 +14557,7 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     if (view && typeof view.showFocusMode === "function") {
       view.showFocusMode();
     } else {
-      new import_obsidian19.Notice("Open Writer Tools, then choose Focus Mode.");
+      new import_obsidian22.Notice("Open Writer Tools, then choose Focus Mode.");
     }
   }
   async activateView() {
@@ -11885,8 +14594,10 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     return rightLeaf;
   }
   async refresh() {
+    var _a;
     await this.scanBooks();
     this.rerenderViews();
+    (_a = this.timelineBand) == null ? void 0 : _a.refresh(true);
   }
   getBasePath() {
     let base = this.settings.basePath || "projects";
@@ -12034,6 +14745,19 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     await this.refresh();
     this.rerenderViews();
   }
+  async setNodeStatus(file, status) {
+    const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
+    if (!book) {
+      console.warn("Could not find book for file:", file.path);
+      return;
+    }
+    await this.treeService.setNodeStatus(book, file, status);
+    await this.refresh();
+    this.rerenderViews();
+  }
+  cycleNodeStatus(file, currentStatus) {
+    return this.setNodeStatus(file, nextSceneStatus(currentStatus));
+  }
   async setStatsOverride(file, action) {
     const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
     if (!book) {
@@ -12134,14 +14858,16 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     }
   }
   rerenderViews() {
-    const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
-    for (const leaf of leaves) {
-      const view = leaf.view;
-      try {
-        if (view && typeof view.render === "function")
-          view.render();
-      } catch (e) {
-        console.warn("render failed", e);
+    for (const type of [VIEW_TYPE, BEAT_BOARD_VIEW_TYPE]) {
+      const leaves = this.app.workspace.getLeavesOfType(type);
+      for (const leaf of leaves) {
+        const view = leaf.view;
+        try {
+          if (view && typeof view.render === "function")
+            view.render();
+        } catch (e) {
+          console.warn("render failed", e);
+        }
       }
     }
   }
@@ -12215,7 +14941,7 @@ var FolioPlugin = class extends import_obsidian19.Plugin {
     if (!folder || !folder.children)
       return out;
     for (const c of folder.children) {
-      if (c instanceof import_obsidian19.TFile && c.name && c.name.toLowerCase().endsWith(".md"))
+      if (c instanceof import_obsidian22.TFile && c.name && c.name.toLowerCase().endsWith(".md"))
         out.push(c);
       else if (c.children)
         out.push(...this._collectMarkdownFiles(c));

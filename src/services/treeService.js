@@ -54,6 +54,8 @@ export class TreeService {
             last_modified: new Date().toISOString()
           };
           if (existing?.icon) node.icon = existing.icon;
+          if (existing?.status) node.status = existing.status;
+          if (existing?.draft) node.draft = true; // file-level draft (essay manuscript)
           return node;
         } else if (item instanceof TFolder) {
           const folderChildren = (item.children || [])
@@ -99,6 +101,8 @@ export class TreeService {
             children
           };
           if (existing?.icon) node.icon = existing.icon;
+          if (existing?.draft) node.draft = true; // preserve draft (manuscript) flag across rebuilds
+          if (existing?.shelf) node.shelf = true; // preserve the "Drafts" shelf flag
           return node;
         }
       };
@@ -345,6 +349,48 @@ export class TreeService {
       }
     } catch (e) {
       console.warn('setStatsOverride failed', e);
+    }
+  }
+
+  /**
+   * Set the writing status for a file node (To-do / Draft / Revised / Final, or
+   * null to clear). Updates both the config tree node and the file frontmatter,
+   * mirroring the exclude/include override pattern.
+   */
+  async setNodeStatus(book, file, status) {
+    try {
+      // Mirror to frontmatter for markdown files so the status is portable.
+      if (file.extension === 'md') {
+        await this.app.fileManager.processFrontMatter(file, (fm) => {
+          if (status) fm.status = status;
+          else delete fm.status;
+        });
+      }
+
+      const cfg = (await this.configService.loadBookConfig(book)) || {};
+      if (!cfg.structure?.tree) return;
+
+      const relativePath = file.path.replace(book.path + '/', '');
+      const updateNode = (nodes) => {
+        for (const node of nodes) {
+          if (node.path === relativePath) {
+            if (status) node.status = status;
+            else delete node.status;
+            // Keep the legacy boolean in sync for backward compatibility.
+            node.completed = status === 'final';
+            node.last_modified = new Date().toISOString();
+            return true;
+          }
+          if (node.children && updateNode(node.children)) return true;
+        }
+        return false;
+      };
+
+      if (updateNode(cfg.structure.tree)) {
+        await this.configService.saveBookConfig(book, cfg);
+      }
+    } catch (e) {
+      console.warn('setNodeStatus failed', e);
     }
   }
 

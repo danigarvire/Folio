@@ -28,6 +28,14 @@ describe('parseScreenplayElements()', () => {
     ]);
   });
 
+  test('strips a trailing folio block id from body text (export stays clean)', () => {
+    const els = parseScreenplayElements('# INT. ROOM - DAY\nA man enters. ^folioab12cd');
+    expect(els).toEqual([
+      { type: 'scene', text: 'INT. ROOM - DAY' },
+      { type: 'action', text: 'A man enters.' },
+    ]);
+  });
+
   test('infers dialogue after a parenthetical', () => {
     const els = parseScreenplayElements('## ALICE\n### beat\nGo on.');
     expect(els.map(e => e.type)).toEqual(['character', 'parenthetical', 'dialogue']);

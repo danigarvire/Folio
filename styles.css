@@ -1585,6 +1585,65 @@ body.theme-light {
   position: relative;
   padding-right: 20px;
 }
+
+/* Writing-status dot — laid out at the right end of the file row. */
+.folio-tree-file {
+  display: flex;
+  align-items: center;
+}
+
+.folio-tree-file .folio-tree-label {
+  flex: 1;
+  min-width: 0;
+  padding-right: 6px;
+}
+
+.folio-tree-status-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-left: auto;
+  margin-right: 8px;
+  border: 1.5px solid var(--background-modifier-border);
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+
+.folio-tree-status-dot:hover {
+  transform: scale(1.25);
+}
+
+/* "No status" dot is hollow and only appears on row hover, to stay quiet. */
+.folio-tree-status-dot.is-none {
+  border-style: dashed;
+  opacity: 0;
+}
+
+.folio-tree-file:hover .folio-tree-status-dot.is-none {
+  opacity: 0.55;
+}
+
+.folio-tree-status-dot.is-todo {
+  background: #9aa0a6;
+  border-color: #9aa0a6;
+}
+
+.folio-tree-status-dot.is-draft {
+  background: #e0a23b;
+  border-color: #e0a23b;
+}
+
+.folio-tree-status-dot.is-revised {
+  background: #4a8fe0;
+  border-color: #4a8fe0;
+}
+
+.folio-tree-status-dot.is-final {
+  background: var(--color-green, #3fa45b);
+  border-color: var(--color-green, #3fa45b);
+}
 /* ===============================================================
    WRITER TOOLS VIEW
 =============================================================== */
@@ -6886,3 +6945,560 @@ body.folio-focus-quiet-workspace .mod-root .workspace-sidedock-vault-profile {
   padding: 20px;
   color: var(--text-muted);
 }
+
+/* ===============================================================
+   FOLIO TIMELINE VIEW
+=============================================================== */
+
+.folio-timeline-view {
+  padding: 16px 18px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.folio-timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.folio-timeline-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.folio-timeline-title-icon {
+  display: inline-flex;
+  color: var(--text-muted);
+}
+
+.folio-timeline-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+}
+
+.folio-timeline-refresh {
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-primary);
+  color: var(--text-normal);
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.folio-timeline-refresh:hover {
+  border-color: var(--interactive-accent);
+  color: var(--interactive-accent);
+}
+
+.folio-timeline-board {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.folio-timeline-track-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.folio-timeline-track-name {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-accent, var(--interactive-accent));
+  font-weight: 600;
+}
+
+.folio-timeline-track.is-loose .folio-timeline-track-name {
+  color: var(--text-muted);
+}
+
+.folio-timeline-track-count {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: var(--background-secondary);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+
+.folio-timeline-lane {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x proximity;
+}
+
+.folio-timeline-card {
+  flex: 0 0 200px;
+  width: 200px;
+  min-height: 96px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-top: 3px solid var(--background-modifier-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border-color 120ms ease, transform 120ms ease;
+  scroll-snap-align: start;
+}
+
+.folio-timeline-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--interactive-accent);
+}
+
+.folio-timeline-card.is-todo { border-top-color: #9aa0a6; }
+.folio-timeline-card.is-draft { border-top-color: #e0a23b; }
+.folio-timeline-card.is-revised { border-top-color: #4a8fe0; }
+.folio-timeline-card.is-final { border-top-color: var(--color-green, #3fa45b); }
+
+/* Drag-to-reorder states */
+.folio-timeline-card {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.folio-timeline-card.is-dragging { opacity: 0.4; cursor: grabbing; }
+.folio-timeline-card.is-drop-target {
+  border-left: 3px solid var(--interactive-accent);
+}
+
+.folio-timeline-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.folio-timeline-card-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  line-height: 1.3;
+}
+
+.folio-timeline-card-status {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.folio-timeline-card-synopsis {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.folio-timeline-card-meta {
+  margin-top: auto;
+  font-size: 0.72rem;
+  color: var(--text-faint, var(--text-muted));
+}
+
+.folio-timeline-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--text-muted);
+}
+
+.folio-timeline-empty-icon {
+  display: inline-flex;
+  opacity: 0.5;
+  margin-bottom: 8px;
+}
+
+.folio-timeline-empty-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-normal);
+}
+
+.folio-timeline-empty-subtitle {
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+/* ===============================================================
+   TIMELINE BAND (pinned scene strip above the editor)
+=============================================================== */
+
+/* Host: stack the band above the editor and let the editor fill the rest. */
+.view-content.folio-timeline-band-host {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.view-content.folio-timeline-band-host > .markdown-source-view,
+.view-content.folio-timeline-band-host > .markdown-reading-view {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.folio-timeline-band {
+  flex: 0 0 auto;
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+
+.folio-band-scroller {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  overflow-x: auto;
+  padding: 7px 12px;
+}
+
+.folio-band-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.folio-band-group-label {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  padding-left: 2px;
+}
+
+.folio-band-group.is-loose .folio-band-group-label {
+  opacity: 0.7;
+}
+
+.folio-band-cards {
+  display: flex;
+  gap: 6px;
+}
+
+.folio-band-card {
+  flex: 0 0 auto;
+  max-width: 160px;
+  border: 1px solid var(--background-modifier-border);
+  border-left: 3px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-primary);
+  padding: 4px 9px;
+  cursor: pointer;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.folio-band-card:hover {
+  border-color: var(--interactive-accent);
+}
+
+.folio-band-card.is-current {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+  font-weight: 600;
+}
+
+.folio-band-card.is-todo { border-left-color: #9aa0a6; }
+.folio-band-card.is-draft { border-left-color: #e0a23b; }
+.folio-band-card.is-revised { border-left-color: #4a8fe0; }
+.folio-band-card.is-final { border-left-color: var(--color-green, #3fa45b); }
+
+.folio-band-card-title {
+  display: block;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Band drag-to-reorder */
+.folio-band-card {
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.folio-band-card.is-dragging { opacity: 0.4; cursor: grabbing; }
+.folio-band-card.is-drop-target {
+  border-left: 3px solid var(--interactive-accent);
+}
+
+/* Folio Unit anchors — hide the ` ^folio…` block id in Live Preview for
+   screenplay docs so the stable id stays invisible while editing. (Reading view
+   already hides block ids; Source mode shows raw text and is unaffected.) */
+.md-screenplay .cm-blockid {
+  display: none;
+}
+
+/* Folio beats — the [!beat] callout is metadata for the beat board, not part of
+   the screenplay page, so hide it in reading + live preview for screenplay docs. */
+.md-screenplay .callout[data-callout="beat"] {
+  display: none;
+}
+
+/* Outline editor — planning lanes (Outline 1, 2, …) above the script lane. */
+.folio-outline-lanes {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px 6px 2px;
+  border-bottom: 1px solid var(--background-modifier-border);
+}
+.folio-outline-lane {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 26px;
+}
+.folio-outline-lane-label {
+  flex: 0 0 auto;
+  width: 70px;
+  font-size: 11px;
+  color: var(--text-accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.folio-outline-beats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+}
+.folio-outline-beat {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 3px 10px;
+  border-radius: 6px;
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+  white-space: nowrap;
+  cursor: grab;
+}
+.folio-outline-beat-title { font-size: 12px; font-weight: 600; }
+.folio-outline-beat-goal { font-size: 10px; opacity: 0.7; font-style: italic; }
+
+/* Outline beat interactions */
+.folio-outline-beat.is-dragging { opacity: 0.4; cursor: grabbing; }
+.folio-outline-beat.is-drop-target { box-shadow: inset 3px 0 0 0 var(--interactive-accent); }
+.folio-outline-add {
+  flex: 0 0 auto;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-weight: 700;
+  padding: 0 6px;
+  border-radius: 4px;
+}
+.folio-outline-add:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+
+/* Beat modal colour swatches */
+.folio-beat-swatches { display: flex; gap: 8px; margin-top: 10px; }
+.folio-beat-swatch {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid var(--background-modifier-border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: var(--text-muted);
+}
+.folio-beat-swatch.is-selected { border-color: var(--interactive-accent); transform: scale(1.12); }
+
+/* ===== Multilane Outline Editor (timeline band) ===== */
+.folio-timeline-band { border-bottom: 1px solid var(--background-modifier-border); background: var(--background-secondary); }
+.folio-tl-toolbar { display: flex; align-items: center; gap: 8px; padding: 2px 6px; }
+.folio-tl-addlane {
+  font-size: 11px; cursor: pointer; color: var(--text-muted);
+  padding: 1px 8px; border-radius: 4px; border: 1px dashed var(--background-modifier-border);
+}
+.folio-tl-addlane:hover { color: var(--text-normal); }
+
+.folio-tl-scroll { overflow-x: auto; overflow-y: hidden; }
+.folio-tl-inner { display: flex; flex-direction: column; gap: 2px; padding-bottom: 4px; min-width: 100%; }
+
+.folio-tl-row { display: flex; align-items: stretch; min-height: 28px; }
+.folio-tl-label {
+  position: sticky; left: 0; z-index: 3;
+  flex: 0 0 auto; width: 80px; padding: 4px 8px;
+  background: var(--background-secondary);
+  font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .02em;
+  color: var(--text-accent); border-right: 1px solid var(--background-modifier-border);
+  display: flex; align-items: center; cursor: default;
+}
+.folio-tl-label.is-lane { cursor: pointer; }
+.folio-tl-label.is-script { color: var(--text-muted); }
+.folio-tl-lane-remove { color: var(--text-faint); cursor: pointer; }
+.folio-tl-lane-remove:hover { color: var(--text-error, #c0504d); }
+
+.folio-tl-track { position: relative; flex: 0 0 auto; }
+
+.folio-tl-ruler { min-height: 16px; }
+.folio-tl-ruler .folio-tl-track { border-bottom: 1px solid var(--background-modifier-border); }
+.folio-tl-page {
+  position: absolute; top: 0; font-size: 9px; color: var(--text-faint);
+  border-left: 1px solid var(--background-modifier-border); padding-left: 2px; height: 14px;
+}
+
+.folio-tl-beat {
+  position: absolute; top: 3px; bottom: 3px;
+  display: flex; align-items: center; gap: 6px; padding: 0 8px;
+  border-radius: 6px; background: var(--background-modifier-hover);
+  color: var(--text-normal); white-space: nowrap; overflow: hidden;
+  cursor: grab; user-select: none;
+}
+.folio-tl-beat-title { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.folio-tl-beat-goal { font-size: 9px; opacity: .7; font-style: italic; }
+.folio-tl-handle { position: absolute; top: 0; bottom: 0; width: 6px; cursor: ew-resize; }
+.folio-tl-handle.is-left { left: 0; }
+.folio-tl-handle.is-right { right: 0; }
+
+.folio-tl-scene {
+  position: absolute; top: 3px; bottom: 3px;
+  display: flex; align-items: center; padding: 0 6px;
+  border-radius: 4px; background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border); border-top-width: 2px;
+  font-size: 10px; white-space: nowrap; overflow: hidden; cursor: pointer; user-select: none;
+}
+.folio-tl-scene-title { overflow: hidden; text-overflow: ellipsis; }
+.folio-tl-scene.is-todo { border-top-color: #9aa0a6; }
+.folio-tl-scene.is-draft { border-top-color: #e0a23b; }
+.folio-tl-scene.is-revised { border-top-color: #4a8fe0; }
+.folio-tl-scene.is-final { border-top-color: var(--color-green, #3fa45b); }
+.folio-tl-scene.is-current { border-color: var(--interactive-accent); box-shadow: 0 0 0 1px var(--interactive-accent); }
+.folio-tl-beat.is-dragging, .folio-tl-scene.is-dragging { opacity: .4; }
+.folio-tl-scene.is-drop-target { box-shadow: inset 3px 0 0 0 var(--interactive-accent); }
+
+/* Outline editor — zoom controls + cursor playhead */
+.folio-tl-zoom {
+  cursor: pointer; font-weight: 700; color: var(--text-muted);
+  padding: 0 6px; border-radius: 4px; border: 1px solid var(--background-modifier-border);
+}
+.folio-tl-zoom:hover { color: var(--text-normal); }
+.folio-tl-zoomlabel { font-size: 10px; color: var(--text-faint); }
+.folio-tl-inner { position: relative; }
+.folio-tl-playhead {
+  position: absolute; top: 0; bottom: 0; width: 2px; z-index: 2;
+  background: var(--interactive-accent); pointer-events: none;
+}
+
+/* Outline editor — zoom slider */
+.folio-tl-zoomwrap { display: inline-flex; align-items: center; gap: 6px; }
+.folio-tl-zoom-icon { display: inline-flex; color: var(--text-muted); }
+.folio-tl-zoom-icon svg { width: 14px; height: 14px; }
+.folio-tl-zoom-slider { width: 120px; cursor: pointer; accent-color: var(--interactive-accent); }
+
+/* ===== Beat Board (freeform 2D view of outline beats) ===== */
+.folio-bb-view { display: flex; flex-direction: column; height: 100%; }
+/* Outline strip hosted at the top of the Beat Board. */
+.folio-bb-strip { position: relative; flex: 0 0 auto; border-bottom: 1px solid var(--background-modifier-border); }
+.folio-bb-header { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--background-modifier-border); }
+.folio-bb-title-wrap { display: flex; align-items: center; gap: 6px; flex: 1; }
+.folio-bb-title-icon { display: inline-flex; color: var(--text-muted); }
+.folio-bb-title { font-weight: 600; }
+.folio-bb-add, .folio-bb-refresh { font-size: 12px; padding: 2px 10px; }
+
+.folio-bb-surface { position: relative; flex: 1; overflow: auto; background:
+  radial-gradient(circle, var(--background-modifier-border) 1px, transparent 1px) 0 0 / 24px 24px; }
+
+.folio-bb-card {
+  position: absolute; box-sizing: border-box;
+  background: var(--background-primary); border: 1px solid var(--background-modifier-border);
+  border-top: 3px solid var(--interactive-accent);
+  border-radius: 8px; padding: 8px 10px; cursor: grab; user-select: none;
+  box-shadow: 0 1px 4px rgba(0,0,0,.18);
+}
+.folio-bb-card.is-dragging { opacity: .75; cursor: grabbing; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+.folio-bb-card-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.folio-bb-card-lane { font-size: 9px; text-transform: uppercase; letter-spacing: .03em; color: var(--text-accent); font-weight: 600; }
+.folio-bb-card-goal { font-size: 9px; font-style: italic; color: var(--text-faint); }
+.folio-bb-card-title { font-weight: 600; margin: 4px 0; }
+.folio-bb-card-notes { font-size: 11px; color: var(--text-muted); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.folio-bb-hint { position: absolute; top: 20px; left: 20px; color: var(--text-faint); }
+
+.folio-bb-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 8px; color: var(--text-muted); }
+.folio-bb-empty-title { font-weight: 600; }
+
+/* Beat Board — card resize handle */
+.folio-bb-resize {
+  position: absolute; right: 2px; bottom: 2px; width: 14px; height: 14px;
+  cursor: nwse-resize; opacity: 0; border-radius: 0 0 6px 0;
+  background: linear-gradient(135deg, transparent 50%, var(--text-faint) 50%);
+}
+.folio-bb-card:hover .folio-bb-resize { opacity: 0.6; }
+.folio-bb-resize:hover { opacity: 1; }
+
+/* Outline toolbar — quick-open view buttons */
+.folio-tl-views { display: inline-flex; align-items: center; gap: 2px; margin-right: 6px; }
+.folio-tl-viewbtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 22px; border-radius: 4px; cursor: pointer; color: var(--text-muted);
+}
+.folio-tl-viewbtn:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.folio-tl-viewbtn svg { width: 15px; height: 15px; }
+
+/* Outline editor — file grouping lane (which file each scene belongs to) */
+.folio-tl-filelane { min-height: 18px; }
+.folio-tl-fileseg {
+  position: absolute; top: 2px; bottom: 2px; box-sizing: border-box;
+  display: flex; align-items: center; padding: 0 8px; overflow: hidden;
+  border-left: 2px solid var(--background-modifier-border);
+  background: var(--background-modifier-hover); border-radius: 3px;
+  cursor: pointer; opacity: 0.65;
+}
+.folio-tl-fileseg.is-alt { background: var(--background-secondary-alt); }
+.folio-tl-fileseg:hover { opacity: 1; }
+.folio-tl-fileseg-label {
+  font-size: 10px; font-weight: 600; color: var(--text-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* Template editor — active draft toggle */
+.folio-template-structure-node-btn.is-active { color: var(--interactive-accent); }
+/* Strip — file outside any draft */
+.folio-tl-outside { padding: 8px 12px; font-size: 12px; color: var(--text-faint); }
+
+/* Template editor — draft folder hint + badge */
+.folio-template-editor-hint {
+  font-size: 11px; color: var(--text-muted); margin: -4px 0 10px 0; line-height: 1.4;
+}
+.folio-template-structure-node-draft {
+  font-size: 9px; font-weight: 700; letter-spacing: .04em;
+  color: var(--text-on-accent); background: var(--interactive-accent);
+  padding: 1px 5px; border-radius: 3px; margin-left: 6px;
+}
+
+/* Tree — draft (manuscript) folder marker */
+.folio-tree-draft-badge {
+  font-size: 8px; font-weight: 700; letter-spacing: .04em;
+  color: var(--text-on-accent); background: var(--interactive-accent);
+  padding: 0 4px; border-radius: 3px; margin-left: 6px; opacity: 0.85;
+}
+
+/* A draft that is NOT the current one — a quiet dot, not a badge. */
+.folio-tree-draft-dot {
+  width: 6px; height: 6px; border-radius: 50%; margin-left: 6px;
+  background: var(--text-faint); opacity: 0.6; flex: 0 0 auto;
+}
+
+/* Current-draft switcher in the strip toolbar. */
+.folio-tl-draftwrap { display: inline-flex; align-items: center; gap: 5px; margin: 0 6px; }
+.folio-tl-draft-icon { display: inline-flex; color: var(--text-muted); }
+.folio-tl-draft-icon svg { width: 14px; height: 14px; }
+.folio-tl-draftselect {
+  font-size: 11px; padding: 1px 4px; border-radius: 4px;
+  background: var(--background-modifier-form-field); color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border); max-width: 160px;
+}
+.folio-tl-draftname { font-size: 11px; color: var(--text-muted); font-weight: 600; }

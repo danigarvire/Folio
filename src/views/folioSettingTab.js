@@ -307,6 +307,57 @@ export class FolioSettingTab extends PluginSettingTab {
     descRow.appendChild(descInput);
     modal.appendChild(descRow);
 
+    // Draft selector — which folder OR single file is the manuscript. One control
+    // (no per-node buttons), with a DRAFT badge shown on the chosen node.
+    const draftRow = document.createElement('div');
+    draftRow.className = 'folio-template-editor-row';
+    const draftLabel = document.createElement('label');
+    draftLabel.textContent = 'Draft (manuscript)';
+    const draftSelect = document.createElement('select');
+    draftSelect.className = 'folio-template-editor-input';
+    draftRow.appendChild(draftLabel);
+    draftRow.appendChild(draftSelect);
+    modal.appendChild(draftRow);
+    const draftHint = document.createElement('div');
+    draftHint.className = 'folio-template-editor-hint';
+    draftHint.textContent = 'The manuscript a draft is written in — a folder (many chapters/episodes) or a single file (one screenplay/essay). It drives the outline, beats and timeline; everything else (notes, characters, research…) stays out of the way. Tip: name a folder “Drafts” to use it as the shelf where new drafts are created.';
+    modal.appendChild(draftHint);
+
+    // Collect folders and files as draft targets (canvases can't be drafts).
+    const collectDraftTargets = (nodes, depth = 0, acc = []) => {
+      for (const n of nodes || []) {
+        if (n.type === 'folder') {
+          acc.push({ node: n, label: `${'— '.repeat(depth)}${n.title}` });
+          collectDraftTargets(n.children, depth + 1, acc);
+        } else if (n.type === 'file') {
+          acc.push({ node: n, label: `${'— '.repeat(depth)}${n.title} (file)` });
+        }
+      }
+      return acc;
+    };
+    const refreshDraftSelect = () => {
+      const targets = collectDraftTargets(editData.structure);
+      draftSelect._folders = targets;
+      draftSelect.innerHTML = '';
+      const none = document.createElement('option');
+      none.value = ''; none.textContent = targets.length ? '— None —' : '— Add a folder or file first —';
+      draftSelect.appendChild(none);
+      targets.forEach((f, i) => {
+        const o = document.createElement('option');
+        o.value = String(i); o.textContent = f.label;
+        if (f.node.draft) o.selected = true;
+        draftSelect.appendChild(o);
+      });
+      draftSelect.disabled = targets.length === 0;
+    };
+    draftSelect.onchange = () => {
+      (draftSelect._folders || []).forEach((f) => { delete f.node.draft; });
+      const idx = draftSelect.value === '' ? -1 : Number(draftSelect.value);
+      const targets = draftSelect._folders || [];
+      if (idx >= 0 && targets[idx]) targets[idx].node.draft = true;
+      renderStructureTree();
+    };
+
     // Structure section
     const structureSection = document.createElement('div');
     structureSection.className = 'folio-template-structure-section';
@@ -502,6 +553,14 @@ export class FolioSettingTab extends PluginSettingTab {
         typeBadge.className = 'folio-template-structure-node-type';
         typeBadge.textContent = node.type;
         nodeRow.appendChild(typeBadge);
+
+        // Draft badge (set via the Draft folder dropdown above)
+        if (node.draft) {
+          const draftBadge = document.createElement('span');
+          draftBadge.className = 'folio-template-structure-node-draft';
+          draftBadge.textContent = 'DRAFT';
+          nodeRow.appendChild(draftBadge);
+        }
         
         // Node actions
         const nodeActions = document.createElement('div');
@@ -583,8 +642,9 @@ export class FolioSettingTab extends PluginSettingTab {
           renderNode(node, editData.structure, index, 0);
         });
       }
+      refreshDraftSelect(); // keep the Draft folder dropdown in sync with the structure
     };
-    
+
     renderStructureTree();
     modal.appendChild(structureSection);
 
@@ -637,7 +697,27 @@ export class FolioSettingTab extends PluginSettingTab {
     modal.appendChild(actions);
 
     overlay.appendChild(modal);
-    document.body.appendChild(overlay);
+
+    // Mount INSIDE the settings .modal (the focus-trapped region) so the editor's
+    // inputs can hold focus — appending to document.body let Obsidian's focus trap
+    // steal keystrokes back to the settings fields (the "typing lands on the
+    // author field" bug).
+    const host = this.containerEl.closest('.modal') || this.containerEl.closest('.modal-container') || this.containerEl || document.body;
+    host.appendChild(overlay);
+
+    const close = () => { document.removeEventListener('keydown', onKey, true); overlay.remove(); };
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); close(); }
+    };
+    document.addEventListener('keydown', onKey, true);
+    overlay.addEventListener('mousedown', (e) => { if (e.target === overlay) close(); });
+    cancelBtn.onclick = close;
+    // Keep the original save handler but ensure the listener is torn down too.
+    const origSave = saveBtn.onclick;
+    saveBtn.onclick = async (e) => { await origSave(e); document.removeEventListener('keydown', onKey, true); };
+
+    // Focus the name field so typing goes where the user expects.
+    setTimeout(() => { nameInput.focus(); nameInput.select(); }, 0);
 
     // Close on overlay click (but not on modal click)
     overlay.onclick = (e) => {

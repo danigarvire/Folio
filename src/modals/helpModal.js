@@ -54,6 +54,20 @@ const HELP_CONTENT = {
         ]
       },
       {
+        icon: "circle-dot",
+        title: "Track scene status",
+        blocks: [
+          { type: "p", text: "Give each scene or chapter a writing status so you can see progress at a glance:" },
+          { type: "ul", items: [
+            "A coloured dot sits at the end of each file row.",
+            "Click the dot to cycle: To-do → Draft → Revised → Final → none.",
+            "Or right-click a file and pick a Status.",
+            "Colours: To-do (grey), Draft (amber), Revised (blue), Final (green)."
+          ] },
+          { type: "tip", text: "The status is saved to the file's frontmatter (status:), so it travels with the file and survives reordering." }
+        ]
+      },
+      {
         icon: "focus",
         title: "Drafting with Focus Mode",
         blocks: [
@@ -80,6 +94,20 @@ const HELP_CONTENT = {
             "Choose exactly which files to include, in outline order."
           ] },
           { type: "tip", text: "You can also run “Export current project to Final Draft” straight from the command palette." }
+        ]
+      },
+      {
+        icon: "layout-dashboard",
+        title: "Beat board (Canvas timeline)",
+        blocks: [
+          { type: "p", text: "Turn your scenes into a native Obsidian Canvas you can rearrange like index cards:" },
+          { type: "ul", items: [
+            "Run “Build / refresh beat board” from the command palette.",
+            "Folio lays every scene out as a horizontal timeline of cards, in outline order.",
+            "Cards are coloured by their writing status.",
+            "Rearrange or add free-form beats freely — refreshing keeps your layout and only updates colours and new scenes."
+          ] },
+          { type: "tip", text: "The board is a normal .canvas file in your project, so all of Obsidian's Canvas tools (zoom, groups, connections) work on it." }
         ]
       },
       {
@@ -170,6 +198,20 @@ const HELP_CONTENT = {
         ]
       },
       {
+        icon: "circle-dot",
+        title: "Estado de cada escena",
+        blocks: [
+          { type: "p", text: "Asigna a cada escena o capítulo un estado de escritura para ver tu progreso de un vistazo:" },
+          { type: "ul", items: [
+            "Un punto de color aparece al final de cada fila de archivo.",
+            "Haz clic en el punto para ciclar: To-do → Draft → Revised → Final → ninguno.",
+            "O haz clic derecho en un archivo y elige un Estado.",
+            "Colores: To-do (gris), Draft (ámbar), Revised (azul), Final (verde)."
+          ] },
+          { type: "tip", text: "El estado se guarda en el frontmatter del archivo (status:), así que viaja con él y sobrevive al reordenar." }
+        ]
+      },
+      {
         icon: "focus",
         title: "Escribir con el Modo enfoque",
         blocks: [
@@ -196,6 +238,20 @@ const HELP_CONTENT = {
             "Eliges exactamente qué archivos incluir, en el orden del esquema."
           ] },
           { type: "tip", text: "También puedes ejecutar «Exportar el proyecto actual a Final Draft» directamente desde la paleta de comandos." }
+        ]
+      },
+      {
+        icon: "layout-dashboard",
+        title: "Beat board (línea de tiempo en Canvas)",
+        blocks: [
+          { type: "p", text: "Convierte tus escenas en un Canvas nativo de Obsidian que puedes reorganizar como fichas:" },
+          { type: "ul", items: [
+            "Ejecuta «Build / refresh beat board» desde la paleta de comandos.",
+            "Folio coloca cada escena como una línea de tiempo horizontal de tarjetas, en el orden del esquema.",
+            "Las tarjetas se colorean según su estado de escritura.",
+            "Reorganiza o añade beats libres a tu gusto — al refrescar se conserva tu disposición y solo se actualizan colores y escenas nuevas."
+          ] },
+          { type: "tip", text: "El tablero es un archivo .canvas normal de tu proyecto, así que funcionan todas las herramientas de Canvas de Obsidian (zoom, grupos, conexiones)." }
         ]
       },
       {

@@ -258,6 +258,8 @@ export class BookService {
           children: item.children ? this.buildTreeFromTemplateStructure(item.children, filePath, now) : []
         };
         if (item.icon) node.icon = item.icon;
+        if (item.draft) node.draft = true;
+        if (item.shelf) node.shelf = true; // the "Drafts" shelf folder
         return node;
       } else if (item.type === 'canvas') {
         const node = {
@@ -285,6 +287,7 @@ export class BookService {
           last_modified: now
         };
         if (item.icon) node.icon = item.icon;
+        if (item.draft) node.draft = true; // file-level draft (e.g. essay Manuscript)
         return node;
       }
     });
