@@ -15,6 +15,7 @@ export class StatsService {
     content = content.replace(frontmatterRegex, '');
 
     content = content
+      .replace(/\s\^folio[A-Za-z0-9]+$/gm, '') // Folio Unit block ids aren't words
       .replace(/^#{1,6}\s+/gm, '')
       .replace(/\*\*([^*]+)\*\*/g, '$1')
       .replace(/\*([^*]+)\*/g, '$1')

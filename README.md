@@ -77,6 +77,8 @@ The Writer Tools view is a core part of Folio and provides **writing-focused too
 ### Export Assistant
 - Tool to consolidate a project into a single document.
 - Designed for exporting or reviewing full drafts outside the vault.
+- Formats: **PDF** (desktop) and **Final Draft** (`.fdx`) screenplay export.
+- Final Draft export respects the project's structure order and lets you choose the save location via a native dialog.
 
 ### About
 - Plugin information, support links, and contact.
@@ -119,6 +121,14 @@ Helper labels (e.g., “Scene Heading”) appear when the snippet’s helper cla
 Screenplay CSS is applied automatically in exports when `cssclass: md-screenplay` or `cssclass: folio-screenplay` is set.
 
 Designed to separate **drafting time** from planning and management.
+
+## Screenplay export (Final Draft)
+
+In Writer Tools → Export Assistant, choose **Final Draft** to export the whole project as a single `.fdx` file. A native save dialog lets you pick the destination, and the exported file is revealed in your file manager afterwards. It also runs from the command palette:
+
+- **Export current project to Final Draft (.fdx)**
+
+All of the project's markdown is included in tree order. Markdown headings are mapped to screenplay elements (same convention as the bundled snippet): `#` scene heading, `##` character, `###` parenthetical, `####` transition, `#####` section/act. Plain text following a character cue is treated as dialogue.
 
 ---
 
