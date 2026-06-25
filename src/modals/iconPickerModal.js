@@ -178,6 +178,7 @@ export class IconPickerModal extends Modal {
     const { contentEl, modalEl, containerEl } = this;
     contentEl.empty();
     contentEl.addClass('folio-icon-picker-modal');
+    containerEl?.addClass('folio-icon-picker-modal-container');
     
     // Force high z-index on modal container
     if (containerEl) {
@@ -248,7 +249,8 @@ export class IconPickerModal extends Modal {
   }
 
   onClose() {
-    const { contentEl } = this;
+    const { contentEl, containerEl } = this;
+    containerEl?.removeClass('folio-icon-picker-modal-container');
     contentEl.empty();
   }
 }

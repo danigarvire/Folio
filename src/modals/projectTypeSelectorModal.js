@@ -16,7 +16,7 @@ export class ProjectTypeSelectorModal extends Modal {
     contentEl.empty();
     contentEl.addClass('folio-project-type-selector-modal');
 
-    contentEl.createEl('h2', { text: 'Select Project Type' });
+    contentEl.createEl('h2', { text: 'Select project type' });
 
     const optionsContainer = contentEl.createDiv({ cls: 'folio-project-type-options' });
 
