@@ -30,6 +30,7 @@ export class FolioBeatBoardView extends ItemView {
   getIcon() { return "layout-dashboard"; }
 
   async onOpen() {
+    try { this.addAction("gallery-vertical", "Views", (e) => this.plugin.showViewMenu(e)); } catch (e) {}
     // Re-render when this board regains focus so edits made in the strip show up.
     this.registerEvent(this.plugin.app.workspace.on("active-leaf-change", (leaf) => {
       if (leaf && leaf.view === this) this.render();
@@ -111,7 +112,7 @@ export class FolioBeatBoardView extends ItemView {
     card.style.minHeight = (beat.bh || CARD_H) + "px";
     if (beat.color) card.style.borderTopColor = beat.color;
 
-    const laneName = (outline.lanes[laneIndex] && outline.lanes[laneIndex].name) || `Outline ${laneIndex + 1}`;
+    const laneName = (outline.lanes[laneIndex] && outline.lanes[laneIndex].name) || `Lane ${laneIndex + 1}`;
     const top = card.createDiv({ cls: "folio-bb-card-top" });
     top.createSpan({ cls: "folio-bb-card-lane", text: laneName });
     if (beat.goal) top.createSpan({ cls: "folio-bb-card-goal", text: String(beat.goal) });

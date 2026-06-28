@@ -3344,13 +3344,17 @@ class PdfSettingsModal extends Modal {
     if (!modalEl) return;
     const activeLeaf = document.querySelector(".workspace-leaf.mod-active .workspace-leaf-content");
     const rootLeaf = document.querySelector(".mod-root .workspace-leaf-content");
-    const rootLeaves = Array.from(document.querySelectorAll(".mod-root .workspace-leaf-content"));
+    const rootSplit = document.querySelector(".workspace-split.mod-root");
+    const rootLeaves = Array.from(document.querySelectorAll(".mod-root .workspace-leaf-content"))
+      .filter((leaf) => leaf.clientWidth > 0 && leaf.clientHeight > 0); // ignore hidden (inactive-tab) leaves
+    // Prefer an editor/Folio view pane; fall back to the largest visible pane, then
+    // the whole main area — so opening from Paged View / Beat Board still fills it.
     const centerLeaf = rootLeaves
-      .filter((leaf) => leaf.matches("[data-type='markdown'], [data-type='markdown-preview'], [data-type='empty']"))
+      .filter((leaf) => leaf.matches("[data-type='markdown'], [data-type='markdown-preview'], [data-type='empty'], [data-type='folio-paged'], [data-type='folio-beat-board']"))
       .sort((a, b) => (b.clientWidth * b.clientHeight) - (a.clientWidth * a.clientHeight))[0];
     const largestRoot = rootLeaves
       .sort((a, b) => (b.clientWidth * b.clientHeight) - (a.clientWidth * a.clientHeight))[0];
-    const target = centerLeaf || largestRoot || activeLeaf || rootLeaf;
+    const target = centerLeaf || largestRoot || rootSplit || activeLeaf || rootLeaf;
     if (!target) return;
     const rect = target.getBoundingClientRect();
     modalEl.dataset.prevPosition = modalEl.style.position || "";

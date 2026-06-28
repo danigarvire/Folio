@@ -17,8 +17,8 @@
 export const DEFAULT_PER_PAGE = 280;
 
 export const DEFAULT_LANES = [
-  { id: "lane-1", name: "Outline 1" },
-  { id: "lane-2", name: "Outline 2" },
+  { id: "lane-1", name: "Lane 1" },
+  { id: "lane-2", name: "Lane 2" },
 ];
 
 export const DEFAULT_ZOOM = 120; // px per script page
@@ -33,7 +33,10 @@ export function clampZoom(z) {
 
 /** Normalise a stored outline (fill defaults), returning a fresh object. */
 export function normalizeOutline(outline) {
-  const lanes = (outline && Array.isArray(outline.lanes) && outline.lanes.length ? outline.lanes : DEFAULT_LANES).map((l) => ({ ...l }));
+  // Migrate the old default lane names ("Outline N" → "Lane N") so existing
+  // projects pick up the new naming without clobbering custom lane names.
+  const lanes = (outline && Array.isArray(outline.lanes) && outline.lanes.length ? outline.lanes : DEFAULT_LANES)
+    .map((l) => ({ ...l, name: /^Outline \d+$/.test(l.name || "") ? l.name.replace(/^Outline /, "Lane ") : l.name }));
   const beats = (outline && Array.isArray(outline.beats) ? outline.beats : []).map((b) => ({ ...b }));
   const zoom = clampZoom(outline && outline.zoom);
   return { lanes, beats, zoom };
@@ -102,7 +105,7 @@ export function addBeat(outline, beat) {
 /** Add a new outline lane. Returns a new outline. */
 export function addLane(outline, name) {
   const next = normalizeOutline(outline);
-  next.lanes.push({ id: "lane-" + (next.lanes.length + 1) + "-" + Math.random().toString(36).slice(2, 5), name: name || `Outline ${next.lanes.length + 1}` });
+  next.lanes.push({ id: "lane-" + (next.lanes.length + 1) + "-" + Math.random().toString(36).slice(2, 5), name: name || `Lane ${next.lanes.length + 1}` });
   return next;
 }
 

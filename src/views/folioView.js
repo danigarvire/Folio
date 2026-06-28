@@ -5,6 +5,8 @@
 import { ItemView, TFolder, Menu, setIcon } from 'obsidian';
 import { VIEW_TYPE, PROJECT_TYPES, sceneStatusLabel } from '../constants/index.js';
 import { resolveCurrentDraft } from '../services/draftModel.js';
+import { streaks } from '../services/statsAnalytics.js';
+import { StatsModal } from '../modals/statsModal.js';
 
 // Helper to get icon from settings templates
 function getProjectTypeIcon(plugin, projectType) {
@@ -518,11 +520,19 @@ export class FolioView extends ItemView {
         if (extra && typeof extra === 'function') extra(r);
       };
 
+      const streak = streaks(dailyWords, todayKey).current;
+      row('flame', 'Streak', `${streak} ${streak === 1 ? 'day' : 'days'}`);
       row('pencil', 'Today', `${formatCount(todayCount)} words`);
       row('file', 'Total words', `${formatCount(totalWords)} / ${formatTarget(targetWords)}`);
       row('target', 'Completion', formatPercent(completionPct));
       row('clock', 'Writing days', `${writingDays} days`);
       row('calendar-clock', 'Daily average', `${formatCount(dailyAvg)} words`);
+
+      // Open the full Final Draft-style Writing Stats panel.
+      const more = container.createDiv({ cls: 'folio-stat-more' });
+      try { setIcon(more.createSpan({ cls: 'folio-stat-more-icon' }), 'bar-chart-3'); } catch {}
+      more.createSpan({ text: 'Writing stats' });
+      more.onclick = () => { try { new StatsModal(this.plugin, book).open(); } catch (e) { console.warn(e); } };
     } catch (e) {
       console.warn('renderStats failed', e);
     }

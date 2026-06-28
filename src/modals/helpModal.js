@@ -32,7 +32,7 @@ const HELP_CONTENT = {
           { type: "p", text: "The Folio View in the left sidebar is your project's home base:" },
           { type: "ul", items: [
             "See the title, author, description and cover at a glance.",
-            "Watch live stats: words today, total vs. target, completion and writing streak.",
+            "Watch live stats: streak, words today, total vs. target, completion. Click “Writing stats” for the full panel — streaks, peak day, Words/Pages over Week/Month/Year, and a daily goal.",
             "Browse and open every part of the manuscript.",
             "Jump to Writer Tools for Focus Mode and Export."
           ] },
@@ -117,12 +117,26 @@ const HELP_CONTENT = {
         blocks: [
           { type: "p", text: "A page-scaled strip sits above your script (and at the top of the Beat Board), mirroring Final Draft's Outline Editor:" },
           { type: "ul", items: [
-            "Planning lanes (Outline 1, Outline 2…) hold free beats — arcs and subplots you position and resize over the page scale. Double-click a lane to add one, drag to move, drag an edge to resize, click to edit (title, goal, notes, colour).",
-            "The Script lane below is built from the current draft's scenes, sized by length — a live map of the manuscript.",
+            "Planning lanes (Lane 1, Lane 2…) hold free beats — arcs and subplots you position and resize over the page scale. Double-click a lane to add one, drag to move, drag an edge to resize, click to edit (title, goal, notes, colour).",
+            "The Draft lane below is built from the current draft's scenes, sized by length — a live map of the manuscript.",
             "A playhead follows your cursor and the ruler marks pages; drag the zoom slider to rescale.",
-            "Toolbar (left): open Folio split, open the draft script (file view), open the Beat Board, build the outline, Writer Tools and Focus Mode — plus “+ lane” and the current-draft switcher."
+            "Toolbar (left): a Split menu, build-outline, Writer Tools and Focus Mode — plus “+ lane” and the current-draft switcher. Switching views lives in the single Views menu in the document header (next to Obsidian's edit/read toggle): Normal / Numbered / Paged, Beat Board, and more soon. Views in the header, tools in the strip."
           ] },
           { type: "tip", text: "Beats are saved per draft, so each draft keeps its own planning. The strip follows the current draft no matter which file you have open." }
+        ]
+      },
+      {
+        icon: "book-open",
+        title: "Paged View (real pages)",
+        blocks: [
+          { type: "p", text: "Paged View shows the current draft as real US-Letter pages — what you'll export. Open it from the Views menu in the document header (next to Obsidian's edit/read toggle), or run “Open Paged View”." },
+          { type: "ul", items: [
+            "Screenplay drafts get a continuous, natively-typed editor with industry formatting (Courier, scene/character/dialogue indents) and real page breaks — type, and the pages reflow.",
+            "Page numbers, the strip ruler and the PDF all use one shared engine, so a scene on page 12 is on page 12 everywhere.",
+            "Click a scene in the strip to jump straight to it in the pages; the playhead shows where you are.",
+            "Prose drafts show a page preview (click a line to edit) — continuous prose typing comes later."
+          ] },
+          { type: "tip", text: "Three document modes, all from the Views menu: Normal = the plain editor; Numbered = the editor with page-break markers + page numbers; Paged = these real sheets. The frontmatter is hidden in Paged mode; edit it in Normal/Numbered." }
         ]
       },
       {
@@ -133,7 +147,7 @@ const HELP_CONTENT = {
           { type: "ul", items: [
             "Open it from the strip's dashboard button, or run “Open Beat Board”.",
             "Drag cards anywhere, drag a corner to resize, click to edit, and use “+ Beat” to add.",
-            "Cards are coloured and grouped by lane (Outline 1, Outline 2…), matching the strip.",
+            "Cards are coloured and grouped by lane (Lane 1, Lane 2…), matching the strip.",
             "The outline strip is pinned at the top of the board too, so structure stays in view while you think."
           ] },
           { type: "tip", text: "Edits sync both ways with the strip in real time. From a beat you can “Send to script” to drop an arc marker into the manuscript." }
@@ -180,7 +194,8 @@ const HELP_CONTENT = {
             "#### → Transition",
             "##### → Act / Section"
           ] },
-          { type: "tip", text: "The same mapping is used when exporting to PDF and Final Draft — no external plugins required." }
+          { type: "p", text: "You usually don't add this by hand: Film/TV templates already mark the draft as screenplay (Settings → Template options → the “Screenplay format” selector), so new files in the draft are formatted automatically. The “New file” dialog also has a Screenplay toggle." },
+          { type: "tip", text: "Exporting a screenplay to PDF lays it out as true script pages (US-Letter, Courier, standard margins) using the same engine as Paged View — so the PDF's pages match what you see. Final Draft (.fdx) export uses the same heading mapping." }
         ]
       }
     ],
@@ -218,7 +233,7 @@ const HELP_CONTENT = {
           { type: "p", text: "La Vista Folio de la barra lateral izquierda es el centro de tu proyecto:" },
           { type: "ul", items: [
             "Ves de un vistazo el título, el autor, la descripción y la portada.",
-            "Sigues las estadísticas en vivo: palabras de hoy, total frente al objetivo, progreso y racha.",
+            "Sigues las estadísticas en vivo: racha, palabras de hoy, total frente al objetivo, progreso. Pulsa «Writing stats» para el panel completo — rachas, día punta, Words/Pages por Semana/Mes/Año y una meta diaria.",
             "Recorres y abres cada parte del manuscrito.",
             "Saltas a las Herramientas de escritura para el Modo enfoque y la Exportación."
           ] },
@@ -303,12 +318,26 @@ const HELP_CONTENT = {
         blocks: [
           { type: "p", text: "Una tira escalada por páginas se sitúa sobre tu guion (y en la parte superior del Beat Board), inspirada en el Editor de esquema de Final Draft:" },
           { type: "ul", items: [
-            "Los carriles de planificación (Outline 1, Outline 2…) contienen beats libres: arcos y subtramas que colocas y redimensionas sobre la escala de páginas. Doble clic en un carril para añadir, arrastra para mover, arrastra un borde para redimensionar, clic para editar (título, objetivo, notas, color).",
-            "El carril Script de abajo se construye con las escenas del borrador actual, dimensionadas por longitud: un mapa vivo del manuscrito.",
+            "Los carriles de planificación (Lane 1, Lane 2…) contienen beats libres: arcos y subtramas que colocas y redimensionas sobre la escala de páginas. Doble clic en un carril para añadir, arrastra para mover, arrastra un borde para redimensionar, clic para editar (título, objetivo, notas, color).",
+            "El carril Draft de abajo se construye con las escenas del borrador actual, dimensionadas por longitud: un mapa vivo del manuscrito.",
             "Un cursor (playhead) sigue tu posición y la regla marca las páginas; arrastra el control de zoom para reescalar.",
-            "Barra (izquierda): abrir Folio en split, abrir el guion del borrador (vista de archivo), abrir el Beat Board, construir el esquema, Herramientas de escritura y Modo enfoque — además de «+ lane» y el selector de borrador actual."
+            "Barra (izquierda): un menú Split, construir esquema, Herramientas de escritura y Modo enfoque — además de «+ lane» y el selector de borrador actual. El cambio de vista vive en un único menú Views en la cabecera del documento (junto al toggle de edición/lectura de Obsidian): Normal / Numbered / Paged, Beat Board, y más pronto. Vistas en la cabecera, herramientas en el strip."
           ] },
           { type: "tip", text: "Los beats se guardan por borrador, así cada borrador conserva su planificación. La tira sigue al borrador actual sin importar qué archivo tengas abierto." }
+        ]
+      },
+      {
+        icon: "book-open",
+        title: "Vista paginada (páginas reales)",
+        blocks: [
+          { type: "p", text: "La Vista paginada muestra el borrador actual como páginas reales US-Letter — lo que vas a exportar. Ábrela desde el menú Views en la cabecera del documento (junto al toggle de edición/lectura de Obsidian), o ejecuta «Open Paged View»." },
+          { type: "ul", items: [
+            "Los guiones tienen un editor continuo, de escritura nativa, con formato profesional (Courier, sangrías de escena/personaje/diálogo) y saltos de página reales — escribes y las páginas se recomponen.",
+            "Los números de página, la regla de la tira y el PDF usan un mismo motor, así que una escena en la página 12 está en la 12 en todas partes.",
+            "Haz clic en una escena de la tira para saltar a ella en las páginas; el playhead muestra dónde estás.",
+            "Los borradores en prosa muestran una previsualización paginada (clic en una línea para editar) — la escritura continua de prosa llegará más adelante."
+          ] },
+          { type: "tip", text: "Tres modos de documento, todos en el menú Views: Normal = el editor liso; Numbered = el editor con marcas de salto y números de página; Paged = estas hojas reales. El frontmatter se oculta en modo Paged; edítalo en Normal/Numbered." }
         ]
       },
       {
@@ -319,7 +348,7 @@ const HELP_CONTENT = {
           { type: "ul", items: [
             "Ábrelo desde el botón de panel de la tira, o ejecuta «Open Beat Board».",
             "Arrastra las tarjetas a cualquier sitio, arrastra una esquina para redimensionar, clic para editar y usa «+ Beat» para añadir.",
-            "Las tarjetas se colorean y agrupan por carril (Outline 1, Outline 2…), igual que la tira.",
+            "Las tarjetas se colorean y agrupan por carril (Lane 1, Lane 2…), igual que la tira.",
             "La tira de esquema también queda fijada arriba del tablero, así la estructura permanece a la vista mientras piensas."
           ] },
           { type: "tip", text: "Las ediciones se sincronizan en ambos sentidos con la tira en tiempo real. Desde un beat puedes «Send to script» para insertar un marcador de arco en el manuscrito." }
@@ -366,7 +395,8 @@ const HELP_CONTENT = {
             "#### → Transición",
             "##### → Acto / Sección"
           ] },
-          { type: "tip", text: "La misma correspondencia se usa al exportar a PDF y a Final Draft — sin plugins externos." }
+          { type: "p", text: "Normalmente no lo añades a mano: las plantillas de Película/TV ya marcan el borrador como guion (Ajustes → Opciones de plantilla → el selector «Screenplay format»), así que los archivos nuevos del borrador se formatean solos. El diálogo «New file» también tiene un interruptor de Guion." },
+          { type: "tip", text: "Al exportar un guion a PDF se compone como páginas de guion reales (US-Letter, Courier, márgenes estándar) con el mismo motor que la Vista paginada — así el PDF coincide con lo que ves. El export a Final Draft (.fdx) usa la misma correspondencia de encabezados." }
         ]
       }
     ],

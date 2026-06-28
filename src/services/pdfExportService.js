@@ -1,4 +1,6 @@
 import { Component, FileSystemAdapter, MarkdownRenderer, Notice } from "obsidian";
+import { resolveCurrentDraft, draftScopeNodes } from "./draftModel.js";
+import { parseScreenplayBlocks, paginate, SCREENPLAY_PROFILE } from "./layoutModel.js";
 
 export class PdfExportService {
   constructor(app, configService) {
@@ -42,7 +44,15 @@ export class PdfExportService {
 
       this.throwIfAborted(signal);
       progress("Rendering the PDF...");
-      const pdfBuffer = await this.renderHtmlToPdf(html, settings, meta, { signal });
+      const projectType = meta?.projectType || cfg?.basic?.projectType || "book";
+      const screenplay = projectType === "script" || projectType === "film";
+      // Screenplay pages are explicit US-Letter sheets that carry their own page
+      // numbers, so force Letter and suppress Electron's header/footer.
+      const pdfBuffer = await this.renderHtmlToPdf(html, settings, meta, {
+        signal,
+        pageSize: screenplay ? "Letter" : undefined,
+        headerFooter: screenplay ? false : undefined,
+      });
       if (!pdfBuffer) {
         new Notice("PDF export failed.");
         return { ok: false };
@@ -68,6 +78,13 @@ export class PdfExportService {
   }
 
   async buildExportHtml(project, meta, cfg, settings, options = {}) {
+    // Screenplay/film: paginate with the SHARED engine so the PDF's pages are
+    // exactly the Paged View's pages (same breaks, same numbers).
+    const projectType = meta?.projectType || cfg?.basic?.projectType || "book";
+    if (projectType === "script" || projectType === "film") {
+      return this.buildScreenplayExportHtml(project, meta, cfg, settings, options);
+    }
+
     const files = await this.collectOrderedMarkdownFiles(project, cfg, settings, meta);
     const sections = [];
     const tocItems = [];
@@ -118,6 +135,91 @@ export class PdfExportService {
     ${bodyHtml}
   </body>
 </html>`;
+  }
+
+  /** The current draft's markdown files (else the whole tree for legacy projects), in order. */
+  _draftFiles(cfg) {
+    const tree = cfg?.structure?.tree || [];
+    const draft = resolveCurrentDraft(tree, cfg?.currentDraftPath);
+    const scope = draft ? (draftScopeNodes(draft) || []) : tree;
+    const out = [];
+    const walk = (nodes) => {
+      for (const n of [...(nodes || [])].sort((a, b) => (a.order || 0) - (b.order || 0))) {
+        if (n.type === "file" && n.path && n.path.endsWith(".md")) out.push(n);
+        else if (n.children) walk(n.children);
+      }
+    };
+    walk(scope);
+    return out;
+  }
+
+  /** Build the PDF for a screenplay from the engine's exact pages (Letter, Courier). */
+  async buildScreenplayExportHtml(project, meta, cfg, settings, options = {}) {
+    const nodes = this._draftFiles(cfg);
+    const blocks = [];
+    let firstFile = true;
+    for (const node of nodes) {
+      this.throwIfAborted(options?.signal);
+      const file = this.app.vault.getAbstractFileByPath(`${project.path}/${node.path}`);
+      if (!file) continue;
+      const text = await this.app.vault.read(file);
+      const fb = parseScreenplayBlocks(text, { file: node.path, keepBlanks: true });
+      if (!firstFile && fb.length) fb[0] = { ...fb[0], pageBreakBefore: true }; // each file on a new page
+      blocks.push(...fb);
+      firstFile = false;
+    }
+    const { pages } = paginate(blocks, SCREENPLAY_PROFILE);
+
+    const coverHtml = settings?.cover?.include ? await this.buildCoverHtml(project, meta, settings) : "";
+    const pagesHtml = pages.map((pg, i) => {
+      const inner = pg.blocks.map((b) => this.renderScreenplayBlock(b)).join("");
+      return `<section class="sp-page"><div class="sp-pagenum">${i + 1}.</div><div class="sp-content">${inner}</div></section>`;
+    }).join("\n");
+
+    const css = this.buildScreenplayPrintCss(settings);
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${this.escapeHtml(meta?.title || project?.name || "Screenplay")}</title>
+    <style>${css}</style>
+  </head>
+  <body>
+    ${[coverHtml, pagesHtml].filter(Boolean).join("\n")}
+  </body>
+</html>`;
+  }
+
+  /** One source line → one styled element line for the screenplay PDF. */
+  renderScreenplayBlock(b) {
+    if (b.type === "spacer") return `<div class="sp-line sp-spacer">&nbsp;</div>`;
+    return `<div class="sp-line sp-${b.type}">${this.escapeHtml(b.text || "")}</div>`;
+  }
+
+  /** Print CSS for the engine-paged screenplay: US-Letter sheets, Courier 12pt,
+   *  standard margins/indents — the same metrics the layout engine uses. */
+  buildScreenplayPrintCss() {
+    return `
+      @page { size: Letter; margin: 0; }
+      html, body { margin: 0; padding: 0; }
+      body { font-family: "Courier New", Courier, monospace; font-size: 12pt; line-height: 1; color: #000; }
+      .sp-page { position: relative; width: 8.5in; height: 11in; box-sizing: border-box; padding: 1in 1in 1in 1.5in; page-break-after: always; overflow: hidden; }
+      .sp-page:last-child { page-break-after: auto; }
+      .sp-content { width: 6in; }
+      .sp-pagenum { position: absolute; top: 0.5in; right: 1in; font-size: 12pt; }
+      .sp-line { white-space: pre-wrap; word-wrap: break-word; }
+      .sp-scene, .sp-character, .sp-transition, .sp-section { text-transform: uppercase; }
+      .sp-section { font-weight: bold; }
+      .sp-character { margin-left: 2in; }
+      .sp-parenthetical { margin-left: 1.5in; margin-right: 1.5in; }
+      .sp-dialogue { margin-left: 1in; margin-right: 1.5in; }
+      .sp-transition { text-align: right; }
+      .cover { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 8.5in; height: 11in; box-sizing: border-box; text-align: center; page-break-after: always; }
+      .cover-title { font-size: 24pt; }
+      .cover-subtitle { font-size: 14pt; margin-top: 12pt; }
+      .cover-author { font-size: 12pt; margin-top: 18pt; }
+      .cover-image { width: 50%; height: 2.5in; background-size: cover; background-position: center; margin-bottom: 24pt; }
+    `;
   }
 
   async buildCoverHtml(project, meta, settings) {
@@ -608,11 +710,13 @@ export class PdfExportService {
       this.throwIfAborted(signal);
       const headerTemplate = this.buildHeaderFooterTemplate("header", settings, meta);
       const footerTemplate = this.buildHeaderFooterTemplate("footer", settings, meta);
-      const displayHeaderFooter = !!(settings?.layout?.includePageNumbers !== false);
+      const displayHeaderFooter = options?.headerFooter !== undefined
+        ? !!options.headerFooter
+        : !!(settings?.layout?.includePageNumbers !== false);
       const pdf = await Promise.race([
         win.webContents.printToPDF({
           printBackground: true,
-          pageSize: settings?.pageSize || "A4",
+          pageSize: options?.pageSize || settings?.pageSize || "A4",
           displayHeaderFooter,
           headerTemplate,
           footerTemplate

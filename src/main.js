@@ -28,7 +28,9 @@ import { OutlineEditorService } from './services/outlineEditorService.js';
 import { getProfile } from './services/formatProfiles.js';
 import { findDrafts, draftScopeNodes, resolveCurrentDraft, draftShelfNode, draftNodeForFile } from './services/draftModel.js';
 import { FolioBeatBoardView } from './views/beatBoardView.js';
-import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, BEAT_BOARD_VIEW_TYPE, DEFAULT_SETTINGS, PROJECT_TYPES, SCENE_STATUSES, nextSceneStatus } from './constants/index.js';
+import { FolioPagedView } from './views/pagedView.js';
+import { screenplayNativePagination, setNativePaginationEnabled, togglePaginationEffect } from './editor/screenplayPagedEditor.js';
+import { VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, BEAT_BOARD_VIEW_TYPE, PAGED_VIEW_TYPE, DEFAULT_SETTINGS, PROJECT_TYPES, SCENE_STATUSES, nextSceneStatus } from './constants/index.js';
 
 import { FolioView } from './views/folioView.js';
 import { WriterToolsView } from './views/writerToolsView.js';
@@ -40,6 +42,7 @@ import { SwitchBookModal } from './modals/switchBookModal.js';
 import { ManageBooksModal } from './modals/manageBooksModal.js';
 import { EditBookModal } from './modals/editBookModal.js';
 import { HelpModal } from './modals/helpModal.js';
+import { StatsModal } from './modals/statsModal.js';
 import { TextInputModal } from './modals/textInputModal.js';
 import { ConfirmModal } from './modals/confirmModal.js';
 
@@ -83,6 +86,13 @@ export default class FolioPlugin extends Plugin {
     this.registerView(VIEW_TYPE, (leaf) => new FolioView(leaf, this));
     this.registerView(WRITER_TOOLS_VIEW_TYPE, (leaf) => new WriterToolsView(leaf, this));
     this.registerView(BEAT_BOARD_VIEW_TYPE, (leaf) => new FolioBeatBoardView(leaf, this));
+    this.registerView(PAGED_VIEW_TYPE, (leaf) => new FolioPagedView(leaf, this));
+
+    // Show page-break markers in Obsidian's OWN editor for md-screenplay files,
+    // using the same pagination engine as Paged View / strip / export. The
+    // Normal/Speed script modes toggle these on/off.
+    setNativePaginationEnabled(this.settings.nativePagination !== false);
+    this.registerEditorExtension([screenplayNativePagination()]);
 
     this.addRibbonIcon("book", "Open Folio", () => this.activateFolio());
 
@@ -108,6 +118,16 @@ export default class FolioPlugin extends Plugin {
       id: "open-beat-board",
       name: "Open Beat Board",
       callback: () => this.openBeatBoard(),
+    });
+    this.addCommand({
+      id: "open-paged-view",
+      name: "Open Paged View",
+      callback: () => this.openPagedView(),
+    });
+    this.addCommand({
+      id: "open-writing-stats",
+      name: "Open Writing Stats",
+      callback: () => this.openWritingStats(),
     });
     this.addCommand({
       id: "toggle-draft-folder",
@@ -138,6 +158,9 @@ export default class FolioPlugin extends Plugin {
       if (this._vaultChangeDebounceTimer) clearTimeout(this._vaultChangeDebounceTimer);
       this._vaultChangeDebounceTimer = setTimeout(() => {
         this.refresh();
+        // Files were added/removed → force the strip to re-paginate (its cache is
+        // keyed by draft, so otherwise a new file only shows after the next edit).
+        try { this.timelineBand && this.timelineBand.refresh(true); } catch (e) {}
         this._vaultChangeDebounceTimer = null;
       }, 200);
     };
@@ -208,8 +231,79 @@ export default class FolioPlugin extends Plugin {
         } catch (e) {
           this.rerenderViews();
         }
+        this.decorateMarkdownHeaders();
       })
     );
+    // Put the Folio "Views" switcher in each project document's header (next to
+    // Obsidian's native edit/read toggle), so switching views is where you expect.
+    this.registerEvent(this.app.workspace.on("layout-change", () => this.decorateMarkdownHeaders()));
+    this.app.workspace.onLayoutReady(() => this.decorateMarkdownHeaders());
+  }
+
+  /**
+   * Add a single Folio "Views" control to project markdown headers, next to
+   * Obsidian's native edit/read toggle. One dropdown for every view (Final Draft
+   * model) so it scales without crowding. Idempotent per view.
+   */
+  decorateMarkdownHeaders() {
+    try {
+      if (!this._viewActionDone) this._viewActionDone = new WeakSet();
+      for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+        const view = leaf.view;
+        if (!view || this._viewActionDone.has(view)) continue;
+        const file = view.file;
+        if (!file || !(this.booksIndex || []).some((b) => file.path.startsWith(b.path + "/"))) continue;
+        try {
+          view.addAction("gallery-vertical", "Views", (e) => this.showViewMenu(e));
+          this._viewActionDone.add(view);
+        } catch (e) { /* ignore */ }
+      }
+    } catch (e) { /* best effort */ }
+  }
+
+  /** The single Views menu — Final Draft's script modes + the Folio views. */
+  showViewMenu(evt) {
+    const ws = this.app.workspace;
+    const leaf = ws.getMostRecentLeaf?.() || ws.activeLeaf;
+    const type = leaf && leaf.view && leaf.view.getViewType ? leaf.view.getViewType() : null;
+    const isMd = type === "markdown";
+    const pagedOn = this.settings.nativePagination !== false;
+    const menu = new Menu(this.app);
+    // Three presentations of the same document (format-agnostic: prose or script).
+    menu.addItem((i) => i.setTitle("Normal").setIcon("align-left").setChecked(isMd && !pagedOn).onClick(() => this.setEditorPageBreaks(false)));
+    menu.addItem((i) => i.setTitle("Numbered").setIcon("separator-horizontal").setChecked(isMd && pagedOn).onClick(() => this.setEditorPageBreaks(true)));
+    menu.addItem((i) => i.setTitle("Paged").setIcon("book-open").setChecked(type === PAGED_VIEW_TYPE).onClick(() => this.openPagedView()));
+    menu.addSeparator();
+    menu.addItem((i) => i.setTitle("Beat Board").setIcon("layout-dashboard").setChecked(type === BEAT_BOARD_VIEW_TYPE).onClick(() => this.openBeatBoard()));
+    menu.addSeparator();
+    menu.addItem((i) => { i.setTitle("Scene View (soon)").setIcon("list").setDisabled(true); });
+    menu.addItem((i) => { i.setTitle("Index Cards (soon)").setIcon("layout-grid").setDisabled(true); });
+    try {
+      if (evt && typeof menu.showAtMouseEvent === "function") menu.showAtMouseEvent(evt);
+      else {
+        const r = evt && evt.currentTarget && evt.currentTarget.getBoundingClientRect ? evt.currentTarget.getBoundingClientRect() : { left: 0, bottom: 0 };
+        menu.showAtPosition({ x: r.left, y: r.bottom });
+      }
+    } catch (e) { console.warn(e); }
+  }
+
+  /**
+   * Numbered (on) vs Normal (off) = Obsidian's editor with page-break markers on
+   * or off. Persists the choice, forces every open editor to recompute, and
+   * ensures we're in the editor (opening the draft script if in Paged / Beat).
+   */
+  async setEditorPageBreaks(on) {
+    try {
+      this.settings.nativePagination = !!on;
+      await this.saveSettings();
+      setNativePaginationEnabled(!!on);
+      for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+        const cm = leaf.view && leaf.view.editor && leaf.view.editor.cm;
+        if (cm) { try { cm.dispatch({ effects: togglePaginationEffect.of(null) }); } catch (e) {} }
+      }
+      const leaf = this.app.workspace.getMostRecentLeaf?.();
+      if (!leaf || !leaf.view || leaf.view.getViewType?.() !== "markdown") await this.openDraftScript();
+    } catch (e) { console.warn("setEditorPageBreaks failed", e); }
   }
 
   async openChapterContextMenu(evt, file, node = null) {
@@ -1012,6 +1106,39 @@ export default class FolioPlugin extends Plugin {
     return leaf;
   }
 
+  /** Open the Final Draft-style Writing Stats panel for the active project. */
+  openWritingStats() {
+    if (!this.activeBook) { new Notice("Open or create a project first."); return; }
+    new StatsModal(this, this.activeBook).open();
+  }
+
+  /** Open (or reveal) the Paged View (continuous WYSIWYG pages of the current draft). */
+  async openPagedView() {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(PAGED_VIEW_TYPE);
+    if (existing.length > 0) { workspace.revealLeaf(existing[0]); return existing[0]; }
+    const leaf = workspace.getLeaf("tab");
+    if (!leaf) return null;
+    await leaf.setViewState({ type: PAGED_VIEW_TYPE, active: true });
+    workspace.revealLeaf(leaf);
+    return leaf;
+  }
+
+  /** Switch the active pane to the native Obsidian editor for the current draft's script. */
+  async openObsidianView() {
+    return this.openDraftScript();
+  }
+
+  /** Scroll the open Paged View to a file+line (scene-click navigation from the strip). */
+  async scrollPagedToLine(fullPath, line) {
+    try {
+      const leaf = this.app.workspace.getLeavesOfType(PAGED_VIEW_TYPE)[0];
+      if (!leaf) return;
+      this.app.workspace.revealLeaf(leaf);
+      if (leaf.view && typeof leaf.view.scrollToLine === "function") await leaf.view.scrollToLine(fullPath, line);
+    } catch (e) { console.warn("scrollPagedToLine failed", e); }
+  }
+
   /** Add a planning beat to the project's outline (lane 1) and refresh the strip. */
   addOutlineBeatForActiveProject() {
     const book = this.activeBook;
@@ -1389,19 +1516,18 @@ export default class FolioPlugin extends Plugin {
   }
 
   async getNewFileFrontmatter(destPath, fileName, explicitScreenplay = false) {
-    let projectType = null;
-    let inDraft = false;
     const book = this.booksIndex.find(b => destPath.startsWith(b.path));
-    if (book) {
-      const cfg = (await this.loadBookConfig(book)) || {};
-      projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
-      // A new file created inside a draft (the manuscript) inherits its formatting,
-      // so e.g. a new "Episode 2" in a TV draft is screenplay-formatted too.
-      try { inDraft = !!draftNodeForFile(cfg.structure?.tree || [], destPath.slice(book.path.length + 1)); } catch (e) { inDraft = false; }
-    }
+    if (!book) return ""; // not inside a project → leave it a plain note
+    const cfg = (await this.loadBookConfig(book)) || {};
+    const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
+    // A new file created inside a draft (the manuscript) inherits its formatting,
+    // so e.g. a new "Episode 2" in a TV draft is screenplay-formatted too.
+    let inDraft = false;
+    try { inDraft = !!draftNodeForFile(cfg.structure?.tree || [], destPath.slice(book.path.length + 1)); } catch (e) { inDraft = false; }
     const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, inDraft, explicitScreenplay);
-    if (!useScreenplay) return "";
-    return this.bookService.buildFrontmatter({ projectType, screenplay: true });
+    // Always stamp projectType so every project file is recognised (pagination,
+    // stats, screenplay detection…); add the screenplay cssclass when it applies.
+    return this.bookService.buildFrontmatter({ projectType, screenplay: useScreenplay });
   }
 
   async waitForFolderSync(filePath, retries = 20) {
@@ -1414,7 +1540,7 @@ export default class FolioPlugin extends Plugin {
   }
 
   rerenderViews() {
-    for (const type of [VIEW_TYPE, BEAT_BOARD_VIEW_TYPE]) {
+    for (const type of [VIEW_TYPE, BEAT_BOARD_VIEW_TYPE, PAGED_VIEW_TYPE]) {
       const leaves = this.app.workspace.getLeavesOfType(type);
       for (const leaf of leaves) {
         const view = leaf.view;

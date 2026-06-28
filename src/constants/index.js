@@ -6,6 +6,7 @@ export const VIEW_TYPE = "folio-view";
 export const WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
 export const TIMELINE_VIEW_TYPE = "folio-timeline";
 export const BEAT_BOARD_VIEW_TYPE = "folio-beat-board";
+export const PAGED_VIEW_TYPE = "folio-paged";
 
 export const PROJECT_TYPES = {
   BOOK: "book",
@@ -25,6 +26,7 @@ export const DEFAULT_SETTINGS = {
   focusSoundEnabled: true,
   focusPomodoroEnabled: false,
   focusBreakMinutes: 5,
+  nativePagination: true, // Script — Normal (page breaks in the native editor) vs Speed (off)
   projectTemplates: [
     {
       id: "book",

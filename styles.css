@@ -7509,3 +7509,160 @@ body.folio-focus-quiet-workspace .mod-root .workspace-sidedock-vault-profile {
   border: 1px solid var(--background-modifier-border); max-width: 160px;
 }
 .folio-tl-draftname { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+/* ============ Paged View (WYSIWYG pages of the current draft) ============ */
+.folio-paged-view { display: flex; flex-direction: column; height: 100%; position: relative; }
+.folio-paged-strip { position: relative; flex: 0 0 auto; border-bottom: 1px solid var(--background-modifier-border); }
+.folio-paged-scroller {
+  flex: 1; overflow: auto; padding: 24px 0 48px;
+  background: var(--background-secondary);
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+/* Off-screen build layer: laid out (so page heights measure) but invisible,
+   swapped in atomically to avoid a blank flash during re-render. */
+.folio-paged-scroller.folio-paged-building {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  visibility: hidden; pointer-events: none;
+}
+.folio-page {
+  position: relative; box-sizing: border-box; flex: 0 0 auto;
+  background: var(--background-primary); color: var(--text-normal);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.18); border: 1px solid var(--background-modifier-border); border-radius: 2px;
+}
+.folio-page-content { position: relative; height: 100%; overflow: hidden; }
+.folio-page-number {
+  position: absolute; top: 0.5in; right: 1in; transform: translateY(-50%);
+  font-size: 11px; color: var(--text-faint);
+}
+.folio-pb { white-space: pre-wrap; word-wrap: break-word; cursor: text; min-height: 1em; }
+.folio-pb:hover { background: rgba(0,120,255,0.06); }
+.folio-pb-edit {
+  width: 100%; box-sizing: border-box; resize: none; border: none; outline: none;
+  background: rgba(0,120,255,0.08); font: inherit; color: inherit;
+  text-align: inherit; padding: 0; margin: 0; line-height: inherit; overflow: hidden;
+}
+.folio-paged-empty { text-align: center; color: var(--text-muted); padding: 60px 20px; }
+.folio-paged-empty-icon { display: flex; justify-content: center; margin-bottom: 10px; opacity: 0.5; }
+.folio-paged-empty-title { font-weight: 600; }
+.folio-paged-empty-subtitle { font-size: 12px; opacity: 0.8; margin-top: 4px; }
+
+/* ===== Continuous CodeMirror paged screenplay editor (Final-Draft model) ===== */
+/* The host scrolls the whole stack of per-file editors; each editor sizes to its
+   own content (auto height, no internal scroll). */
+.folio-paged-editor-host { flex: 1; overflow: auto; padding: 24px 0 64px; background: var(--background-secondary); }
+.folio-paged-editor-host .cm-editor { height: auto; background: transparent; }
+.folio-paged-editor-host .cm-scroller { overflow: visible; padding: 0; }
+.folio-paged-filesection { margin-bottom: 8px; }
+.folio-paged-fileheader {
+  width: 816px; margin: 14px auto 6px; display: flex; align-items: baseline; justify-content: space-between;
+  font-size: 11px; color: var(--text-muted);
+}
+.folio-paged-filename { font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.folio-paged-filerange { color: var(--text-faint); }
+/* The editable area styled as a US-Letter sheet. Width/padding come from the
+   editor theme (per profile: screenplay 1.5in left, prose 1in). */
+.folio-paged-editor-host .cm-content {
+  margin: 0 auto; box-sizing: border-box; min-height: 1056px;
+  background: var(--background-primary); color: var(--text-normal);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18); border: 1px solid var(--background-modifier-border);
+}
+/* Prose line styling (chapters/sections/paragraphs) for the prose paged editor. */
+.folio-cm-prose-chapter { text-align: center; font-weight: 700; font-size: 1.5em; margin: 1.5em 0 1em; }
+.folio-cm-prose-section { font-weight: 700; font-size: 1.1em; margin: 1em 0 0.4em; }
+.folio-cm-prose-paragraph { text-indent: 1.5em; text-align: justify; }
+.folio-cm-prose-blockquote { margin-left: 2em; margin-right: 2em; font-style: italic; }
+.folio-paged-editor-host .cm-line { padding: 0; }
+/* Screenplay element styling (standard indents from the content edge). */
+/* Spacing comes from the blank lines in the script (not CSS margins), so the
+   visual layout matches the page count exactly. */
+.folio-cm-scene, .folio-cm-character, .folio-cm-transition, .folio-cm-section { text-transform: uppercase; }
+.folio-cm-section { font-weight: 700; }
+.folio-cm-character { margin-left: 192px; }   /* 2.0in */
+.folio-cm-parenthetical { margin-left: 144px; margin-right: 144px; } /* 1.5in */
+.folio-cm-dialogue { margin-left: 96px; margin-right: 144px; } /* 1.0in / 1.5in */
+.folio-cm-transition { text-align: right; }
+.folio-cm-spacer { min-height: 1em; }
+/* Inter-page gap: bottom margin (white) + desk gap + top margin (white). Bled to
+   the sheet edges so each page shows real ~1in top/bottom whitespace. */
+.folio-cm-pagebreak {
+  margin: 0 calc(-1 * var(--folio-pad-right, 96px)) 0 calc(-1 * var(--folio-pad-left, 144px));
+}
+.folio-cm-pb-bottom, .folio-cm-pb-top { height: 96px; background: var(--background-primary); } /* 1in margins (paper) */
+.folio-cm-pb-gap {
+  height: 26px; background: var(--background-secondary);
+  border-top: 1px solid var(--background-modifier-border); border-bottom: 1px solid var(--background-modifier-border);
+}
+.folio-cm-pb-top { position: relative; }
+.folio-cm-pb-label { position: absolute; right: 14px; top: 10px; font-size: 11px; color: var(--text-faint); }
+
+/* Prose paged preview note */
+.folio-paged-prose-note {
+  max-width: 816px; margin: 0 auto 8px; padding: 6px 10px;
+  font-size: 11px; color: var(--text-muted);
+  background: var(--background-primary-alt); border-radius: 6px;
+  border: 1px solid var(--background-modifier-border);
+}
+
+/* ============ Writing Stats panel (Final Draft-inspired) ============ */
+.folio-stat-more {
+  display: flex; align-items: center; gap: 6px; margin-top: 10px; padding: 7px 10px;
+  font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer;
+  border-radius: 6px; border: 1px solid var(--background-modifier-border);
+}
+.folio-stat-more:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.folio-stat-more-icon { display: inline-flex; }
+.folio-stat-more-icon svg { width: 14px; height: 14px; }
+
+.folio-stats-modal { min-width: 520px; }
+.folio-stats-title { margin: 0 0 14px; text-align: center; }
+.folio-stats-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+.folio-stats-card {
+  padding: 12px; border-radius: 10px; background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border); text-align: left;
+}
+.folio-stats-card-label { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--text-muted); }
+.folio-stats-card-value { font-size: 22px; font-weight: 700; margin-top: 4px; color: var(--text-normal); line-height: 1.1; }
+.folio-stats-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.folio-stats-segmented { display: inline-flex; gap: 0; margin: 0 auto 12px; justify-content: center; width: 100%; }
+.folio-stats-seg {
+  flex: 0 0 auto; padding: 4px 14px; font-size: 12px; cursor: pointer;
+  background: var(--background-secondary); color: var(--text-muted);
+  border: 1px solid var(--background-modifier-border); border-right: none;
+}
+.folio-stats-seg:first-child { border-radius: 6px 0 0 6px; }
+.folio-stats-seg:last-child { border-radius: 0 6px 6px 0; border-right: 1px solid var(--background-modifier-border); }
+.folio-stats-seg.is-active { background: var(--interactive-accent); color: var(--text-on-accent); border-color: var(--interactive-accent); }
+.folio-stats-range { margin-bottom: 14px; }
+
+.folio-stats-totals { display: flex; gap: 28px; justify-content: center; margin-bottom: 8px; }
+.folio-stats-total { text-align: center; }
+.folio-stats-total-num { font-size: 30px; font-weight: 800; color: var(--text-normal); }
+.folio-stats-total-lbl { font-size: 11px; color: var(--text-muted); }
+.folio-stats-goalbar { height: 6px; border-radius: 3px; background: var(--background-modifier-border); overflow: hidden; margin: 6px auto 14px; max-width: 320px; }
+.folio-stats-goalbar-fill { height: 100%; background: var(--interactive-accent); transition: width .2s; }
+.folio-stats-goalbar-fill.is-done { background: var(--color-green, #3fa45b); }
+
+.folio-stats-chart { margin: 8px 0 16px; }
+.folio-stats-bars { display: flex; align-items: flex-end; gap: 3px; height: 150px; }
+.folio-stats-barcol { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; height: 100%; }
+.folio-stats-bartrack { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+.folio-stats-bar { width: 100%; min-height: 1px; border-radius: 3px 3px 0 0; background: var(--interactive-accent); opacity: 0.55; transition: height .2s; }
+.folio-stats-barcol:hover .folio-stats-bar { opacity: 0.85; }
+.folio-stats-bar.is-today { opacity: 1; }
+.folio-stats-barlabel { font-size: 9px; color: var(--text-faint); margin-top: 4px; height: 12px; white-space: nowrap; }
+
+.folio-stats-goalset { display: flex; align-items: center; gap: 8px; justify-content: center; padding-top: 6px; border-top: 1px solid var(--background-modifier-border); }
+.folio-stats-goalinput { width: 80px; }
+.folio-stats-goalunit { font-size: 12px; color: var(--text-muted); }
+
+/* Page breaks in Obsidian's native editor (md-screenplay files) — Final Draft
+   "Normal View" style: boundary rule + a real inter-page gap + page number. */
+.folio-native-pagebreak { margin: 0; }
+.folio-native-pb-rule { border-top: 1px solid var(--hr-color, var(--text-muted)); opacity: 0.85; }
+.folio-native-pb-gap { position: relative; height: 92px; }
+.folio-native-pb-num {
+  position: absolute; top: 52px; right: 0;
+  font-family: var(--font-monospace, "Courier New", monospace);
+  font-size: 12px; color: var(--text-normal);
+}

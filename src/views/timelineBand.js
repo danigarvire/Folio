@@ -11,12 +11,13 @@
  * outlineModel.js / outlineLayout.js.
  */
 
-import { setIcon } from 'obsidian';
-import { PROJECT_TYPES, BEAT_BOARD_VIEW_TYPE } from '../constants/index.js';
+import { setIcon, Menu } from 'obsidian';
+import { PROJECT_TYPES, BEAT_BOARD_VIEW_TYPE, PAGED_VIEW_TYPE } from '../constants/index.js';
 import { getProfile } from '../services/formatProfiles.js';
-import { beatsInLane, paginate, MIN_ZOOM, MAX_ZOOM } from '../services/outlineModel.js';
+import { beatsInLane, MIN_ZOOM, MAX_ZOOM } from '../services/outlineModel.js';
 import { findDrafts, draftScopeNodes, resolveCurrentDraft } from '../services/draftModel.js';
 import { layout, pxToPage } from '../services/outlineLayout.js';
+import { SCREENPLAY_PROFILE, PROSE_PROFILE, parseScreenplayBlocks, parseProseBlocks, paginatedScenesFromBlocks } from '../services/layoutModel.js';
 import { BeatModal } from '../modals/beatModal.js';
 import { TextInputModal } from '../modals/textInputModal.js';
 
@@ -95,12 +96,14 @@ export class TimelineBand {
         if (book && this.isScene(file, book)) await this.renderBand(contentEl, book, file, force);
         else this.removeBand(contentEl);
       }
-      // The Beat Board hosts the same strip (file-less — no playhead) in its own
-      // header slot, so "Beat Board with strip" is a complete standalone view.
-      for (const leaf of ws.getLeavesOfType(BEAT_BOARD_VIEW_TYPE)) {
-        const host = leaf.view?.contentEl?.querySelector(":scope > .folio-bb-strip");
-        const book = this.plugin.activeBook;
-        if (host && book) await this.renderBand(host, book, null, force);
+      // The Beat Board and Paged View host the same strip (file-less — no playhead)
+      // in their own header slot, so each is a complete standalone view.
+      for (const type of [BEAT_BOARD_VIEW_TYPE, PAGED_VIEW_TYPE]) {
+        for (const leaf of ws.getLeavesOfType(type)) {
+          const host = leaf.view?.contentEl?.querySelector(":scope > .folio-bb-strip");
+          const book = this.plugin.activeBook;
+          if (host && book) await this.renderBand(host, book, null, force);
+        }
       }
     } catch (e) {
       console.warn("TimelineBand.refresh failed", e);
@@ -113,10 +116,151 @@ export class TimelineBand {
     try { await this.renderBand(host, book, null, force); } catch (e) { console.warn(e); }
   }
 
+  /**
+   * Position the playhead on a host's band from an EXTERNAL cursor (the Paged
+   * View's CodeMirror editor, which isn't a markdown editor the strip can poll).
+   * @param {HTMLElement} band the .folio-timeline-band element in the host
+   * @param {{path:string}} book
+   * @param {string} fullPath the edited file's full path
+   * @param {number} line 0-indexed cursor line within that file
+   */
+  positionExternalPlayhead(band, book, fullPath, line, pageFraction) {
+    const view = this._views && this._views.get(book.path);
+    const ph = band && band.querySelector(".folio-tl-playhead");
+    if (!view || !ph) return;
+    // Prefer the editor's EXACT page position; fall back to the line-based estimate.
+    let px;
+    if (pageFraction != null && Number.isFinite(pageFraction)) px = pageFraction * view.pxPerPage;
+    else px = this.computePlayheadPx(view, book, fullPath, line);
+    if (px == null) { ph.style.display = "none"; return; }
+    ph.style.display = "";
+    ph.style.left = LABEL_W + px + "px";
+    ph.dataset.uoff = String(px / view.pxPerUnit);
+  }
+
+  /** The active main-area leaf (the pane this strip lives in), or null. */
+  _activeLeaf() {
+    const ws = this.plugin.app.workspace;
+    try { return ws.getMostRecentLeaf() || ws.activeLeaf || null; } catch (e) { return ws.activeLeaf || null; }
+  }
+
+  /** First leaf found anywhere under a layout node (depth-first). */
+  _firstLeafIn(node) {
+    if (!node) return null;
+    if (Array.isArray(node.children)) {
+      for (const c of node.children) { const r = this._firstLeafIn(c); if (r) return r; }
+      return null;
+    }
+    return node; // a leaf (no children array)
+  }
+
+  /**
+   * Representative leaves of the OTHER panes in this leaf's SPLIT (not its tab
+   * siblings). In Obsidian a leaf's `.parent` is its tab group; the split is the
+   * grandparent, so we look there — otherwise sibling panes are never found.
+   */
+  _siblingLeaves(leaf) {
+    try {
+      const pane = leaf && leaf.parent;        // WorkspaceTabs (this leaf's pane)
+      const split = pane && pane.parent;       // WorkspaceSplit (the real split)
+      if (!split || !Array.isArray(split.children) || split.children.length < 2) return [];
+      const out = [];
+      for (const branch of split.children) {
+        if (branch === pane) continue;
+        const rep = this._firstLeafIn(branch);
+        if (rep) out.push(rep);
+      }
+      return out;
+    } catch (e) { return []; }
+  }
+
+  /** Show a Menu at the click (mouse event) or below the anchor element. */
+  _showMenu(menu, evt) {
+    try {
+      if (evt && typeof menu.showAtMouseEvent === "function") menu.showAtMouseEvent(evt);
+      else {
+        const r = evt && evt.currentTarget && evt.currentTarget.getBoundingClientRect ? evt.currentTarget.getBoundingClientRect() : { left: 0, bottom: 0 };
+        menu.showAtPosition({ x: r.left, y: r.bottom });
+      }
+    } catch (e) { console.warn(e); }
+  }
+
+  /** Split-view menu on the columns icon: split / swap / unsplit the panes. */
+  openSplitMenu(evt) {
+    const ws = this.plugin.app.workspace;
+    const leaf = this._activeLeaf();
+    const hasSplit = this._siblingLeaves(leaf).length > 0;
+    const menu = new Menu();
+
+    menu.addItem((i) => i.setTitle("Split Vertically").setIcon("separator-vertical").onClick(() => this._split("vertical")));
+    menu.addItem((i) => i.setTitle("Split Horizontally").setIcon("separator-horizontal").onClick(() => this._split("horizontal")));
+    menu.addSeparator();
+    menu.addItem((i) => { i.setTitle("Swap Panels").setIcon("arrow-left-right").setDisabled(!hasSplit).onClick(() => this._swapPanels()); });
+    menu.addItem((i) => { i.setTitle("Unsplit Panels").setIcon("columns").setDisabled(!hasSplit).onClick(() => this._unsplitPanels()); });
+    this._showMenu(menu, evt);
+  }
+
+  /** Split the active pane and mirror its current file into the new pane. */
+  _split(direction) {
+    const ws = this.plugin.app.workspace;
+    try {
+      const file = ws.getActiveFile();
+      const leaf = ws.getLeaf("split", direction);
+      if (leaf && file && typeof leaf.openFile === "function") leaf.openFile(file);
+    } catch (e) { console.warn("split failed", e); }
+  }
+
+  /** Swap the contents of the active pane and its sibling. */
+  _swapPanels() {
+    const a = this._activeLeaf();
+    const b = this._siblingLeaves(a)[0];
+    if (!a || !b) return;
+    try {
+      const sa = a.getViewState(), sb = b.getViewState();
+      const ea = a.getEphemeralState ? a.getEphemeralState() : null;
+      const eb = b.getEphemeralState ? b.getEphemeralState() : null;
+      a.setViewState(sb, eb);
+      b.setViewState(sa, ea);
+    } catch (e) { console.warn("swap panels failed", e); }
+  }
+
+  /** Collect every leaf under a layout node. */
+  _allLeavesIn(node, acc) {
+    if (!node) return;
+    if (Array.isArray(node.children)) { for (const c of node.children) this._allLeavesIn(c, acc); }
+    else acc.push(node);
+  }
+
+  /** Collapse the split: close all OTHER panes in the split, keep the active one. */
+  _unsplitPanels() {
+    try {
+      const active = this._activeLeaf();
+      const pane = active && active.parent;
+      const split = pane && pane.parent;
+      if (!split || !Array.isArray(split.children)) return;
+      const toClose = [];
+      for (const branch of split.children) { if (branch === pane) continue; this._allLeavesIn(branch, toClose); }
+      for (const l of toClose) { try { l.detach(); } catch (e) { console.warn("unsplit failed", e); } }
+    } catch (e) { console.warn("unsplit failed", e); }
+  }
+
   removeBand(contentEl) {
     const band = contentEl.querySelector(":scope > ." + BAND_CLASS);
     if (band) band.remove();
     contentEl.classList.remove(HOST_CLASS);
+  }
+
+  /** Flatten a node list to its markdown file nodes, in tree order. */
+  _flattenFiles(nodes) {
+    const out = [];
+    const walk = (ns) => {
+      for (const n of [...(ns || [])].sort((a, b) => (a.order || 0) - (b.order || 0))) {
+        if (n.type === "file" && n.path && n.path.endsWith(".md")) out.push(n);
+        else if (n.children) walk(n.children);
+      }
+    };
+    walk(nodes);
+    return out;
   }
 
   async getData(book, file, force) {
@@ -141,10 +285,33 @@ export class TimelineBand {
     let outline = { lanes: [], beats: [] };
     try { outline = await this.plugin.outlineEditorService.load(book); } catch (e) { outline = { lanes: [], beats: [] }; }
     const pt = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
-    const perPage = pt === PROJECT_TYPES.SCRIPT || pt === PROJECT_TYPES.FILM ? 190 : 280; // words/page
+    const screenplay = pt === PROJECT_TYPES.SCRIPT || pt === PROJECT_TYPES.FILM;
+
+    // Real pagination via the SHARED layout engine, so the strip ruler agrees with
+    // the Paged editor (and, later, export) on page numbers and scene positions.
+    const layoutProfile = screenplay ? SCREENPLAY_PROFILE : PROSE_PROFILE;
+    const blocks = [];
+    let firstFile = true;
+    for (const node of this._flattenFiles(scopedTree)) {
+      const text = await this.plugin.spineService.readText(`${book.path}/${node.path}`);
+      if (text == null) continue;
+      let fb = screenplay
+        ? parseScreenplayBlocks(text, { file: node.path, keepBlanks: true })
+        : parseProseBlocks(text, { file: node.path });
+      // An empty file (e.g. just-created, only frontmatter) still occupies its own
+      // page — otherwise it has no position and would overlap the previous file.
+      if (!fb.length) fb = [{ type: "spacer", text: "", file: node.path, startLine: 0, endLine: 0 }];
+      // Each draft file starts on a fresh page, so editor (single-file) and strip
+      // (whole-draft) agree on page numbers via a simple per-file offset.
+      if (!firstFile) fb[0] = { ...fb[0], pageBreakBefore: true };
+      blocks.push(...fb);
+      firstFile = false;
+    }
+    const paginated = paginatedScenesFromBlocks(blocks, spine, layoutProfile);
+
     const choices = findDrafts(tree).map((d) => ({ path: d.path, name: d.title || d.path }));
     const draftName = draftNode ? (draftNode.title || draftNode.path) : "";
-    const data = { spine, outline, draftPath, draftName, choices, perPage };
+    const data = { spine, outline, draftPath, draftName, choices, paginated };
     this._cache.set(key, data);
     return data;
   }
@@ -157,13 +324,12 @@ export class TimelineBand {
     if (!band) { band = createDiv({ cls: BAND_CLASS }); contentEl.prepend(band); }
     contentEl.classList.add(HOST_CLASS);
 
-    const { spine, outline, draftPath, draftName, choices, perPage } = await this.getData(book, file, force);
+    const { spine, outline, draftPath, draftName, choices, paginated } = await this.getData(book, file, force);
     const draftKey = book.path + "::" + draftPath;
 
     // Cheap path on nav: same draft already rendered, not forced → just highlight.
     if (band.dataset.draftkey === draftKey && !force) { this.updateHighlight(band, file ? file.path : null); this.positionPlayhead(band, book, file); return; }
 
-    const paginated = paginate(spine, perPage);
     const pxPerPage = outline.zoom || PX_PER_PAGE;
     const view = layout(paginated, outline.beats, pxPerPage);
     if (!this._views) this._views = new Map();
@@ -183,11 +349,9 @@ export class TimelineBand {
       try { setIcon(b, icon); } catch (e) {}
       b.setAttribute("aria-label", title);
       b.setAttribute("title", title);
-      b.addEventListener("click", () => { try { fn(); } catch (e) { console.warn(e); } });
+      b.addEventListener("click", (e) => { try { fn(e); } catch (err) { console.warn(err); } });
     };
-    viewBtn("columns-2", "Open Folio (split)", () => this.plugin.activateFolio());
-    viewBtn("file-text", "Open draft script", () => this.plugin.openDraftScript());
-    viewBtn("layout-dashboard", "Open Beat Board", () => this.plugin.openBeatBoard());
+    viewBtn("columns-2", "Split view", (e) => this.openSplitMenu(e));
     viewBtn("list-tree", "Build outline from draft", () => this.plugin.buildOutlineFromDraft());
     viewBtn("pencil-ruler", "Writer Tools", () => this.plugin.openWriterTools());
     viewBtn("focus", "Focus Mode", () => this.plugin.openFocusMode());
@@ -259,7 +423,7 @@ export class TimelineBand {
 
   renderLane(inner, view, outline, lane, laneIndex, book) {
     const row = inner.createDiv({ cls: "folio-tl-row folio-tl-lane" });
-    const label = row.createSpan({ cls: "folio-tl-label is-lane", text: lane.name || `Outline ${laneIndex + 1}` });
+    const label = row.createSpan({ cls: "folio-tl-label is-lane", text: lane.name || `Lane ${laneIndex + 1}` });
     label.setAttribute("title", "Click to rename");
     label.addEventListener("click", () => this.renameLane(book, laneIndex, lane.name));
     if (outline.lanes.length > 1) {
@@ -365,7 +529,7 @@ export class TimelineBand {
 
   renderScriptLane(inner, view, book) {
     const row = inner.createDiv({ cls: "folio-tl-row folio-tl-script" });
-    row.createSpan({ cls: "folio-tl-label is-script", text: "Script" });
+    row.createSpan({ cls: "folio-tl-label is-script", text: "Draft" });
     const track = row.createDiv({ cls: "folio-tl-track" });
     track.style.width = view.width + "px";
 
@@ -384,7 +548,7 @@ export class TimelineBand {
       bar.dataset.id = scene.id || "";
       bar.createSpan({ cls: "folio-tl-scene-title", text: scene.title });
       bar.setAttribute("title", scene.title);
-      bar.addEventListener("click", () => { if (!this._dragging) this.revealAtLine(fullPath, scene.line); });
+      bar.addEventListener("click", () => { if (!this._dragging) this._revealScene(bar, fullPath, scene.line); });
       this.attachSceneDrag(bar, book, scene);
     }
 
@@ -457,6 +621,16 @@ export class TimelineBand {
     modal.open();
   }
 
+  /** Navigate to a scene: scroll the Paged editor in place if the strip lives in it,
+   *  otherwise open the file at that line in the normal editor. */
+  _revealScene(barEl, fullPath, line) {
+    if (barEl && barEl.closest(".folio-paged-strip")) {
+      this.plugin.scrollPagedToLine(fullPath, line || 0);
+    } else {
+      this.revealAtLine(fullPath, line);
+    }
+  }
+
   async revealAtLine(fullPath, line) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(fullPath);
@@ -523,7 +697,7 @@ export class TimelineBand {
 
   /** Reposition all bars/ticks/playhead for a new zoom without a rebuild (live drag). */
   applyZoomLive(band, v) {
-    const pp = Number(band.dataset.pp) || 280;
+    const pp = Number(band.dataset.pp) || 648; // page content height (pt); was words/page
     const total = Number(band.dataset.total) || 1;
     const pxUnit = v / pp;
     const width = Math.max(total * pxUnit, v) + "px";

@@ -67,12 +67,13 @@ function sceneStatusLabel(id) {
   var _a;
   return ((_a = SCENE_STATUSES.find((s) => s.id === id)) == null ? void 0 : _a.label) || null;
 }
-var VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, BEAT_BOARD_VIEW_TYPE, PROJECT_TYPES, DEFAULT_SETTINGS, DEFAULT_BOOK_CONFIG, SCENE_STATUSES, SCENE_STATUS_CYCLE;
+var VIEW_TYPE, WRITER_TOOLS_VIEW_TYPE, BEAT_BOARD_VIEW_TYPE, PAGED_VIEW_TYPE, PROJECT_TYPES, DEFAULT_SETTINGS, DEFAULT_BOOK_CONFIG, SCENE_STATUSES, SCENE_STATUS_CYCLE;
 var init_constants = __esm({
   "src/constants/index.js"() {
     VIEW_TYPE = "folio-view";
     WRITER_TOOLS_VIEW_TYPE = "folio-writer-tools";
     BEAT_BOARD_VIEW_TYPE = "folio-beat-board";
+    PAGED_VIEW_TYPE = "folio-paged";
     PROJECT_TYPES = {
       BOOK: "book",
       SCRIPT: "script",
@@ -90,6 +91,8 @@ var init_constants = __esm({
       focusSoundEnabled: true,
       focusPomodoroEnabled: false,
       focusBreakMinutes: 5,
+      nativePagination: true,
+      // Script — Normal (page breaks in the native editor) vs Speed (off)
       projectTemplates: [
         {
           id: "book",
@@ -190,11 +193,11 @@ var init_constants = __esm({
 });
 
 // src/modals/projectTypeSelectorModal.js
-var import_obsidian7, ProjectTypeSelectorModal;
+var import_obsidian9, ProjectTypeSelectorModal;
 var init_projectTypeSelectorModal = __esm({
   "src/modals/projectTypeSelectorModal.js"() {
-    import_obsidian7 = require("obsidian");
-    ProjectTypeSelectorModal = class extends import_obsidian7.Modal {
+    import_obsidian9 = require("obsidian");
+    ProjectTypeSelectorModal = class extends import_obsidian9.Modal {
       constructor(app, onSelect, templates = null) {
         super(app);
         this.onSelect = onSelect;
@@ -224,7 +227,7 @@ var init_projectTypeSelectorModal = __esm({
       createProjectOption(container, { title, description, icon, value }) {
         const option = container.createDiv({ cls: "folio-project-type-option" });
         const iconEl = option.createDiv({ cls: "folio-project-type-icon" });
-        (0, import_obsidian7.setIcon)(iconEl, icon);
+        (0, import_obsidian9.setIcon)(iconEl, icon);
         const content = option.createDiv({ cls: "folio-project-type-content" });
         content.createEl("div", { text: title, cls: "folio-project-type-title" });
         content.createEl("div", { text: description, cls: "folio-project-type-description" });
@@ -246,13 +249,13 @@ var newBookModal_exports = {};
 __export(newBookModal_exports, {
   NewBookModal: () => NewBookModal
 });
-var import_obsidian8, NewBookModal;
+var import_obsidian10, NewBookModal;
 var init_newBookModal = __esm({
   "src/modals/newBookModal.js"() {
-    import_obsidian8 = require("obsidian");
+    import_obsidian10 = require("obsidian");
     init_constants();
     init_projectTypeSelectorModal();
-    NewBookModal = class extends import_obsidian8.Modal {
+    NewBookModal = class extends import_obsidian10.Modal {
       constructor(plugin) {
         var _a;
         super(plugin.app);
@@ -401,12 +404,12 @@ var init_newBookModal = __esm({
           var _a2, _b2;
           const title = titleInput.value.trim();
           if (!title) {
-            new import_obsidian8.Notice("Please enter a project title.");
+            new import_obsidian10.Notice("Please enter a project title.");
             return;
           }
           const nameError = (_b2 = (_a2 = this.plugin.bookService) == null ? void 0 : _a2.validateName) == null ? void 0 : _b2.call(_a2, title);
           if (nameError) {
-            new import_obsidian8.Notice(`Invalid project name: ${nameError}`);
+            new import_obsidian10.Notice(`Invalid project name: ${nameError}`);
             return;
           }
           let projectType = this.selectedProjectType;
@@ -432,7 +435,7 @@ var init_newBookModal = __esm({
           try {
             await this.plugin.createBook(title, projectType, templateStructure);
           } catch (e) {
-            new import_obsidian8.Notice(`Failed to create project: ${e.message || e}`);
+            new import_obsidian10.Notice(`Failed to create project: ${e.message || e}`);
             return;
           }
           const basePath = this.plugin.settings && this.plugin.settings.basePath ? String(this.plugin.settings.basePath).replace(/\/+/g, "/") : "projects";
@@ -638,12 +641,12 @@ var switchBookModal_exports = {};
 __export(switchBookModal_exports, {
   SwitchBookModal: () => SwitchBookModal
 });
-var import_obsidian9, SwitchBookModal;
+var import_obsidian11, SwitchBookModal;
 var init_switchBookModal = __esm({
   "src/modals/switchBookModal.js"() {
-    import_obsidian9 = require("obsidian");
+    import_obsidian11 = require("obsidian");
     init_projectListUtils();
-    SwitchBookModal = class extends import_obsidian9.Modal {
+    SwitchBookModal = class extends import_obsidian11.Modal {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -681,7 +684,7 @@ var init_switchBookModal = __esm({
             const rightCol = row.createDiv({ cls: "folio-switch-right" });
             const titleRow = leftCol.createDiv({ cls: "folio-switch-title-row" });
             const iconEl = titleRow.createSpan({ cls: "folio-switch-icon" });
-            (0, import_obsidian9.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
+            (0, import_obsidian11.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
             titleRow.createSpan({ text: summary.displayTitle || book.name || "Untitled", cls: "folio-switch-title" });
             if (summary.subtitle) {
               titleRow.createSpan({ text: " - ", cls: "folio-switch-dash" });
@@ -732,11 +735,11 @@ var init_switchBookModal = __esm({
 });
 
 // src/modals/confirmModal.js
-var import_obsidian10, ConfirmModal;
+var import_obsidian12, ConfirmModal;
 var init_confirmModal = __esm({
   "src/modals/confirmModal.js"() {
-    import_obsidian10 = require("obsidian");
-    ConfirmModal = class extends import_obsidian10.Modal {
+    import_obsidian12 = require("obsidian");
+    ConfirmModal = class extends import_obsidian12.Modal {
       constructor(app, { title, message, confirmText, onConfirm }) {
         super(app);
         this.title = title;
@@ -766,11 +769,11 @@ var init_confirmModal = __esm({
 });
 
 // src/modals/editBookModal.js
-var import_obsidian11, EditBookModal;
+var import_obsidian13, EditBookModal;
 var init_editBookModal = __esm({
   "src/modals/editBookModal.js"() {
-    import_obsidian11 = require("obsidian");
-    EditBookModal = class extends import_obsidian11.Modal {
+    import_obsidian13 = require("obsidian");
+    EditBookModal = class extends import_obsidian13.Modal {
       constructor(plugin, book) {
         super(plugin.app);
         this.plugin = plugin;
@@ -1102,14 +1105,14 @@ var manageBooksModal_exports = {};
 __export(manageBooksModal_exports, {
   ManageBooksModal: () => ManageBooksModal
 });
-var import_obsidian12, ManageBooksModal;
+var import_obsidian14, ManageBooksModal;
 var init_manageBooksModal = __esm({
   "src/modals/manageBooksModal.js"() {
-    import_obsidian12 = require("obsidian");
+    import_obsidian14 = require("obsidian");
     init_confirmModal();
     init_editBookModal();
     init_projectListUtils();
-    ManageBooksModal = class extends import_obsidian12.Modal {
+    ManageBooksModal = class extends import_obsidian14.Modal {
       constructor(plugin) {
         super(plugin.app);
         this.plugin = plugin;
@@ -1148,19 +1151,19 @@ var init_manageBooksModal = __esm({
             const right = card.createDiv({ cls: "folio-manage-right" });
             const coverWrap = left.createDiv({ cls: "folio-manage-cover" });
             try {
-              const coverFile = book.cover instanceof import_obsidian12.TFile ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
-              if (coverFile instanceof import_obsidian12.TFile) {
+              const coverFile = book.cover instanceof import_obsidian14.TFile ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
+              if (coverFile instanceof import_obsidian14.TFile) {
                 const url = this.plugin.app.vault.getResourcePath(coverFile);
                 coverWrap.style.backgroundImage = `url("${url}")`;
               }
             } catch (e) {
             }
             try {
-              const coverFile = book.cover instanceof import_obsidian12.TFile ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
-              if (!(coverFile instanceof import_obsidian12.TFile)) {
+              const coverFile = book.cover instanceof import_obsidian14.TFile ? book.cover : book.cover ? this.plugin.app.vault.getAbstractFileByPath(book.cover) : null;
+              if (!(coverFile instanceof import_obsidian14.TFile)) {
                 coverWrap.addClass("folio-manage-cover-placeholder");
                 const iconEl = coverWrap.createDiv({ cls: "folio-manage-cover-icon" });
-                (0, import_obsidian12.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
+                (0, import_obsidian14.setIcon)(iconEl, getProjectTypeIcon(this.plugin, summary.projectType));
               }
             } catch (e) {
             }
@@ -1230,10 +1233,10 @@ var helpModal_exports = {};
 __export(helpModal_exports, {
   HelpModal: () => HelpModal
 });
-var import_obsidian13, HELP_CONTENT, HelpModal;
+var import_obsidian15, HELP_CONTENT, HelpModal;
 var init_helpModal = __esm({
   "src/modals/helpModal.js"() {
-    import_obsidian13 = require("obsidian");
+    import_obsidian15 = require("obsidian");
     HELP_CONTENT = {
       en: {
         title: "Help",
@@ -1261,7 +1264,7 @@ var init_helpModal = __esm({
               { type: "p", text: "The Folio View in the left sidebar is your project's home base:" },
               { type: "ul", items: [
                 "See the title, author, description and cover at a glance.",
-                "Watch live stats: words today, total vs. target, completion and writing streak.",
+                "Watch live stats: streak, words today, total vs. target, completion. Click \u201CWriting stats\u201D for the full panel \u2014 streaks, peak day, Words/Pages over Week/Month/Year, and a daily goal.",
                 "Browse and open every part of the manuscript.",
                 "Jump to Writer Tools for Focus Mode and Export."
               ] },
@@ -1346,12 +1349,26 @@ var init_helpModal = __esm({
             blocks: [
               { type: "p", text: "A page-scaled strip sits above your script (and at the top of the Beat Board), mirroring Final Draft's Outline Editor:" },
               { type: "ul", items: [
-                "Planning lanes (Outline 1, Outline 2\u2026) hold free beats \u2014 arcs and subplots you position and resize over the page scale. Double-click a lane to add one, drag to move, drag an edge to resize, click to edit (title, goal, notes, colour).",
-                "The Script lane below is built from the current draft's scenes, sized by length \u2014 a live map of the manuscript.",
+                "Planning lanes (Lane 1, Lane 2\u2026) hold free beats \u2014 arcs and subplots you position and resize over the page scale. Double-click a lane to add one, drag to move, drag an edge to resize, click to edit (title, goal, notes, colour).",
+                "The Draft lane below is built from the current draft's scenes, sized by length \u2014 a live map of the manuscript.",
                 "A playhead follows your cursor and the ruler marks pages; drag the zoom slider to rescale.",
-                "Toolbar (left): open Folio split, open the draft script (file view), open the Beat Board, build the outline, Writer Tools and Focus Mode \u2014 plus \u201C+ lane\u201D and the current-draft switcher."
+                "Toolbar (left): a Split menu, build-outline, Writer Tools and Focus Mode \u2014 plus \u201C+ lane\u201D and the current-draft switcher. Switching views lives in the single Views menu in the document header (next to Obsidian's edit/read toggle): Normal / Numbered / Paged, Beat Board, and more soon. Views in the header, tools in the strip."
               ] },
               { type: "tip", text: "Beats are saved per draft, so each draft keeps its own planning. The strip follows the current draft no matter which file you have open." }
+            ]
+          },
+          {
+            icon: "book-open",
+            title: "Paged View (real pages)",
+            blocks: [
+              { type: "p", text: "Paged View shows the current draft as real US-Letter pages \u2014 what you'll export. Open it from the Views menu in the document header (next to Obsidian's edit/read toggle), or run \u201COpen Paged View\u201D." },
+              { type: "ul", items: [
+                "Screenplay drafts get a continuous, natively-typed editor with industry formatting (Courier, scene/character/dialogue indents) and real page breaks \u2014 type, and the pages reflow.",
+                "Page numbers, the strip ruler and the PDF all use one shared engine, so a scene on page 12 is on page 12 everywhere.",
+                "Click a scene in the strip to jump straight to it in the pages; the playhead shows where you are.",
+                "Prose drafts show a page preview (click a line to edit) \u2014 continuous prose typing comes later."
+              ] },
+              { type: "tip", text: "Three document modes, all from the Views menu: Normal = the plain editor; Numbered = the editor with page-break markers + page numbers; Paged = these real sheets. The frontmatter is hidden in Paged mode; edit it in Normal/Numbered." }
             ]
           },
           {
@@ -1362,7 +1379,7 @@ var init_helpModal = __esm({
               { type: "ul", items: [
                 "Open it from the strip's dashboard button, or run \u201COpen Beat Board\u201D.",
                 "Drag cards anywhere, drag a corner to resize, click to edit, and use \u201C+ Beat\u201D to add.",
-                "Cards are coloured and grouped by lane (Outline 1, Outline 2\u2026), matching the strip.",
+                "Cards are coloured and grouped by lane (Lane 1, Lane 2\u2026), matching the strip.",
                 "The outline strip is pinned at the top of the board too, so structure stays in view while you think."
               ] },
               { type: "tip", text: "Edits sync both ways with the strip in real time. From a beat you can \u201CSend to script\u201D to drop an arc marker into the manuscript." }
@@ -1409,7 +1426,8 @@ var init_helpModal = __esm({
                 "#### \u2192 Transition",
                 "##### \u2192 Act / Section"
               ] },
-              { type: "tip", text: "The same mapping is used when exporting to PDF and Final Draft \u2014 no external plugins required." }
+              { type: "p", text: "You usually don't add this by hand: Film/TV templates already mark the draft as screenplay (Settings \u2192 Template options \u2192 the \u201CScreenplay format\u201D selector), so new files in the draft are formatted automatically. The \u201CNew file\u201D dialog also has a Screenplay toggle." },
+              { type: "tip", text: "Exporting a screenplay to PDF lays it out as true script pages (US-Letter, Courier, standard margins) using the same engine as Paged View \u2014 so the PDF's pages match what you see. Final Draft (.fdx) export uses the same heading mapping." }
             ]
           }
         ],
@@ -1446,7 +1464,7 @@ var init_helpModal = __esm({
               { type: "p", text: "La Vista Folio de la barra lateral izquierda es el centro de tu proyecto:" },
               { type: "ul", items: [
                 "Ves de un vistazo el t\xEDtulo, el autor, la descripci\xF3n y la portada.",
-                "Sigues las estad\xEDsticas en vivo: palabras de hoy, total frente al objetivo, progreso y racha.",
+                "Sigues las estad\xEDsticas en vivo: racha, palabras de hoy, total frente al objetivo, progreso. Pulsa \xABWriting stats\xBB para el panel completo \u2014 rachas, d\xEDa punta, Words/Pages por Semana/Mes/A\xF1o y una meta diaria.",
                 "Recorres y abres cada parte del manuscrito.",
                 "Saltas a las Herramientas de escritura para el Modo enfoque y la Exportaci\xF3n."
               ] },
@@ -1531,12 +1549,26 @@ var init_helpModal = __esm({
             blocks: [
               { type: "p", text: "Una tira escalada por p\xE1ginas se sit\xFAa sobre tu guion (y en la parte superior del Beat Board), inspirada en el Editor de esquema de Final Draft:" },
               { type: "ul", items: [
-                "Los carriles de planificaci\xF3n (Outline 1, Outline 2\u2026) contienen beats libres: arcos y subtramas que colocas y redimensionas sobre la escala de p\xE1ginas. Doble clic en un carril para a\xF1adir, arrastra para mover, arrastra un borde para redimensionar, clic para editar (t\xEDtulo, objetivo, notas, color).",
-                "El carril Script de abajo se construye con las escenas del borrador actual, dimensionadas por longitud: un mapa vivo del manuscrito.",
+                "Los carriles de planificaci\xF3n (Lane 1, Lane 2\u2026) contienen beats libres: arcos y subtramas que colocas y redimensionas sobre la escala de p\xE1ginas. Doble clic en un carril para a\xF1adir, arrastra para mover, arrastra un borde para redimensionar, clic para editar (t\xEDtulo, objetivo, notas, color).",
+                "El carril Draft de abajo se construye con las escenas del borrador actual, dimensionadas por longitud: un mapa vivo del manuscrito.",
                 "Un cursor (playhead) sigue tu posici\xF3n y la regla marca las p\xE1ginas; arrastra el control de zoom para reescalar.",
-                "Barra (izquierda): abrir Folio en split, abrir el guion del borrador (vista de archivo), abrir el Beat Board, construir el esquema, Herramientas de escritura y Modo enfoque \u2014 adem\xE1s de \xAB+ lane\xBB y el selector de borrador actual."
+                "Barra (izquierda): un men\xFA Split, construir esquema, Herramientas de escritura y Modo enfoque \u2014 adem\xE1s de \xAB+ lane\xBB y el selector de borrador actual. El cambio de vista vive en un \xFAnico men\xFA Views en la cabecera del documento (junto al toggle de edici\xF3n/lectura de Obsidian): Normal / Numbered / Paged, Beat Board, y m\xE1s pronto. Vistas en la cabecera, herramientas en el strip."
               ] },
               { type: "tip", text: "Los beats se guardan por borrador, as\xED cada borrador conserva su planificaci\xF3n. La tira sigue al borrador actual sin importar qu\xE9 archivo tengas abierto." }
+            ]
+          },
+          {
+            icon: "book-open",
+            title: "Vista paginada (p\xE1ginas reales)",
+            blocks: [
+              { type: "p", text: "La Vista paginada muestra el borrador actual como p\xE1ginas reales US-Letter \u2014 lo que vas a exportar. \xC1brela desde el men\xFA Views en la cabecera del documento (junto al toggle de edici\xF3n/lectura de Obsidian), o ejecuta \xABOpen Paged View\xBB." },
+              { type: "ul", items: [
+                "Los guiones tienen un editor continuo, de escritura nativa, con formato profesional (Courier, sangr\xEDas de escena/personaje/di\xE1logo) y saltos de p\xE1gina reales \u2014 escribes y las p\xE1ginas se recomponen.",
+                "Los n\xFAmeros de p\xE1gina, la regla de la tira y el PDF usan un mismo motor, as\xED que una escena en la p\xE1gina 12 est\xE1 en la 12 en todas partes.",
+                "Haz clic en una escena de la tira para saltar a ella en las p\xE1ginas; el playhead muestra d\xF3nde est\xE1s.",
+                "Los borradores en prosa muestran una previsualizaci\xF3n paginada (clic en una l\xEDnea para editar) \u2014 la escritura continua de prosa llegar\xE1 m\xE1s adelante."
+              ] },
+              { type: "tip", text: "Tres modos de documento, todos en el men\xFA Views: Normal = el editor liso; Numbered = el editor con marcas de salto y n\xFAmeros de p\xE1gina; Paged = estas hojas reales. El frontmatter se oculta en modo Paged; ed\xEDtalo en Normal/Numbered." }
             ]
           },
           {
@@ -1547,7 +1579,7 @@ var init_helpModal = __esm({
               { type: "ul", items: [
                 "\xC1brelo desde el bot\xF3n de panel de la tira, o ejecuta \xABOpen Beat Board\xBB.",
                 "Arrastra las tarjetas a cualquier sitio, arrastra una esquina para redimensionar, clic para editar y usa \xAB+ Beat\xBB para a\xF1adir.",
-                "Las tarjetas se colorean y agrupan por carril (Outline 1, Outline 2\u2026), igual que la tira.",
+                "Las tarjetas se colorean y agrupan por carril (Lane 1, Lane 2\u2026), igual que la tira.",
                 "La tira de esquema tambi\xE9n queda fijada arriba del tablero, as\xED la estructura permanece a la vista mientras piensas."
               ] },
               { type: "tip", text: "Las ediciones se sincronizan en ambos sentidos con la tira en tiempo real. Desde un beat puedes \xABSend to script\xBB para insertar un marcador de arco en el manuscrito." }
@@ -1594,7 +1626,8 @@ var init_helpModal = __esm({
                 "#### \u2192 Transici\xF3n",
                 "##### \u2192 Acto / Secci\xF3n"
               ] },
-              { type: "tip", text: "La misma correspondencia se usa al exportar a PDF y a Final Draft \u2014 sin plugins externos." }
+              { type: "p", text: "Normalmente no lo a\xF1ades a mano: las plantillas de Pel\xEDcula/TV ya marcan el borrador como guion (Ajustes \u2192 Opciones de plantilla \u2192 el selector \xABScreenplay format\xBB), as\xED que los archivos nuevos del borrador se formatean solos. El di\xE1logo \xABNew file\xBB tambi\xE9n tiene un interruptor de Guion." },
+              { type: "tip", text: "Al exportar un guion a PDF se compone como p\xE1ginas de guion reales (US-Letter, Courier, m\xE1rgenes est\xE1ndar) con el mismo motor que la Vista paginada \u2014 as\xED el PDF coincide con lo que ves. El export a Final Draft (.fdx) usa la misma correspondencia de encabezados." }
             ]
           }
         ],
@@ -1606,7 +1639,7 @@ var init_helpModal = __esm({
         ]
       }
     };
-    HelpModal = class extends import_obsidian13.Modal {
+    HelpModal = class extends import_obsidian15.Modal {
       constructor(plugin) {
         var _a;
         super(plugin.app);
@@ -1664,7 +1697,7 @@ var init_helpModal = __esm({
         const cardHeader = el.createDiv({ cls: "help-card-header" });
         const icon = cardHeader.createSpan({ cls: "help-card-icon" });
         try {
-          (0, import_obsidian13.setIcon)(icon, card.icon);
+          (0, import_obsidian15.setIcon)(icon, card.icon);
         } catch (e) {
         }
         cardHeader.createEl("h3", { text: card.title });
@@ -1716,11 +1749,11 @@ var textInputModal_exports = {};
 __export(textInputModal_exports, {
   TextInputModal: () => TextInputModal
 });
-var import_obsidian14, TextInputModal;
+var import_obsidian16, TextInputModal;
 var init_textInputModal = __esm({
   "src/modals/textInputModal.js"() {
-    import_obsidian14 = require("obsidian");
-    TextInputModal = class extends import_obsidian14.Modal {
+    import_obsidian16 = require("obsidian");
+    TextInputModal = class extends import_obsidian16.Modal {
       constructor(app, {
         title,
         placeholder,
@@ -1788,7 +1821,7 @@ __export(main_exports, {
   default: () => FolioPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian22 = require("obsidian");
+var import_obsidian24 = require("obsidian");
 
 // src/services/configService.js
 init_constants();
@@ -2851,8 +2884,8 @@ var BookService = class {
           const filePath = `${itemPath}.md`;
           if (!vault.getAbstractFileByPath(filePath)) {
             const isScreenplay = itemScreenplay || this.shouldUseScreenplayClass(projectType, item.title, itemInDraft);
-            const frontmatter = this.buildFrontmatter({ projectType, screenplay: isScreenplay });
-            await vault.create(filePath, frontmatter);
+            const frontmatter2 = this.buildFrontmatter({ projectType, screenplay: isScreenplay });
+            await vault.create(filePath, frontmatter2);
           }
         }
       }
@@ -3047,8 +3080,8 @@ projectType: script
     }
     const scene1Path = `${episode1Path}/Scene 1.md`;
     if (!vault.getAbstractFileByPath(scene1Path)) {
-      const frontmatter = this.buildFrontmatter({ projectType: PROJECT_TYPES.SCRIPT, screenplay: true });
-      await vault.create(scene1Path, frontmatter);
+      const frontmatter2 = this.buildFrontmatter({ projectType: PROJECT_TYPES.SCRIPT, screenplay: true });
+      await vault.create(scene1Path, frontmatter2);
     }
   }
   /**
@@ -3074,8 +3107,8 @@ projectType: film
     }
     const scene1Path = `${sequence1Path}/Scene 1.md`;
     if (!vault.getAbstractFileByPath(scene1Path)) {
-      const frontmatter = this.buildFrontmatter({ projectType: PROJECT_TYPES.FILM, screenplay: true });
-      await vault.create(scene1Path, frontmatter);
+      const frontmatter2 = this.buildFrontmatter({ projectType: PROJECT_TYPES.FILM, screenplay: true });
+      await vault.create(scene1Path, frontmatter2);
     }
   }
   /**
@@ -3194,13 +3227,351 @@ projectType: film
 
 // src/services/pdfExportService.js
 var import_obsidian3 = require("obsidian");
+
+// src/services/draftModel.js
+function findDrafts(tree) {
+  const out = [];
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (n.draft && (n.type === "group" || n.type === "file"))
+        out.push(n);
+      if (n.children)
+        walk(n.children);
+    }
+  };
+  walk(tree || []);
+  return out;
+}
+function findGroupByPath(tree, path) {
+  let found = null;
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (found)
+        return;
+      if (n.type === "group" && n.path === path) {
+        found = n;
+        return;
+      }
+      if (n.children)
+        walk(n.children);
+    }
+  };
+  walk(tree || []);
+  return found;
+}
+var isAncestorPath = (folder, file) => file === folder || file.startsWith(folder + "/");
+function draftNodeForFile(tree, relPath) {
+  if (!relPath)
+    return null;
+  const drafts = findDrafts(tree);
+  let best = null;
+  for (const d of drafts) {
+    if (d.path && isAncestorPath(d.path, relPath) && (!best || d.path.length > best.path.length))
+      best = d;
+  }
+  if (best)
+    return best;
+  if (drafts.length)
+    return null;
+  const i = relPath.indexOf("/");
+  if (i === -1)
+    return null;
+  return findGroupByPath(tree, relPath.slice(0, i));
+}
+function draftScopeNodes(draftNode) {
+  if (!draftNode)
+    return null;
+  return draftNode.type === "file" ? [draftNode] : draftNode.children || [];
+}
+function resolveCurrentDraft(tree, currentDraftPath) {
+  const drafts = findDrafts(tree);
+  if (!drafts.length)
+    return null;
+  if (currentDraftPath) {
+    const match = drafts.find((d) => d.path === currentDraftPath);
+    if (match)
+      return match;
+  }
+  return drafts[0];
+}
+function draftShelfNode(tree) {
+  let found = null;
+  const walk = (nodes) => {
+    for (const n of nodes || []) {
+      if (found)
+        return;
+      if (n.type === "group" && (n.shelf || /^drafts$/i.test(n.title || ""))) {
+        found = n;
+        return;
+      }
+      if (n.children)
+        walk(n.children);
+    }
+  };
+  walk(tree || []);
+  return found;
+}
+
+// src/services/layoutModel.js
+var PT_PER_INCH = 72;
+var inToPt = (n) => n * PT_PER_INCH;
+var PAGE_SIZES = {
+  letter: { width: inToPt(8.5), height: inToPt(11) },
+  a4: { width: 595.28, height: 841.89 }
+  // 210×297mm
+};
+var SCREENPLAY_PROFILE = {
+  id: "screenplay",
+  page: { size: "letter", margins: { top: inToPt(1), right: inToPt(1), bottom: inToPt(1), left: inToPt(1.5) } },
+  font: { family: '"Courier New", Courier, monospace', sizePt: 12, lineHeight: 1, cpi: 10 },
+  // Screenplay spacing comes from the literal blank lines in the markdown (kept as
+  // "spacer" rows), so per-element spaceBefore/After is 0 — otherwise the space is
+  // counted twice and pages inflate. marginLeft/marginRight are inches.
+  elements: {
+    spacer: { marginLeft: 0, marginRight: 0, align: "left", upper: false, spaceBefore: 0, spaceAfter: 0 },
+    scene: { marginLeft: 0, marginRight: 0, align: "left", upper: true, spaceBefore: 0, spaceAfter: 0, keepWithNext: true },
+    action: { marginLeft: 0, marginRight: 0, align: "left", upper: false, spaceBefore: 0, spaceAfter: 0 },
+    character: { marginLeft: 2, marginRight: 0, align: "left", upper: true, spaceBefore: 0, spaceAfter: 0, keepWithNext: true },
+    parenthetical: { marginLeft: 1.5, marginRight: 1.5, align: "left", upper: false, spaceBefore: 0, spaceAfter: 0, keepWithNext: true },
+    dialogue: { marginLeft: 1, marginRight: 1.5, align: "left", upper: false, spaceBefore: 0, spaceAfter: 0 },
+    transition: { marginLeft: 0, marginRight: 0, align: "right", upper: true, spaceBefore: 0, spaceAfter: 0 },
+    section: { marginLeft: 0, marginRight: 0, align: "left", upper: true, spaceBefore: 0, spaceAfter: 0, bold: true }
+  }
+};
+var PROSE_PROFILE = {
+  id: "prose",
+  page: { size: "letter", margins: { top: inToPt(1), right: inToPt(1), bottom: inToPt(1), left: inToPt(1) } },
+  font: { family: "Georgia, 'Times New Roman', serif", sizePt: 12, lineHeight: 1.5, cpi: 14 },
+  elements: {
+    chapter: { marginLeft: 0, marginRight: 0, align: "center", upper: false, spaceBefore: 4, spaceAfter: 2, bold: true, pageBreakBefore: true, sizeScale: 1.6 },
+    section: { marginLeft: 0, marginRight: 0, align: "left", upper: false, spaceBefore: 1.5, spaceAfter: 0.5, bold: true, sizeScale: 1.15 },
+    paragraph: { marginLeft: 0, marginRight: 0, align: "left", upper: false, spaceBefore: 0, spaceAfter: 0, firstLineIndent: 0.3 },
+    blockquote: { marginLeft: 0.5, marginRight: 0.5, align: "left", upper: false, spaceBefore: 0.5, spaceAfter: 0.5 }
+  }
+};
+function contentBox(profile) {
+  const size = PAGE_SIZES[profile.page.size] || PAGE_SIZES.letter;
+  const m = profile.page.margins;
+  return {
+    width: size.width - m.left - m.right,
+    height: size.height - m.top - m.bottom,
+    pageWidth: size.width,
+    pageHeight: size.height
+  };
+}
+function cleanLine(raw) {
+  return raw.replace(/\s+$/, "").replace(/\s\^folio[A-Za-z0-9]+$/, "");
+}
+function splitFrontmatter(text) {
+  const lines = (text || "").replace(/\r\n/g, "\n").split("\n");
+  if (lines[0] !== "---")
+    return { lines, offset: 0 };
+  for (let i = 1; i < lines.length; i++) {
+    if (lines[i] === "---")
+      return { lines: lines.slice(i + 1), offset: i + 1 };
+  }
+  return { lines, offset: 0 };
+}
+function parseScreenplayBlocks(text, ctx = {}) {
+  const { lines, offset } = splitFrontmatter(text);
+  const keepBlanks = !!ctx.keepBlanks;
+  const out = [];
+  let inDialogue = false;
+  for (let i = 0; i < lines.length; i++) {
+    const srcLine = offset + i;
+    const line = cleanLine(lines[i]);
+    if (line.trim() === "") {
+      inDialogue = false;
+      if (keepBlanks)
+        out.push({ type: "spacer", text: "", raw: "", prefix: "", file: ctx.file, startLine: srcLine, endLine: srcLine });
+      continue;
+    }
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    const mk = (type, text2, raw, prefix) => ({ type, text: text2, raw, prefix, file: ctx.file, startLine: srcLine, endLine: srcLine });
+    if (!h) {
+      out.push(mk(inDialogue ? "dialogue" : "action", line, line, ""));
+      continue;
+    }
+    const marks = h[1];
+    const t = h[2].trim();
+    if (!t)
+      continue;
+    const level = marks.length;
+    if (level === 1) {
+      out.push(mk("scene", t.toUpperCase(), t, "# "));
+      inDialogue = false;
+    } else if (level === 2) {
+      out.push(mk("character", t.toUpperCase(), t, "## "));
+      inDialogue = true;
+    } else if (level === 3) {
+      const inner = t.replace(/^\(+|\)+$/g, "").trim();
+      out.push(mk("parenthetical", `(${inner})`, inner, "### "));
+      inDialogue = true;
+    } else if (level === 4) {
+      out.push(mk("transition", t.toUpperCase(), t, "#### "));
+      inDialogue = false;
+    } else {
+      out.push(mk("section", t, t, marks + " "));
+      inDialogue = false;
+    }
+  }
+  return out;
+}
+function parseProseBlocks(text, ctx = {}) {
+  const { lines, offset } = splitFrontmatter(text);
+  const out = [];
+  let para = null;
+  const flush = () => {
+    if (para) {
+      const text2 = para.parts.join(" ");
+      out.push({ type: para.type, text: text2, raw: text2, prefix: para.prefix, file: ctx.file, startLine: para.startLine, endLine: para.endLine });
+      para = null;
+    }
+  };
+  for (let i = 0; i < lines.length; i++) {
+    const srcLine = offset + i;
+    const line = cleanLine(lines[i]);
+    if (line.trim() === "") {
+      flush();
+      continue;
+    }
+    const h = line.match(/^(#{1,6})\s+(.*)$/);
+    if (h) {
+      flush();
+      const t = h[2].trim();
+      if (!t)
+        continue;
+      out.push({ type: h[1].length <= 2 ? "chapter" : "section", text: t, raw: t, prefix: h[1] + " ", file: ctx.file, startLine: srcLine, endLine: srcLine });
+      continue;
+    }
+    const isQuote = /^>\s?/.test(line);
+    const type = isQuote ? "blockquote" : "paragraph";
+    const body = isQuote ? line.replace(/^>\s?/, "") : line;
+    if (para && para.type === type) {
+      para.parts.push(body);
+      para.endLine = srcLine;
+    } else {
+      flush();
+      para = { type, parts: [body], prefix: isQuote ? "> " : "", startLine: srcLine, endLine: srcLine };
+    }
+  }
+  flush();
+  return out;
+}
+function charsPerLine(profile, elementType) {
+  const cb = contentBox(profile);
+  const el = profile.elements[elementType] || profile.elements.action || profile.elements.paragraph || {};
+  const widthIn = cb.width / PT_PER_INCH - (el.marginLeft || 0) - (el.marginRight || 0);
+  const cpi = profile.font.cpi || 10;
+  return Math.max(1, Math.floor(widthIn * cpi));
+}
+function blockMetrics(profile, block) {
+  const el = profile.elements[block.type] || profile.elements.action || profile.elements.paragraph || {};
+  const sizePt = profile.font.sizePt * (el.sizeScale || 1);
+  const lineStep = sizePt * (profile.font.lineHeight || 1);
+  const cpl = charsPerLine(profile, block.type);
+  const textLines = String(block.text || "").split("\n");
+  let wrapped = 0;
+  for (const tl of textLines)
+    wrapped += Math.max(1, Math.ceil(tl.length / cpl));
+  const lineHeightPt = profile.font.sizePt * (profile.font.lineHeight || 1);
+  const spaceBefore = (el.spaceBefore || 0) * lineHeightPt;
+  const spaceAfter = (el.spaceAfter || 0) * lineHeightPt;
+  return { lines: wrapped, textHeight: wrapped * lineStep, spaceBefore, spaceAfter, height: spaceBefore + wrapped * lineStep + spaceAfter, lineStep };
+}
+function paginate(blocks, profile) {
+  const cb = contentBox(profile);
+  const contentHeightPt = cb.height;
+  const pages = [];
+  let cur = { index: 0, blocks: [], heightPt: 0 };
+  const pushPage = () => {
+    pages.push(cur);
+    cur = { index: pages.length, blocks: [], heightPt: 0 };
+  };
+  for (const block of blocks || []) {
+    const el = profile.elements[block.type] || {};
+    const m = blockMetrics(profile, block);
+    if ((el.pageBreakBefore || block.pageBreakBefore) && cur.blocks.length)
+      pushPage();
+    const needs = m.height + (el.keepWithNext ? m.lineStep : 0);
+    if (cur.blocks.length && cur.heightPt + needs > contentHeightPt)
+      pushPage();
+    const top = cur.heightPt;
+    cur.blocks.push({ ...block, top, height: m.height, lines: m.lines });
+    cur.heightPt += m.height;
+    if (cur.heightPt > contentHeightPt && cur.blocks.length > 1) {
+      const last = cur.blocks.pop();
+      cur.heightPt -= last.height;
+      pushPage();
+      last.top = 0;
+      cur.blocks.push(last);
+      cur.heightPt += last.height;
+    }
+  }
+  if (cur.blocks.length || pages.length === 0)
+    pages.push(cur);
+  return { pages, pageCount: pages.length, contentHeightPt };
+}
+function pageBreakLines(blocks, profile) {
+  const { pages } = paginate(blocks, profile);
+  const map = /* @__PURE__ */ new Map();
+  for (let k = 1; k < pages.length; k++) {
+    const first = pages[k].blocks[0];
+    if (first && first.startLine != null)
+      map.set(first.startLine, k + 1);
+  }
+  return map;
+}
+function pageOffsetOfLine(blocks, profile, line) {
+  const { pages, contentHeightPt } = paginate(blocks, profile);
+  for (const pg of pages) {
+    for (const b of pg.blocks) {
+      if (b.startLine === line)
+        return (pg.index * contentHeightPt + b.top) / contentHeightPt;
+    }
+  }
+  return null;
+}
+function paginatedScenesFromBlocks(blocks, spine, profile) {
+  const { pages, pageCount, contentHeightPt } = paginate(blocks, profile);
+  const absByKey = /* @__PURE__ */ new Map();
+  const fileFirst = /* @__PURE__ */ new Map();
+  for (const pg of pages)
+    for (const b of pg.blocks) {
+      const at = pg.index * contentHeightPt + b.top;
+      absByKey.set(`${b.file}:${b.startLine}`, at);
+      if (!fileFirst.has(b.file))
+        fileFirst.set(b.file, at);
+    }
+  const docTotal = pageCount * contentHeightPt;
+  const scenes = (spine || []).map((u, i) => {
+    const key = `${u.file}:${u.startLine || 0}`;
+    const at = absByKey.has(key) ? absByKey.get(key) : fileFirst.has(u.file) ? fileFirst.get(u.file) : null;
+    return { index: i, id: u.id || null, title: u.title, file: u.file, line: u.startLine || 0, end: u.endLine, status: u.status || null, _at: at };
+  });
+  let last = 0;
+  for (const s of scenes) {
+    if (s._at == null)
+      s.start = last;
+    else {
+      s.start = s._at;
+      last = s._at;
+    }
+    delete s._at;
+  }
+  for (let i = 0; i < scenes.length; i++)
+    scenes[i].length = Math.max(1, (scenes[i + 1] ? scenes[i + 1].start : docTotal) - scenes[i].start);
+  return { scenes, total: docTotal || 1, pages: pageCount, perPage: contentHeightPt };
+}
+
+// src/services/pdfExportService.js
 var PdfExportService = class {
   constructor(app, configService) {
     this.app = app;
     this.configService = configService;
   }
   async exportProject(project, settings, options = {}) {
-    var _a;
+    var _a, _b;
     const { signal, onProgress } = options || {};
     const progress = (message) => {
       if (typeof onProgress === "function")
@@ -3233,7 +3604,13 @@ var PdfExportService = class {
         return { ok: false, cancelled: false };
       this.throwIfAborted(signal);
       progress("Rendering the PDF...");
-      const pdfBuffer = await this.renderHtmlToPdf(html, settings, meta, { signal });
+      const projectType = (meta == null ? void 0 : meta.projectType) || ((_b = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _b.projectType) || "book";
+      const screenplay = projectType === "script" || projectType === "film";
+      const pdfBuffer = await this.renderHtmlToPdf(html, settings, meta, {
+        signal,
+        pageSize: screenplay ? "Letter" : void 0,
+        headerFooter: screenplay ? false : void 0
+      });
       if (!pdfBuffer) {
         new import_obsidian3.Notice("PDF export failed.");
         return { ok: false };
@@ -3257,11 +3634,15 @@ var PdfExportService = class {
     }
   }
   async buildExportHtml(project, meta, cfg, settings, options = {}) {
-    var _a, _b, _c, _d, _e, _f;
+    var _a, _b, _c, _d, _e, _f, _g;
+    const projectType = (meta == null ? void 0 : meta.projectType) || ((_a = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _a.projectType) || "book";
+    if (projectType === "script" || projectType === "film") {
+      return this.buildScreenplayExportHtml(project, meta, cfg, settings, options);
+    }
     const files = await this.collectOrderedMarkdownFiles(project, cfg, settings, meta);
     const sections = [];
     const tocItems = [];
-    const applyCssClasses = ((_a = settings == null ? void 0 : settings.layout) == null ? void 0 : _a.applyCssClasses) !== false;
+    const applyCssClasses = ((_b = settings == null ? void 0 : settings.layout) == null ? void 0 : _b.applyCssClasses) !== false;
     for (const [index, file] of files.entries()) {
       this.throwIfAborted(options == null ? void 0 : options.signal);
       if (typeof (options == null ? void 0 : options.onProgress) === "function") {
@@ -3275,16 +3656,16 @@ var PdfExportService = class {
         continue;
       }
       const markdown = await this.app.vault.read(file);
-      tocItems.push(...this.extractHeadings(markdown, ((_b = settings == null ? void 0 : settings.toc) == null ? void 0 : _b.maxHeadingLevel) || 3));
+      tocItems.push(...this.extractHeadings(markdown, ((_c = settings == null ? void 0 : settings.toc) == null ? void 0 : _c.maxHeadingLevel) || 3));
       const html = await this.renderMarkdownToHtml(markdown, file.path);
       const cssClasses = applyCssClasses ? this.getFileCssClasses(file) : [];
       const classAttr = ["chapter", "markdown-preview-view", ...cssClasses].join(" ");
       sections.push(`<section class="${classAttr}" data-path="${this.escapeHtml(file.path)}">${html}</section>`);
     }
     this.throwIfAborted(options == null ? void 0 : options.signal);
-    const coverHtml = ((_c = settings == null ? void 0 : settings.cover) == null ? void 0 : _c.include) ? await this.buildCoverHtml(project, meta, settings) : "";
-    const tocHtml = ((_d = settings == null ? void 0 : settings.toc) == null ? void 0 : _d.enabled) ? this.buildTocHtml(tocItems, settings) : "";
-    const tocBreak = ((_e = settings == null ? void 0 : settings.toc) == null ? void 0 : _e.enabled) && ((_f = settings == null ? void 0 : settings.toc) == null ? void 0 : _f.pageBreakAfter) ? `<div class="page-break"></div>` : "";
+    const coverHtml = ((_d = settings == null ? void 0 : settings.cover) == null ? void 0 : _d.include) ? await this.buildCoverHtml(project, meta, settings) : "";
+    const tocHtml = ((_e = settings == null ? void 0 : settings.toc) == null ? void 0 : _e.enabled) ? this.buildTocHtml(tocItems, settings) : "";
+    const tocBreak = ((_f = settings == null ? void 0 : settings.toc) == null ? void 0 : _f.enabled) && ((_g = settings == null ? void 0 : settings.toc) == null ? void 0 : _g.pageBreakAfter) ? `<div class="page-break"></div>` : "";
     const bodyHtml = [coverHtml, tocHtml, tocBreak, sections.join("\n")].filter(Boolean).join("\n");
     const css = this.buildPrintCss(settings);
     return `<!DOCTYPE html>
@@ -3298,6 +3679,92 @@ var PdfExportService = class {
     ${bodyHtml}
   </body>
 </html>`;
+  }
+  /** The current draft's markdown files (else the whole tree for legacy projects), in order. */
+  _draftFiles(cfg) {
+    var _a;
+    const tree = ((_a = cfg == null ? void 0 : cfg.structure) == null ? void 0 : _a.tree) || [];
+    const draft = resolveCurrentDraft(tree, cfg == null ? void 0 : cfg.currentDraftPath);
+    const scope = draft ? draftScopeNodes(draft) || [] : tree;
+    const out = [];
+    const walk = (nodes) => {
+      for (const n of [...nodes || []].sort((a, b) => (a.order || 0) - (b.order || 0))) {
+        if (n.type === "file" && n.path && n.path.endsWith(".md"))
+          out.push(n);
+        else if (n.children)
+          walk(n.children);
+      }
+    };
+    walk(scope);
+    return out;
+  }
+  /** Build the PDF for a screenplay from the engine's exact pages (Letter, Courier). */
+  async buildScreenplayExportHtml(project, meta, cfg, settings, options = {}) {
+    var _a;
+    const nodes = this._draftFiles(cfg);
+    const blocks = [];
+    let firstFile = true;
+    for (const node of nodes) {
+      this.throwIfAborted(options == null ? void 0 : options.signal);
+      const file = this.app.vault.getAbstractFileByPath(`${project.path}/${node.path}`);
+      if (!file)
+        continue;
+      const text = await this.app.vault.read(file);
+      const fb = parseScreenplayBlocks(text, { file: node.path, keepBlanks: true });
+      if (!firstFile && fb.length)
+        fb[0] = { ...fb[0], pageBreakBefore: true };
+      blocks.push(...fb);
+      firstFile = false;
+    }
+    const { pages } = paginate(blocks, SCREENPLAY_PROFILE);
+    const coverHtml = ((_a = settings == null ? void 0 : settings.cover) == null ? void 0 : _a.include) ? await this.buildCoverHtml(project, meta, settings) : "";
+    const pagesHtml = pages.map((pg, i) => {
+      const inner = pg.blocks.map((b) => this.renderScreenplayBlock(b)).join("");
+      return `<section class="sp-page"><div class="sp-pagenum">${i + 1}.</div><div class="sp-content">${inner}</div></section>`;
+    }).join("\n");
+    const css = this.buildScreenplayPrintCss(settings);
+    return `<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>${this.escapeHtml((meta == null ? void 0 : meta.title) || (project == null ? void 0 : project.name) || "Screenplay")}</title>
+    <style>${css}</style>
+  </head>
+  <body>
+    ${[coverHtml, pagesHtml].filter(Boolean).join("\n")}
+  </body>
+</html>`;
+  }
+  /** One source line → one styled element line for the screenplay PDF. */
+  renderScreenplayBlock(b) {
+    if (b.type === "spacer")
+      return `<div class="sp-line sp-spacer">&nbsp;</div>`;
+    return `<div class="sp-line sp-${b.type}">${this.escapeHtml(b.text || "")}</div>`;
+  }
+  /** Print CSS for the engine-paged screenplay: US-Letter sheets, Courier 12pt,
+   *  standard margins/indents — the same metrics the layout engine uses. */
+  buildScreenplayPrintCss() {
+    return `
+      @page { size: Letter; margin: 0; }
+      html, body { margin: 0; padding: 0; }
+      body { font-family: "Courier New", Courier, monospace; font-size: 12pt; line-height: 1; color: #000; }
+      .sp-page { position: relative; width: 8.5in; height: 11in; box-sizing: border-box; padding: 1in 1in 1in 1.5in; page-break-after: always; overflow: hidden; }
+      .sp-page:last-child { page-break-after: auto; }
+      .sp-content { width: 6in; }
+      .sp-pagenum { position: absolute; top: 0.5in; right: 1in; font-size: 12pt; }
+      .sp-line { white-space: pre-wrap; word-wrap: break-word; }
+      .sp-scene, .sp-character, .sp-transition, .sp-section { text-transform: uppercase; }
+      .sp-section { font-weight: bold; }
+      .sp-character { margin-left: 2in; }
+      .sp-parenthetical { margin-left: 1.5in; margin-right: 1.5in; }
+      .sp-dialogue { margin-left: 1in; margin-right: 1.5in; }
+      .sp-transition { text-align: right; }
+      .cover { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 8.5in; height: 11in; box-sizing: border-box; text-align: center; page-break-after: always; }
+      .cover-title { font-size: 24pt; }
+      .cover-subtitle { font-size: 14pt; margin-top: 12pt; }
+      .cover-author { font-size: 12pt; margin-top: 18pt; }
+      .cover-image { width: 50%; height: 2.5in; background-size: cover; background-position: center; margin-bottom: 24pt; }
+    `;
   }
   async buildCoverHtml(project, meta, settings) {
     var _a, _b, _c;
@@ -3779,11 +4246,11 @@ var PdfExportService = class {
       this.throwIfAborted(signal);
       const headerTemplate = this.buildHeaderFooterTemplate("header", settings, meta);
       const footerTemplate = this.buildHeaderFooterTemplate("footer", settings, meta);
-      const displayHeaderFooter = !!(((_a = settings == null ? void 0 : settings.layout) == null ? void 0 : _a.includePageNumbers) !== false);
+      const displayHeaderFooter = (options == null ? void 0 : options.headerFooter) !== void 0 ? !!options.headerFooter : !!(((_a = settings == null ? void 0 : settings.layout) == null ? void 0 : _a.includePageNumbers) !== false);
       const pdf = await Promise.race([
         win.webContents.printToPDF({
           printBackground: true,
-          pageSize: (settings == null ? void 0 : settings.pageSize) || "A4",
+          pageSize: (options == null ? void 0 : options.pageSize) || (settings == null ? void 0 : settings.pageSize) || "A4",
           displayHeaderFooter,
           headerTemplate,
           footerTemplate
@@ -4811,10 +5278,9 @@ var ReorderService = class {
 };
 
 // src/services/outlineModel.js
-var DEFAULT_PER_PAGE = 280;
 var DEFAULT_LANES = [
-  { id: "lane-1", name: "Outline 1" },
-  { id: "lane-2", name: "Outline 2" }
+  { id: "lane-1", name: "Lane 1" },
+  { id: "lane-2", name: "Lane 2" }
 ];
 var DEFAULT_ZOOM = 120;
 var MIN_ZOOM = 40;
@@ -4824,7 +5290,7 @@ function clampZoom(z) {
   return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, n));
 }
 function normalizeOutline(outline) {
-  const lanes = (outline && Array.isArray(outline.lanes) && outline.lanes.length ? outline.lanes : DEFAULT_LANES).map((l) => ({ ...l }));
+  const lanes = (outline && Array.isArray(outline.lanes) && outline.lanes.length ? outline.lanes : DEFAULT_LANES).map((l) => ({ ...l, name: /^Outline \d+$/.test(l.name || "") ? l.name.replace(/^Outline /, "Lane ") : l.name }));
   const beats = (outline && Array.isArray(outline.beats) ? outline.beats : []).map((b) => ({ ...b }));
   const zoom = clampZoom(outline && outline.zoom);
   return { lanes, beats, zoom };
@@ -4872,7 +5338,7 @@ function addBeat(outline, beat) {
 }
 function addLane(outline, name) {
   const next = normalizeOutline(outline);
-  next.lanes.push({ id: "lane-" + (next.lanes.length + 1) + "-" + Math.random().toString(36).slice(2, 5), name: name || `Outline ${next.lanes.length + 1}` });
+  next.lanes.push({ id: "lane-" + (next.lanes.length + 1) + "-" + Math.random().toString(36).slice(2, 5), name: name || `Lane ${next.lanes.length + 1}` });
   return next;
 }
 function renameLane(outline, laneIndex, name) {
@@ -4925,102 +5391,6 @@ function renumber(outline, laneIndex) {
   outline.beats.filter((b) => (b.lane || 0) === laneIndex).sort((a, b) => (a.order || 0) - (b.order || 0)).forEach((b, i) => {
     b.order = i;
   });
-}
-function paginate(spine, perPage = DEFAULT_PER_PAGE) {
-  let offset = 0;
-  const scenes = (spine || []).map((u, i) => {
-    const endLine = u.endLine != null ? u.endLine : (u.startLine || 0) + 1;
-    const length = Math.max(1, u.words != null ? u.words : endLine - (u.startLine || 0));
-    const start = offset;
-    offset += length;
-    return { index: i, id: u.id || null, title: u.title, file: u.file, line: u.startLine || 0, end: endLine, status: u.status || null, length, start };
-  });
-  const total = offset || 1;
-  return { scenes, total, pages: Math.max(1, Math.ceil(total / perPage)), perPage };
-}
-
-// src/services/draftModel.js
-function findDrafts(tree) {
-  const out = [];
-  const walk = (nodes) => {
-    for (const n of nodes || []) {
-      if (n.draft && (n.type === "group" || n.type === "file"))
-        out.push(n);
-      if (n.children)
-        walk(n.children);
-    }
-  };
-  walk(tree || []);
-  return out;
-}
-function findGroupByPath(tree, path) {
-  let found = null;
-  const walk = (nodes) => {
-    for (const n of nodes || []) {
-      if (found)
-        return;
-      if (n.type === "group" && n.path === path) {
-        found = n;
-        return;
-      }
-      if (n.children)
-        walk(n.children);
-    }
-  };
-  walk(tree || []);
-  return found;
-}
-var isAncestorPath = (folder, file) => file === folder || file.startsWith(folder + "/");
-function draftNodeForFile(tree, relPath) {
-  if (!relPath)
-    return null;
-  const drafts = findDrafts(tree);
-  let best = null;
-  for (const d of drafts) {
-    if (d.path && isAncestorPath(d.path, relPath) && (!best || d.path.length > best.path.length))
-      best = d;
-  }
-  if (best)
-    return best;
-  if (drafts.length)
-    return null;
-  const i = relPath.indexOf("/");
-  if (i === -1)
-    return null;
-  return findGroupByPath(tree, relPath.slice(0, i));
-}
-function draftScopeNodes(draftNode) {
-  if (!draftNode)
-    return null;
-  return draftNode.type === "file" ? [draftNode] : draftNode.children || [];
-}
-function resolveCurrentDraft(tree, currentDraftPath) {
-  const drafts = findDrafts(tree);
-  if (!drafts.length)
-    return null;
-  if (currentDraftPath) {
-    const match = drafts.find((d) => d.path === currentDraftPath);
-    if (match)
-      return match;
-  }
-  return drafts[0];
-}
-function draftShelfNode(tree) {
-  let found = null;
-  const walk = (nodes) => {
-    for (const n of nodes || []) {
-      if (found)
-        return;
-      if (n.type === "group" && (n.shelf || /^drafts$/i.test(n.title || ""))) {
-        found = n;
-        return;
-      }
-      if (n.children)
-        walk(n.children);
-    }
-  };
-  walk(tree || []);
-  return found;
 }
 
 // src/services/outlineEditorService.js
@@ -5089,14 +5459,14 @@ var OutlineEditorService = class {
 };
 
 // src/services/formatProfiles.js
-var SCREENPLAY_PROFILE = {
+var SCREENPLAY_PROFILE2 = {
   headingRoles: { 1: "scene", 2: "character", 3: "parenthetical", 4: "transition", 5: "act" },
   unitRole: "scene",
   grouperTiers: { act: 0 }
 };
 var FORMAT_PROFILES = {
-  script: SCREENPLAY_PROFILE,
-  film: SCREENPLAY_PROFILE,
+  script: SCREENPLAY_PROFILE2,
+  film: SCREENPLAY_PROFILE2,
   book: {
     headingRoles: { 1: "part", 2: "chapter", 3: "scene" },
     unitRole: "scene",
@@ -5236,6 +5606,10 @@ var FolioBeatBoardView = class extends import_obsidian6.ItemView {
     return "layout-dashboard";
   }
   async onOpen() {
+    try {
+      this.addAction("gallery-vertical", "Views", (e) => this.plugin.showViewMenu(e));
+    } catch (e) {
+    }
     this.registerEvent(this.plugin.app.workspace.on("active-leaf-change", (leaf) => {
       if (leaf && leaf.view === this)
         this.render();
@@ -5326,7 +5700,7 @@ var FolioBeatBoardView = class extends import_obsidian6.ItemView {
     card.style.minHeight = (beat.bh || CARD_H) + "px";
     if (beat.color)
       card.style.borderTopColor = beat.color;
-    const laneName = outline.lanes[laneIndex] && outline.lanes[laneIndex].name || `Outline ${laneIndex + 1}`;
+    const laneName = outline.lanes[laneIndex] && outline.lanes[laneIndex].name || `Lane ${laneIndex + 1}`;
     const top = card.createDiv({ cls: "folio-bb-card-top" });
     top.createSpan({ cls: "folio-bb-card-lane", text: laneName });
     if (beat.goal)
@@ -5443,12 +5817,1090 @@ var FolioBeatBoardView = class extends import_obsidian6.ItemView {
   }
 };
 
+// src/views/pagedView.js
+var import_obsidian7 = require("obsidian");
+init_constants();
+
+// src/editor/screenplayPagedEditor.js
+var import_view = require("@codemirror/view");
+var import_state = require("@codemirror/state");
+var import_commands = require("@codemirror/commands");
+var PX_PER_PT = 96 / 72;
+var PageBreakWidget = class extends import_view.WidgetType {
+  constructor(pageNum) {
+    super();
+    this.pageNum = pageNum;
+  }
+  eq(other) {
+    return other.pageNum === this.pageNum;
+  }
+  toDOM() {
+    const wrap = document.createElement("div");
+    wrap.className = "folio-cm-pagebreak";
+    wrap.appendChild(this._part("folio-cm-pb-bottom"));
+    wrap.appendChild(this._part("folio-cm-pb-gap"));
+    const top = this._part("folio-cm-pb-top");
+    const label2 = document.createElement("span");
+    label2.className = "folio-cm-pb-label";
+    label2.textContent = this.pageNum + ".";
+    top.appendChild(label2);
+    wrap.appendChild(top);
+    return wrap;
+  }
+  _part(cls) {
+    const d = document.createElement("div");
+    d.className = cls;
+    return d;
+  }
+  ignoreEvent() {
+    return true;
+  }
+};
+var PageFillWidget = class extends import_view.WidgetType {
+  constructor(px) {
+    super();
+    this.px = Math.round(px);
+  }
+  eq(other) {
+    return other.px === this.px;
+  }
+  toDOM() {
+    const d = document.createElement("div");
+    d.className = "folio-cm-pagefill";
+    d.style.height = this.px + "px";
+    return d;
+  }
+  ignoreEvent() {
+    return true;
+  }
+};
+var FOLIO_ANCHOR = /\s*\^folio[A-Za-z0-9]+\s*$/;
+function hideFrontmatter(doc, decos) {
+  if (doc.lines >= 1 && doc.line(1).text.trim() === "---") {
+    let close = 0;
+    for (let i = 2; i <= doc.lines; i++) {
+      if (doc.line(i).text.trim() === "---") {
+        close = i;
+        break;
+      }
+    }
+    if (close) {
+      const to = close < doc.lines ? doc.line(close + 1).from : doc.line(close).to;
+      decos.push(import_view.Decoration.replace({ block: true }).range(0, to));
+      return close + 1;
+    }
+  }
+  return 1;
+}
+function fillLastPage(doc, pages, contentHeightPt, decos) {
+  const lastPage = pages[pages.length - 1];
+  if (!lastPage)
+    return;
+  const fillPt = contentHeightPt - (lastPage.heightPt || 0);
+  if (fillPt > 2)
+    decos.push(import_view.Decoration.widget({ widget: new PageFillWidget(fillPt * PX_PER_PT), block: true, side: 1 }).range(doc.line(doc.lines).to));
+}
+function buildProseDecorations(state, profile, pageOffset = 0) {
+  const decos = [];
+  const doc = state.doc;
+  const blocks = parseProseBlocks(doc.toString());
+  const { pages, contentHeightPt } = paginate(blocks, profile);
+  const breakAt = /* @__PURE__ */ new Map();
+  for (let k = 1; k < pages.length; k++) {
+    const f = pages[k].blocks[0];
+    if (f && f.startLine != null)
+      breakAt.set(f.startLine, k + 1);
+  }
+  const lineBlock = /* @__PURE__ */ new Map();
+  for (const b of blocks)
+    for (let ln = b.startLine; ln <= b.endLine; ln++)
+      lineBlock.set(ln, b);
+  const startLine = hideFrontmatter(doc, decos);
+  for (let i = startLine; i <= doc.lines; i++) {
+    const line = doc.line(i);
+    const idx = i - 1;
+    if (breakAt.has(idx))
+      decos.push(import_view.Decoration.widget({ widget: new PageBreakWidget(pageOffset + breakAt.get(idx)), block: true, side: -1 }).range(line.from));
+    const b = lineBlock.get(idx);
+    if (!b)
+      continue;
+    decos.push(import_view.Decoration.line({ class: `folio-cm-line folio-cm-prose-${b.type}` }).range(line.from));
+    if ((b.type === "chapter" || b.type === "section") && idx === b.startLine) {
+      const m = /^(#{1,6})\s+/.exec(line.text);
+      if (m)
+        decos.push(import_view.Decoration.replace({}).range(line.from, line.from + m[0].length));
+    }
+  }
+  fillLastPage(doc, pages, contentHeightPt, decos);
+  return import_view.Decoration.set(decos, true);
+}
+function buildScreenplayDecorations(state, profile, pageOffset = 0) {
+  const decos = [];
+  const doc = state.doc;
+  const text = doc.toString();
+  const blocks = parseScreenplayBlocks(text, { keepBlanks: true });
+  const blockByLine = /* @__PURE__ */ new Map();
+  for (const b of blocks)
+    blockByLine.set(b.startLine, b);
+  const { pages, contentHeightPt } = paginate(blocks, profile);
+  const breakAt = /* @__PURE__ */ new Map();
+  for (let k = 1; k < pages.length; k++) {
+    const first = pages[k].blocks[0];
+    if (first && first.startLine != null)
+      breakAt.set(first.startLine, k + 1);
+  }
+  let startLine = 1;
+  if (doc.lines >= 1 && doc.line(1).text.trim() === "---") {
+    let close = 0;
+    for (let i = 2; i <= doc.lines; i++) {
+      if (doc.line(i).text.trim() === "---") {
+        close = i;
+        break;
+      }
+    }
+    if (close) {
+      const to = close < doc.lines ? doc.line(close + 1).from : doc.line(close).to;
+      decos.push(import_view.Decoration.replace({ block: true }).range(0, to));
+      startLine = close + 1;
+    }
+  }
+  for (let i = startLine; i <= doc.lines; i++) {
+    const line = doc.line(i);
+    const idx = i - 1;
+    const block = blockByLine.get(idx) || { type: "action", prefix: "" };
+    const prefixLen = (block.prefix || "").length;
+    if (breakAt.has(idx)) {
+      decos.push(import_view.Decoration.widget({ widget: new PageBreakWidget(pageOffset + breakAt.get(idx)), block: true, side: -1 }).range(line.from));
+    }
+    decos.push(import_view.Decoration.line({ class: `folio-cm-line folio-cm-${block.type}` }).range(line.from));
+    if (prefixLen > 0)
+      decos.push(import_view.Decoration.replace({}).range(line.from, line.from + prefixLen));
+    const a = FOLIO_ANCHOR.exec(line.text);
+    if (a && prefixLen === 0) {
+      const f = line.from + a.index;
+      decos.push(import_view.Decoration.replace({}).range(f, f + a[0].length));
+    }
+  }
+  const lastPage = pages[pages.length - 1];
+  if (lastPage) {
+    const fillPt = contentHeightPt - (lastPage.heightPt || 0);
+    if (fillPt > 2) {
+      const end = doc.line(doc.lines).to;
+      decos.push(import_view.Decoration.widget({ widget: new PageFillWidget(fillPt * PX_PER_PT), block: true, side: 1 }).range(end));
+    }
+  }
+  return import_view.Decoration.set(decos, true);
+}
+function pagedDecorationField(profile, pageOffset) {
+  const build = profile && profile.id === "prose" ? buildProseDecorations : buildScreenplayDecorations;
+  return import_state.StateField.define({
+    create(state) {
+      return build(state, profile, pageOffset);
+    },
+    update(value, tr) {
+      return tr.docChanged ? build(tr.state, profile, pageOffset) : value;
+    },
+    provide: (f) => import_view.EditorView.decorations.from(f)
+  });
+}
+function paperTheme(profile) {
+  const fontPx = profile.font.sizePt * PX_PER_PT;
+  const size = PAGE_SIZES[profile.page.size] || PAGE_SIZES.letter;
+  const m = profile.page.margins;
+  return import_view.EditorView.theme({
+    "&": { backgroundColor: "transparent" },
+    ".cm-scroller": { fontFamily: profile.font.family, fontSize: fontPx + "px", lineHeight: String(profile.font.lineHeight), justifyContent: "center" },
+    ".cm-content": {
+      caretColor: "var(--text-normal)",
+      width: size.width * PX_PER_PT + "px",
+      padding: `${m.top * PX_PER_PT}px ${m.right * PX_PER_PT}px ${m.bottom * PX_PER_PT}px ${m.left * PX_PER_PT}px`,
+      // Exposed so the page-break widget bleeds exactly to the sheet edges per profile.
+      "--folio-pad-left": m.left * PX_PER_PT + "px",
+      "--folio-pad-right": m.right * PX_PER_PT + "px"
+    },
+    ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--text-normal)" },
+    ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": { backgroundColor: "var(--text-selection)" }
+  });
+}
+function createPagedEditor(parent, doc, opts = {}) {
+  const profile = opts.profile || SCREENPLAY_PROFILE;
+  const pageOffset = opts.pageOffset || 0;
+  let debounce = null;
+  const onChange = opts.onChange || (() => {
+  });
+  const state = import_state.EditorState.create({
+    doc: doc || "",
+    extensions: [
+      (0, import_commands.history)(),
+      import_view.keymap.of([...import_commands.defaultKeymap, ...import_commands.historyKeymap]),
+      import_view.EditorView.lineWrapping,
+      pagedDecorationField(profile, pageOffset),
+      paperTheme(profile),
+      import_view.EditorView.updateListener.of((u) => {
+        if (u.docChanged) {
+          clearTimeout(debounce);
+          const text = u.state.doc.toString();
+          debounce = setTimeout(() => onChange(text), 400);
+        }
+        if ((u.selectionSet || u.docChanged) && opts.onCursor) {
+          const pos = u.state.selection.main.head;
+          const line = u.state.doc.lineAt(pos).number - 1;
+          let pageFraction = null;
+          try {
+            const blocks = parseScreenplayBlocks(u.state.doc.toString(), { keepBlanks: true });
+            const local = pageOffsetOfLine(blocks, profile, line);
+            if (local != null)
+              pageFraction = pageOffset + local;
+          } catch (e) {
+          }
+          opts.onCursor(line, pageFraction);
+        }
+      })
+    ]
+  });
+  return new import_view.EditorView({ state, parent });
+}
+var nativePaginationOn = true;
+function setNativePaginationEnabled(on) {
+  nativePaginationOn = !!on;
+}
+var togglePaginationEffect = import_state.StateEffect.define();
+function frontmatter(text) {
+  const m = /^---\s*\r?\n([\s\S]*?)\r?\n---/.exec(text || "");
+  return m ? m[1] : "";
+}
+function hasScreenplayClass(text) {
+  return /(?:cssclass|cssclasses)\s*:[\s\S]*?(md-screenplay|folio-screenplay)/.test(frontmatter(text));
+}
+function hasProjectType(text) {
+  return /(^|\n)\s*projectType\s*:/.test(frontmatter(text));
+}
+var NativePageBreakWidget = class extends import_view.WidgetType {
+  constructor(pageNum) {
+    super();
+    this.pageNum = pageNum;
+  }
+  eq(other) {
+    return other.pageNum === this.pageNum;
+  }
+  toDOM() {
+    const wrap = document.createElement("div");
+    wrap.className = "folio-native-pagebreak";
+    wrap.appendChild(this._div("folio-native-pb-rule"));
+    const gap = this._div("folio-native-pb-gap");
+    const num = this._div("folio-native-pb-num");
+    num.textContent = this.pageNum + ".";
+    gap.appendChild(num);
+    wrap.appendChild(gap);
+    return wrap;
+  }
+  _div(cls) {
+    const d = document.createElement("div");
+    d.className = cls;
+    return d;
+  }
+  ignoreEvent() {
+    return true;
+  }
+};
+function nativePageDecorations(state) {
+  if (!nativePaginationOn)
+    return import_view.Decoration.none;
+  const text = state.doc.toString();
+  const screenplay = hasScreenplayClass(text);
+  if (!screenplay && !hasProjectType(text))
+    return import_view.Decoration.none;
+  const profile = screenplay ? SCREENPLAY_PROFILE : PROSE_PROFILE;
+  let breakAt;
+  try {
+    const blocks = screenplay ? parseScreenplayBlocks(text, { keepBlanks: true }) : parseProseBlocks(text);
+    breakAt = pageBreakLines(blocks, profile);
+  } catch (e) {
+    return import_view.Decoration.none;
+  }
+  const decos = [];
+  for (const [line, num] of breakAt) {
+    if (line < 0 || line + 1 > state.doc.lines)
+      continue;
+    const pos = state.doc.line(line + 1).from;
+    decos.push(import_view.Decoration.widget({ widget: new NativePageBreakWidget(num), block: true, side: -1 }).range(pos));
+  }
+  return import_view.Decoration.set(decos, true);
+}
+function screenplayNativePagination() {
+  return import_state.StateField.define({
+    create: (state) => nativePageDecorations(state),
+    update: (value, tr) => tr.docChanged || tr.effects.some((e) => e.is(togglePaginationEffect)) ? nativePageDecorations(tr.state) : value,
+    provide: (f) => import_view.EditorView.decorations.from(f)
+  });
+}
+
+// src/views/pagedView.js
+var PX_PER_PT2 = 96 / 72;
+var PX_PER_IN = 96;
+var FolioPagedView = class extends import_obsidian7.ItemView {
+  constructor(leaf, plugin) {
+    super(leaf);
+    this.plugin = plugin;
+  }
+  getViewType() {
+    return PAGED_VIEW_TYPE;
+  }
+  getDisplayText() {
+    return "Paged View";
+  }
+  getIcon() {
+    return "book-open";
+  }
+  async onOpen() {
+    const ws = this.plugin.app.workspace;
+    try {
+      this.addAction("gallery-vertical", "Views", (e) => this.plugin.showViewMenu(e));
+    } catch (e) {
+    }
+    this.registerEvent(ws.on("active-leaf-change", (leaf) => {
+      if (leaf && leaf.view === this) {
+        clearTimeout(this._alcTimer);
+        this._alcTimer = setTimeout(() => this.render(), 150);
+      }
+    }));
+    this.registerEvent(ws.on("editor-change", (editor, info) => {
+      const f = info && info.file;
+      if (f && this._editorFor(f.path))
+        this._scheduleSync(f.path);
+    }));
+    this.registerEvent(this.plugin.app.vault.on("modify", (file) => {
+      if (file && this._editorFor(file.path))
+        this._scheduleSync(file.path);
+    }));
+    await this.render();
+  }
+  async onClose() {
+    clearTimeout(this._alcTimer);
+    clearTimeout(this._syncTimer);
+    this._destroyEditors();
+  }
+  _scheduleSync(fullPath) {
+    clearTimeout(this._syncTimer);
+    this._syncTimer = setTimeout(() => this._syncFromFile(fullPath), 150);
+  }
+  /** Pull a file's current text into its stacked editor when it changed elsewhere. */
+  async _syncFromFile(fullPath) {
+    try {
+      const e = this._editorFor(fullPath);
+      if (!e || !e.view || e.view.hasFocus)
+        return;
+      const text = await this._readText(fullPath);
+      if (text == null || text === e.view.state.doc.toString())
+        return;
+      e.view.dispatch({ changes: { from: 0, to: e.view.state.doc.length, insert: text } });
+    } catch (err) {
+      console.warn("paged sync-from-file failed", err);
+    }
+  }
+  /** Serialised render (empty-then-await would otherwise interleave; see Beat Board). */
+  async render() {
+    if (this._rendering) {
+      this._pending = true;
+      return;
+    }
+    this._rendering = true;
+    try {
+      do {
+        this._pending = false;
+        await this._renderImpl();
+      } while (this._pending);
+    } finally {
+      this._rendering = false;
+    }
+  }
+  /** The current draft's markdown files, in tree order. */
+  _draftFiles(cfg) {
+    var _a;
+    const draft = resolveCurrentDraft(((_a = cfg.structure) == null ? void 0 : _a.tree) || [], cfg.currentDraftPath);
+    const scope = draftScopeNodes(draft) || [];
+    const out = [];
+    const walk = (nodes) => {
+      for (const n of [...nodes || []].sort((a, b) => (a.order || 0) - (b.order || 0))) {
+        if (n.type === "file" && n.path && n.path.endsWith(".md"))
+          out.push(n);
+        else if (n.children)
+          walk(n.children);
+      }
+    };
+    walk(scope);
+    return { draft, files: out };
+  }
+  /** Read a file's current text, preferring an open editor's buffer. */
+  async _readText(fullPath) {
+    for (const leaf of this.plugin.app.workspace.getLeavesOfType("markdown")) {
+      const v = leaf.view;
+      if (v && v.file && v.file.path === fullPath && v.editor)
+        return v.editor.getValue();
+    }
+    const file = this.plugin.app.vault.getAbstractFileByPath(fullPath);
+    return file && file.extension === "md" ? await this.plugin.app.vault.read(file) : null;
+  }
+  async _renderImpl() {
+    var _a, _b;
+    const el = this.contentEl;
+    el.addClass("folio-paged-view");
+    const book = this.plugin.activeBook;
+    if (!book) {
+      this._teardown(el);
+      this._empty(el, "No active project", "Open or create a Folio project to use the Paged View.");
+      return;
+    }
+    this._book = book;
+    const cfg = await this.plugin.loadBookConfig(book) || {};
+    const projectType = ((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
+    const screenplay = projectType === PROJECT_TYPES.SCRIPT || projectType === PROJECT_TYPES.FILM;
+    const profile = screenplay ? SCREENPLAY_PROFILE : PROSE_PROFILE;
+    this._profile = profile;
+    this._screenplay = screenplay;
+    const { draft, files } = this._draftFiles(cfg);
+    if (!draft) {
+      this._teardown(el);
+      this._empty(el, "No draft", "Mark a folder or file as a draft to page it.");
+      return;
+    }
+    let stripHost = el.querySelector(":scope > .folio-paged-strip");
+    if (!stripHost) {
+      stripHost = createDiv({ cls: "folio-paged-strip folio-bb-strip" });
+      el.prepend(stripHost);
+    }
+    await this._mountEditors(el, book, files, profile);
+    try {
+      await ((_b = this.plugin.timelineBand) == null ? void 0 : _b.renderBandInto(stripHost, book, false));
+    } catch (e) {
+    }
+    if (this._cursorFrac != null)
+      this._updatePlayhead(this._cursorFrac);
+  }
+  /** The mounted editor entry for a full file path, or null. */
+  _editorFor(fullPath) {
+    return (this._editors || []).find((e) => e.fullPath === fullPath) || null;
+  }
+  /**
+   * Mount one CodeMirror paged editor PER draft file, stacked — so every file
+   * lives in the same Paged View. Each file is numbered LOCALLY (from page 1);
+   * the strip ruler on top is the continuous PROJECT pagination, and each file's
+   * header shows its project page range. Rebuilds only when the file set changes
+   * (so live editors keep their cursors).
+   */
+  async _mountEditors(el, book, files, profile) {
+    if (!files.length) {
+      this._destroyEditors();
+      this._clearBody(el);
+      this._empty(el, "Nothing to page yet", "Add a script file to the current draft.");
+      return;
+    }
+    const sig = book.path + "::" + files.map((f) => f.path).join("|");
+    if (this._editors && this._editors.length && this._editorsSig === sig)
+      return;
+    this._destroyEditors();
+    this._clearBody(el);
+    const scroller = el.createDiv({ cls: "folio-paged-body folio-paged-scroller folio-paged-editor-host" });
+    this._editors = [];
+    this._editorsSig = sig;
+    const multi = files.length > 1;
+    const parse = this._screenplay ? (t) => parseScreenplayBlocks(t, { keepBlanks: true }) : (t) => parseProseBlocks(t);
+    let projOffset = 0;
+    for (const node of files) {
+      const fullPath = `${book.path}/${node.path}`;
+      const text = await this._readText(fullPath) || "";
+      let pageCount = 1;
+      try {
+        pageCount = paginate(parse(text), profile).pageCount || 1;
+      } catch (e) {
+      }
+      const projTo = projOffset + pageCount;
+      const section = scroller.createDiv({ cls: "folio-paged-filesection" });
+      if (multi) {
+        const header = section.createDiv({ cls: "folio-paged-fileheader" });
+        header.createSpan({ cls: "folio-paged-filename", text: node.title || node.path.replace(/\.md$/, "") });
+        header.createSpan({ cls: "folio-paged-filerange", text: `project p. ${projOffset + 1}\u2013${projTo}` });
+      }
+      const host = section.createDiv({ cls: "folio-paged-fileeditor" });
+      const fileOffset = projOffset;
+      let view = null;
+      try {
+        view = createPagedEditor(host, text, {
+          profile,
+          pageOffset: 0,
+          // local numbering (each file from page 1)
+          onChange: (t) => this._saveEditor(fullPath, t),
+          onCursor: (line, localFrac) => {
+            const frac = localFrac == null ? null : fileOffset + localFrac;
+            this._cursorFrac = frac;
+            this._cursorPath = fullPath;
+            this._updatePlayhead(frac);
+          }
+        });
+      } catch (e) {
+        console.error("paged editor mount failed", e);
+        this._empty(host, "Editor unavailable", "Couldn't start the paged editor (see console).");
+      }
+      this._editors.push({ path: node.path, fullPath, view, projOffset, pageCount });
+      projOffset = projTo;
+    }
+  }
+  _destroyEditors() {
+    var _a;
+    for (const e of this._editors || []) {
+      try {
+        (_a = e.view) == null ? void 0 : _a.destroy();
+      } catch (x) {
+      }
+    }
+    this._editors = [];
+    this._editorsSig = null;
+  }
+  /** Persist the editor's text to its file (via the open editor if any, else the vault). */
+  async _saveEditor(fullPath, text) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    try {
+      const file = this.plugin.app.vault.getAbstractFileByPath(fullPath);
+      if (!file)
+        return;
+      for (const leaf of this.plugin.app.workspace.getLeavesOfType("markdown")) {
+        const v = leaf.view;
+        if (v && v.file && v.file.path === fullPath && v.editor) {
+          if (v.editor.getValue() !== text) {
+            const cur = (_b = (_a = v.editor).getCursor) == null ? void 0 : _b.call(_a);
+            const scroll = (_d = (_c = v.editor).getScrollInfo) == null ? void 0 : _d.call(_c);
+            v.editor.setValue(text);
+            try {
+              if (cur)
+                v.editor.setCursor(cur);
+              if (scroll)
+                (_f = (_e = v.editor).scrollTo) == null ? void 0 : _f.call(_e, scroll.left, scroll.top);
+            } catch (e) {
+            }
+          }
+          (_g = this.plugin.timelineBand) == null ? void 0 : _g.refresh(true);
+          return;
+        }
+      }
+      await this.plugin.app.vault.modify(file, text);
+      (_h = this.plugin.timelineBand) == null ? void 0 : _h.refresh(true);
+    } catch (e) {
+      console.error("paged save failed", e);
+    }
+  }
+  /** Scroll the stacked editor for a file to a source line. Called by scene clicks. */
+  async scrollToLine(fullPath, line) {
+    try {
+      const e = this._editorFor(fullPath);
+      const view = e && e.view;
+      if (!view)
+        return;
+      const n = Math.max(1, Math.min(view.state.doc.lines, (line || 0) + 1));
+      const info = view.state.doc.line(n);
+      view.dispatch({ selection: { anchor: info.from }, scrollIntoView: true });
+      view.focus();
+    } catch (e) {
+      console.warn("scrollToLine failed", e);
+    }
+  }
+  /** Move the strip's "you are here" playhead to the cursor's PROJECT page position. */
+  _updatePlayhead(pageFraction) {
+    var _a;
+    try {
+      const host = this.contentEl.querySelector(":scope > .folio-paged-strip");
+      const band = host && host.querySelector(".folio-timeline-band");
+      if (band)
+        (_a = this.plugin.timelineBand) == null ? void 0 : _a.positionExternalPlayhead(band, this._book, this._cursorPath || "", 0, pageFraction);
+    } catch (e) {
+    }
+  }
+  /** Remove the body (pages/editor) but keep the strip host. */
+  _clearBody(el) {
+    el.querySelectorAll(":scope > .folio-paged-body, :scope > .folio-paged-scroller, :scope > .folio-paged-empty").forEach((n) => n.remove());
+  }
+  /** Empty-state teardown: destroy the editors and clear the whole view. */
+  _teardown(el) {
+    this._destroyEditors();
+    el.empty();
+  }
+  /** Prose pages (DOM preview with per-block click-to-edit), build-then-swap. */
+  async _renderProsePages(el, book, files, profile) {
+    const blocks = [];
+    let first = true;
+    for (const node of files) {
+      const text = await this._readText(`${book.path}/${node.path}`);
+      if (text == null)
+        continue;
+      let fileBlocks = parseProseBlocks(text, { file: node.path });
+      if (!fileBlocks.length)
+        fileBlocks = [{ type: "paragraph", text: "", file: node.path, startLine: 0, endLine: 0 }];
+      if (!first)
+        fileBlocks[0] = { ...fileBlocks[0], pageBreakBefore: true };
+      blocks.push(...fileBlocks);
+      first = false;
+    }
+    this._blocks = blocks;
+    this._blockEls = [];
+    const building = el.createDiv({ cls: "folio-paged-body folio-paged-scroller folio-paged-building" });
+    building.createDiv({ cls: "folio-paged-prose-note", text: "Prose preview \u2014 click a line to edit. Continuous typing arrives with the prose editor; for now write in Obsidian View." });
+    this._paginateInto(building, blocks, profile);
+    if (!blocks.length)
+      this._empty(building, "Nothing to page yet", "Add chapters to the current draft.");
+    let prevScroll = 0;
+    el.querySelectorAll(":scope > .folio-paged-scroller").forEach((s) => {
+      if (s !== building) {
+        prevScroll = s.scrollTop || prevScroll;
+        s.remove();
+      }
+    });
+    building.classList.remove("folio-paged-building");
+    building.scrollTop = prevScroll;
+    this._restoreFocus();
+  }
+  /** Build a fresh page element and return its content area. */
+  _newPage(scroller, profile) {
+    const size = PAGE_SIZES[profile.page.size] || PAGE_SIZES.letter;
+    const m = profile.page.margins;
+    const page = scroller.createDiv({ cls: "folio-page" });
+    page.style.width = size.width * PX_PER_PT2 + "px";
+    page.style.height = size.height * PX_PER_PT2 + "px";
+    page.style.paddingTop = m.top * PX_PER_PT2 + "px";
+    page.style.paddingRight = m.right * PX_PER_PT2 + "px";
+    page.style.paddingBottom = m.bottom * PX_PER_PT2 + "px";
+    page.style.paddingLeft = m.left * PX_PER_PT2 + "px";
+    page.style.fontFamily = profile.font.family;
+    page.style.fontSize = profile.font.sizePt * PX_PER_PT2 + "px";
+    page.style.lineHeight = String(profile.font.lineHeight);
+    const content = page.createDiv({ cls: "folio-page-content" });
+    const num = page.createDiv({ cls: "folio-page-number" });
+    num.textContent = String(scroller.querySelectorAll(".folio-page").length);
+    return content;
+  }
+  /** Style one block element per the profile (no positioning — it flows). */
+  _styleBlock(blockEl, block, profile) {
+    const e = profile.elements[block.type] || {};
+    blockEl.style.marginLeft = (e.marginLeft || 0) * PX_PER_IN + "px";
+    blockEl.style.marginRight = (e.marginRight || 0) * PX_PER_IN + "px";
+    blockEl.style.textAlign = e.align || "left";
+    blockEl.style.fontWeight = e.bold ? "700" : "400";
+    if (e.sizeScale)
+      blockEl.style.fontSize = profile.font.sizePt * e.sizeScale * PX_PER_PT2 + "px";
+    const lh = profile.font.sizePt * profile.font.lineHeight * PX_PER_PT2;
+    blockEl.style.marginTop = (e.spaceBefore || 0) * lh + "px";
+    blockEl.style.marginBottom = (e.spaceAfter || 0) * lh + "px";
+    if (e.firstLineIndent)
+      blockEl.style.textIndent = e.firstLineIndent * PX_PER_IN + "px";
+  }
+  /** Render a block's display element (click to edit). */
+  _renderBlock(block, profile) {
+    const b = createDiv({ cls: `folio-pb folio-pb-${block.type}` });
+    b.textContent = block.type === "spacer" ? "" : block.text || "";
+    this._styleBlock(b, block, profile);
+    b._block = block;
+    (this._blockEls || (this._blockEls = [])).push(b);
+    b.addEventListener("click", (e) => this._editBlock(b, block, this._caretFromClick(b, e)));
+    return b;
+  }
+  /** Approximate caret offset from where the block was clicked (start vs end). */
+  _caretFromClick(blockEl, e) {
+    try {
+      const r = blockEl.getBoundingClientRect();
+      return e.clientX - r.left < r.width / 2 ? 0 : void 0;
+    } catch (x) {
+      return void 0;
+    }
+  }
+  /** After a structural edit + re-render, re-open the editor where the caret should land. */
+  _restoreFocus() {
+    const f = this._focus;
+    this._focus = null;
+    if (!f)
+      return;
+    const el = (this._blockEls || []).find((e) => e._block && e._block.file === f.file && e._block.startLine === f.line);
+    if (el)
+      this._editBlock(el, el._block, f.ch);
+  }
+  /** Flow blocks into pages by real DOM height (append → overflow → new page). */
+  _paginateInto(scroller, blocks, profile) {
+    let content = this._newPage(scroller, profile);
+    for (const block of blocks) {
+      if (block.pageBreakBefore && content.childElementCount)
+        content = this._newPage(scroller, profile);
+      const b = this._renderBlock(block, profile);
+      content.appendChild(b);
+      if (content.scrollHeight > content.clientHeight && content.childElementCount > 1) {
+        content.removeChild(b);
+        content = this._newPage(scroller, profile);
+        content.appendChild(b);
+      }
+    }
+  }
+  /**
+   * Click-to-edit with structural keys. The block becomes an inline editor of its
+   * raw source; Enter inserts/splits lines (push a cue onto the next page),
+   * Backspace removes an empty/spacer line, Esc cancels, blur commits the text.
+   */
+  _editBlock(blockEl, block, caretCh) {
+    if (!blockEl || blockEl.querySelector("textarea"))
+      return;
+    const ta = document.createElement("textarea");
+    ta.className = "folio-pb-edit";
+    ta.value = block.raw != null ? block.raw : block.text || "";
+    blockEl.textContent = "";
+    blockEl.appendChild(ta);
+    const autosize = () => {
+      ta.style.height = "auto";
+      ta.style.height = ta.scrollHeight + "px";
+    };
+    ta.addEventListener("input", autosize);
+    try {
+      ta.focus({ preventScroll: true });
+    } catch (e) {
+      ta.focus();
+    }
+    autosize();
+    let pos = caretCh;
+    if (pos == null)
+      pos = ta.value.length;
+    if (!Number.isFinite(pos) || pos > ta.value.length)
+      pos = ta.value.length;
+    try {
+      ta.setSelectionRange(pos, pos);
+    } catch (e) {
+    }
+    let done = false;
+    ta.addEventListener("keydown", (ev) => {
+      const atStart = ta.selectionStart === 0 && ta.selectionEnd === 0;
+      if (ev.key === "Escape") {
+        ev.preventDefault();
+        done = true;
+        this.render();
+        return;
+      }
+      if (ev.key === "Enter" && !ev.shiftKey) {
+        ev.preventDefault();
+        done = true;
+        this._enterAt(block, ta.value, ta.selectionStart);
+        return;
+      }
+      if (ev.key === "Backspace" && atStart && (block.type === "spacer" || ta.value === "")) {
+        ev.preventDefault();
+        done = true;
+        this._deleteLine(block);
+        return;
+      }
+    });
+    ta.addEventListener("blur", () => {
+      if (done)
+        return;
+      done = true;
+      this._commitText(block, ta.value);
+    });
+  }
+  /** Apply a line-array mutation to a file (open editor → setValue, else vault). */
+  async _mutateFile(relFile, mutate) {
+    const fullPath = `${this._book.path}/${relFile}`;
+    for (const leaf of this.plugin.app.workspace.getLeavesOfType("markdown")) {
+      const v = leaf.view;
+      if (v && v.file && v.file.path === fullPath && v.editor) {
+        const ed = v.editor;
+        ed.setValue(mutate(ed.getValue().split("\n")).join("\n"));
+        return;
+      }
+    }
+    const file = this.plugin.app.vault.getAbstractFileByPath(fullPath);
+    if (!file)
+      return;
+    if (typeof this.plugin.app.vault.process === "function")
+      await this.plugin.app.vault.process(file, (d) => mutate(d.split("\n")).join("\n"));
+    else {
+      const d = await this.plugin.app.vault.read(file);
+      await this.plugin.app.vault.modify(file, mutate(d.split("\n")).join("\n"));
+    }
+  }
+  /** Enter at a caret: insert a blank line before/after, or split the line. */
+  async _enterAt(block, value, caret) {
+    const span = block.endLine - block.startLine + 1;
+    const pfx = block.prefix || "";
+    if (!this._screenplay) {
+      await this._commitText(block, value);
+      return;
+    }
+    await this._mutateFile(block.file, (lines) => {
+      let repl;
+      if (caret <= 0)
+        repl = ["", pfx + value];
+      else if (caret >= value.length)
+        repl = [pfx + value, ""];
+      else
+        repl = [pfx + value.slice(0, caret), value.slice(caret)];
+      lines.splice(block.startLine, span, ...repl);
+      return lines;
+    });
+    this._focus = { file: block.file, line: block.startLine + 1, ch: 0 };
+    this.render();
+  }
+  /** Remove an empty/spacer line and pull focus up to the previous line's end. */
+  async _deleteLine(block) {
+    const span = block.endLine - block.startLine + 1;
+    await this._mutateFile(block.file, (lines) => {
+      lines.splice(block.startLine, span);
+      return lines;
+    });
+    this._focus = { file: block.file, line: Math.max(0, block.startLine - 1), ch: Infinity };
+    this.render();
+  }
+  /** Commit edited text for a block back to its source range. */
+  async _commitText(block, value) {
+    if (value === (block.raw != null ? block.raw : block.text)) {
+      this.render();
+      return;
+    }
+    const span = block.endLine - block.startLine + 1;
+    const repl = ((block.prefix || "") + value).split("\n");
+    await this._mutateFile(block.file, (lines) => {
+      lines.splice(block.startLine, span, ...repl);
+      return lines;
+    });
+    this.render();
+  }
+  _empty(parent, title, subtitle) {
+    const wrap = parent.createDiv({ cls: "folio-paged-empty" });
+    const icon = wrap.createDiv({ cls: "folio-paged-empty-icon" });
+    try {
+      (0, import_obsidian7.setIcon)(icon, "file-text");
+    } catch (e) {
+    }
+    wrap.createDiv({ cls: "folio-paged-empty-title", text: title });
+    wrap.createDiv({ cls: "folio-paged-empty-subtitle", text: subtitle });
+  }
+};
+
 // src/main.js
 init_constants();
 
 // src/views/folioView.js
-var import_obsidian15 = require("obsidian");
+var import_obsidian17 = require("obsidian");
 init_constants();
+
+// src/services/statsAnalytics.js
+var MS_PER_DAY = 864e5;
+function dayNum(key) {
+  return Math.floor(Date.UTC(+key.slice(0, 4), +key.slice(5, 7) - 1, +key.slice(8, 10)) / MS_PER_DAY);
+}
+function dayKey(n) {
+  return new Date(n * MS_PER_DAY).toISOString().slice(0, 10);
+}
+var WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+function weekdayLabel(n) {
+  return WEEKDAYS[(n % 7 + 4) % 7];
+}
+function activeDays(dailyWords) {
+  return Object.keys(dailyWords || {}).filter((d) => (dailyWords[d] || 0) > 0 && /^\d{4}-\d{2}-\d{2}$/.test(d)).map(dayNum).sort((a, b) => a - b);
+}
+function streaks(dailyWords, today) {
+  const days = activeDays(dailyWords);
+  if (!days.length)
+    return { current: 0, longest: 0 };
+  const set = new Set(days);
+  let longest = 1, run = 1;
+  for (let i = 1; i < days.length; i++) {
+    run = days[i] === days[i - 1] + 1 ? run + 1 : 1;
+    if (run > longest)
+      longest = run;
+  }
+  const t = dayNum(today);
+  let start = set.has(t) ? t : set.has(t - 1) ? t - 1 : null;
+  let current = 0;
+  while (start != null && set.has(start)) {
+    current++;
+    start--;
+  }
+  return { current, longest };
+}
+function peakWeekday(dailyWords) {
+  const totals = new Array(7).fill(0);
+  for (const [d, w] of Object.entries(dailyWords || {})) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !(w > 0))
+      continue;
+    totals[(dayNum(d) % 7 + 4) % 7] += w;
+  }
+  const max = Math.max(...totals);
+  if (max <= 0)
+    return null;
+  const names = totals.map((v, i) => v === max ? WEEKDAYS[i] : null).filter(Boolean);
+  return names.slice(0, 2).join(" & ");
+}
+function bestDay(dailyWords) {
+  let best = null;
+  for (const [d, w] of Object.entries(dailyWords || {})) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !(w > 0))
+      continue;
+    if (!best || w > best.words)
+      best = { date: d, words: w };
+  }
+  return best;
+}
+function wordsToPages(words, perPage) {
+  if (!perPage || perPage <= 0)
+    return 0;
+  return Math.round(Math.max(0, words) / perPage * 10) / 10;
+}
+function bucketSeries(dailyWords, range, today) {
+  const dw = dailyWords || {};
+  const t = dayNum(today);
+  const out = [];
+  if (range === "year") {
+    const y = +today.slice(0, 4), m = +today.slice(5, 7) - 1;
+    const monthTotals = /* @__PURE__ */ new Map();
+    for (const [d, w] of Object.entries(dw)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d) || !(w > 0))
+        continue;
+      monthTotals.set(d.slice(0, 7), (monthTotals.get(d.slice(0, 7)) || 0) + w);
+    }
+    for (let i = 11; i >= 0; i--) {
+      const mi = m - i;
+      const yy = y + Math.floor(mi / 12);
+      const mm = (mi % 12 + 12) % 12;
+      const key = `${yy}-${String(mm + 1).padStart(2, "0")}`;
+      out.push({ label: MONTHS[mm], key, words: monthTotals.get(key) || 0 });
+    }
+    return out;
+  }
+  const span = range === "month" ? 30 : 7;
+  for (let i = span - 1; i >= 0; i--) {
+    const n = t - i;
+    const key = dayKey(n);
+    out.push({ label: range === "month" ? key.slice(8, 10) : weekdayLabel(n), key, words: dw[key] || 0 });
+  }
+  return out;
+}
+function sumSeries(series) {
+  return (series || []).reduce((s, b) => s + (b.words || 0), 0);
+}
+
+// src/modals/statsModal.js
+var import_obsidian8 = require("obsidian");
+init_constants();
+var StatsModal = class extends import_obsidian8.Modal {
+  constructor(plugin, book) {
+    super(plugin.app);
+    this.plugin = plugin;
+    this.book = book || plugin.activeBook;
+    this.metric = "words";
+    this.range = "week";
+  }
+  async onOpen() {
+    var _a;
+    this.cfg = await this.plugin.loadBookConfig(this.book) || {};
+    this.stats = this.cfg.stats || {};
+    this.daily = this.stats.daily_words || {};
+    this.today = new Date().toISOString().slice(0, 10);
+    const pt = ((_a = this.cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
+    this.perPage = pt === PROJECT_TYPES.SCRIPT || pt === PROJECT_TYPES.FILM ? 190 : 280;
+    this.contentEl.addClass("folio-stats-modal");
+    this.render();
+  }
+  onClose() {
+    this.contentEl.empty();
+  }
+  _toUnit(words) {
+    return this.metric === "pages" ? wordsToPages(words, this.perPage) : Math.round(words);
+  }
+  _unitLabel() {
+    return this.metric === "pages" ? "pages" : "words";
+  }
+  render() {
+    const el = this.contentEl;
+    el.empty();
+    el.createEl("h2", { cls: "folio-stats-title", text: "Writing Stats" });
+    const s = streaks(this.daily, this.today);
+    const peak = peakWeekday(this.daily);
+    const best = bestDay(this.daily);
+    const cards = el.createDiv({ cls: "folio-stats-cards" });
+    this._card(cards, "Current streak", s.current, s.current === 1 ? "day" : "days");
+    this._card(cards, "Longest streak", s.longest, s.longest === 1 ? "day" : "days");
+    this._card(cards, "Peak day", peak || "\u2014", peak ? "most words" : "");
+    this._card(cards, "Best day", best ? best.words.toLocaleString() : "\u2014", best ? new Date(best.date).toLocaleDateString(void 0, { month: "short", day: "numeric" }) : "");
+    const metricRow = el.createDiv({ cls: "folio-stats-segmented" });
+    for (const m of ["words", "pages"]) {
+      const b = metricRow.createEl("button", { cls: "folio-stats-seg" + (this.metric === m ? " is-active" : ""), text: m[0].toUpperCase() + m.slice(1) });
+      b.onclick = () => {
+        this.metric = m;
+        this.render();
+      };
+    }
+    const rangeRow = el.createDiv({ cls: "folio-stats-segmented folio-stats-range" });
+    for (const r of ["week", "month", "year"]) {
+      const b = rangeRow.createEl("button", { cls: "folio-stats-seg" + (this.range === r ? " is-active" : ""), text: r[0].toUpperCase() + r.slice(1) });
+      b.onclick = () => {
+        this.range = r;
+        this.render();
+      };
+    }
+    const series = bucketSeries(this.daily, this.range, this.today);
+    const rangeWords = sumSeries(series);
+    const todayWords = this.daily[this.today] || 0;
+    const goalWords = Number(this.stats.daily_goal_words) || 0;
+    const totals = el.createDiv({ cls: "folio-stats-totals" });
+    const totBlock = totals.createDiv({ cls: "folio-stats-total" });
+    totBlock.createDiv({ cls: "folio-stats-total-num", text: String(this._toUnit(rangeWords)) });
+    totBlock.createDiv({ cls: "folio-stats-total-lbl", text: `${this._unitLabel()} this ${this.range}` });
+    const todayBlock = totals.createDiv({ cls: "folio-stats-total" });
+    todayBlock.createDiv({ cls: "folio-stats-total-num", text: String(this._toUnit(todayWords)) });
+    const goalTxt = goalWords ? ` / ${this._toUnit(goalWords)} goal` : "";
+    todayBlock.createDiv({ cls: "folio-stats-total-lbl", text: `${this._unitLabel()} today${goalTxt}` });
+    if (goalWords > 0) {
+      const pct = Math.min(100, Math.round(todayWords / goalWords * 100));
+      const bar = el.createDiv({ cls: "folio-stats-goalbar" });
+      const fill = bar.createDiv({ cls: "folio-stats-goalbar-fill" + (pct >= 100 ? " is-done" : "") });
+      fill.style.width = pct + "%";
+    }
+    this._renderChart(el.createDiv({ cls: "folio-stats-chart" }), series);
+    const goalRow = el.createDiv({ cls: "folio-stats-goalset" });
+    goalRow.createSpan({ text: "Daily goal" });
+    const input = goalRow.createEl("input", { cls: "folio-stats-goalinput", type: "number", attr: { min: "0", placeholder: "\u2014" } });
+    if (goalWords)
+      input.value = String(goalWords);
+    goalRow.createSpan({ cls: "folio-stats-goalunit", text: "words/day" });
+    const save = goalRow.createEl("button", { cls: "mod-cta", text: "Save goal" });
+    save.onclick = async () => {
+      const v = Math.max(0, Math.floor(Number(input.value) || 0));
+      const cfg = await this.plugin.loadBookConfig(this.book) || {};
+      cfg.stats = cfg.stats || {};
+      cfg.stats.daily_goal_words = v;
+      await this.plugin.saveBookConfig(this.book, cfg);
+      this.stats = cfg.stats;
+      this.render();
+    };
+  }
+  _card(parent, label2, value, sub) {
+    const c = parent.createDiv({ cls: "folio-stats-card" });
+    c.createDiv({ cls: "folio-stats-card-label", text: label2 });
+    c.createDiv({ cls: "folio-stats-card-value", text: String(value) });
+    if (sub)
+      c.createDiv({ cls: "folio-stats-card-sub", text: sub });
+  }
+  _renderChart(host, series) {
+    const values = series.map((b) => this._toUnit(b.words));
+    const max = Math.max(1, ...values);
+    const skip = this.range === "month" ? 4 : 1;
+    const bars = host.createDiv({ cls: "folio-stats-bars" });
+    series.forEach((b, i) => {
+      const v = values[i];
+      const col = bars.createDiv({ cls: "folio-stats-barcol" });
+      col.setAttribute("aria-label", `${b.label}: ${v} ${this._unitLabel()}`);
+      col.setAttribute("title", `${b.label}: ${v} ${this._unitLabel()}`);
+      const track = col.createDiv({ cls: "folio-stats-bartrack" });
+      const bar = track.createDiv({ cls: "folio-stats-bar" + (b.key === this.today ? " is-today" : "") });
+      bar.style.height = Math.round(v / max * 100) + "%";
+      col.createDiv({ cls: "folio-stats-barlabel", text: i % skip === 0 ? b.label : "" });
+    });
+  }
+};
+
+// src/views/folioView.js
 function getProjectTypeIcon2(plugin, projectType) {
   var _a;
   const templates = ((_a = plugin.settings) == null ? void 0 : _a.projectTemplates) || [];
@@ -5465,7 +6917,7 @@ function getProjectTypeIcon2(plugin, projectType) {
     return "newspaper";
   return "book";
 }
-var FolioView = class extends import_obsidian15.ItemView {
+var FolioView = class extends import_obsidian17.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -5544,10 +6996,10 @@ var FolioView = class extends import_obsidian15.ItemView {
   async renderBookTree(container, bookFolder) {
     var _a, _b, _c;
     container.empty();
-    const folder = bookFolder instanceof import_obsidian15.TFolder ? bookFolder : this.plugin.app.vault.getAbstractFileByPath(
+    const folder = bookFolder instanceof import_obsidian17.TFolder ? bookFolder : this.plugin.app.vault.getAbstractFileByPath(
       (bookFolder == null ? void 0 : bookFolder.path) || bookFolder
     );
-    if (!(folder instanceof import_obsidian15.TFolder)) {
+    if (!(folder instanceof import_obsidian17.TFolder)) {
       console.error("Invalid book folder", bookFolder);
       return;
     }
@@ -5683,8 +7135,8 @@ var FolioView = class extends import_obsidian15.ItemView {
         try {
           const isExpanded = this.plugin.expandedFolders.has(fullPath);
           const iconName = node.icon || this.getCustomIcon(node.title, isExpanded, "folder");
-          (0, import_obsidian15.setIcon)(folderIcon, iconName);
-          (0, import_obsidian15.setIcon)(collapse, isExpanded ? "chevron-down" : "chevron-right");
+          (0, import_obsidian17.setIcon)(folderIcon, iconName);
+          (0, import_obsidian17.setIcon)(collapse, isExpanded ? "chevron-down" : "chevron-right");
         } catch (e) {
         }
         const titleSpan = folderRow.createSpan({ text: node.title, cls: "folio-tree-label" });
@@ -5725,8 +7177,8 @@ var FolioView = class extends import_obsidian15.ItemView {
             this.plugin.expandedFolders.delete(fullPath);
           try {
             const iconName = node.icon || this.getCustomIcon(node.title, isHidden, "folder");
-            (0, import_obsidian15.setIcon)(folderIcon, iconName);
-            (0, import_obsidian15.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
+            (0, import_obsidian17.setIcon)(folderIcon, iconName);
+            (0, import_obsidian17.setIcon)(collapse, isHidden ? "chevron-down" : "chevron-right");
           } catch (e2) {
           }
         };
@@ -5742,7 +7194,7 @@ var FolioView = class extends import_obsidian15.ItemView {
         const icon = fileRow.createSpan({ cls: "folio-tree-icon" });
         try {
           const defaultIcon = node.type === "canvas" ? "layout-dashboard" : this.getCustomIcon(node.title, false, "file");
-          (0, import_obsidian15.setIcon)(icon, node.icon || defaultIcon);
+          (0, import_obsidian17.setIcon)(icon, node.icon || defaultIcon);
         } catch (e) {
         }
         const label2 = fileRow.createSpan({ text: node.title, cls: "folio-tree-label" });
@@ -5892,13 +7344,13 @@ var FolioView = class extends import_obsidian15.ItemView {
             iconName.forEach((n, i) => {
               const s = iconSpan.createSpan({ cls: `folio-stat-icon-part part-${i}` });
               try {
-                (0, import_obsidian15.setIcon)(s, n);
+                (0, import_obsidian17.setIcon)(s, n);
               } catch (e) {
               }
             });
           } else {
             try {
-              (0, import_obsidian15.setIcon)(iconSpan, iconName);
+              (0, import_obsidian17.setIcon)(iconSpan, iconName);
             } catch (e) {
             }
           }
@@ -5909,11 +7361,26 @@ var FolioView = class extends import_obsidian15.ItemView {
         if (extra && typeof extra === "function")
           extra(r);
       };
+      const streak = streaks(dailyWords, todayKey).current;
+      row("flame", "Streak", `${streak} ${streak === 1 ? "day" : "days"}`);
       row("pencil", "Today", `${formatCount(todayCount)} words`);
       row("file", "Total words", `${formatCount(totalWords)} / ${formatTarget(targetWords)}`);
       row("target", "Completion", formatPercent(completionPct));
       row("clock", "Writing days", `${writingDays} days`);
       row("calendar-clock", "Daily average", `${formatCount(dailyAvg)} words`);
+      const more = container.createDiv({ cls: "folio-stat-more" });
+      try {
+        (0, import_obsidian17.setIcon)(more.createSpan({ cls: "folio-stat-more-icon" }), "bar-chart-3");
+      } catch (e) {
+      }
+      more.createSpan({ text: "Writing stats" });
+      more.onclick = () => {
+        try {
+          new StatsModal(this.plugin, book).open();
+        } catch (e) {
+          console.warn(e);
+        }
+      };
     } catch (e) {
       console.warn("renderStats failed", e);
     }
@@ -5925,7 +7392,7 @@ var FolioView = class extends import_obsidian15.ItemView {
   _showTreeAreaContextMenu(evt, book, TextInputModal2) {
     try {
       evt.preventDefault();
-      const menu = new import_obsidian15.Menu(this.plugin.app);
+      const menu = new import_obsidian17.Menu(this.plugin.app);
       menu.addItem(
         (it) => it.setTitle("New root canvas").setIcon("layout-dashboard").onClick(() => {
           new TextInputModal2(this.plugin.app, {
@@ -5969,8 +7436,8 @@ var FolioView = class extends import_obsidian15.ItemView {
                 const fileName = name.endsWith(".md") ? name : `${name}.md`;
                 const filePath = `${book.path}/${fileName}`;
                 if (!this.plugin.app.vault.getAbstractFileByPath(filePath)) {
-                  const frontmatter = await this.plugin.getNewFileFrontmatter(filePath, fileName, !!opts.screenplay);
-                  await this.plugin.app.vault.create(filePath, frontmatter);
+                  const frontmatter2 = await this.plugin.getNewFileFrontmatter(filePath, fileName, !!opts.screenplay);
+                  await this.plugin.app.vault.create(filePath, frontmatter2);
                 }
                 await this.plugin.refresh();
                 this.plugin.rerenderViews();
@@ -6030,7 +7497,7 @@ var FolioView = class extends import_obsidian15.ItemView {
       labelButton(newBtn, "New Project");
       const newIcon = newBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian15.setIcon)(newIcon, "edit");
+        (0, import_obsidian17.setIcon)(newIcon, "edit");
       } catch (e) {
       }
       newBtn.createSpan({ text: "New Project", cls: "folio-top-label" });
@@ -6038,7 +7505,7 @@ var FolioView = class extends import_obsidian15.ItemView {
       labelButton(switchBtn, "Switch");
       const switchIcon = switchBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian15.setIcon)(switchIcon, "repeat");
+        (0, import_obsidian17.setIcon)(switchIcon, "repeat");
       } catch (e) {
       }
       switchBtn.createSpan({ text: "Switch", cls: "folio-top-label" });
@@ -6046,7 +7513,7 @@ var FolioView = class extends import_obsidian15.ItemView {
       labelButton(manageBtn, "Manage");
       const manageIcon = manageBtn.createSpan({ cls: "folio-top-icon" });
       try {
-        (0, import_obsidian15.setIcon)(manageIcon, "library");
+        (0, import_obsidian17.setIcon)(manageIcon, "library");
       } catch (e) {
       }
       manageBtn.createSpan({ text: "Manage", cls: "folio-top-label" });
@@ -6054,7 +7521,7 @@ var FolioView = class extends import_obsidian15.ItemView {
       labelButton(helpBtn, "Help");
       const helpIcon = helpBtn.createSpan({ cls: "folio-help-icon" });
       try {
-        (0, import_obsidian15.setIcon)(helpIcon, "help");
+        (0, import_obsidian17.setIcon)(helpIcon, "help");
       } catch (e) {
       }
       newBtn.onclick = () => {
@@ -6077,7 +7544,7 @@ var FolioView = class extends import_obsidian15.ItemView {
         coverEl2.addClass("folio-book-cover-placeholder");
         try {
           const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
-          (0, import_obsidian15.setIcon)(iconEl, "book-open");
+          (0, import_obsidian17.setIcon)(iconEl, "book-open");
         } catch (e) {
         }
         const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
@@ -6094,7 +7561,7 @@ var FolioView = class extends import_obsidian15.ItemView {
         const emptyState = structureEl2.createDiv({ cls: "folio-empty-state" });
         const emptyIconEl = emptyState.createDiv({ cls: "folio-empty-icon" });
         try {
-          (0, import_obsidian15.setIcon)(emptyIconEl, "book-open");
+          (0, import_obsidian17.setIcon)(emptyIconEl, "book-open");
         } catch (e) {
         }
         emptyState.createDiv({ cls: "folio-empty-title", text: "No active project" });
@@ -6106,14 +7573,14 @@ var FolioView = class extends import_obsidian15.ItemView {
         return;
       }
       const bookFolderCheck = this.plugin.app.vault.getAbstractFileByPath(book.path);
-      if (!bookFolderCheck || !(bookFolderCheck instanceof import_obsidian15.TFolder)) {
+      if (!bookFolderCheck || !(bookFolderCheck instanceof import_obsidian17.TFolder)) {
         const headerEl2 = el.createDiv("folio-book-header");
         const coverCol2 = headerEl2.createDiv("folio-book-cover-col");
         const coverEl2 = coverCol2.createDiv("folio-book-cover");
         coverEl2.addClass("folio-book-cover-placeholder");
         try {
           const iconEl = coverEl2.createDiv({ cls: "folio-book-cover-icon" });
-          (0, import_obsidian15.setIcon)(iconEl, "alert-circle");
+          (0, import_obsidian17.setIcon)(iconEl, "alert-circle");
         } catch (e) {
         }
         const titleBlock2 = headerEl2.createDiv("folio-book-title-block");
@@ -6130,7 +7597,7 @@ var FolioView = class extends import_obsidian15.ItemView {
         const missingState = structureEl2.createDiv({ cls: "folio-empty-state" });
         const missingIconEl = missingState.createDiv({ cls: "folio-empty-icon" });
         try {
-          (0, import_obsidian15.setIcon)(missingIconEl, "folder-x");
+          (0, import_obsidian17.setIcon)(missingIconEl, "folder-x");
         } catch (e) {
         }
         missingState.createDiv({ cls: "folio-empty-title", text: "Folder not found" });
@@ -6159,7 +7626,7 @@ var FolioView = class extends import_obsidian15.ItemView {
           const iconEl = coverEl.createDiv({ cls: "folio-book-cover-icon" });
           const projectType = (metadata == null ? void 0 : metadata.projectType) || PROJECT_TYPES.BOOK;
           const iconName = getProjectTypeIcon2(this.plugin, projectType);
-          (0, import_obsidian15.setIcon)(iconEl, iconName);
+          (0, import_obsidian17.setIcon)(iconEl, iconName);
         } catch (e) {
         }
       }
@@ -6190,7 +7657,7 @@ var FolioView = class extends import_obsidian15.ItemView {
       const bookFolder = this.plugin.app.vault.getAbstractFileByPath(book.path);
       if (this._renderCounter !== token)
         return;
-      if (bookFolder instanceof import_obsidian15.TFolder) {
+      if (bookFolder instanceof import_obsidian17.TFolder) {
         await this.renderBookTree(structureEl, bookFolder);
       } else {
         structureEl.createEl("p", { text: "(No folder found on disk)" });
@@ -6222,12 +7689,12 @@ var FolioView = class extends import_obsidian15.ItemView {
 };
 
 // src/views/writerToolsView.js
-var import_obsidian18 = require("obsidian");
+var import_obsidian20 = require("obsidian");
 init_confirmModal();
 
 // src/modals/focusModeStatsModal.js
-var import_obsidian16 = require("obsidian");
-var FocusModeStatsModal = class extends import_obsidian16.Modal {
+var import_obsidian18 = require("obsidian");
+var FocusModeStatsModal = class extends import_obsidian18.Modal {
   constructor(plugin, project) {
     super(plugin.app);
     this.plugin = plugin;
@@ -6434,16 +7901,16 @@ var FocusModeStatsModal = class extends import_obsidian16.Modal {
     const createdAt = this.formatDate(meta.created_at);
     const lastModified = this.formatDate(((_b = cfg.stats) == null ? void 0 : _b.last_modified) || meta.last_modified);
     const focusMode = cfg.focusMode || {};
-    const history = Array.isArray(focusMode.history) ? focusMode.history : [];
+    const history2 = Array.isArray(focusMode.history) ? focusMode.history : [];
     const currentWords = Number(focusMode.currentWords || 0);
     const currentTarget = Number(focusMode.wordGoal || 0);
     const sessionDurationMinutes = Number(focusMode.sessionDurationMinutes || 25);
     const completedCount = Number(focusMode.sessions || 0);
     const interruptedCount = Number(focusMode.interruptions || 0);
-    const historyWords = history.reduce((sum, session) => sum + Number(session.words || 0), 0);
-    const bestSessionWords = history.reduce((max, session) => Math.max(max, Number(session.words || 0)), currentWords);
-    const totalTime = Number(focusMode.totalTimeSpent || 0) || history.reduce((sum, session) => sum + Number(session.elapsedSeconds || 0), 0);
-    const hasSessionData = completedCount > 0 || interruptedCount > 0 || history.length > 0 || currentWords > 0;
+    const historyWords = history2.reduce((sum, session) => sum + Number(session.words || 0), 0);
+    const bestSessionWords = history2.reduce((max, session) => Math.max(max, Number(session.words || 0)), currentWords);
+    const totalTime = Number(focusMode.totalTimeSpent || 0) || history2.reduce((sum, session) => sum + Number(session.elapsedSeconds || 0), 0);
+    const hasSessionData = completedCount > 0 || interruptedCount > 0 || history2.length > 0 || currentWords > 0;
     const sessionLength = this.formatMinutes(sessionDurationMinutes);
     const summary = body.createDiv({ cls: "focus-mode-summary-grid" });
     this.renderMetricCard(summary, "Session words", this.formatNumber(currentWords), "Current or most recent session", true);
@@ -6475,7 +7942,7 @@ var FocusModeStatsModal = class extends import_obsidian16.Modal {
     addStatRow("Best session", `${this.formatNumber(bestSessionWords)} words`);
     addStatRow("Session word goal", currentTarget ? `${this.formatNumber(currentTarget)} words` : "\u2014");
     addStatRow("Session length", `${this.formatNumber(sessionLength)} minutes`);
-    addStatRow("Saved sessions", this.formatNumber(history.length));
+    addStatRow("Saved sessions", this.formatNumber(history2.length));
     if (!hasSessionData) {
       const empty = body.createDiv({ cls: "focus-mode-stats-empty is-inline" });
       empty.createDiv({ cls: "focus-mode-stats-empty-title", text: "No focus sessions yet" });
@@ -6488,7 +7955,7 @@ var FocusModeStatsModal = class extends import_obsidian16.Modal {
     const recentSection = body.createDiv({ cls: "focus-mode-stats-section" });
     recentSection.createDiv({ cls: "focus-mode-stats-section-title", text: "Recent sessions" });
     const recentList = recentSection.createDiv({ cls: "focus-mode-history-list" });
-    const recent = history.slice(-5).reverse();
+    const recent = history2.slice(-5).reverse();
     if (!recent.length) {
       recentList.createDiv({ cls: "focus-mode-history-empty", text: "No saved session history yet." });
     } else {
@@ -6514,7 +7981,7 @@ var FocusModeStatsModal = class extends import_obsidian16.Modal {
 };
 
 // src/writer-tools/referenceDetails.js
-var import_obsidian17 = require("obsidian");
+var import_obsidian19 = require("obsidian");
 
 // src/writer-tools/resourcesI18n.js
 var ARCHETYPE_DATA = {
@@ -7969,7 +9436,7 @@ var PITFALLS_DATA = {
 function createResourceSubheading(parent, iconName, text) {
   const heading = parent.createDiv({ cls: "resource-detail-subheading-row" });
   const icon = heading.createSpan({ cls: "resource-detail-subheading-icon" });
-  (0, import_obsidian17.setIcon)(icon, iconName);
+  (0, import_obsidian19.setIcon)(icon, iconName);
   heading.createSpan({ cls: "resource-detail-subheading", text });
 }
 function renderArchetypeDetail(container, archetypeKey, lang = "en") {
@@ -8031,7 +9498,7 @@ function renderArchetypeDetail(container, archetypeKey, lang = "en") {
     const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
     const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
     const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-    (0, import_obsidian17.setIcon)(examplesIcon, "bookmark");
+    (0, import_obsidian19.setIcon)(examplesIcon, "bookmark");
     examplesHeader.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
     const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
     data.examples.forEach((example) => {
@@ -8079,7 +9546,7 @@ function renderCharacterArcDetail(container, arcKey, lang = "en") {
     const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
     const header = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
     const icon = header.createSpan({ cls: "resource-detail-examples-icon" });
-    (0, import_obsidian17.setIcon)(icon, "bookmark");
+    (0, import_obsidian19.setIcon)(icon, "bookmark");
     header.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
     const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
     data.examples.forEach((example) => {
@@ -8114,7 +9581,7 @@ function renderTechniqueDetail(container, config) {
   const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
   const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
   const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian17.setIcon)(examplesIcon, "bookmark");
+  (0, import_obsidian19.setIcon)(examplesIcon, "bookmark");
   examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
   const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
   config.examples.forEach((example) => {
@@ -8212,7 +9679,7 @@ function renderCalloutItem(container, item) {
   const callout = container.createDiv({ cls: "resource-detail-callout" });
   if (iconName) {
     const icon = callout.createSpan({ cls: "resource-detail-callout-icon" });
-    (0, import_obsidian17.setIcon)(icon, iconName);
+    (0, import_obsidian19.setIcon)(icon, iconName);
   }
   callout.createSpan({ cls: "resource-detail-callout-title", text: title });
   if (body) {
@@ -8269,7 +9736,7 @@ function renderStructureDetail(container, config) {
   const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
   const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
   const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian17.setIcon)(examplesIcon, "bookmark");
+  (0, import_obsidian19.setIcon)(examplesIcon, "bookmark");
   examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
   const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
   config.examples.forEach((example) => {
@@ -8297,7 +9764,7 @@ function renderPitfallsDetail(container, title, items) {
 
 // src/views/writerToolsView.js
 var WRITER_TOOLS_VIEW_TYPE2 = "folio-writer-tools";
-var WriterToolsView = class extends import_obsidian18.ItemView {
+var WriterToolsView = class extends import_obsidian20.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -8411,7 +9878,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     focusItem.setAttr("tabindex", "0");
     focusItem.setAttr("aria-label", "Open Focus mode for a quiet timed writing session");
     const focusIcon = focusItem.createSpan({ cls: "writer-tools-item-icon" });
-    (0, import_obsidian18.setIcon)(focusIcon, "circle-dot");
+    (0, import_obsidian20.setIcon)(focusIcon, "circle-dot");
     focusItem.createSpan({ cls: "writer-tools-item-text", text: "Focus mode" });
     const openFocusMode = () => this.showFocusMode();
     focusItem.addEventListener("click", openFocusMode);
@@ -8423,7 +9890,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     });
     const exportItem = section.createDiv({ cls: "writer-tools-item" });
     const exportIcon = exportItem.createSpan({ cls: "writer-tools-item-icon" });
-    (0, import_obsidian18.setIcon)(exportIcon, "file-stack");
+    (0, import_obsidian20.setIcon)(exportIcon, "file-stack");
     exportItem.createSpan({ cls: "writer-tools-item-text", text: "Export assistant" });
     exportItem.addEventListener("click", () => this.showExportSettingsView());
   }
@@ -8455,7 +9922,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
       this.focusModeProject = null;
       const empty = container.createDiv({ cls: "focus-mode-empty-state" });
       const emptyIcon = empty.createSpan({ cls: "focus-mode-empty-icon" });
-      (0, import_obsidian18.setIcon)(emptyIcon, "circle-dot");
+      (0, import_obsidian20.setIcon)(emptyIcon, "circle-dot");
       empty.createDiv({ cls: "focus-mode-empty-title", text: "Choose a project first" });
       empty.createDiv({
         cls: "focus-mode-empty-subtitle",
@@ -8477,7 +9944,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     container.addClass("folio-export-settings");
     const header = container.createDiv({ cls: "export-settings-header" });
     const headerIcon = header.createSpan({ cls: "export-settings-header-icon" });
-    (0, import_obsidian18.setIcon)(headerIcon, "settings");
+    (0, import_obsidian20.setIcon)(headerIcon, "settings");
     header.createSpan({ cls: "export-settings-header-title", text: "Export project" });
     const backButton = header.createEl("button", { cls: "export-settings-back", text: "Back" });
     backButton.addEventListener("click", () => this.onOpen());
@@ -8520,7 +9987,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     const iconWrap = card.createDiv({ cls: "export-settings-book-icon" });
     const iconEl = iconWrap.createSpan({ cls: "export-settings-book-icon-svg" });
     const type = (meta == null ? void 0 : meta.projectType) || ((_f = cfg == null ? void 0 : cfg.basic) == null ? void 0 : _f.projectType) || "book";
-    (0, import_obsidian18.setIcon)(iconEl, this.getProjectTypeIcon(type));
+    (0, import_obsidian20.setIcon)(iconEl, this.getProjectTypeIcon(type));
     const bookInfo = card.createDiv({ cls: "export-settings-book-info" });
     const displayTitle = (meta == null ? void 0 : meta.title) || (project == null ? void 0 : project.name) || "Untitled";
     bookInfo.createDiv({ cls: "export-settings-book-title", text: displayTitle });
@@ -8557,7 +10024,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     });
     const statusRow = content.createDiv({ cls: "export-settings-status" });
     const statusIcon = statusRow.createSpan({ cls: "export-settings-status-icon" });
-    (0, import_obsidian18.setIcon)(statusIcon, "settings");
+    (0, import_obsidian20.setIcon)(statusIcon, "settings");
     const statusText = statusRow.createSpan({ cls: "export-settings-status-text" });
     const refreshState = () => {
       const hasFormat = !!this.exportFormat;
@@ -8576,7 +10043,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     formats.forEach((format) => {
       const card2 = formatGrid.createDiv({ cls: "export-settings-format-card" });
       const icon = card2.createSpan({ cls: "export-settings-format-icon" });
-      (0, import_obsidian18.setIcon)(icon, format.icon);
+      (0, import_obsidian20.setIcon)(icon, format.icon);
       card2.createDiv({ cls: "export-settings-format-title", text: format.title });
       card2.createDiv({ cls: "export-settings-format-subtitle", text: format.subtitle });
       card2.addEventListener("click", () => {
@@ -8613,7 +10080,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     try {
       const project = this.exportProject;
       if (!project) {
-        new import_obsidian18.Notice("No active project selected.");
+        new import_obsidian20.Notice("No active project selected.");
         return;
       }
       const cfg = this.exportConfig || {};
@@ -8622,21 +10089,21 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
       const collected = await this.plugin.pdfExportService.collectOrderedMarkdownFiles(project, cfg, settings, meta);
       const files = (collected || []).filter((f) => f && f.extension === "md");
       if (files.length === 0) {
-        new import_obsidian18.Notice("No markdown files to export.");
+        new import_obsidian20.Notice("No markdown files to export.");
         return;
       }
       const path = await this.plugin.fdxExportService.exportProject(project, meta, files);
       if (path)
-        new import_obsidian18.Notice(`Exported Final Draft to ${path}`);
+        new import_obsidian20.Notice(`Exported Final Draft to ${path}`);
     } catch (e) {
       console.error("runScreenplayExport failed", e);
-      new import_obsidian18.Notice("Final Draft export failed. See console for details.");
+      new import_obsidian20.Notice("Final Draft export failed. See console for details.");
     }
   }
   async handleExportAction(options = {}) {
     var _a, _b;
     if (!this.exportProject) {
-      new import_obsidian18.Notice("No active project selected.");
+      new import_obsidian20.Notice("No active project selected.");
       return false;
     }
     if (!this.validatePdfExportSettings()) {
@@ -8647,7 +10114,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
         await this.plugin.pdfExportService.exportProject(this.exportProject, this.pdfSettings, options);
         return true;
       }
-      new import_obsidian18.Notice("PDF export is not wired yet. Settings are saved and preview updates are in place.");
+      new import_obsidian20.Notice("PDF export is not wired yet. Settings are saved and preview updates are in place.");
       return false;
     }
     if (this.exportFormat === "docx") {
@@ -8821,7 +10288,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
   validatePdfExportSettings(notify = true) {
     const state = this.getPdfExportReadiness();
     if (!state.canExport && notify) {
-      new import_obsidian18.Notice(state.message);
+      new import_obsidian20.Notice(state.message);
     }
     return state.canExport;
   }
@@ -9351,7 +10818,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     const card = container.createDiv({ cls: "pdf-settings-card" });
     const header = card.createDiv({ cls: "pdf-settings-card-header" });
     const icon = header.createSpan({ cls: "pdf-settings-card-icon" });
-    (0, import_obsidian18.setIcon)(icon, iconName);
+    (0, import_obsidian20.setIcon)(icon, iconName);
     const copy = header.createDiv({ cls: "pdf-settings-card-copy" });
     copy.createDiv({ cls: "pdf-settings-card-title", text: title });
     if (helper)
@@ -9649,7 +11116,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     ["is-ready", "is-running", "is-paused", "is-completed", "is-ended"].forEach((cls) => container.removeClass(cls));
     const header = container.createDiv({ cls: "focus-mode-header" });
     const headerIcon = header.createSpan({ cls: "focus-mode-header-icon" });
-    (0, import_obsidian18.setIcon)(headerIcon, "circle-dot");
+    (0, import_obsidian20.setIcon)(headerIcon, "circle-dot");
     const context = this.getFocusContext(project);
     const headerCopy = header.createDiv({ cls: "focus-mode-header-copy" });
     headerCopy.createSpan({ cls: "focus-mode-header-title", text: "Focus mode" });
@@ -9944,7 +11411,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
       this.focusModeContainer.addClass("is-break");
     this.updateTimerDisplay();
     this.updateFocusControls();
-    new import_obsidian18.Notice(isLong ? `Long break \u2014 ${mins} min. Step away.` : `Break \u2014 ${mins} min.`);
+    new import_obsidian20.Notice(isLong ? `Long break \u2014 ${mins} min. Step away.` : `Break \u2014 ${mins} min.`);
     this._startCountdown();
   }
   /* Pomodoro: break finished — chime and auto-start the next work sprint. */
@@ -9957,7 +11424,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     if (this.focusModeContainer)
       this.focusModeContainer.removeClass("is-break");
     this.playFocusChime("goal");
-    new import_obsidian18.Notice("Break over \u2014 back to writing.");
+    new import_obsidian20.Notice("Break over \u2014 back to writing.");
     this.timerSeconds = 0;
     this.focusSessionState = "ready";
     this.sessionStartWords = null;
@@ -10008,7 +11475,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     this.refreshFocusStats();
     this.updateFocusControls();
     this.playFocusChime("complete");
-    new import_obsidian18.Notice(wordsWritten > 0 ? `Focus session complete \u2014 ${wordsWritten} words written.` : "Focus session complete.");
+    new import_obsidian20.Notice(wordsWritten > 0 ? `Focus session complete \u2014 ${wordsWritten} words written.` : "Focus session complete.");
     if (this.pomodoroEnabled)
       this.startBreak();
   }
@@ -10189,7 +11656,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
       if (this.focusModeContainer)
         this.focusModeContainer.addClass("is-goal-reached");
       this.playFocusChime("goal");
-      new import_obsidian18.Notice(`Word goal reached \u2014 ${goal} words! \u{1F389}`);
+      new import_obsidian20.Notice(`Word goal reached \u2014 ${goal} words! \u{1F389}`);
     }
   }
   playFocusChime(kind = "complete") {
@@ -10394,7 +11861,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
       resourceItem.setAttribute("tabindex", "0");
       resourceItem.setAttribute("aria-label", resource.label);
       const iconWrapper = resourceItem.createDiv({ cls: "writer-tools-item-icon" });
-      (0, import_obsidian18.setIcon)(iconWrapper, resource.icon);
+      (0, import_obsidian20.setIcon)(iconWrapper, resource.icon);
       resourceItem.createDiv({ cls: "writer-tools-item-text", text: resource.label });
       const activate = () => resource.action();
       resourceItem.addEventListener("click", activate);
@@ -10444,13 +11911,13 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     const header = container.createDiv({ cls: "folio-resource-view-header" });
     const left = header.createDiv({ cls: "folio-resource-view-header-left" });
     const iconEl = left.createSpan({ cls: "folio-resource-view-header-icon" });
-    (0, import_obsidian18.setIcon)(iconEl, iconName);
+    (0, import_obsidian20.setIcon)(iconEl, iconName);
     left.createSpan({ cls: "folio-resource-view-header-title", text: titleText });
     const right = header.createDiv({ cls: "folio-resource-view-header-right" });
     this.createLangToggle(right, onLangToggle);
     const backButton = right.createEl("button", { cls: "folio-resource-view-back" });
     const backIcon = backButton.createSpan({ cls: "folio-resource-view-back-icon" });
-    (0, import_obsidian18.setIcon)(backIcon, "chevron-left");
+    (0, import_obsidian20.setIcon)(backIcon, "chevron-left");
     backButton.createSpan({ text: ui(this.resourceLanguage, "back") });
     backButton.addEventListener("click", onBack);
     return header;
@@ -10473,9 +11940,9 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     container.empty();
     container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
-      (0, import_obsidian18.setIcon)(el, iconName);
+      (0, import_obsidian20.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
-        (0, import_obsidian18.setIcon)(el, "circle-dot");
+        (0, import_obsidian20.setIcon)(el, "circle-dot");
     };
     this.buildResourceViewHeader(
       container,
@@ -10553,9 +12020,9 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     container.empty();
     container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
-      (0, import_obsidian18.setIcon)(el, iconName);
+      (0, import_obsidian20.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
-        (0, import_obsidian18.setIcon)(el, "circle-dot");
+        (0, import_obsidian20.setIcon)(el, "circle-dot");
     };
     this.buildResourceViewHeader(
       container,
@@ -10612,9 +12079,9 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     container.empty();
     container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
-      (0, import_obsidian18.setIcon)(el, iconName);
+      (0, import_obsidian20.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
-        (0, import_obsidian18.setIcon)(el, "circle-dot");
+        (0, import_obsidian20.setIcon)(el, "circle-dot");
     };
     this.buildResourceViewHeader(
       container,
@@ -10672,9 +12139,9 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     container.empty();
     container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
-      (0, import_obsidian18.setIcon)(el, iconName);
+      (0, import_obsidian20.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
-        (0, import_obsidian18.setIcon)(el, "circle-dot");
+        (0, import_obsidian20.setIcon)(el, "circle-dot");
     };
     this.buildResourceViewHeader(
       container,
@@ -11215,7 +12682,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     aboutItems.forEach((item) => {
       const aboutItem = section.createDiv({ cls: "writer-tools-item" });
       const iconSpan = aboutItem.createSpan({ cls: "writer-tools-item-icon" });
-      (0, import_obsidian18.setIcon)(iconSpan, item.icon);
+      (0, import_obsidian20.setIcon)(iconSpan, item.icon);
       aboutItem.createSpan({ cls: "writer-tools-item-text", text: item.label });
       aboutItem.addEventListener("click", item.action);
     });
@@ -11227,7 +12694,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     const header = container.createDiv({ cls: "donate-view-header" });
     const headerLeft = header.createDiv({ cls: "donate-view-header-left" });
     const headerHeart = headerLeft.createSpan({ cls: "donate-view-header-heart" });
-    (0, import_obsidian18.setIcon)(headerHeart, "heart");
+    (0, import_obsidian20.setIcon)(headerHeart, "heart");
     headerLeft.createSpan({ cls: "donate-view-header-title", text: "Support" });
     const backButton = header.createEl("button", { cls: "donate-view-back", text: "Back" });
     backButton.addEventListener("click", () => this.exitDonateView());
@@ -11235,7 +12702,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     const card = content.createDiv({ cls: "donate-view-card" });
     const cardHeader = card.createDiv({ cls: "donate-view-card-header" });
     const cardIcon = cardHeader.createSpan({ cls: "donate-view-card-icon" });
-    (0, import_obsidian18.setIcon)(cardIcon, "coffee");
+    (0, import_obsidian20.setIcon)(cardIcon, "coffee");
     cardHeader.createSpan({ cls: "donate-view-card-title", text: "Support Folio development" });
     const donateCopy = card.createDiv({ cls: "donate-view-card-text" });
     donateCopy.createSpan({
@@ -11266,7 +12733,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     container.addClass("folio-contact-view");
     const header = container.createDiv({ cls: "contact-view-header" });
     const headerIcon = header.createSpan({ cls: "contact-view-header-icon" });
-    (0, import_obsidian18.setIcon)(headerIcon, "mail");
+    (0, import_obsidian20.setIcon)(headerIcon, "mail");
     header.createSpan({ cls: "contact-view-header-title", text: "Contact" });
     const backButton = header.createEl("button", { cls: "contact-view-back", text: "Back" });
     backButton.addEventListener("click", () => this.exitContactView());
@@ -11282,7 +12749,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     links.forEach((item) => {
       const row = list.createDiv({ cls: "contact-view-item" });
       const icon = row.createSpan({ cls: "contact-view-item-icon" });
-      (0, import_obsidian18.setIcon)(icon, item.icon);
+      (0, import_obsidian20.setIcon)(icon, item.icon);
       const text = row.createDiv({ cls: "contact-view-item-text" });
       text.createDiv({ cls: "contact-view-item-title", text: item.label });
       text.createDiv({ cls: "contact-view-item-subtext", text: item.url });
@@ -11295,7 +12762,7 @@ var WriterToolsView = class extends import_obsidian18.ItemView {
     this.onOpen();
   }
 };
-var PdfPreviewModal = class extends import_obsidian18.Modal {
+var PdfPreviewModal = class extends import_obsidian20.Modal {
   constructor(app, view) {
     super(app);
     this.view = view;
@@ -11328,7 +12795,7 @@ var PdfPreviewModal = class extends import_obsidian18.Modal {
     }
   }
 };
-var PdfSettingsModal = class extends import_obsidian18.Modal {
+var PdfSettingsModal = class extends import_obsidian20.Modal {
   constructor(app, view) {
     super(app);
     this.view = view;
@@ -11424,10 +12891,11 @@ var PdfSettingsModal = class extends import_obsidian18.Modal {
       return;
     const activeLeaf = document.querySelector(".workspace-leaf.mod-active .workspace-leaf-content");
     const rootLeaf = document.querySelector(".mod-root .workspace-leaf-content");
-    const rootLeaves = Array.from(document.querySelectorAll(".mod-root .workspace-leaf-content"));
-    const centerLeaf = rootLeaves.filter((leaf) => leaf.matches("[data-type='markdown'], [data-type='markdown-preview'], [data-type='empty']")).sort((a, b) => b.clientWidth * b.clientHeight - a.clientWidth * a.clientHeight)[0];
+    const rootSplit = document.querySelector(".workspace-split.mod-root");
+    const rootLeaves = Array.from(document.querySelectorAll(".mod-root .workspace-leaf-content")).filter((leaf) => leaf.clientWidth > 0 && leaf.clientHeight > 0);
+    const centerLeaf = rootLeaves.filter((leaf) => leaf.matches("[data-type='markdown'], [data-type='markdown-preview'], [data-type='empty'], [data-type='folio-paged'], [data-type='folio-beat-board']")).sort((a, b) => b.clientWidth * b.clientHeight - a.clientWidth * a.clientHeight)[0];
     const largestRoot = rootLeaves.sort((a, b) => b.clientWidth * b.clientHeight - a.clientWidth * a.clientHeight)[0];
-    const target = centerLeaf || largestRoot || activeLeaf || rootLeaf;
+    const target = centerLeaf || largestRoot || rootSplit || activeLeaf || rootLeaf;
     if (!target)
       return;
     const rect = target.getBoundingClientRect();
@@ -11522,7 +12990,7 @@ var PdfSettingsModal = class extends import_obsidian18.Modal {
 };
 
 // src/views/timelineBand.js
-var import_obsidian19 = require("obsidian");
+var import_obsidian21 = require("obsidian");
 init_constants();
 
 // src/services/outlineLayout.js
@@ -11631,11 +13099,13 @@ var TimelineBand = class {
         else
           this.removeBand(contentEl);
       }
-      for (const leaf of ws.getLeavesOfType(BEAT_BOARD_VIEW_TYPE)) {
-        const host = (_b = (_a = leaf.view) == null ? void 0 : _a.contentEl) == null ? void 0 : _b.querySelector(":scope > .folio-bb-strip");
-        const book = this.plugin.activeBook;
-        if (host && book)
-          await this.renderBand(host, book, null, force);
+      for (const type of [BEAT_BOARD_VIEW_TYPE, PAGED_VIEW_TYPE]) {
+        for (const leaf of ws.getLeavesOfType(type)) {
+          const host = (_b = (_a = leaf.view) == null ? void 0 : _a.contentEl) == null ? void 0 : _b.querySelector(":scope > .folio-bb-strip");
+          const book = this.plugin.activeBook;
+          if (host && book)
+            await this.renderBand(host, book, null, force);
+        }
       }
     } catch (e) {
       console.warn("TimelineBand.refresh failed", e);
@@ -11651,11 +13121,191 @@ var TimelineBand = class {
       console.warn(e);
     }
   }
+  /**
+   * Position the playhead on a host's band from an EXTERNAL cursor (the Paged
+   * View's CodeMirror editor, which isn't a markdown editor the strip can poll).
+   * @param {HTMLElement} band the .folio-timeline-band element in the host
+   * @param {{path:string}} book
+   * @param {string} fullPath the edited file's full path
+   * @param {number} line 0-indexed cursor line within that file
+   */
+  positionExternalPlayhead(band, book, fullPath, line, pageFraction) {
+    const view = this._views && this._views.get(book.path);
+    const ph = band && band.querySelector(".folio-tl-playhead");
+    if (!view || !ph)
+      return;
+    let px;
+    if (pageFraction != null && Number.isFinite(pageFraction))
+      px = pageFraction * view.pxPerPage;
+    else
+      px = this.computePlayheadPx(view, book, fullPath, line);
+    if (px == null) {
+      ph.style.display = "none";
+      return;
+    }
+    ph.style.display = "";
+    ph.style.left = LABEL_W + px + "px";
+    ph.dataset.uoff = String(px / view.pxPerUnit);
+  }
+  /** The active main-area leaf (the pane this strip lives in), or null. */
+  _activeLeaf() {
+    const ws = this.plugin.app.workspace;
+    try {
+      return ws.getMostRecentLeaf() || ws.activeLeaf || null;
+    } catch (e) {
+      return ws.activeLeaf || null;
+    }
+  }
+  /** First leaf found anywhere under a layout node (depth-first). */
+  _firstLeafIn(node) {
+    if (!node)
+      return null;
+    if (Array.isArray(node.children)) {
+      for (const c of node.children) {
+        const r = this._firstLeafIn(c);
+        if (r)
+          return r;
+      }
+      return null;
+    }
+    return node;
+  }
+  /**
+   * Representative leaves of the OTHER panes in this leaf's SPLIT (not its tab
+   * siblings). In Obsidian a leaf's `.parent` is its tab group; the split is the
+   * grandparent, so we look there — otherwise sibling panes are never found.
+   */
+  _siblingLeaves(leaf) {
+    try {
+      const pane = leaf && leaf.parent;
+      const split = pane && pane.parent;
+      if (!split || !Array.isArray(split.children) || split.children.length < 2)
+        return [];
+      const out = [];
+      for (const branch of split.children) {
+        if (branch === pane)
+          continue;
+        const rep = this._firstLeafIn(branch);
+        if (rep)
+          out.push(rep);
+      }
+      return out;
+    } catch (e) {
+      return [];
+    }
+  }
+  /** Show a Menu at the click (mouse event) or below the anchor element. */
+  _showMenu(menu, evt) {
+    try {
+      if (evt && typeof menu.showAtMouseEvent === "function")
+        menu.showAtMouseEvent(evt);
+      else {
+        const r = evt && evt.currentTarget && evt.currentTarget.getBoundingClientRect ? evt.currentTarget.getBoundingClientRect() : { left: 0, bottom: 0 };
+        menu.showAtPosition({ x: r.left, y: r.bottom });
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+  /** Split-view menu on the columns icon: split / swap / unsplit the panes. */
+  openSplitMenu(evt) {
+    const ws = this.plugin.app.workspace;
+    const leaf = this._activeLeaf();
+    const hasSplit = this._siblingLeaves(leaf).length > 0;
+    const menu = new import_obsidian21.Menu();
+    menu.addItem((i) => i.setTitle("Split Vertically").setIcon("separator-vertical").onClick(() => this._split("vertical")));
+    menu.addItem((i) => i.setTitle("Split Horizontally").setIcon("separator-horizontal").onClick(() => this._split("horizontal")));
+    menu.addSeparator();
+    menu.addItem((i) => {
+      i.setTitle("Swap Panels").setIcon("arrow-left-right").setDisabled(!hasSplit).onClick(() => this._swapPanels());
+    });
+    menu.addItem((i) => {
+      i.setTitle("Unsplit Panels").setIcon("columns").setDisabled(!hasSplit).onClick(() => this._unsplitPanels());
+    });
+    this._showMenu(menu, evt);
+  }
+  /** Split the active pane and mirror its current file into the new pane. */
+  _split(direction) {
+    const ws = this.plugin.app.workspace;
+    try {
+      const file = ws.getActiveFile();
+      const leaf = ws.getLeaf("split", direction);
+      if (leaf && file && typeof leaf.openFile === "function")
+        leaf.openFile(file);
+    } catch (e) {
+      console.warn("split failed", e);
+    }
+  }
+  /** Swap the contents of the active pane and its sibling. */
+  _swapPanels() {
+    const a = this._activeLeaf();
+    const b = this._siblingLeaves(a)[0];
+    if (!a || !b)
+      return;
+    try {
+      const sa = a.getViewState(), sb = b.getViewState();
+      const ea = a.getEphemeralState ? a.getEphemeralState() : null;
+      const eb = b.getEphemeralState ? b.getEphemeralState() : null;
+      a.setViewState(sb, eb);
+      b.setViewState(sa, ea);
+    } catch (e) {
+      console.warn("swap panels failed", e);
+    }
+  }
+  /** Collect every leaf under a layout node. */
+  _allLeavesIn(node, acc) {
+    if (!node)
+      return;
+    if (Array.isArray(node.children)) {
+      for (const c of node.children)
+        this._allLeavesIn(c, acc);
+    } else
+      acc.push(node);
+  }
+  /** Collapse the split: close all OTHER panes in the split, keep the active one. */
+  _unsplitPanels() {
+    try {
+      const active = this._activeLeaf();
+      const pane = active && active.parent;
+      const split = pane && pane.parent;
+      if (!split || !Array.isArray(split.children))
+        return;
+      const toClose = [];
+      for (const branch of split.children) {
+        if (branch === pane)
+          continue;
+        this._allLeavesIn(branch, toClose);
+      }
+      for (const l of toClose) {
+        try {
+          l.detach();
+        } catch (e) {
+          console.warn("unsplit failed", e);
+        }
+      }
+    } catch (e) {
+      console.warn("unsplit failed", e);
+    }
+  }
   removeBand(contentEl) {
     const band = contentEl.querySelector(":scope > ." + BAND_CLASS);
     if (band)
       band.remove();
     contentEl.classList.remove(HOST_CLASS);
+  }
+  /** Flatten a node list to its markdown file nodes, in tree order. */
+  _flattenFiles(nodes) {
+    const out = [];
+    const walk = (ns) => {
+      for (const n of [...ns || []].sort((a, b) => (a.order || 0) - (b.order || 0))) {
+        if (n.type === "file" && n.path && n.path.endsWith(".md"))
+          out.push(n);
+        else if (n.children)
+          walk(n.children);
+      }
+    };
+    walk(nodes);
+    return out;
   }
   async getData(book, file, force) {
     var _a, _b;
@@ -11687,10 +13337,26 @@ var TimelineBand = class {
       outline = { lanes: [], beats: [] };
     }
     const pt = ((_b = cfg.basic) == null ? void 0 : _b.projectType) || PROJECT_TYPES.BOOK;
-    const perPage = pt === PROJECT_TYPES.SCRIPT || pt === PROJECT_TYPES.FILM ? 190 : 280;
+    const screenplay = pt === PROJECT_TYPES.SCRIPT || pt === PROJECT_TYPES.FILM;
+    const layoutProfile = screenplay ? SCREENPLAY_PROFILE : PROSE_PROFILE;
+    const blocks = [];
+    let firstFile = true;
+    for (const node of this._flattenFiles(scopedTree)) {
+      const text = await this.plugin.spineService.readText(`${book.path}/${node.path}`);
+      if (text == null)
+        continue;
+      let fb = screenplay ? parseScreenplayBlocks(text, { file: node.path, keepBlanks: true }) : parseProseBlocks(text, { file: node.path });
+      if (!fb.length)
+        fb = [{ type: "spacer", text: "", file: node.path, startLine: 0, endLine: 0 }];
+      if (!firstFile)
+        fb[0] = { ...fb[0], pageBreakBefore: true };
+      blocks.push(...fb);
+      firstFile = false;
+    }
+    const paginated = paginatedScenesFromBlocks(blocks, spine, layoutProfile);
     const choices = findDrafts(tree).map((d) => ({ path: d.path, name: d.title || d.path }));
     const draftName = draftNode ? draftNode.title || draftNode.path : "";
-    const data = { spine, outline, draftPath, draftName, choices, perPage };
+    const data = { spine, outline, draftPath, draftName, choices, paginated };
     this._cache.set(key, data);
     return data;
   }
@@ -11704,14 +13370,13 @@ var TimelineBand = class {
       contentEl.prepend(band);
     }
     contentEl.classList.add(HOST_CLASS);
-    const { spine, outline, draftPath, draftName, choices, perPage } = await this.getData(book, file, force);
+    const { spine, outline, draftPath, draftName, choices, paginated } = await this.getData(book, file, force);
     const draftKey = book.path + "::" + draftPath;
     if (band.dataset.draftkey === draftKey && !force) {
       this.updateHighlight(band, file ? file.path : null);
       this.positionPlayhead(band, book, file);
       return;
     }
-    const paginated = paginate(spine, perPage);
     const pxPerPage = outline.zoom || PX_PER_PAGE;
     const view = layout(paginated, outline.beats, pxPerPage);
     if (!this._views)
@@ -11727,29 +13392,27 @@ var TimelineBand = class {
     const viewBtn = (icon, title, fn) => {
       const b = views.createSpan({ cls: "folio-tl-viewbtn" });
       try {
-        (0, import_obsidian19.setIcon)(b, icon);
+        (0, import_obsidian21.setIcon)(b, icon);
       } catch (e) {
       }
       b.setAttribute("aria-label", title);
       b.setAttribute("title", title);
-      b.addEventListener("click", () => {
+      b.addEventListener("click", (e) => {
         try {
-          fn();
-        } catch (e) {
-          console.warn(e);
+          fn(e);
+        } catch (err) {
+          console.warn(err);
         }
       });
     };
-    viewBtn("columns-2", "Open Folio (split)", () => this.plugin.activateFolio());
-    viewBtn("file-text", "Open draft script", () => this.plugin.openDraftScript());
-    viewBtn("layout-dashboard", "Open Beat Board", () => this.plugin.openBeatBoard());
+    viewBtn("columns-2", "Split view", (e) => this.openSplitMenu(e));
     viewBtn("list-tree", "Build outline from draft", () => this.plugin.buildOutlineFromDraft());
     viewBtn("pencil-ruler", "Writer Tools", () => this.plugin.openWriterTools());
     viewBtn("focus", "Focus Mode", () => this.plugin.openFocusMode());
     if (choices && choices.length) {
       const dwrap = toolbar.createDiv({ cls: "folio-tl-draftwrap" });
       try {
-        (0, import_obsidian19.setIcon)(dwrap.createSpan({ cls: "folio-tl-draft-icon" }), "layers");
+        (0, import_obsidian21.setIcon)(dwrap.createSpan({ cls: "folio-tl-draft-icon" }), "layers");
       } catch (e) {
       }
       if (choices.length > 1) {
@@ -11776,7 +13439,7 @@ var TimelineBand = class {
     });
     const zoomWrap = toolbar.createDiv({ cls: "folio-tl-zoomwrap" });
     try {
-      (0, import_obsidian19.setIcon)(zoomWrap.createSpan({ cls: "folio-tl-zoom-icon" }), "zoom-in");
+      (0, import_obsidian21.setIcon)(zoomWrap.createSpan({ cls: "folio-tl-zoom-icon" }), "zoom-in");
     } catch (e) {
     }
     const slider = zoomWrap.createEl("input", { cls: "folio-tl-zoom-slider", type: "range" });
@@ -11814,7 +13477,7 @@ var TimelineBand = class {
   }
   renderLane(inner, view, outline, lane, laneIndex, book) {
     const row = inner.createDiv({ cls: "folio-tl-row folio-tl-lane" });
-    const label2 = row.createSpan({ cls: "folio-tl-label is-lane", text: lane.name || `Outline ${laneIndex + 1}` });
+    const label2 = row.createSpan({ cls: "folio-tl-label is-lane", text: lane.name || `Lane ${laneIndex + 1}` });
     label2.setAttribute("title", "Click to rename");
     label2.addEventListener("click", () => this.renameLane(book, laneIndex, lane.name));
     if (outline.lanes.length > 1) {
@@ -11936,7 +13599,7 @@ var TimelineBand = class {
   }
   renderScriptLane(inner, view, book) {
     const row = inner.createDiv({ cls: "folio-tl-row folio-tl-script" });
-    row.createSpan({ cls: "folio-tl-label is-script", text: "Script" });
+    row.createSpan({ cls: "folio-tl-label is-script", text: "Draft" });
     const track = row.createDiv({ cls: "folio-tl-track" });
     track.style.width = view.width + "px";
     for (const scene of view.scenes) {
@@ -11956,7 +13619,7 @@ var TimelineBand = class {
       bar.setAttribute("title", scene.title);
       bar.addEventListener("click", () => {
         if (!this._dragging)
-          this.revealAtLine(fullPath, scene.line);
+          this._revealScene(bar, fullPath, scene.line);
       });
       this.attachSceneDrag(bar, book, scene);
     }
@@ -12061,6 +13724,15 @@ var TimelineBand = class {
     });
     modal.open();
   }
+  /** Navigate to a scene: scroll the Paged editor in place if the strip lives in it,
+   *  otherwise open the file at that line in the normal editor. */
+  _revealScene(barEl, fullPath, line) {
+    if (barEl && barEl.closest(".folio-paged-strip")) {
+      this.plugin.scrollPagedToLine(fullPath, line || 0);
+    } else {
+      this.revealAtLine(fullPath, line);
+    }
+  }
   async revealAtLine(fullPath, line) {
     try {
       const file = this.plugin.app.vault.getAbstractFileByPath(fullPath);
@@ -12144,7 +13816,7 @@ var TimelineBand = class {
   }
   /** Reposition all bars/ticks/playhead for a new zoom without a rebuild (live drag). */
   applyZoomLive(band, v) {
-    const pp = Number(band.dataset.pp) || 280;
+    const pp = Number(band.dataset.pp) || 648;
     const total = Number(band.dataset.total) || 1;
     const pxUnit = v / pp;
     const width = Math.max(total * pxUnit, v) + "px";
@@ -12169,10 +13841,10 @@ var TimelineBand = class {
 };
 
 // src/views/folioSettingTab.js
-var import_obsidian21 = require("obsidian");
+var import_obsidian23 = require("obsidian");
 
 // src/modals/iconPickerModal.js
-var import_obsidian20 = require("obsidian");
+var import_obsidian22 = require("obsidian");
 var COMMON_ICONS = [
   // Books & Documents
   "book",
@@ -12881,7 +14553,7 @@ var COMMON_ICONS = [
   "wand-2",
   "crown"
 ];
-var IconPickerModal = class extends import_obsidian20.Modal {
+var IconPickerModal = class extends import_obsidian22.Modal {
   constructor(app, { title, currentIcon, onSelect }) {
     super(app);
     this.title = title || "Select Icon";
@@ -12934,7 +14606,7 @@ var IconPickerModal = class extends import_obsidian20.Modal {
         cls: "folio-icon-picker-option" + (iconName === this.currentIcon ? " is-selected" : "")
       });
       iconOption.title = iconName;
-      (0, import_obsidian20.setIcon)(iconOption, iconName);
+      (0, import_obsidian22.setIcon)(iconOption, iconName);
       const label2 = iconOption.createSpan({ cls: "folio-icon-picker-label" });
       label2.textContent = iconName;
       iconOption.onclick = () => {
@@ -12952,7 +14624,7 @@ var IconPickerModal = class extends import_obsidian20.Modal {
 
 // src/views/folioSettingTab.js
 init_constants();
-var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
+var FolioSettingTab = class extends import_obsidian23.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
@@ -12964,20 +14636,20 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     const basicSection = el.createDiv({ cls: "folio-settings-section" });
     const basicHeader = basicSection.createDiv({ cls: "folio-settings-section-header" });
     const basicToggle = basicHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian21.setIcon)(basicToggle, "chevron-down");
+    (0, import_obsidian23.setIcon)(basicToggle, "chevron-down");
     basicHeader.createSpan({ text: "Basic options", cls: "folio-settings-section-title" });
     const basicContent = basicSection.createDiv({ cls: "folio-settings-section-content" });
     basicHeader.onclick = () => {
       basicContent.classList.toggle("collapsed");
-      (0, import_obsidian21.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
+      (0, import_obsidian23.setIcon)(basicToggle, basicContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
     };
-    new import_obsidian21.Setting(basicContent).setName("Default author").setDesc("Default author name for new projects").addText(
+    new import_obsidian23.Setting(basicContent).setName("Default author").setDesc("Default author name for new projects").addText(
       (text) => text.setPlaceholder("Author name").setValue(this.plugin.settings.defaultAuthor || "").onChange(async (value) => {
         this.plugin.settings.defaultAuthor = value.trim();
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian21.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText((text) => {
+    new import_obsidian23.Setting(basicContent).setName("Project storage path").setDesc("Default storage path for new projects (relative to vault root)").addText((text) => {
       text.setPlaceholder("projects").setValue(this.plugin.settings.basePath || "projects").onChange(async (value) => {
         let normalizedPath = value.trim().replace(/^\/+|\/+$/g, "") || "projects";
         this.plugin.settings.basePath = normalizedPath;
@@ -12991,12 +14663,12 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     const templateSection = el.createDiv({ cls: "folio-settings-section" });
     const templateHeader = templateSection.createDiv({ cls: "folio-settings-section-header" });
     const templateToggle = templateHeader.createSpan({ cls: "folio-settings-toggle" });
-    (0, import_obsidian21.setIcon)(templateToggle, "chevron-right");
+    (0, import_obsidian23.setIcon)(templateToggle, "chevron-right");
     templateHeader.createSpan({ text: "Template options", cls: "folio-settings-section-title" });
     const templateContent = templateSection.createDiv({ cls: "folio-settings-section-content collapsed" });
     templateHeader.onclick = () => {
       templateContent.classList.toggle("collapsed");
-      (0, import_obsidian21.setIcon)(templateToggle, templateContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
+      (0, import_obsidian23.setIcon)(templateToggle, templateContent.classList.contains("collapsed") ? "chevron-right" : "chevron-down");
     };
     if (!this.plugin.settings.projectTemplates) {
       this.plugin.settings.projectTemplates = [
@@ -13011,7 +14683,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     templates.sort((a, b) => a.order - b.order).forEach((t) => {
       defaultOptions[t.id] = t.name;
     });
-    new import_obsidian21.Setting(templateContent).setName("Default template").setDesc("Default template used when creating new projects").addDropdown(
+    new import_obsidian23.Setting(templateContent).setName("Default template").setDesc("Default template used when creating new projects").addDropdown(
       (dropdown) => dropdown.addOptions(defaultOptions).setValue(this.plugin.settings.defaultProjectType || "book").onChange(async (value) => {
         this.plugin.settings.defaultProjectType = value;
         await this.plugin.saveSettings();
@@ -13020,7 +14692,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     templateContent.createEl("h4", { text: "Project templates", cls: "folio-settings-subheader" });
     const templatesHeaderRow = templateContent.createDiv({ cls: "folio-templates-header-row" });
     const resetBtn = templatesHeaderRow.createEl("button", { cls: "folio-reset-templates-btn" });
-    (0, import_obsidian21.setIcon)(resetBtn, "rotate-ccw");
+    (0, import_obsidian23.setIcon)(resetBtn, "rotate-ccw");
     resetBtn.title = "Reset all templates to defaults";
     resetBtn.onclick = async () => {
       const confirmed = confirm("Are you sure you want to reset all templates to their default values? This will remove any custom templates and restore the original Book, TV Show, Film, and Essay templates.");
@@ -13029,7 +14701,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
         await this.plugin.saveSettings();
         this.renderTemplatesList(templatesListEl);
         this.plugin.rerenderViews();
-        new import_obsidian21.Notice("Templates reset to defaults");
+        new import_obsidian23.Notice("Templates reset to defaults");
       }
     };
     const templatesListEl = templateContent.createDiv({ cls: "folio-templates-list" });
@@ -13065,22 +14737,24 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     templates.forEach((template, index) => {
       const row = container.createDiv({ cls: "folio-template-row" });
       const iconEl = row.createDiv({ cls: "folio-template-icon" });
-      (0, import_obsidian21.setIcon)(iconEl, template.icon || "file");
+      (0, import_obsidian23.setIcon)(iconEl, template.icon || "file");
       const infoEl = row.createDiv({ cls: "folio-template-info" });
       infoEl.createDiv({ text: template.name, cls: "folio-template-name" });
       infoEl.createDiv({ text: template.description || "", cls: "folio-template-desc" });
       const actionsEl = row.createDiv({ cls: "folio-template-actions" });
       const editBtn = actionsEl.createEl("button", { cls: "folio-template-action-btn" });
-      (0, import_obsidian21.setIcon)(editBtn, "pencil");
+      (0, import_obsidian23.setIcon)(editBtn, "pencil");
       editBtn.title = "Edit template";
       editBtn.onclick = () => {
         this.openTemplateEditor(template, container);
       };
       if (templates.length > 1) {
         const deleteBtn = actionsEl.createEl("button", { cls: "folio-template-action-btn mod-danger" });
-        (0, import_obsidian21.setIcon)(deleteBtn, "trash");
+        (0, import_obsidian23.setIcon)(deleteBtn, "trash");
         deleteBtn.title = "Delete template";
         deleteBtn.onclick = async () => {
+          if (!confirm(`Delete the \u201C${template.name}\u201D template? This can't be undone (existing projects are unaffected).`))
+            return;
           this.plugin.settings.projectTemplates = templates.filter((t) => t.id !== template.id);
           await this.plugin.saveSettings();
           this.renderTemplatesList(container);
@@ -13146,9 +14820,9 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     const updateIconPreview = () => {
       iconPreview.innerHTML = "";
       try {
-        (0, import_obsidian21.setIcon)(iconPreview, iconInput.value || "file");
+        (0, import_obsidian23.setIcon)(iconPreview, iconInput.value || "file");
       } catch (e) {
-        (0, import_obsidian21.setIcon)(iconPreview, "file");
+        (0, import_obsidian23.setIcon)(iconPreview, "file");
       }
     };
     updateIconPreview();
@@ -13281,7 +14955,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     const addFileBtn = document.createElement("button");
     addFileBtn.className = "folio-template-structure-add-btn";
     addFileBtn.type = "button";
-    (0, import_obsidian21.setIcon)(addFileBtn, "file-plus");
+    (0, import_obsidian23.setIcon)(addFileBtn, "file-plus");
     addFileBtn.appendChild(document.createTextNode(" File"));
     addFileBtn.onclick = () => {
       editData.structure.push({ title: "New File", type: "file" });
@@ -13290,7 +14964,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     const addFolderBtn = document.createElement("button");
     addFolderBtn.className = "folio-template-structure-add-btn";
     addFolderBtn.type = "button";
-    (0, import_obsidian21.setIcon)(addFolderBtn, "folder-plus");
+    (0, import_obsidian23.setIcon)(addFolderBtn, "folder-plus");
     addFolderBtn.appendChild(document.createTextNode(" Folder"));
     addFolderBtn.onclick = () => {
       editData.structure.push({ title: "New Folder", type: "folder", children: [] });
@@ -13299,7 +14973,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
     const addCanvasBtn = document.createElement("button");
     addCanvasBtn.className = "folio-template-structure-add-btn";
     addCanvasBtn.type = "button";
-    (0, import_obsidian21.setIcon)(addCanvasBtn, "layout-dashboard");
+    (0, import_obsidian23.setIcon)(addCanvasBtn, "layout-dashboard");
     addCanvasBtn.appendChild(document.createTextNode(" Canvas"));
     addCanvasBtn.onclick = () => {
       editData.structure.push({ title: "New Canvas", type: "canvas" });
@@ -13329,7 +15003,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
         const dragHandle = document.createElement("span");
         dragHandle.className = "folio-template-structure-node-drag-handle";
         dragHandle.title = "Drag to reorder";
-        (0, import_obsidian21.setIcon)(dragHandle, "grip-horizontal");
+        (0, import_obsidian23.setIcon)(dragHandle, "grip-horizontal");
         nodeRow.appendChild(dragHandle);
         nodeRow.addEventListener("dragstart", (e) => {
           draggedNode = node;
@@ -13372,7 +15046,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
           const toggleBtn = document.createElement("span");
           toggleBtn.className = "folio-template-structure-node-toggle";
           const isExpanded = expandedFolders.has(node);
-          (0, import_obsidian21.setIcon)(toggleBtn, isExpanded ? "chevron-down" : "chevron-right");
+          (0, import_obsidian23.setIcon)(toggleBtn, isExpanded ? "chevron-down" : "chevron-right");
           toggleBtn.onclick = () => {
             if (expandedFolders.has(node)) {
               expandedFolders.delete(node);
@@ -13391,7 +15065,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
         nodeIcon.className = "folio-template-structure-node-icon folio-icon-clickable";
         nodeIcon.title = "Click to change icon";
         const defaultIcon = node.type === "folder" ? "folder" : node.type === "canvas" ? "layout-dashboard" : "file";
-        (0, import_obsidian21.setIcon)(nodeIcon, node.icon || defaultIcon);
+        (0, import_obsidian23.setIcon)(nodeIcon, node.icon || defaultIcon);
         nodeIcon.onclick = (e) => {
           e.stopPropagation();
           new IconPickerModal(this.app, {
@@ -13443,7 +15117,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
           addFileBtn2.className = "folio-template-structure-node-btn";
           addFileBtn2.type = "button";
           addFileBtn2.title = "Add file";
-          (0, import_obsidian21.setIcon)(addFileBtn2, "file-plus");
+          (0, import_obsidian23.setIcon)(addFileBtn2, "file-plus");
           addFileBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -13456,7 +15130,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
           addFolderBtn2.className = "folio-template-structure-node-btn";
           addFolderBtn2.type = "button";
           addFolderBtn2.title = "Add folder";
-          (0, import_obsidian21.setIcon)(addFolderBtn2, "folder-plus");
+          (0, import_obsidian23.setIcon)(addFolderBtn2, "folder-plus");
           addFolderBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -13469,7 +15143,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
           addCanvasBtn2.className = "folio-template-structure-node-btn";
           addCanvasBtn2.type = "button";
           addCanvasBtn2.title = "Add canvas";
-          (0, import_obsidian21.setIcon)(addCanvasBtn2, "layout-dashboard");
+          (0, import_obsidian23.setIcon)(addCanvasBtn2, "layout-dashboard");
           addCanvasBtn2.onclick = () => {
             if (!node.children)
               node.children = [];
@@ -13483,7 +15157,7 @@ var FolioSettingTab = class extends import_obsidian21.PluginSettingTab {
         deleteBtn.className = "folio-template-structure-node-btn mod-danger";
         deleteBtn.type = "button";
         deleteBtn.title = "Delete";
-        (0, import_obsidian21.setIcon)(deleteBtn, "trash");
+        (0, import_obsidian23.setIcon)(deleteBtn, "trash");
         deleteBtn.onclick = () => {
           parentArray.splice(index, 1);
           renderStructureTree();
@@ -13600,7 +15274,7 @@ init_editBookModal();
 init_helpModal();
 init_textInputModal();
 init_confirmModal();
-var FolioPlugin = class extends import_obsidian22.Plugin {
+var FolioPlugin = class extends import_obsidian24.Plugin {
   async onload() {
     var _a;
     await this.loadSettings();
@@ -13637,6 +15311,9 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     this.registerView(VIEW_TYPE, (leaf) => new FolioView(leaf, this));
     this.registerView(WRITER_TOOLS_VIEW_TYPE, (leaf) => new WriterToolsView(leaf, this));
     this.registerView(BEAT_BOARD_VIEW_TYPE, (leaf) => new FolioBeatBoardView(leaf, this));
+    this.registerView(PAGED_VIEW_TYPE, (leaf) => new FolioPagedView(leaf, this));
+    setNativePaginationEnabled(this.settings.nativePagination !== false);
+    this.registerEditorExtension([screenplayNativePagination()]);
     this.addRibbonIcon("book", "Open Folio", () => this.activateFolio());
     this.timelineBand = new TimelineBand(this);
     this.timelineBand.register();
@@ -13659,6 +15336,16 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       id: "open-beat-board",
       name: "Open Beat Board",
       callback: () => this.openBeatBoard()
+    });
+    this.addCommand({
+      id: "open-paged-view",
+      name: "Open Paged View",
+      callback: () => this.openPagedView()
+    });
+    this.addCommand({
+      id: "open-writing-stats",
+      name: "Open Writing Stats",
+      callback: () => this.openWritingStats()
     });
     this.addCommand({
       id: "toggle-draft-folder",
@@ -13687,6 +15374,10 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
         clearTimeout(this._vaultChangeDebounceTimer);
       this._vaultChangeDebounceTimer = setTimeout(() => {
         this.refresh();
+        try {
+          this.timelineBand && this.timelineBand.refresh(true);
+        } catch (e) {
+        }
         this._vaultChangeDebounceTimer = null;
       }, 200);
     };
@@ -13753,14 +15444,101 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
         } catch (e) {
           this.rerenderViews();
         }
+        this.decorateMarkdownHeaders();
       })
     );
+    this.registerEvent(this.app.workspace.on("layout-change", () => this.decorateMarkdownHeaders()));
+    this.app.workspace.onLayoutReady(() => this.decorateMarkdownHeaders());
+  }
+  /**
+   * Add a single Folio "Views" control to project markdown headers, next to
+   * Obsidian's native edit/read toggle. One dropdown for every view (Final Draft
+   * model) so it scales without crowding. Idempotent per view.
+   */
+  decorateMarkdownHeaders() {
+    try {
+      if (!this._viewActionDone)
+        this._viewActionDone = /* @__PURE__ */ new WeakSet();
+      for (const leaf of this.app.workspace.getLeavesOfType("markdown")) {
+        const view = leaf.view;
+        if (!view || this._viewActionDone.has(view))
+          continue;
+        const file = view.file;
+        if (!file || !(this.booksIndex || []).some((b) => file.path.startsWith(b.path + "/")))
+          continue;
+        try {
+          view.addAction("gallery-vertical", "Views", (e) => this.showViewMenu(e));
+          this._viewActionDone.add(view);
+        } catch (e) {
+        }
+      }
+    } catch (e) {
+    }
+  }
+  /** The single Views menu — Final Draft's script modes + the Folio views. */
+  showViewMenu(evt) {
+    var _a;
+    const ws = this.app.workspace;
+    const leaf = ((_a = ws.getMostRecentLeaf) == null ? void 0 : _a.call(ws)) || ws.activeLeaf;
+    const type = leaf && leaf.view && leaf.view.getViewType ? leaf.view.getViewType() : null;
+    const isMd = type === "markdown";
+    const pagedOn = this.settings.nativePagination !== false;
+    const menu = new import_obsidian24.Menu(this.app);
+    menu.addItem((i) => i.setTitle("Normal").setIcon("align-left").setChecked(isMd && !pagedOn).onClick(() => this.setEditorPageBreaks(false)));
+    menu.addItem((i) => i.setTitle("Numbered").setIcon("separator-horizontal").setChecked(isMd && pagedOn).onClick(() => this.setEditorPageBreaks(true)));
+    menu.addItem((i) => i.setTitle("Paged").setIcon("book-open").setChecked(type === PAGED_VIEW_TYPE).onClick(() => this.openPagedView()));
+    menu.addSeparator();
+    menu.addItem((i) => i.setTitle("Beat Board").setIcon("layout-dashboard").setChecked(type === BEAT_BOARD_VIEW_TYPE).onClick(() => this.openBeatBoard()));
+    menu.addSeparator();
+    menu.addItem((i) => {
+      i.setTitle("Scene View (soon)").setIcon("list").setDisabled(true);
+    });
+    menu.addItem((i) => {
+      i.setTitle("Index Cards (soon)").setIcon("layout-grid").setDisabled(true);
+    });
+    try {
+      if (evt && typeof menu.showAtMouseEvent === "function")
+        menu.showAtMouseEvent(evt);
+      else {
+        const r = evt && evt.currentTarget && evt.currentTarget.getBoundingClientRect ? evt.currentTarget.getBoundingClientRect() : { left: 0, bottom: 0 };
+        menu.showAtPosition({ x: r.left, y: r.bottom });
+      }
+    } catch (e) {
+      console.warn(e);
+    }
+  }
+  /**
+   * Numbered (on) vs Normal (off) = Obsidian's editor with page-break markers on
+   * or off. Persists the choice, forces every open editor to recompute, and
+   * ensures we're in the editor (opening the draft script if in Paged / Beat).
+   */
+  async setEditorPageBreaks(on) {
+    var _a, _b, _c, _d;
+    try {
+      this.settings.nativePagination = !!on;
+      await this.saveSettings();
+      setNativePaginationEnabled(!!on);
+      for (const leaf2 of this.app.workspace.getLeavesOfType("markdown")) {
+        const cm = leaf2.view && leaf2.view.editor && leaf2.view.editor.cm;
+        if (cm) {
+          try {
+            cm.dispatch({ effects: togglePaginationEffect.of(null) });
+          } catch (e) {
+          }
+        }
+      }
+      const leaf = (_b = (_a = this.app.workspace).getMostRecentLeaf) == null ? void 0 : _b.call(_a);
+      if (!leaf || !leaf.view || ((_d = (_c = leaf.view).getViewType) == null ? void 0 : _d.call(_c)) !== "markdown")
+        await this.openDraftScript();
+    } catch (e) {
+      console.warn("setEditorPageBreaks failed", e);
+    }
   }
   async openChapterContextMenu(evt, file, node = null) {
     var _a, _b, _c;
     try {
       (_a = evt.preventDefault) == null ? void 0 : _a.call(evt);
-      const menu = new import_obsidian22.Menu(this.app);
+      const menu = new import_obsidian24.Menu(this.app);
       let shouldCount = !(node == null ? void 0 : node.exclude);
       try {
         const book = this.booksIndex.find((b) => file.path.startsWith(b.path));
@@ -13869,7 +15647,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       );
       menu.addItem(
         (it) => it.setTitle("Delete").setIcon("trash").onClick(() => {
-          const name = file instanceof import_obsidian22.TFolder ? `folder "${file.name}"` : `"${file.name}"`;
+          const name = file instanceof import_obsidian24.TFolder ? `folder "${file.name}"` : `"${file.name}"`;
           new ConfirmModal(this.app, {
             title: "Delete",
             message: `Delete ${name}? It will be moved to trash.`,
@@ -13895,12 +15673,12 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     var _a;
     try {
       (_a = evt.preventDefault) == null ? void 0 : _a.call(evt);
-      const menu = new import_obsidian22.Menu(this.app);
+      const menu = new import_obsidian24.Menu(this.app);
       menu.addItem(
         (it) => it.setTitle(isRoot ? "New root canvas" : "New canvas").setIcon("layout-dashboard").onClick(async () => {
           try {
-            const folderObj = folder instanceof import_obsidian22.TFolder ? folder : this.app.vault.getAbstractFileByPath((folder == null ? void 0 : folder.path) || folder);
-            if (!(folderObj instanceof import_obsidian22.TFolder))
+            const folderObj = folder instanceof import_obsidian24.TFolder ? folder : this.app.vault.getAbstractFileByPath((folder == null ? void 0 : folder.path) || folder);
+            if (!(folderObj instanceof import_obsidian24.TFolder))
               return;
             let base = "Canvas";
             let name = `${base}.canvas`;
@@ -13932,8 +15710,8 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
                 const fileName = name.endsWith(".md") ? name : `${name}.md`;
                 const dest = `${folder.path}/${fileName}`;
                 if (!this.app.vault.getAbstractFileByPath(dest)) {
-                  const frontmatter = await this.getNewFileFrontmatter(dest, fileName, !!opts.screenplay);
-                  await this.app.vault.create(dest, frontmatter);
+                  const frontmatter2 = await this.getNewFileFrontmatter(dest, fileName, !!opts.screenplay);
+                  await this.app.vault.create(dest, frontmatter2);
                   const book = this.booksIndex.find((b) => dest.startsWith(b.path));
                   if (book)
                     await this.syncChapterStatsBaseline(book);
@@ -14038,13 +15816,13 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
   }
   openFile(filePath) {
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (file && file instanceof import_obsidian22.TFile) {
+    if (file && file instanceof import_obsidian24.TFile) {
       this.app.workspace.openLinkText(file.path, "", false);
     }
   }
   openFileInNewTab(filePath) {
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (file && file instanceof import_obsidian22.TFile) {
+    if (file && file instanceof import_obsidian24.TFile) {
       try {
         this.app.workspace.openLinkText(file.path, "", true);
       } catch (e) {
@@ -14055,7 +15833,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
   }
   openFileInNewPane(filePath) {
     const file = this.app.vault.getAbstractFileByPath(filePath);
-    if (file && file instanceof import_obsidian22.TFile) {
+    if (file && file instanceof import_obsidian24.TFile) {
       try {
         const leaf = this.app.workspace.getLeaf(true);
         leaf.openFile(file);
@@ -14092,9 +15870,9 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     if (!file)
       return;
     try {
-      if (file instanceof import_obsidian22.TFile) {
+      if (file instanceof import_obsidian24.TFile) {
         this.app.fileManager.duplicateFile(file);
-      } else if (file instanceof import_obsidian22.TFolder) {
+      } else if (file instanceof import_obsidian24.TFolder) {
         const parentPath = file.path.split("/").slice(0, -1).join("/") || "";
         const baseName = `${file.name} Copy`;
         let destPath = `${parentPath}/${baseName}`.replace(/\/+/g, "/");
@@ -14105,14 +15883,14 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
         const createFolderAndCopy = async (src, dest) => {
           await this.app.vault.createFolder(dest);
           const folder = this.app.vault.getAbstractFileByPath(src);
-          if (!(folder instanceof import_obsidian22.TFolder))
+          if (!(folder instanceof import_obsidian24.TFolder))
             return;
           for (const child of folder.children) {
             const childDest = `${dest}/${child.name}`;
-            if (child instanceof import_obsidian22.TFile) {
+            if (child instanceof import_obsidian24.TFile) {
               const content = await this.app.vault.read(child);
               await this.app.vault.create(childDest, content);
-            } else if (child instanceof import_obsidian22.TFolder) {
+            } else if (child instanceof import_obsidian24.TFolder) {
               await createFolderAndCopy(child.path, childDest);
             }
           }
@@ -14128,10 +15906,10 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
   async createNextChapterFile(folder) {
     var _a;
     try {
-      const folderObj = folder instanceof import_obsidian22.TFolder ? folder : this.app.vault.getAbstractFileByPath((folder == null ? void 0 : folder.path) || folder);
-      if (!(folderObj instanceof import_obsidian22.TFolder))
+      const folderObj = folder instanceof import_obsidian24.TFolder ? folder : this.app.vault.getAbstractFileByPath((folder == null ? void 0 : folder.path) || folder);
+      if (!(folderObj instanceof import_obsidian24.TFolder))
         return;
-      const existing = ((_a = folderObj.children) != null ? _a : []).filter((c) => c instanceof import_obsidian22.TFile && c.extension === "md").map((f) => f.basename);
+      const existing = ((_a = folderObj.children) != null ? _a : []).filter((c) => c instanceof import_obsidian24.TFile && c.extension === "md").map((f) => f.basename);
       let max = 0;
       for (const name of existing) {
         const match = name.match(/^Chapter (\d+)$/i);
@@ -14181,7 +15959,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
   async _collectScreenplayExport() {
     const book = this.activeBook;
     if (!book) {
-      new import_obsidian22.Notice("Open or create a project first.");
+      new import_obsidian24.Notice("Open or create a project first.");
       return null;
     }
     const cfg = await this.loadBookConfig(book) || {};
@@ -14190,7 +15968,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     const collected = await this.pdfExportService.collectOrderedMarkdownFiles(book, cfg, settings, meta);
     const files = (collected || []).filter((f) => f && f.extension === "md");
     if (files.length === 0) {
-      new import_obsidian22.Notice("No markdown files to export.");
+      new import_obsidian24.Notice("No markdown files to export.");
       return null;
     }
     return { book, meta, files };
@@ -14204,14 +15982,14 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       this._announceExport(path, "Final Draft");
     } catch (e) {
       console.error("exportActiveProjectToFdx failed", e);
-      new import_obsidian22.Notice("Final Draft export failed. See console for details.");
+      new import_obsidian24.Notice("Final Draft export failed. See console for details.");
     }
   }
   async syncOutlineForActiveProject() {
     try {
       const book = this.activeBook;
       if (!book) {
-        new import_obsidian22.Notice("Open or create a project first.");
+        new import_obsidian24.Notice("Open or create a project first.");
         return;
       }
       const cfg = await this.loadBookConfig(book) || {};
@@ -14223,7 +16001,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       await this.refresh();
       this.rerenderViews();
       if (res.added > 0) {
-        new import_obsidian22.Notice(`Outline updated \u2014 added ${res.added} scene${res.added === 1 ? "" : "s"}.`);
+        new import_obsidian24.Notice(`Outline updated \u2014 added ${res.added} scene${res.added === 1 ? "" : "s"}.`);
         if (res.outlinePath) {
           try {
             this.app.workspace.openLinkText(res.outlinePath, "", false);
@@ -14232,11 +16010,11 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
           }
         }
       } else {
-        new import_obsidian22.Notice("Outline already up to date.");
+        new import_obsidian24.Notice("Outline already up to date.");
       }
     } catch (e) {
       console.error("syncOutlineForActiveProject failed", e);
-      new import_obsidian22.Notice("Outline sync failed. See console for details.");
+      new import_obsidian24.Notice("Outline sync failed. See console for details.");
     }
   }
   /** Parse an outline into [{file, scenes:[{title, notes:[]}]}] for rebuilding a draft. */
@@ -14294,7 +16072,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     try {
       const book = this.activeBook;
       if (!book) {
-        new import_obsidian22.Notice("Open or create a project first.");
+        new import_obsidian24.Notice("Open or create a project first.");
         return;
       }
       const cfg = await this.loadBookConfig(book) || {};
@@ -14322,12 +16100,12 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
           outlineFile = this.app.vault.getAbstractFileByPath(`${book.path}/${rel}`);
       }
       if (!outlineFile) {
-        new import_obsidian22.Notice('No "Outline" file found to build from.');
+        new import_obsidian24.Notice('No "Outline" file found to build from.');
         return;
       }
       const groups = this._parseOutlineForRebuild(await this.app.vault.read(outlineFile));
       if (!groups.length) {
-        new import_obsidian22.Notice("The outline has no scene headers (###) to build from.");
+        new import_obsidian24.Notice("The outline has no scene headers (###) to build from.");
         return;
       }
       const roles = profile.headingRoles || {};
@@ -14364,7 +16142,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
               draftRel = parentRel ? `${parentRel}/${name}.md` : `${name}.md`;
               const abs = `${book.path}/${draftRel}`;
               if (this.app.vault.getAbstractFileByPath(abs)) {
-                new import_obsidian22.Notice(`\u201C${name}\u201D already exists.`);
+                new import_obsidian24.Notice(`\u201C${name}\u201D already exists.`);
                 return;
               }
               await this.app.vault.create(abs, fileContent(sceneBody(groups[0])));
@@ -14372,7 +16150,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
               draftRel = parentRel ? `${parentRel}/${name}` : name;
               const folderAbs = `${book.path}/${draftRel}`;
               if (this.app.vault.getAbstractFileByPath(folderAbs)) {
-                new import_obsidian22.Notice(`\u201C${name}\u201D already exists.`);
+                new import_obsidian24.Notice(`\u201C${name}\u201D already exists.`);
                 return;
               }
               await this.app.vault.createFolder(folderAbs);
@@ -14382,17 +16160,17 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
             await this.refresh();
             await this.setDraftForFolderPath(draftRel, true);
             await this.setCurrentDraft(book, draftRel);
-            new import_obsidian22.Notice(`Created draft \u201C${name}\u201D${shelf ? " in Drafts" : ""}.`);
+            new import_obsidian24.Notice(`Created draft \u201C${name}\u201D${shelf ? " in Drafts" : ""}.`);
           } catch (e) {
             console.error("buildDraftFromOutline (create) failed", e);
-            new import_obsidian22.Notice("Couldn't create the draft. See console for details.");
+            new import_obsidian24.Notice("Couldn't create the draft. See console for details.");
           }
         }
       });
       modal.open();
     } catch (e) {
       console.error("buildDraftFromOutline failed", e);
-      new import_obsidian22.Notice("Couldn't build draft from outline. See console for details.");
+      new import_obsidian24.Notice("Couldn't build draft from outline. See console for details.");
     }
   }
   /**
@@ -14442,7 +16220,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     try {
       const book = this.activeBook;
       if (!book) {
-        new import_obsidian22.Notice("Open or create a project first.");
+        new import_obsidian24.Notice("Open or create a project first.");
         return;
       }
       const cfg = await this.loadBookConfig(book) || {};
@@ -14450,7 +16228,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       const tree = ((_b = cfg.structure) == null ? void 0 : _b.tree) || [];
       const draftNode = resolveCurrentDraft(tree, cfg.currentDraftPath);
       if (!draftNode) {
-        new import_obsidian22.Notice("No draft found. Mark a folder as a draft first.");
+        new import_obsidian24.Notice("No draft found. Mark a folder as a draft first.");
         return;
       }
       const draftPrefix = draftNode.path + "/";
@@ -14467,14 +16245,14 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       };
       walk(tree);
       if (!outlineRel) {
-        new import_obsidian22.Notice('No "Outline" file in this project to write into.');
+        new import_obsidian24.Notice('No "Outline" file in this project to write into.');
         return;
       }
       const scopedCfg = { ...cfg, structure: { ...cfg.structure || {}, tree: draftScopeNodes(draftNode) } };
       const spine = await this.spineService.buildSpine(book, scopedCfg, profile);
       const file = this.app.vault.getAbstractFileByPath(`${book.path}/${outlineRel}`);
       if (!file) {
-        new import_obsidian22.Notice("Outline file not found.");
+        new import_obsidian24.Notice("Outline file not found.");
         return;
       }
       const prev = await this.app.vault.read(file);
@@ -14510,10 +16288,10 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       } catch (e) {
         console.warn(e);
       }
-      new import_obsidian22.Notice(`Outline updated (${spine.length} scenes) \u2192 ${outlineRel}.`);
+      new import_obsidian24.Notice(`Outline updated (${spine.length} scenes) \u2192 ${outlineRel}.`);
     } catch (e) {
       console.error("buildOutlineFromDraft failed", e);
-      new import_obsidian22.Notice("Couldn't build outline. See console for details.");
+      new import_obsidian24.Notice("Couldn't build outline. See console for details.");
     }
   }
   /** Set/clear the draft flag on a folder node (book-relative path) in the active project. */
@@ -14538,7 +16316,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       };
       const node = find(((_a = cfg.structure) == null ? void 0 : _a.tree) || []);
       if (!node) {
-        new import_obsidian22.Notice("Couldn't find that folder.");
+        new import_obsidian24.Notice("Couldn't find that folder.");
         return;
       }
       node.draft = !!value;
@@ -14557,7 +16335,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       } catch (e) {
         console.warn(e);
       }
-      new import_obsidian22.Notice(node.draft ? `\u201C${node.title || relPath}\u201D is now a draft.` : `\u201C${node.title || relPath}\u201D is no longer a draft.`);
+      new import_obsidian24.Notice(node.draft ? `\u201C${node.title || relPath}\u201D is now a draft.` : `\u201C${node.title || relPath}\u201D is no longer a draft.`);
     } catch (e) {
       console.error("setDraftForFolderPath failed", e);
     }
@@ -14588,25 +16366,25 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     try {
       const av = this.app.workspace.activeEditor;
       if (!av || !av.file) {
-        new import_obsidian22.Notice("Open a file in a project folder first.");
+        new import_obsidian24.Notice("Open a file in a project folder first.");
         return;
       }
       const book = (this.booksIndex || []).find((b) => av.file.path.startsWith(b.path + "/"));
       if (!book) {
-        new import_obsidian22.Notice("Active file is not in a Folio project.");
+        new import_obsidian24.Notice("Active file is not in a Folio project.");
         return;
       }
       const rel = av.file.path.slice(book.path.length + 1);
       const i = rel.indexOf("/");
       if (i === -1) {
-        new import_obsidian22.Notice("This file isn't inside a folder to mark as a draft.");
+        new import_obsidian24.Notice("This file isn't inside a folder to mark as a draft.");
         return;
       }
       const topPath = rel.slice(0, i);
       const cfg = await this.configService.loadBookConfig(book) || {};
       const node = (((_a = cfg.structure) == null ? void 0 : _a.tree) || []).find((n) => n.type === "group" && n.path === topPath);
       if (!node) {
-        new import_obsidian22.Notice("Couldn't find that folder in the project.");
+        new import_obsidian24.Notice("Couldn't find that folder in the project.");
         return;
       }
       node.draft = !node.draft;
@@ -14616,10 +16394,10 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       } catch (e) {
         console.warn(e);
       }
-      new import_obsidian22.Notice(node.draft ? `\u201C${topPath}\u201D is now a draft.` : `\u201C${topPath}\u201D is no longer a draft.`);
+      new import_obsidian24.Notice(node.draft ? `\u201C${topPath}\u201D is now a draft.` : `\u201C${topPath}\u201D is no longer a draft.`);
     } catch (e) {
       console.error("toggleDraftFolder failed", e);
-      new import_obsidian22.Notice("Couldn't toggle draft. See console for details.");
+      new import_obsidian24.Notice("Couldn't toggle draft. See console for details.");
     }
   }
   /** Open (or reveal) the current draft's script — the manuscript "file view". */
@@ -14628,13 +16406,13 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     try {
       const book = this.activeBook;
       if (!book) {
-        new import_obsidian22.Notice("Open or create a project first.");
+        new import_obsidian24.Notice("Open or create a project first.");
         return;
       }
       const cfg = await this.loadBookConfig(book) || {};
       const draft = resolveCurrentDraft(((_a = cfg.structure) == null ? void 0 : _a.tree) || [], cfg.currentDraftPath);
       if (!draft) {
-        new import_obsidian22.Notice("No draft found. Mark a folder or file as a draft first.");
+        new import_obsidian24.Notice("No draft found. Mark a folder or file as a draft first.");
         return;
       }
       const find = (nodes) => {
@@ -14651,7 +16429,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       };
       const first = find(draftScopeNodes(draft) || []);
       if (!first) {
-        new import_obsidian22.Notice("This draft has no script file yet.");
+        new import_obsidian24.Notice("This draft has no script file yet.");
         return;
       }
       const path = `${book.path}/${first.path}`;
@@ -14663,7 +16441,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       }
       const file = this.app.vault.getAbstractFileByPath(path);
       if (!file) {
-        new import_obsidian22.Notice("Script file not found.");
+        new import_obsidian24.Notice("Script file not found.");
         return;
       }
       const leaf = this.app.workspace.getLeaf("tab");
@@ -14673,7 +16451,7 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
       }
     } catch (e) {
       console.error("openDraftScript failed", e);
-      new import_obsidian22.Notice("Couldn't open the draft script. See console for details.");
+      new import_obsidian24.Notice("Couldn't open the draft script. See console for details.");
     }
   }
   /** Open (or reveal) the Beat Board as a standalone view (it carries its own strip). */
@@ -14691,11 +16469,51 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
     workspace.revealLeaf(leaf);
     return leaf;
   }
+  /** Open the Final Draft-style Writing Stats panel for the active project. */
+  openWritingStats() {
+    if (!this.activeBook) {
+      new import_obsidian24.Notice("Open or create a project first.");
+      return;
+    }
+    new StatsModal(this, this.activeBook).open();
+  }
+  /** Open (or reveal) the Paged View (continuous WYSIWYG pages of the current draft). */
+  async openPagedView() {
+    const { workspace } = this.app;
+    const existing = workspace.getLeavesOfType(PAGED_VIEW_TYPE);
+    if (existing.length > 0) {
+      workspace.revealLeaf(existing[0]);
+      return existing[0];
+    }
+    const leaf = workspace.getLeaf("tab");
+    if (!leaf)
+      return null;
+    await leaf.setViewState({ type: PAGED_VIEW_TYPE, active: true });
+    workspace.revealLeaf(leaf);
+    return leaf;
+  }
+  /** Switch the active pane to the native Obsidian editor for the current draft's script. */
+  async openObsidianView() {
+    return this.openDraftScript();
+  }
+  /** Scroll the open Paged View to a file+line (scene-click navigation from the strip). */
+  async scrollPagedToLine(fullPath, line) {
+    try {
+      const leaf = this.app.workspace.getLeavesOfType(PAGED_VIEW_TYPE)[0];
+      if (!leaf)
+        return;
+      this.app.workspace.revealLeaf(leaf);
+      if (leaf.view && typeof leaf.view.scrollToLine === "function")
+        await leaf.view.scrollToLine(fullPath, line);
+    } catch (e) {
+      console.warn("scrollPagedToLine failed", e);
+    }
+  }
   /** Add a planning beat to the project's outline (lane 1) and refresh the strip. */
   addOutlineBeatForActiveProject() {
     const book = this.activeBook;
     if (!book) {
-      new import_obsidian22.Notice("Open or create a project first.");
+      new import_obsidian24.Notice("Open or create a project first.");
       return;
     }
     const modal = new TextInputModal(this.app, {
@@ -14710,10 +16528,10 @@ var FolioPlugin = class extends import_obsidian22.Plugin {
           } catch (e) {
             console.warn(e);
           }
-          new import_obsidian22.Notice("Beat added to the outline.");
+          new import_obsidian24.Notice("Beat added to the outline.");
         } catch (e) {
           console.error("addBeat failed", e);
-          new import_obsidian22.Notice("Couldn't add beat. See console for details.");
+          new import_obsidian24.Notice("Couldn't add beat. See console for details.");
         }
       }
     });
@@ -14740,7 +16558,7 @@ ${(beat.notes || "").trim()}
       const av = this.app.workspace.activeEditor;
       if (av && av.editor && av.file && av.file.extension === "md" && av.file.path.startsWith(book.path + "/")) {
         av.editor.replaceRange(text + "\n", av.editor.getCursor());
-        new import_obsidian22.Notice(`Sent \u201C${beat.title}\u201D as an arc at the cursor.`);
+        new import_obsidian24.Notice(`Sent \u201C${beat.title}\u201D as an arc at the cursor.`);
         return;
       }
       const spine = await this.spineService.buildSpine(book, cfg, profile);
@@ -14761,21 +16579,21 @@ ${(beat.notes || "").trim()}
         walk(((_b = cfg == null ? void 0 : cfg.structure) == null ? void 0 : _b.tree) || []);
       }
       if (!rel) {
-        new import_obsidian22.Notice("No script file to send the beat into.");
+        new import_obsidian24.Notice("No script file to send the beat into.");
         return;
       }
       const file = this.app.vault.getAbstractFileByPath(`${book.path}/${rel}`);
       const existing = await this.app.vault.read(file);
       await this.app.vault.modify(file, existing.replace(/\s*$/, "") + "\n\n" + text);
-      new import_obsidian22.Notice(`Sent \u201C${beat.title}\u201D to the end of ${rel}.`);
+      new import_obsidian24.Notice(`Sent \u201C${beat.title}\u201D to the end of ${rel}.`);
     } catch (e) {
       console.warn("sendBeatTextToScript failed", e);
-      new import_obsidian22.Notice("Send failed. See console for details.");
+      new import_obsidian24.Notice("Send failed. See console for details.");
     }
   }
   _announceExport(path, formatLabel) {
     if (path) {
-      new import_obsidian22.Notice(`Exported ${formatLabel} to ${path}`);
+      new import_obsidian24.Notice(`Exported ${formatLabel} to ${path}`);
     }
   }
   async openFocusMode() {
@@ -14784,7 +16602,7 @@ ${(beat.notes || "").trim()}
     if (view && typeof view.showFocusMode === "function") {
       view.showFocusMode();
     } else {
-      new import_obsidian22.Notice("Open Writer Tools, then choose Focus Mode.");
+      new import_obsidian24.Notice("Open Writer Tools, then choose Focus Mode.");
     }
   }
   async activateView() {
@@ -15064,22 +16882,19 @@ ${(beat.notes || "").trim()}
   }
   async getNewFileFrontmatter(destPath, fileName, explicitScreenplay = false) {
     var _a, _b;
-    let projectType = null;
-    let inDraft = false;
     const book = this.booksIndex.find((b) => destPath.startsWith(b.path));
-    if (book) {
-      const cfg = await this.loadBookConfig(book) || {};
-      projectType = ((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
-      try {
-        inDraft = !!draftNodeForFile(((_b = cfg.structure) == null ? void 0 : _b.tree) || [], destPath.slice(book.path.length + 1));
-      } catch (e) {
-        inDraft = false;
-      }
+    if (!book)
+      return "";
+    const cfg = await this.loadBookConfig(book) || {};
+    const projectType = ((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
+    let inDraft = false;
+    try {
+      inDraft = !!draftNodeForFile(((_b = cfg.structure) == null ? void 0 : _b.tree) || [], destPath.slice(book.path.length + 1));
+    } catch (e) {
+      inDraft = false;
     }
     const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, inDraft, explicitScreenplay);
-    if (!useScreenplay)
-      return "";
-    return this.bookService.buildFrontmatter({ projectType, screenplay: true });
+    return this.bookService.buildFrontmatter({ projectType, screenplay: useScreenplay });
   }
   async waitForFolderSync(filePath, retries = 20) {
     const delay = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -15091,7 +16906,7 @@ ${(beat.notes || "").trim()}
     }
   }
   rerenderViews() {
-    for (const type of [VIEW_TYPE, BEAT_BOARD_VIEW_TYPE]) {
+    for (const type of [VIEW_TYPE, BEAT_BOARD_VIEW_TYPE, PAGED_VIEW_TYPE]) {
       const leaves = this.app.workspace.getLeavesOfType(type);
       for (const leaf of leaves) {
         const view = leaf.view;
@@ -15174,7 +16989,7 @@ ${(beat.notes || "").trim()}
     if (!folder || !folder.children)
       return out;
     for (const c of folder.children) {
-      if (c instanceof import_obsidian22.TFile && c.name && c.name.toLowerCase().endsWith(".md"))
+      if (c instanceof import_obsidian24.TFile && c.name && c.name.toLowerCase().endsWith(".md"))
         out.push(c);
       else if (c.children)
         out.push(...this._collectMarkdownFiles(c));

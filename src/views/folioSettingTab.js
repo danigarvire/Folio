@@ -190,6 +190,7 @@ export class FolioSettingTab extends PluginSettingTab {
         setIcon(deleteBtn, 'trash');
         deleteBtn.title = 'Delete template';
         deleteBtn.onclick = async () => {
+          if (!confirm(`Delete the “${template.name}” template? This can't be undone (existing projects are unaffected).`)) return;
           this.plugin.settings.projectTemplates = templates.filter(t => t.id !== template.id);
           await this.plugin.saveSettings();
           this.renderTemplatesList(container);
