@@ -6,6 +6,7 @@
 
 import { setIcon } from 'obsidian';
 import { getArchetypeData, UI_I18N } from './resourcesI18n.js';
+import { EXAMPLE_NOTES } from './resourcesExampleNotes.js';
 
 // ─── Shared helpers ──────────────────────────────────────────────────────────
 
@@ -14,6 +15,51 @@ export function createResourceSubheading(parent, iconName, text) {
   const icon = heading.createSpan({ cls: "resource-detail-subheading-icon" });
   setIcon(icon, iconName);
   heading.createSpan({ cls: "resource-detail-subheading", text });
+}
+
+/**
+ * Renders the examples grid. When `notes` (an array aligned to data.examples)
+ * is provided, each example becomes clickable and reveals a spoiler-blurred
+ * one-line summary of why it embodies the card.
+ */
+export function renderExamplesZone(content, data, lang = 'en', notes = null) {
+  if (!data.examples?.length) return;
+  const zone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+  const header = zone.createDiv({ cls: "resource-detail-examples-header" });
+  setIcon(header.createSpan({ cls: "resource-detail-examples-icon" }), "bookmark");
+  header.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading || data.examplesTitle });
+  const grid = zone.createDiv({ cls: "resource-detail-examples-grid" });
+
+  const noteBox = zone.createDiv({ cls: "resource-detail-example-note" });
+  noteBox.style.display = "none";
+  let openIdx = -1;
+  const revealLabel = UI_I18N[lang]?.revealSpoiler || "Click to reveal (spoiler)";
+
+  data.examples.forEach((example, i) => {
+    const note = notes && notes[i] ? (notes[i][lang] ?? notes[i].en) : null;
+    const card = grid.createDiv({ cls: "resource-detail-example-card" + (note ? " has-note" : "") });
+    card.createSpan({ text: example });
+    if (!note) return;
+    setIcon(card.createSpan({ cls: "resource-detail-example-eye" }), "eye");
+    card.addEventListener("click", () => {
+      if (openIdx === i) {
+        noteBox.style.display = "none";
+        card.classList.remove("is-open");
+        openIdx = -1;
+        return;
+      }
+      openIdx = i;
+      grid.querySelectorAll(".resource-detail-example-card.is-open").forEach((c) => c.classList.remove("is-open"));
+      card.classList.add("is-open");
+      noteBox.empty();
+      noteBox.style.display = "";
+      noteBox.classList.add("is-spoiler");
+      noteBox.createSpan({ cls: "resource-detail-example-note-title", text: example });
+      noteBox.createDiv({ cls: "resource-detail-example-note-body", text: note });
+      noteBox.createDiv({ cls: "resource-detail-example-note-reveal", text: revealLabel });
+      noteBox.onclick = () => noteBox.classList.remove("is-spoiler");
+    });
+  });
 }
 
 // ─── Generic archetype renderer ──────────────────────────────────────────────
@@ -27,7 +73,7 @@ export function createResourceSubheading(parent, iconName, text) {
 export function renderArchetypeDetail(container, archetypeKey, lang = 'en') {
   const data = getArchetypeData(archetypeKey, lang);
   if (!data) {
-    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+    container.createDiv({ cls: "resource-detail-placeholder", text: UI_I18N[lang]?.comingSoon || "Content coming soon." });
     return;
   }
 
@@ -65,7 +111,7 @@ export function renderArchetypeDetail(container, archetypeKey, lang = 'en') {
 
   // Key relationships zone (Campbell archetypes)
   if (data.relationships?.length) {
-    const relZone = content.createDiv({ cls: "resource-detail-zone" });
+    const relZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
     createResourceSubheading(relZone, "flask-conical", data.relationshipsHeading || UI_I18N[lang]?.keyRelationships || "Key relationships");
     const list = relZone.createEl("ul", { cls: "resource-detail-list" });
     data.relationships.forEach(item => list.createEl("li", { text: item }));
@@ -73,40 +119,29 @@ export function renderArchetypeDetail(container, archetypeKey, lang = 'en') {
 
   // Writing tips zone (Campbell archetypes)
   if (data.writing?.length) {
-    const writeZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(writeZone, "square-pen", data.writingHeading || "Writing tips");
+    const writeZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(writeZone, "square-pen", data.writingHeading || UI_I18N[lang]?.writingTipsHeading || "Writing tips");
     const list = writeZone.createEl("ul", { cls: "resource-detail-list" });
     data.writing.forEach(item => list.createEl("li", { text: item }));
   }
 
   // Why this works zone (Hero only)
   if (data.why) {
-    const whyZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(whyZone, "chart-spline", data.whyHeading || "Why this archetype works");
+    const whyZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(whyZone, "chart-spline", data.whyHeading || UI_I18N[lang]?.whyArchetype || "Why this archetype works");
     whyZone.createDiv({ cls: "resource-detail-paragraph", text: data.why });
   }
 
   // Inner conflict zone (Jung archetypes)
   if (data.innerConflicts?.length) {
-    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
     createResourceSubheading(conflictZone, "alert-triangle", data.innerConflictHeading || UI_I18N[lang]?.innerConflict || "Inner conflict");
     const list = conflictZone.createEl("ul", { cls: "resource-detail-list" });
     data.innerConflicts.forEach(item => list.createEl("li", { text: item }));
   }
 
-  // Examples zone
-  if (data.examples?.length) {
-    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-    setIcon(examplesIcon, "bookmark");
-    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
-    const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-    data.examples.forEach(example => {
-      const card = grid.createDiv({ cls: "resource-detail-example-card" });
-      card.createSpan({ text: example });
-    });
-  }
+  // Examples zone (with spoiler "why it fits" notes)
+  renderExamplesZone(content, data, lang, EXAMPLE_NOTES[archetypeKey]);
 }
 
 // ─── Generic character arc renderer ─────────────────────────────────────────
@@ -120,7 +155,7 @@ export function renderArchetypeDetail(container, archetypeKey, lang = 'en') {
 export function renderCharacterArcDetail(container, arcKey, lang = 'en') {
   const data = getArchetypeData(arcKey, lang);
   if (!data) {
-    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+    container.createDiv({ cls: "resource-detail-placeholder", text: UI_I18N[lang]?.comingSoon || "Content coming soon." });
     return;
   }
 
@@ -155,30 +190,19 @@ export function renderCharacterArcDetail(container, arcKey, lang = 'en') {
 
   // Internal conflicts
   if (data.conflicts?.length) {
-    const confZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(confZone, "alert-triangle", data.conflictsHeading || "Common internal conflicts");
+    const confZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(confZone, "alert-triangle", data.conflictsHeading || UI_I18N[lang]?.commonInternalConflicts || "Common internal conflicts");
     const list = confZone.createEl("ul", { cls: "resource-detail-list" });
     data.conflicts.forEach(item => list.createEl("li", { text: item }));
   }
 
-  // Examples
-  if (data.examples?.length) {
-    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-    const header = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-    const icon = header.createSpan({ cls: "resource-detail-examples-icon" });
-    setIcon(icon, "bookmark");
-    header.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
-    const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-    data.examples.forEach(example => {
-      const card = grid.createDiv({ cls: "resource-detail-example-card" });
-      card.createSpan({ text: example });
-    });
-  }
+  // Examples zone (with spoiler "why it fits" notes)
+  renderExamplesZone(content, data, lang, EXAMPLE_NOTES[arcKey]);
 }
 
 // ─── Technique renderer (data-driven, bilingual via caller) ──────────────────
 
-export function renderTechniqueDetail(container, config) {
+export function renderTechniqueDetail(container, config, lang = 'en', title = null) {
   const content = container.createDiv({ cls: "resource-detail-content" });
 
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
@@ -186,7 +210,7 @@ export function renderTechniqueDetail(container, config) {
   config.intro.forEach(p => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
 
   const coreZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(coreZone, "heart", config.coreHeading || "Core characteristics");
+  createResourceSubheading(coreZone, "heart", config.coreHeading || UI_I18N[lang]?.coreCharacteristics || "Core characteristics");
   const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
   config.core.forEach(item => coreList.createEl("li", { text: item }));
   if (config.coreNote) {
@@ -194,28 +218,19 @@ export function renderTechniqueDetail(container, config) {
   }
 
   const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", config.functionHeading || "Narrative function");
+  createResourceSubheading(functionZone, "chart-spline", config.functionHeading || UI_I18N[lang]?.narrativeFunction || "Narrative function");
   const functionList = functionZone.createEl("ul", { cls: "resource-detail-list" });
   config.narrativeFunction.forEach(item => functionList.createEl("li", { text: item }));
   if (config.narrativeNote) {
     functionZone.createDiv({ cls: "resource-detail-paragraph", text: config.narrativeNote });
   }
 
-  const risksZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(risksZone, "alert-triangle", config.risksTitle || "Common risks");
+  const risksZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+  createResourceSubheading(risksZone, "alert-triangle", config.risksTitle || UI_I18N[lang]?.commonRisks || "Common risks");
   const risksList = risksZone.createEl("ul", { cls: "resource-detail-list" });
   config.risks.forEach(item => risksList.createEl("li", { text: item }));
 
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  setIcon(examplesIcon, "bookmark");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  config.examples.forEach(example => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
+  renderExamplesZone(content, config, lang, title ? EXAMPLE_NOTES[title] : null);
 }
 
 // ─── Structure renderer (data-driven, bilingual via caller) ──────────────────
@@ -273,7 +288,7 @@ export function renderCalloutItem(container, item) {
   }
 }
 
-export function renderStructureDetail(container, config) {
+export function renderStructureDetail(container, config, lang = 'en', title = null) {
   const content = container.createDiv({ cls: "resource-detail-content" });
 
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
@@ -282,7 +297,7 @@ export function renderStructureDetail(container, config) {
 
   if (config.core?.length) {
     const coreZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(coreZone, "heart", config.coreHeading || "Core characteristics");
+    createResourceSubheading(coreZone, "heart", config.coreHeading || UI_I18N[lang]?.coreCharacteristics || "Core characteristics");
     const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
     config.core.forEach(item => coreList.createEl("li", { text: item }));
     if (config.coreNote) {
@@ -291,7 +306,7 @@ export function renderStructureDetail(container, config) {
   }
 
   const stepsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(stepsZone, "list-ordered", config.stepsTitle || "Steps");
+  createResourceSubheading(stepsZone, "list-ordered", config.stepsTitle || UI_I18N[lang]?.steps || "Steps");
 
   if (config.stepGroups?.length) {
     const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
@@ -321,26 +336,17 @@ export function renderStructureDetail(container, config) {
   }
 
   if (config.why) {
-    const whyZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(whyZone, "chart-spline", config.whyTitle || "Why this works");
+    const whyZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(whyZone, "chart-spline", config.whyTitle || UI_I18N[lang]?.whyThisWorks || "Why this works");
     whyZone.createDiv({ cls: "resource-detail-paragraph", text: config.why });
   }
 
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  setIcon(examplesIcon, "bookmark");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  config.examples.forEach(example => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
+  renderExamplesZone(content, config, lang, title ? EXAMPLE_NOTES[title] : null);
 }
 
 // ─── Tips renderer (data-driven, bilingual via caller) ───────────────────────
 
-export function renderTipsDetail(container, config) {
+export function renderTipsDetail(container, config, lang = 'en') {
   const content = container.createDiv({ cls: "resource-detail-content" });
 
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
@@ -348,7 +354,7 @@ export function renderTipsDetail(container, config) {
   config.intro.forEach(p => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
 
   const techniquesZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(techniquesZone, "heart", config.techniquesHeading || "Core techniques");
+  createResourceSubheading(techniquesZone, "heart", config.techniquesHeading || UI_I18N[lang]?.coreTechniques || "Core techniques");
   const techniquesList = techniquesZone.createDiv({ cls: "resource-detail-callout-list" });
   config.techniques.forEach(item => renderCalloutItem(techniquesList, item));
 }

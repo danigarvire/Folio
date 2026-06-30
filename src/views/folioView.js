@@ -573,13 +573,15 @@ export class FolioView extends ItemView {
       );
 
       menu.addItem((it) =>
-        it.setTitle('New root file').setIcon('file-plus').onClick(() => {
+        it.setTitle('New root file').setIcon('file-plus').onClick(async () => {
+          const screenplayDefault = await this.plugin.getScreenplayDefaultForFolder(book.path);
           new TextInputModal(this.plugin.app, {
             title: 'New root file',
             placeholder: 'File name (without .md)',
             cta: 'Create',
             toggleLabel: 'Screenplay formatting',
             toggleKey: 'screenplay',
+            toggleDefault: screenplayDefault,
             onSubmit: async (value, opts = {}) => {
               try {
                 const name = (value || '').trim();

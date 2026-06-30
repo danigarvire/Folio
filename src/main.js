@@ -471,13 +471,15 @@ export default class FolioPlugin extends Plugin {
       );
 
       menu.addItem(it =>
-        it.setTitle(isRoot ? "New root file" : "New file").setIcon("file-plus").onClick(() => {
+        it.setTitle(isRoot ? "New root file" : "New file").setIcon("file-plus").onClick(async () => {
+          const screenplayDefault = await this.getScreenplayDefaultForFolder(folder.path);
           const modal = new TextInputModal(this.app, {
             title: "New file",
             placeholder: "File name",
             cta: "Create",
             toggleLabel: "Screenplay formatting",
             toggleKey: "screenplay",
+            toggleDefault: screenplayDefault,
             onSubmit: async (value, opts = {}) => {
               const name = (value || "").trim();
               if (!name) return;
@@ -1515,19 +1517,35 @@ export default class FolioPlugin extends Plugin {
     return this.configService.loadProjectMeta(book);
   }
 
-  async getNewFileFrontmatter(destPath, fileName, explicitScreenplay = false) {
+  async getNewFileFrontmatter(destPath, fileName, screenplay = false) {
     const book = this.booksIndex.find(b => destPath.startsWith(b.path));
     if (!book) return ""; // not inside a project → leave it a plain note
     const cfg = (await this.loadBookConfig(book)) || {};
     const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
-    // A new file created inside a draft (the manuscript) inherits its formatting,
-    // so e.g. a new "Episode 2" in a TV draft is screenplay-formatted too.
-    let inDraft = false;
-    try { inDraft = !!draftNodeForFile(cfg.structure?.tree || [], destPath.slice(book.path.length + 1)); } catch (e) { inDraft = false; }
-    const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, inDraft, explicitScreenplay);
+    // The "New file" dialog's Screenplay toggle is authoritative. Its default is
+    // pre-set from where the file lands (getScreenplayDefaultForFolder), so a file
+    // in a script/TV draft starts checked — but unchecking it now actually omits
+    // the md-screenplay cssclass instead of being silently re-applied.
     // Always stamp projectType so every project file is recognised (pagination,
-    // stats, screenplay detection…); add the screenplay cssclass when it applies.
-    return this.bookService.buildFrontmatter({ projectType, screenplay: useScreenplay });
+    // stats…); add the screenplay cssclass only when the user kept it on.
+    return this.bookService.buildFrontmatter({ projectType, screenplay: !!screenplay });
+  }
+
+  /** Default state for the "New file" Screenplay toggle, based on the target folder
+   *  (checked when the folder sits inside a script/TV draft). Mirrors the path
+   *  logic getNewFileFrontmatter used to apply automatically. */
+  async getScreenplayDefaultForFolder(folderPath) {
+    try {
+      const book = this.booksIndex.find(b => folderPath === b.path || folderPath.startsWith(b.path + "/"));
+      if (!book) return false;
+      const cfg = (await this.loadBookConfig(book)) || {};
+      const projectType = cfg.basic?.projectType || PROJECT_TYPES.BOOK;
+      const isScript = projectType === PROJECT_TYPES.SCRIPT || projectType === PROJECT_TYPES.FILM;
+      if (!isScript) return false;
+      const relFolder = folderPath === book.path ? "" : folderPath.slice(book.path.length + 1);
+      const probe = relFolder ? `${relFolder}/__probe__.md` : "__probe__.md";
+      return !!draftNodeForFile(cfg.structure?.tree || [], probe);
+    } catch (e) { return false; }
   }
 
   async waitForFolderSync(filePath, retries = 20) {

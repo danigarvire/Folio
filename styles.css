@@ -7358,8 +7358,18 @@ body.folio-focus-quiet-workspace .mod-root .workspace-sidedock-vault-profile {
   color: var(--text-normal); white-space: nowrap; overflow: hidden;
   cursor: grab; user-select: none;
 }
-.folio-tl-beat-title { font-size: 11px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
-.folio-tl-beat-goal { font-size: 9px; opacity: .7; font-style: italic; }
+.folio-tl-beat-title {
+  flex: 0 1 auto; min-width: 0;
+  font-size: 11px; font-weight: 600;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* Secondary subtitle: yields all shrink space to the title, so the title is
+   never collapsed in its favour, and ellipsizes rather than pushing it out. */
+.folio-tl-beat-goal {
+  flex: 0 100000 auto; min-width: 0;
+  font-size: 9px; opacity: .7; font-style: italic;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 .folio-tl-handle { position: absolute; top: 0; bottom: 0; width: 6px; cursor: ew-resize; }
 .folio-tl-handle.is-left { left: 0; }
 .folio-tl-handle.is-right { right: 0; }
@@ -7666,3 +7676,257 @@ body.folio-focus-quiet-workspace .mod-root .workspace-sidedock-vault-profile {
   font-family: var(--font-monospace, "Courier New", monospace);
   font-size: 12px; color: var(--text-normal);
 }
+
+/* ─── Resources: search box ──────────────────────────────────────────────── */
+.resource-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 10px;
+  padding: 6px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+}
+.resource-search:focus-within {
+  border-color: var(--interactive-accent);
+}
+.resource-search-icon {
+  display: inline-flex;
+  color: var(--text-muted);
+}
+.resource-search-icon svg { width: 16px; height: 16px; }
+.resource-search-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--text-normal);
+  font-size: 13px;
+  outline: none;
+}
+.resource-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+}
+.resource-search-empty {
+  padding: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* ─── Resources: reference → action bar ──────────────────────────────────── */
+.resource-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+.resource-detail-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-size: 13px;
+  cursor: pointer;
+}
+.resource-detail-action-btn:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+.resource-detail-action-icon { display: inline-flex; }
+.resource-detail-action-icon svg { width: 15px; height: 15px; }
+
+/* ─── Resources: sources & related cross-links ───────────────────────────── */
+.resource-detail-sources .resource-detail-list { margin-top: 4px; }
+.resource-detail-related-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.resource-detail-related-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 999px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 12px;
+  cursor: pointer;
+}
+.resource-detail-related-chip:hover {
+  background: var(--background-modifier-hover);
+  border-color: var(--interactive-accent);
+}
+.resource-detail-related-chip-icon { display: inline-flex; color: var(--text-muted); }
+.resource-detail-related-chip-icon svg { width: 13px; height: 13px; }
+
+/* ─── Resources: non-affiliation / trademark disclaimer ──────────────────── */
+.resource-detail-disclaimer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 12px;
+  border-top: 1px solid var(--background-modifier-border);
+}
+.resource-detail-disclaimer-icon { display: inline-flex; flex: 0 0 auto; color: var(--text-faint); margin-top: 1px; }
+.resource-detail-disclaimer-icon svg { width: 13px; height: 13px; }
+.resource-detail-disclaimer-text {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  line-height: 1.5;
+}
+
+/* ─── Resources: breadcrumb trail ────────────────────────────────────────── */
+.resource-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.resource-breadcrumb-link {
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 1px 4px;
+}
+.resource-breadcrumb-link:hover { color: var(--text-normal); background: var(--background-modifier-hover); }
+.resource-breadcrumb-sep { color: var(--text-faint); }
+.resource-breadcrumb-current { color: var(--text-normal); font-weight: 600; }
+
+/* Example chips that resolve to another card become interactive. */
+.resource-detail-example-card.is-linked {
+  cursor: pointer;
+  border-color: var(--interactive-accent);
+}
+.resource-detail-example-card.is-linked:hover { background: var(--background-modifier-hover); }
+
+/* ─── Resources: example "why it fits" spoiler notes ─────────────────────── */
+.resource-detail-example-card.has-note {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+.resource-detail-example-card.has-note:hover { border-color: var(--interactive-accent); }
+.resource-detail-example-card.is-open {
+  border-color: var(--interactive-accent);
+  background: var(--background-modifier-hover);
+}
+.resource-detail-example-eye { display: inline-flex; margin-left: 5px; color: var(--text-faint); }
+.resource-detail-example-eye svg { width: 12px; height: 12px; }
+.resource-detail-example-note {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  cursor: pointer;
+}
+.resource-detail-example-note-title { font-size: 12px; font-weight: 600; color: var(--text-normal); }
+.resource-detail-example-note-body {
+  font-size: 13px;
+  margin-top: 4px;
+  color: var(--text-normal);
+  transition: filter 0.15s ease;
+}
+.resource-detail-example-note.is-spoiler .resource-detail-example-note-body {
+  filter: blur(5px);
+  user-select: none;
+}
+.resource-detail-example-note-reveal { display: none; }
+.resource-detail-example-note.is-spoiler .resource-detail-example-note-reveal {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--interactive-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ─── Resources: progressive disclosure (collapsible secondary sections) ──── */
+.resource-detail-zone.is-secondary > .resource-detail-subheading-row {
+  cursor: pointer;
+  user-select: none;
+}
+.resource-detail-zone.is-secondary > .resource-detail-subheading-row:hover .resource-detail-subheading {
+  color: var(--text-normal);
+}
+.resource-detail-zone.is-collapsed > :not(.resource-detail-subheading-row) { display: none; }
+.resource-detail-collapse-chevron {
+  margin-left: auto;
+  display: inline-flex;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+}
+.resource-detail-collapse-chevron svg { width: 15px; height: 15px; }
+.resource-detail-zone.is-collapsed .resource-detail-collapse-chevron { transform: rotate(-90deg); }
+
+/* ─── Resources: "I'm stuck on…" diagnostic entry (plain list item) ───────── */
+.resource-diagnose-item .writer-tools-item-icon { color: var(--interactive-accent); }
+
+/* Diagnostic page: one card per problem with its recommended fixes. */
+.diagnose-card {
+  margin-bottom: 10px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+}
+.diagnose-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.diagnose-card-icon { display: inline-flex; color: var(--interactive-accent); }
+.diagnose-card-icon svg { width: 17px; height: 17px; }
+.diagnose-card-label { font-size: 14px; font-weight: 600; color: var(--text-normal); }
+.diagnose-card-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* ─── Resources: Prose / Screen / Both medium badge ──────────────────────── */
+.resource-medium-badge {
+  margin-left: auto;
+  flex: 0 0 auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  background: var(--background-secondary);
+}
+.resource-medium-badge.is-prose {
+  color: var(--text-on-accent, #fff);
+  background: var(--color-green, #3a9b5c);
+  border-color: transparent;
+}
+.resource-medium-badge.is-screen {
+  color: var(--text-on-accent, #fff);
+  background: var(--color-blue, #4a7bd0);
+  border-color: transparent;
+}
+.resource-medium-badge.is-both {
+  color: var(--text-muted);
+  background: transparent;
+}
+/* Let the label take available space so the badge sits at the right edge. */
+.resource-view-item .resource-view-item-label,
+.writer-tools-item .writer-tools-item-text { flex: 1 1 auto; }

@@ -6,7 +6,7 @@ import { ItemView, Modal, Notice, setIcon } from 'obsidian';
 import { ConfirmModal } from '../modals/confirmModal.js';
 import { FocusModeStatsModal } from '../modals/focusModeStatsModal.js';
 import { renderArchetypeDetail, renderCharacterArcDetail, renderPitfallsDetail, renderTipsDetail, renderTechniqueDetail, renderStructureDetail } from '../writer-tools/referenceDetails.js';
-import { ui, label, TECHNIQUE_DATA, TIPS_DATA, PITFALLS_DATA } from '../writer-tools/resourcesI18n.js';
+import { ui, label, TECHNIQUE_DATA, TIPS_DATA, PITFALLS_DATA, STRUCTURE_DATA, RESOURCE_SOURCES, RESOURCE_RELATED, DIAGNOSE_PROBLEMS } from '../writer-tools/resourcesI18n.js';
 
 /**
  * @typedef {Object} ExportPdfSettings
@@ -177,6 +177,25 @@ export class WriterToolsView extends ItemView {
     setIcon(exportIcon, "file-stack");
     exportItem.createSpan({ cls: "writer-tools-item-text", text: "Export assistant" });
     exportItem.addEventListener("click", () => this.showExportSettingsView());
+
+    // Shortcuts to existing project surfaces, gathered here where users look for tools.
+    const addToolShortcut = (icon, text, ariaLabel, action) => {
+      const item = section.createDiv({ cls: "writer-tools-item" });
+      item.setAttr("role", "button");
+      item.setAttr("tabindex", "0");
+      item.setAttr("aria-label", ariaLabel);
+      setIcon(item.createSpan({ cls: "writer-tools-item-icon" }), icon);
+      item.createSpan({ cls: "writer-tools-item-text", text });
+      const run = () => { try { action(); } catch (e) { console.error(text + " failed", e); } };
+      item.addEventListener("click", run);
+      item.addEventListener("keydown", (evt) => {
+        if (evt.key === "Enter" || evt.key === " ") { evt.preventDefault(); run(); }
+      });
+    };
+
+    addToolShortcut("layout-dashboard", "Beat board", "Open the Beat Board corkboard", () => this.plugin.openBeatBoard?.());
+    addToolShortcut("book-open", "Paged view", "Open the continuous Paged View", () => this.plugin.openPagedView?.());
+    addToolShortcut("bar-chart-3", "Writing stats", "Open the Writing Stats panel", () => this.plugin.openWritingStats?.());
   }
 
   getProjectTypeIcon(projectType) {
@@ -2220,13 +2239,58 @@ export class WriterToolsView extends ItemView {
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "RESOURCES" });
 
+    // Problem-first entry point: "I'm stuck on…" → the cards that fix it.
+    // Rendered as a plain menu item (accent icon) to match the list aesthetic.
+    const diag = section.createDiv({ cls: "writer-tools-item resource-diagnose-item" });
+    diag.setAttr("role", "button");
+    diag.setAttr("tabindex", "0");
+    setIcon(diag.createSpan({ cls: "writer-tools-item-icon" }), "stethoscope");
+    diag.createSpan({ cls: "writer-tools-item-text", text: ui(lang, "diagnoseTitle") });
+    const openDiagnose = () => this.showDiagnoseResources();
+    diag.addEventListener("click", openDiagnose);
+    diag.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDiagnose(); }
+    });
+
+    // Search across every reference card, regardless of category.
+    const searchWrap = section.createDiv({ cls: "resource-search" });
+    setIcon(searchWrap.createSpan({ cls: "resource-search-icon" }), "search");
+    const searchInput = searchWrap.createEl("input", {
+      cls: "resource-search-input",
+      attr: { type: "text", placeholder: ui(lang, "searchPlaceholder"), "aria-label": ui(lang, "searchPlaceholder") }
+    });
+    const resultsEl = section.createDiv({ cls: "resource-search-results" });
+    resultsEl.style.display = "none";
+
     const resourcesGrid = section.createDiv({ cls: "writer-tools-resources-grid" });
+
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.trim().toLowerCase();
+      resultsEl.empty();
+      if (!q) { resourcesGrid.style.display = ""; resultsEl.style.display = "none"; return; }
+      resourcesGrid.style.display = "none";
+      resultsEl.style.display = "";
+      const matches = this.getAllResourceTitles()
+        .filter((t) => label(lang, t).toLowerCase().includes(q) || t.toLowerCase().includes(q) || this.getResourceSearchText(t, lang).includes(q))
+        .sort((a, b) => label(lang, a).localeCompare(label(lang, b)));
+      if (!matches.length) {
+        resultsEl.createDiv({ cls: "resource-search-empty", text: ui(lang, "searchNoResults") });
+        return;
+      }
+      matches.slice(0, 50).forEach((t) => {
+        const item = resultsEl.createDiv({ cls: "writer-tools-item" });
+        setIcon(item.createSpan({ cls: "writer-tools-item-icon" }), this.getResourceIcon(t));
+        item.createSpan({ cls: "writer-tools-item-text", text: label(lang, t) });
+        this.appendMediumBadge(item, t);
+        this.makeInteractive(item, () => this.showResourceDetail(t, () => this.onOpen()));
+      });
+    });
 
     const resources = [
       { icon: "user", key: "character", label: ui(lang, "characterResources"), action: () => this.showCharacterResources() },
-      { icon: "bookmark", key: "narrative", label: ui(lang, "narrativeResources"), action: () => this.showNarrativeResources() },
       { icon: "layout-grid", key: "structure", label: ui(lang, "structureResources"), action: () => this.showStructureResources() },
-      { icon: "lightbulb", key: "tips", label: ui(lang, "tipsResources"), action: () => this.showTipsResources() }
+      { icon: "compass", key: "story", label: ui(lang, "storyResources"), action: () => this.showStoryResources() },
+      { icon: "pen-line", key: "craft", label: ui(lang, "craftResources"), action: () => this.showCraftResources() }
     ];
 
     resources.forEach(resource => {
@@ -2350,6 +2414,7 @@ export class WriterToolsView extends ItemView {
       const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, arc.icon);
       item.createDiv({ cls: "resource-view-item-label", text: label(lang, arc.key) });
+      this.appendMediumBadge(item, arc.key);
       this.makeInteractive(item, () => this.showResourceDetail(arc.key, () => this.showCharacterResources()));
     });
 
@@ -2376,6 +2441,7 @@ export class WriterToolsView extends ItemView {
       const icon = item.createSpan({ cls: "resource-view-card-icon" });
       applyIcon(icon, itemData.icon);
       item.createDiv({ cls: "resource-view-card-label", text: label(lang, itemData.key) });
+      this.appendMediumBadge(item, itemData.key);
       this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
     });
 
@@ -2402,27 +2468,39 @@ export class WriterToolsView extends ItemView {
       const icon = item.createSpan({ cls: "resource-view-card-icon" });
       applyIcon(icon, itemData.icon);
       item.createDiv({ cls: "resource-view-card-label", text: label(lang, itemData.key) });
+      this.appendMediumBadge(item, itemData.key);
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
+    });
+
+    // Character engines (internal machinery of character)
+    const enginesSection = container.createDiv({ cls: "resource-view-section is-separated" });
+    enginesSection.createDiv({ cls: "resource-view-section-title", text: ui(lang, "characterEngines") });
+    const enginesGrid = enginesSection.createDiv({ cls: "resource-view-group-grid" });
+    const engines = [
+      { key: "Want vs Need", icon: "target" },
+      { key: "Wound & Ghost", icon: "ghost" },
+      { key: "The Lie & The Truth", icon: "scale" },
+      { key: "Fatal Flaw", icon: "crack" },
+      { key: "Antagonist Design", icon: "swords" },
+      { key: "Character Web", icon: "spline" }
+    ];
+    engines.forEach(itemData => {
+      const item = enginesGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
+      applyIcon(icon, itemData.icon);
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+      this.appendMediumBadge(item, itemData.key);
       this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
     });
   }
 
-  showNarrativeResources() {
+  renderNarrativeSection(container, onBack) {
     const lang = this.resourceLanguage;
-    const container = this.containerEl.children[1];
-    container.empty();
-    container.addClass("folio-resource-view");
 
     const applyIcon = (el, iconName) => {
       setIcon(el, iconName);
       if (!el.querySelector("svg")) setIcon(el, "circle-dot");
     };
-
-    this.buildResourceViewHeader(
-      container, "bookmark",
-      ui(lang, "narrativeResources"),
-      () => this.onOpen(),
-      () => this.showNarrativeResources()
-    );
 
     container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "narrativeTechniques") });
 
@@ -2461,7 +2539,8 @@ export class WriterToolsView extends ItemView {
         const icon = item.createSpan({ cls: "resource-view-item-icon" });
         applyIcon(icon, itemData.icon);
         item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
-        this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showNarrativeResources()));
+        this.appendMediumBadge(item, itemData.key);
+        this.makeInteractive(item, () => this.showResourceDetail(itemData.key, onBack));
       });
       if (group.note) {
         card.createDiv({ cls: "resource-view-group-note", text: group.note });
@@ -2528,29 +2607,39 @@ export class WriterToolsView extends ItemView {
         const icon = item.createSpan({ cls: "resource-view-item-icon" });
         applyIcon(icon, itemData.icon);
         item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+        this.appendMediumBadge(item, itemData.key);
         this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showStructureResources()));
       });
     });
+
+    // Screen & sequence frameworks (film and television)
+    const screenCard = container.createDiv({ cls: "resource-view-group-card" });
+    screenCard.createDiv({ cls: "resource-view-group-title", text: ui(lang, "screenSequence") });
+    const screenGrid = screenCard.createDiv({ cls: "resource-view-group-grid" });
+    const screenItems = [
+      { key: "Eight-Sequence Structure", icon: "layers" },
+      { key: "Syd Field Paradigm", icon: "columns-3" },
+      { key: "Truby 22 Steps", icon: "list-ordered" },
+      { key: "TV Series Structure", icon: "tv" }
+    ];
+    screenItems.forEach(itemData => {
+      const item = screenGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
+      applyIcon(icon, itemData.icon);
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showStructureResources()));
+    });
   }
 
-  showTipsResources() {
+  renderTipsSection(container, onBack) {
     const lang = this.resourceLanguage;
-    const container = this.containerEl.children[1];
-    container.empty();
-    container.addClass("folio-resource-view");
 
     const applyIcon = (el, iconName) => {
       setIcon(el, iconName);
       if (!el.querySelector("svg")) setIcon(el, "circle-dot");
     };
 
-    this.buildResourceViewHeader(
-      container, "lightbulb",
-      ui(lang, "tipsResources"),
-      () => this.onOpen(),
-      () => this.showTipsResources()
-    );
-
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "writingTips") });
     container.createDiv({ cls: "resource-view-description", text: ui(lang, "tipsIntro") });
 
     const tipsCard = container.createDiv({ cls: "resource-view-group-card" });
@@ -2570,7 +2659,30 @@ export class WriterToolsView extends ItemView {
       const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, tip.icon);
       item.createSpan({ cls: "resource-view-item-label", text: label(lang, tip.key) });
-      this.makeInteractive(item, () => this.showResourceDetail(tip.key, () => this.showTipsResources()));
+      this.appendMediumBadge(item, tip.key);
+      this.makeInteractive(item, () => this.showResourceDetail(tip.key, onBack));
+    });
+
+    container.createDiv({ cls: "resource-view-divider" });
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "revisionEditing") });
+
+    const revisionCard = container.createDiv({ cls: "resource-view-group-card" });
+    const revisionGrid = revisionCard.createDiv({ cls: "resource-view-group-grid" });
+
+    const revisionTips = [
+      { key: "The Rewrite Pass (tips)", icon: "repeat" },
+      { key: "Self-Editing Checklist (tips)", icon: "list-checks" },
+      { key: "Cutting & Tightening (tips)", icon: "scissors" },
+      { key: "Notes & Feedback (tips)", icon: "message-circle-more" }
+    ];
+
+    revisionTips.forEach(tip => {
+      const item = revisionGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
+      applyIcon(icon, tip.icon);
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, tip.key) });
+      this.appendMediumBadge(item, tip.key);
+      this.makeInteractive(item, () => this.showResourceDetail(tip.key, onBack));
     });
 
     container.createDiv({ cls: "resource-view-divider" });
@@ -2584,7 +2696,8 @@ export class WriterToolsView extends ItemView {
       { key: "Character Arc Pitfalls", icon: "route" },
       { key: "Narrative Technique Pitfalls", icon: "book-open" },
       { key: "Structure Pitfalls", icon: "layout-grid" },
-      { key: "Writing-Level Pitfalls", icon: "pen-line" }
+      { key: "Writing-Level Pitfalls", icon: "pen-line" },
+      { key: "Revision Pitfalls", icon: "alert-triangle" }
     ];
 
     pitfalls.forEach(pitfall => {
@@ -2592,8 +2705,211 @@ export class WriterToolsView extends ItemView {
       const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, pitfall.icon);
       item.createSpan({ cls: "resource-view-item-label", text: label(lang, pitfall.key) });
-      this.makeInteractive(item, () => this.showResourceDetail(pitfall.key, () => this.showTipsResources()));
+      this.appendMediumBadge(item, pitfall.key);
+      this.makeInteractive(item, () => this.showResourceDetail(pitfall.key, onBack));
     });
+  }
+
+  /** Shared renderer for a flat grid of resource cards under one category. */
+  renderResourceItemGrid(parent, items, onBack) {
+    const lang = this.resourceLanguage;
+    const applyIcon = (el, iconName) => {
+      setIcon(el, iconName);
+      if (!el.querySelector("svg")) setIcon(el, "circle-dot");
+    };
+    const grid = parent.createDiv({ cls: "resource-view-group-grid" });
+    items.forEach(itemData => {
+      const item = grid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
+      applyIcon(icon, itemData.icon);
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+      this.appendMediumBadge(item, itemData.key);
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, onBack));
+    });
+  }
+
+  // ── Prose / Screen / Both medium classification ────────────────────────────
+  static SCREEN_TITLES = new Set([
+    "Scene Headings (tips)", "Action Lines (tips)", "Character & Dialogue (tips)",
+    "Parentheticals (tips)", "Transitions (tips)", "Montage & Intercut (tips)",
+    "Loglines (tips)", "Treatment & Outline (tips)",
+    "Eight-Sequence Structure", "Syd Field Paradigm", "TV Series Structure"
+  ]);
+  static PROSE_TITLES = new Set([
+    "Point of View & Narrator", "Scene vs Summary", "Psychic Distance & Interiority",
+    "Prose Rhythm & Sentence Variety", "Worldbuilding & Setting", "Showing & Telling Balance"
+  ]);
+
+  getResourceMedium(title) {
+    if (WriterToolsView.SCREEN_TITLES.has(title)) return "screen";
+    if (WriterToolsView.PROSE_TITLES.has(title)) return "prose";
+    return "both";
+  }
+
+  appendMediumBadge(parent, title) {
+    const lang = this.resourceLanguage;
+    const medium = this.getResourceMedium(title);
+    // Universal ("both") items stay unbadged to keep the lists uncluttered;
+    // only the format-specific Prose / Screen tags are surfaced.
+    if (medium === "both") return;
+    const text = medium === "prose" ? ui(lang, "mediumProse") : ui(lang, "mediumScreen");
+    parent.createSpan({ cls: `resource-medium-badge is-${medium}`, text });
+  }
+
+  // ── Diagnostic: "I'm stuck on…" → recommended cards ───────────────────────
+  showDiagnoseResources() {
+    const lang = this.resourceLanguage;
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-resource-view");
+    const back = () => this.showDiagnoseResources();
+    this.buildResourceViewHeader(container, "stethoscope", ui(lang, "diagnoseTitle"), () => this.onOpen(), back);
+    container.createDiv({ cls: "resource-view-description", text: ui(lang, "diagnoseHint") });
+
+    DIAGNOSE_PROBLEMS.forEach((p) => {
+      const card = container.createDiv({ cls: "diagnose-card" });
+      const head = card.createDiv({ cls: "diagnose-card-head" });
+      setIcon(head.createSpan({ cls: "diagnose-card-icon" }), p.icon);
+      head.createSpan({ cls: "diagnose-card-label", text: (p.label && p.label[lang]) || p.label.en });
+      const chips = card.createDiv({ cls: "diagnose-card-chips" });
+      p.cards.forEach((t) => {
+        const chip = chips.createDiv({ cls: "resource-detail-related-chip" });
+        setIcon(chip.createSpan({ cls: "resource-detail-related-chip-icon" }), this.getResourceIcon(t));
+        chip.createSpan({ text: label(lang, t) });
+        this.appendMediumBadge(chip, t);
+        this.makeInteractive(chip, () => this.showResourceDetail(t, back));
+      });
+    });
+  }
+
+  // ── Hub: Story & theme ─────────────────────────────────────────────────────
+  showStoryResources() {
+    const lang = this.resourceLanguage;
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-resource-view");
+    const back = () => this.showStoryResources();
+    this.buildResourceViewHeader(container, "compass", ui(lang, "storyResources"), () => this.onOpen(), back);
+    container.createDiv({ cls: "resource-view-description", text: ui(lang, "storyIntro") });
+    this.renderThemeSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderGenreSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderNarrativeSection(container, back);
+  }
+
+  // ── Hub: Craft ─────────────────────────────────────────────────────────────
+  showCraftResources() {
+    const lang = this.resourceLanguage;
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-resource-view");
+    const back = () => this.showCraftResources();
+    this.buildResourceViewHeader(container, "pen-line", ui(lang, "craftResources"), () => this.onOpen(), back);
+    container.createDiv({ cls: "resource-view-description", text: ui(lang, "craftIntro") });
+    this.renderDialogueSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderProseSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderScreenwritingSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderTipsSection(container, back);
+  }
+
+  renderThemeSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "themeArchitecture") });
+    const card = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(card, [
+      { key: "Theme vs Premise", icon: "scale" },
+      { key: "Controlling Idea", icon: "key-round" },
+      { key: "Thematic Argument", icon: "gavel" },
+      { key: "Theme Through Character", icon: "users" },
+      { key: "Motif & Symbol", icon: "gem" }
+    ], onBack);
+  }
+
+  renderGenreSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    const overviewCard = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(overviewCard, [
+      { key: "Genre & Conventions", icon: "library-big" }
+    ], onBack);
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "genreConventional") });
+    const conv = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(conv, [
+      { key: "Drama", icon: "drama" },
+      { key: "Comedy", icon: "laugh" },
+      { key: "Action", icon: "swords" },
+      { key: "Adventure", icon: "compass" },
+      { key: "Thriller", icon: "alarm-clock" },
+      { key: "Horror", icon: "skull" },
+      { key: "Science Fiction", icon: "rocket" },
+      { key: "Fantasy", icon: "wand-2" },
+      { key: "Romance", icon: "heart" },
+      { key: "Mystery & Crime", icon: "search" },
+      { key: "Historical Fiction", icon: "landmark" },
+      { key: "Western", icon: "tractor" }
+    ], onBack);
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "genreSystem") });
+    const types = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(types, [
+      { key: "Monster in the House", icon: "ghost" },
+      { key: "Golden Fleece", icon: "map" },
+      { key: "Dude with a Problem", icon: "alert-triangle" },
+      { key: "Rites of Passage", icon: "hourglass" },
+      { key: "Buddy Love", icon: "heart-handshake" },
+      { key: "Whydunit", icon: "search" },
+      { key: "Superhero", icon: "shield-half" }
+    ], onBack);
+  }
+
+  renderDialogueSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "dialogueCraft") });
+    const card = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(card, [
+      { key: "Subtext", icon: "layers" },
+      { key: "On-the-Nose Dialogue", icon: "megaphone" },
+      { key: "Voice Differentiation", icon: "mic" },
+      { key: "The Scene Turn", icon: "refresh-ccw-dot" },
+      { key: "Exposition in Dialogue", icon: "info" },
+      { key: "Action Beats & Silence", icon: "pause" }
+    ], onBack);
+  }
+
+  renderProseSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "proseCraft") });
+    const card = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(card, [
+      { key: "Point of View & Narrator", icon: "eye" },
+      { key: "Scene vs Summary", icon: "clapperboard" },
+      { key: "Psychic Distance & Interiority", icon: "brain" },
+      { key: "Prose Rhythm & Sentence Variety", icon: "music" },
+      { key: "Worldbuilding & Setting", icon: "globe" },
+      { key: "Showing & Telling Balance", icon: "eye" }
+    ], onBack);
+  }
+
+  renderScreenwritingSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "screenwritingFormat") });
+    const formatCard = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(formatCard, [
+      { key: "Scene Headings (tips)", icon: "heading" },
+      { key: "Action Lines (tips)", icon: "align-left" },
+      { key: "Character & Dialogue (tips)", icon: "message-square" },
+      { key: "Parentheticals (tips)", icon: "parentheses" },
+      { key: "Transitions (tips)", icon: "arrow-right-left" },
+      { key: "Montage & Intercut (tips)", icon: "film" }
+    ], onBack);
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "screenwritingDocs") });
+    const docsCard = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(docsCard, [
+      { key: "Loglines (tips)", icon: "type" },
+      { key: "Treatment & Outline (tips)", icon: "file-text" }
+    ], onBack);
   }
 
   showResourceDetail(title, onBack) {
@@ -2613,6 +2929,11 @@ export class WriterToolsView extends ItemView {
       () => this.showResourceDetail(title, onBack)
     );
 
+    this.renderBreadcrumb(container, title);
+
+    // Routing is wrapped so a context-aware actions bar can be appended after
+    // whichever detail renderer runs (each branch returns early).
+    const route = () => {
     // ── Archetype routing ────────────────────────────────────────────────────
     const archetypeKeyMap = {
       "The Ally": "ally",
@@ -2657,13 +2978,13 @@ export class WriterToolsView extends ItemView {
 
     // ── Narrative technique routing ──────────────────────────────────────────
     if (TECHNIQUE_DATA[title]) {
-      renderTechniqueDetail(container, TECHNIQUE_DATA[title][lang] ?? TECHNIQUE_DATA[title].en);
+      renderTechniqueDetail(container, TECHNIQUE_DATA[title][lang] ?? TECHNIQUE_DATA[title].en, lang, title);
       return;
     }
 
     // ── Writing tips routing ─────────────────────────────────────────────────
     if (TIPS_DATA[title]) {
-      renderTipsDetail(container, TIPS_DATA[title][lang] ?? TIPS_DATA[title].en);
+      renderTipsDetail(container, TIPS_DATA[title][lang] ?? TIPS_DATA[title].en, lang);
       return;
     }
 
@@ -2674,330 +2995,368 @@ export class WriterToolsView extends ItemView {
       return;
     }
 
-    // ── Story structure routing ──────────────────────────────────────────────
-    if (title === "The Hero's Journey") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Hero\u2019s Journey?",
-        intro: [
-          "The Hero\u2019s Journey is a mythic structure that frames story as transformation: a character leaves the familiar, faces trials, dies symbolically, and returns changed. It\u2019s less a rigid formula than a map for meaning and growth."
-        ],
-        core: [
-          "A movement from comfort to challenge to return",
-          "External trials that force internal change",
-          "Symbolic death and rebirth",
-          "A concluding \u201cgift\u201d brought back to the world"
-        ],
-        stepsTitle: "Steps (classic model)",
-        stepGroups: [
-          {
-            title: "ACT I",
-            items: [
-              { title: "Ordinary World", body: "Establish the Hero\u2019s baseline life, limitations, and unmet need.", icon: "earth" },
-              { title: "Call to Adventure", body: "A disruption offers a mission, opportunity, or threat that demands response.", icon: "phone-incoming" },
-              { title: "Refusal of the Call", body: "Fear, duty, or doubt causes hesitation; the Hero resists change.", icon: "phone-off" },
-              { title: "Meeting the Mentor", body: "Guidance appears: training, tools, wisdom, or encouragement.", icon: "graduation-cap" },
-              { title: "Crossing the First Threshold", body: "The Hero commits and enters the \u201cspecial world,\u201d leaving the old life behind.", icon: "brick-wall" }
-            ]
-          },
-          {
-            title: "ACT II",
-            items: [
-              { title: "Tests, Allies, Enemies", body: "The rules of the new world are learned; relationships and rivalries form.", icon: "line-squiggle" },
-              { title: "Approach to the Inmost Cave", body: "Preparation for the central crisis; tensions tighten and stakes clarify.", icon: "mountain" },
-              { title: "Ordeal", body: "A major confrontation with death, failure, or the deepest fear.", icon: "swords" },
-              { title: "Reward (Seizing the Sword)", body: "The Hero gains something: knowledge, power, object, love, or self-belief.", icon: "trophy" }
-            ]
-          },
-          {
-            title: "ACT III",
-            items: [
-              { title: "The Road Back", body: "Consequences arrive; the Hero must return with the reward under pressure.", icon: "arrow-big-left" },
-              { title: "Resurrection", body: "A final test proves transformation. The Hero confronts the core flaw one last time.", icon: "user-round-plus" },
-              { title: "Return with the Elixir", body: "The Hero returns changed, bringing value to others: healing, truth, freedom, hope.", icon: "gem" }
-            ]
-          }
-        ],
-        whyTitle: "Why this works",
-        why: "These steps externalize inner change: the world forces the Hero to become someone new.",
-        examplesTitle: "Hero\u2019s Journey Examples",
-        examples: ["Star Wars", "The Matrix", "The Lord of the Rings", "Moana", "Harry Potter"]
-      });
-      return;
-    }
-    if (title === "Dan Harmon Story Circle") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Story Circle?",
-        intro: [
-          "The Story Circle compresses transformation into a repeatable loop: a character wants something, leaves comfort, pays a price, and returns changed. It\u2019s designed to be practical for episodes as well as features."
-        ],
-        core: [
-          "Motivation-driven steps",
-          "Clear cause-and-effect",
-          "Repeatable structure (especially for TV)",
-          "Emphasis on change and cost"
-        ],
-        stepsTitle: "Steps (8-step circle)",
-        steps: [
-          { title: "YOU (COMFORT)", body: "Establish the character\u2019s normal world and identity.", icon: "fish" },
-          { title: "NEED (DESIRE)", body: "The character wants or needs something that disrupts balance.", icon: "candy" },
-          { title: "GO (ENTER UNFAMILIAR)", body: "The character leaves comfort and enters a new situation.", icon: "log-in" },
-          { title: "SEARCH (ADAPT)", body: "The character explores the new world and tries strategies that may fail.", icon: "map" },
-          { title: "FIND (GET WHAT THEY WANTED)", body: "The character achieves the goal\u2014or seems to.", icon: "search-check" },
-          { title: "TAKE (PAY A PRICE)", body: "There is a cost: sacrifice, loss, compromise, or consequence.", icon: "hand-coins" },
-          { title: "RETURN (BACK TO FAMILIAR)", body: "The character returns to a version of their old world.", icon: "arrow-big-left" },
-          { title: "CHANGE (TRANSFORMED)", body: "The character is different: wiser, broken, empowered, humbled, etc.", icon: "user-pen" }
-        ],
-        examplesTitle: "Story Circle Examples",
-        examples: ["Episodic TV arcs", "Community", "Rick and Morty", "Character-centered short stories"]
-      });
-      return;
-    }
-    if (title === "Three Act Structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Three Act Structure?",
-        intro: ["A story divided into Setup, Confrontation, and Resolution. It\u2019s the most common modern narrative skeleton because it aligns with audience attention and escalating stakes."],
-        stepsTitle: "Steps (typical beats)",
-        numberedSteps: true,
-        steps: [
-          "ACT I \u2014 Setup",
-          "1. Opening / Status Quo \u2014 Introduce the protagonist, their world, and the core problem-space.",
-          "2. Inciting Incident \u2014 A disruption creates a new problem or opportunity.",
-          "3. Debate / Refusal \u2014 The protagonist hesitates, resists, or explores alternatives.",
-          "4. Act I Break (Commitment) \u2014 The protagonist commits and can\u2019t go back.",
-          "ACT II \u2014 Confrontation",
-          "5. Rising Complications \u2014 Obstacles escalate; stakes increase; plans fail.",
-          "6. Midpoint Shift \u2014 A major reveal or reversal changes the story\u2019s direction and intensity.",
-          "7. Bad Guys Close In / Pressure Peaks \u2014 Consequences compound; resources thin; relationships strain.",
-          "8. All Is Lost \u2014 The lowest point; apparent defeat or devastating cost.",
-          "9. Dark Night of the Soul \u2014 Reflection and decision: who will the protagonist become?",
-          "ACT III \u2014 Resolution",
-          "10. Act III Break (New plan) \u2014 The protagonist acts with new clarity, courage, or strategy.",
-          "11. Climax \u2014 The decisive confrontation that resolves the central conflict.",
-          "12. Denouement \u2014 Aftermath: new equilibrium; consequences; thematic closure."
-        ],
-        examplesTitle: "Three Act Examples",
-        examples: ["Most Hollywood films", "Contemporary commercial novels", "Studio-driven storytelling"]
-      });
-      return;
-    }
-    if (title === "Freytag's Pyramid") {
-      renderStructureDetail(container, {
-        introTitle: "What is Freytag\u2019s Pyramid?",
-        intro: ["A classical five-part model of dramatic tension, often associated with tragedy. It formalizes a rise to climax followed by a decline into resolution."],
-        stepsTitle: "Steps (5-part model)",
-        steps: [
-          "1. Exposition \u2014 Introduce setting, characters, and the initial balance.",
-          "2. Rising Action \u2014 Complications build; conflict intensifies; choices narrow.",
-          "3. Climax \u2014 The turning point\u2014the peak tension where fate changes direction.",
-          "4. Falling Action \u2014 Consequences unfold; momentum turns toward inevitable outcome.",
-          "5. Denouement / Catastrophe \u2014 Final resolution, often with moral or tragic closure."
-        ],
-        examplesTitle: "Freytag Examples",
-        examples: ["Classical tragedies", "Shakespearean drama", "Traditional stage plays"]
-      });
-      return;
-    }
-    if (title === "Fichtean Curve") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Fichtean Curve?",
-        intro: ["A structure built from a chain of escalating crises with minimal exposition. The story begins close to conflict and continues increasing pressure until climax."],
-        stepsTitle: "Steps (crisis chain)",
-        steps: [
-          "1. Immediate Hook / First Crisis \u2014 Start near a problem, not far before it.",
-          "2. Crisis Escalation 1 \u2014 The protagonist responds; the response creates new complications.",
-          "3. Crisis Escalation 2 \u2014 Stakes rise; setbacks compound; options shrink.",
-          "4. Crisis Escalation 3 \u2014 Pressure intensifies; emotional and practical costs deepen.",
-          "5. Major Crisis / Low Point \u2014 A near-defeat moment that forces a decisive shift.",
-          "6. Climax \u2014 The protagonist commits fully and confronts the core conflict.",
-          "7. Short Resolution \u2014 Quick wrap-up; consequences and new stability."
-        ],
-        examplesTitle: "Fichtean Curve Examples",
-        examples: ["Thrillers", "Page-turner genre fiction", "Serialized storytelling"]
-      });
-      return;
-    }
-    if (title === "Kish\u014dtenketsu") {
-      renderStructureDetail(container, {
-        introTitle: "What is Kish\u014dtenketsu?",
-        intro: ["Kish\u014dtenketsu is a four-part structure that emphasizes development and contrast rather than conflict. It\u2019s common in East Asian storytelling and works well for narratives driven by discovery, theme, or perspective."],
-        stepsTitle: "Steps (4-part model)",
-        steps: [
-          "1. Ki (Introduction) \u2014 Establish the situation, characters, and core idea.",
-          "2. Sh\u014d (Development) \u2014 Expand the situation; deepen detail and context without major disruption.",
-          "3. Ten (Turn / Twist) \u2014 Introduce a surprising contrast or shift: a new angle, reveal, or reframing event.",
-          "4. Ketsu (Conclusion) \u2014 Synthesize: show how the contrast changes meaning; resolve by integration rather than victory."
-        ],
-        examplesTitle: "Kish\u014dtenketsu Examples",
-        examples: ["Many slice-of-life stories", "Certain anime and manga arcs", "Essays or thematic short fiction", "Some puzzle-like narratives"]
-      });
-      return;
-    }
-    if (title === "Save the Cat") {
-      renderStructureDetail(container, {
-        introTitle: "What is Save the Cat?",
-        intro: ["Save the Cat is a commercial beat sheet designed to maximize audience engagement. It focuses on emotional timing, clarity, and likeability, especially for film and genre fiction."],
-        core: ["Strong emotional beats", "Clear pacing", "Audience empathy", "Market-tested structure"],
-        stepsTitle: "Steps (15-beat model)",
-        steps: [
-          "1. Opening Image \u2014 A snapshot of the protagonist\u2019s world before change.",
-          "2. Theme Stated \u2014 A line or moment hints at the story\u2019s central lesson.",
-          "3. Setup \u2014 Introduce characters, flaws, relationships, and stakes.",
-          "4. Catalyst \u2014 The inciting incident that disrupts normal life.",
-          "5. Debate \u2014 The protagonist hesitates and weighs options.",
-          "6. Break into Act II \u2014 Commitment to the journey.",
-          "7. B Story \u2014 A secondary plot, often emotional or relational.",
-          "8. Fun and Games \u2014 The \u201cpromise of the premise\u201d; the story delivers on genre.",
-          "9. Midpoint \u2014 A major reversal: false victory or false defeat.",
-          "10. Bad Guys Close In \u2014 Pressure increases; plans unravel.",
-          "11. All Is Lost \u2014 Apparent defeat; emotional or literal low point.",
-          "12. Dark Night of the Soul \u2014 Reflection and internal reckoning.",
-          "13. Break into Act III \u2014 New insight leads to decisive action.",
-          "14. Finale \u2014 The protagonist applies what they\u2019ve learned to win or lose meaningfully.",
-          "15. Final Image \u2014 A mirror of the opening image, showing change."
-        ],
-        examplesTitle: "Save the Cat Examples",
-        examples: ["Most studio films", "Romantic comedies", "High-concept genre movies", "Animated features"]
-      });
-      return;
-    }
-    if (title === "Seven Point Structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Seven Point Structure?",
-        intro: ["A clean, flexible structure focused on cause-and-effect turning points. It emphasizes clarity and momentum."],
-        core: ["Fewer beats, higher impact", "Clear reversals", "Strong midpoint logic"],
-        stepsTitle: "Steps (7-point model)",
-        numberedSteps: true,
-        steps: [
-          "1. Hook \u2014 Introduce the protagonist and the central problem.",
-          "2. Plot Turn 1 \u2014 An event pushes the protagonist into action.",
-          "3. Pinch Point 1 \u2014 Pressure reveals the antagonist\u2019s power.",
-          "4. Midpoint \u2014 The protagonist shifts from reactive to proactive.",
-          "5. Pinch Point 2 \u2014 Stakes intensify; consequences loom.",
-          "6. Plot Turn 2 \u2014 Final commitment toward resolution.",
-          "7. Resolution \u2014 Conflict concludes; new status quo established."
-        ],
-        examplesTitle: "Seven Point Examples",
-        examples: ["Fantasy and sci-fi novels", "Plot-driven fiction", "Serialized narratives"]
-      });
-      return;
-    }
-    if (title === "Pulp Formula") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Pulp Formula?",
-        intro: ["A fast-paced structure designed for entertainment, clarity, and momentum. It prioritizes action, stakes, and accessibility over thematic subtlety."],
-        core: ["Immediate engagement", "Clear heroes and villains", "Escalating danger", "High momentum"],
-        stepsTitle: "Steps (common pulp rhythm)",
-        steps: [
-          "1. Immediate Hook \u2014 Start with action or danger.",
-          "2. Clear Goal \u2014 The protagonist knows what must be done.",
-          "3. Obstacle Chain \u2014 Continuous challenges and reversals.",
-          "4. Escalation \u2014 Stakes increase rapidly.",
-          "5. Cliffhanger or Crisis \u2014 A major setback or revelation.",
-          "6. Final Confrontation \u2014 Direct clash with the antagonist.",
-          "7. Swift Resolution \u2014 Loose ends tied quickly."
-        ],
-        examplesTitle: "Pulp Examples",
-        examples: ["Adventure serials", "Noir fiction", "Action thrillers", "Comic storytelling"]
-      });
-      return;
-    }
-    if (title === "McKee Story paradigm") {
-      renderStructureDetail(container, {
-        introTitle: "What is the McKee Paradigm?",
-        intro: ["Robert McKee\u2019s model emphasizes story as a sequence of value changes driven by conflict and choice. It focuses on scene design and narrative causality."],
-        core: ["Value shifts", "Progressive complications", "Scene-level causality", "Strong climax logic"],
-        stepsTitle: "Structural principles",
-        steps: [
-          "1. Inciting Incident \u2014 A radical change disrupts balance.",
-          "2. Progressive Complications \u2014 Each action leads to greater difficulty.",
-          "3. Crisis \u2014 A decision between irreconcilable values.",
-          "4. Climax \u2014 Action that resolves the crisis.",
-          "5. Resolution \u2014 The world stabilizes in a new form."
-        ],
-        examplesTitle: "McKee Examples",
-        examples: ["Prestige drama", "Character-driven films", "Serious literary narratives"]
-      });
-      return;
-    }
-    if (title === "Into the Woods structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Into the Woods structure?",
-        intro: ["John Yorke\u2019s model views story as a five-act, fractal pattern: order, disorder, repair, collapse, and transformation. It emphasizes repetition at multiple scales."],
-        core: ["Five-part rhythm", "Fractal repetition", "Moral consequence", "Thematic depth"],
-        stepsTitle: "Steps (5-act pattern)",
-        steps: [
-          "1. Order \u2014 Establish a flawed equilibrium.",
-          "2. Disruption \u2014 A desire or problem breaks order.",
-          "3. Attempted Repair \u2014 Characters try to fix things.",
-          "4. Collapse \u2014 Efforts fail; chaos peaks.",
-          "5. New Order \u2014 A transformed equilibrium emerges."
-        ],
-        examplesTitle: "Into the Woods Examples",
-        examples: ["British television drama", "Prestige serialized storytelling", "Thematic narratives"]
-      });
-      return;
-    }
-    if (title === "Frame Narrative") {
-      renderStructureDetail(container, {
-        introTitle: "What is a Frame Narrative?",
-        intro: ["A story within a story. An outer narrative contextualizes or reframes an inner narrative."],
-        core: ["Nested storytelling", "Perspective mediation", "Interpretive distance"],
-        stepsTitle: "Structural layers",
-        steps: [
-          "1. Outer Frame \u2014 Establish the narrator or context.",
-          "2. Inner Story \u2014 The primary narrative is told.",
-          "3. Interruption or Commentary \u2014 The frame reacts or reframes meaning.",
-          "4. Return to Frame \u2014 The story closes with new understanding."
-        ],
-        examplesTitle: "Frame Narrative Examples",
-        examples: ["Frankenstein", "The Princess Bride", "Heart of Darkness", "Arabian Nights"]
-      });
-      return;
-    }
-    if (title === "Nonlinear Structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is a Nonlinear Structure?",
-        intro: ["A narrative told out of chronological order. Meaning emerges from juxtaposition rather than sequence."],
-        core: ["Fragmented timeline", "Pattern recognition", "Active audience participation"],
-        stepsTitle: "Common nonlinear patterns",
-        steps: ["Reverse chronology", "Interwoven timelines", "Fragmented memory", "Circular narratives"],
-        examplesTitle: "Nonlinear Examples",
-        examples: ["Memento", "Pulp Fiction", "Westworld", "Slaughterhouse-Five"]
-      });
-      return;
-    }
-    if (title === "Rashomon Structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is a Rashomon Structure?",
-        intro: ["A narrative that presents multiple, conflicting perspectives of the same event, emphasizing subjectivity and truth ambiguity."],
-        core: ["Multiple narrators", "Contradictory accounts", "Truth as unstable"],
-        stepsTitle: "Structural pattern",
-        steps: ["1. Single event", "2. Multiple retellings", "3. Contradictions revealed", "4. Ambiguity preserved"],
-        examplesTitle: "Rashomon Examples",
-        examples: ["Rashomon", "Hero", "The Affair", "Gone Girl (partial)"]
-      });
-      return;
-    }
-    if (title === "In Medias Res") {
-      renderStructureDetail(container, {
-        introTitle: "What is In Medias Res?",
-        intro: ["A narrative that begins in the middle of action, then later provides context for how events reached that point."],
-        core: ["Immediate engagement", "Delayed exposition", "Momentum-first storytelling"],
-        stepsTitle: "Structural pattern",
-        steps: [
-          "1. Mid-action opening",
-          "2. Audience confusion",
-          "3. Gradual backfill",
-          "4. Recontextualization",
-          "5. Continuation to resolution"
-        ],
-        examplesTitle: "In Medias Res Examples",
-        examples: ["The Odyssey", "Breaking Bad (cold opens)", "Mad Max: Fury Road", "Fight Club"]
-      });
+    // ── Story structure routing (unified bilingual data) ─────────
+    if (STRUCTURE_DATA[title]) {
+      renderStructureDetail(container, STRUCTURE_DATA[title][lang] ?? STRUCTURE_DATA[title].en, lang, title);
       return;
     }
 
-    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+    container.createDiv({ cls: "resource-detail-placeholder", text: ui(lang, "comingSoon") });
+    };
+    route();
+    this.renderResourceActions(container, title, onBack);
+    this.renderResourceMeta(container, title, onBack);
+    this.linkExampleCards(container, onBack);
+    this.makeDetailCollapsible(container);
+  }
+
+  /** Progressive disclosure: collapse secondary sections so the card leads with its essence. */
+  makeDetailCollapsible(container) {
+    container.querySelectorAll(".resource-detail-zone.is-secondary").forEach((zone) => {
+      const head = zone.querySelector(".resource-detail-subheading-row");
+      if (!head || head.dataset.collapsibleWired) return;
+      head.dataset.collapsibleWired = "true";
+      zone.classList.add("is-collapsed");
+      setIcon(head.createSpan({ cls: "resource-detail-collapse-chevron" }), "chevron-down");
+      head.setAttribute("role", "button");
+      head.setAttribute("tabindex", "0");
+      const toggle = () => zone.classList.toggle("is-collapsed");
+      head.addEventListener("click", toggle);
+      head.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+      });
+    });
+  }
+
+  /** Hub (top-level category) a card belongs to, for breadcrumbs. */
+  getResourceHub(title) {
+    if (WriterToolsView.CHARACTER_TITLES.has(title)) return { key: "characterResources", fn: () => this.showCharacterResources() };
+    if (WriterToolsView.STRUCTURE_TITLES.has(title)) return { key: "structureResources", fn: () => this.showStructureResources() };
+    if (WriterToolsView.STORY_TITLES.has(title)) return { key: "storyResources", fn: () => this.showStoryResources() };
+    return { key: "craftResources", fn: () => this.showCraftResources() };
+  }
+
+  /** Breadcrumb trail: Resources › Hub › Card. */
+  renderBreadcrumb(container, title) {
+    const lang = this.resourceLanguage;
+    const hub = this.getResourceHub(title);
+    const bc = container.createDiv({ cls: "resource-breadcrumb" });
+    const home = bc.createSpan({ cls: "resource-breadcrumb-link", text: ui(lang, "resources") });
+    this.makeInteractive(home, () => this.onOpen());
+    bc.createSpan({ cls: "resource-breadcrumb-sep", text: "›" });
+    const h = bc.createSpan({ cls: "resource-breadcrumb-link", text: ui(lang, hub.key) });
+    this.makeInteractive(h, hub.fn);
+    bc.createSpan({ cls: "resource-breadcrumb-sep", text: "›" });
+    bc.createSpan({ cls: "resource-breadcrumb-current", text: label(lang, title) });
+  }
+
+  /** Make example chips that match an existing card clickable (cross-references). */
+  linkExampleCards(container, onBack) {
+    const index = this.getExampleLinkIndex();
+    container.querySelectorAll(".resource-detail-example-card").forEach((card) => {
+      const target = index[(card.textContent || "").trim().toLowerCase()];
+      if (target && target !== container.dataset.cardTitle) {
+        card.classList.add("is-linked");
+        this.makeInteractive(card, () => this.showResourceDetail(target, onBack));
+      }
+    });
+  }
+
+  getExampleLinkIndex() {
+    if (this._exampleIndex) return this._exampleIndex;
+    const idx = {};
+    this.getAllResourceTitles().forEach((t) => {
+      idx[t.toLowerCase()] = t;
+      idx[label("en", t).toLowerCase()] = t;
+      idx[label("es", t).toLowerCase()] = t;
+    });
+    this._exampleIndex = idx;
+    return idx;
+  }
+
+  /** Append "Sources & further reading" and "Related" cross-links to a detail view. */
+  renderResourceMeta(container, title, onBack) {
+    const lang = this.resourceLanguage;
+    const content = container.querySelector(".resource-detail-content") || container;
+    const sources = RESOURCE_SOURCES[title];
+    const related = this.getRelatedTitles(title);
+
+    if (Array.isArray(sources) && sources.length) {
+      const zone = content.createDiv({ cls: "resource-detail-zone resource-detail-sources" });
+      const head = zone.createDiv({ cls: "resource-detail-subheading-row" });
+      setIcon(head.createSpan({ cls: "resource-detail-subheading-icon" }), "book-marked");
+      head.createSpan({ cls: "resource-detail-subheading", text: ui(lang, "sourcesHeading") });
+      const list = zone.createEl("ul", { cls: "resource-detail-list" });
+      sources.forEach((s) => list.createEl("li", { text: s }));
+    }
+
+    if (related.length) {
+      const zone = content.createDiv({ cls: "resource-detail-zone resource-detail-related" });
+      const head = zone.createDiv({ cls: "resource-detail-subheading-row" });
+      setIcon(head.createSpan({ cls: "resource-detail-subheading-icon" }), "link" );
+      head.createSpan({ cls: "resource-detail-subheading", text: ui(lang, "relatedHeading") });
+      const chips = zone.createDiv({ cls: "resource-detail-related-chips" });
+      related.forEach((rel) => {
+        const chip = chips.createDiv({ cls: "resource-detail-related-chip" });
+        setIcon(chip.createSpan({ cls: "resource-detail-related-chip-icon" }), this.getResourceIcon(rel));
+        chip.createSpan({ text: label(lang, rel) });
+        this.makeInteractive(chip, () => this.showResourceDetail(rel, onBack));
+      });
+    }
+
+    // Non-affiliation / trademark notice — shown on every reference card so the
+    // educational, unaffiliated nature of the summaries and cited titles is clear.
+    const disc = content.createDiv({ cls: "resource-detail-zone resource-detail-disclaimer" });
+    setIcon(disc.createSpan({ cls: "resource-detail-disclaimer-icon" }), "info");
+    disc.createSpan({ cls: "resource-detail-disclaimer-text", text: ui(lang, "affiliationDisclaimer") });
+  }
+
+  // Titles that can be turned into beats / character sheets.
+  static STRUCTURE_TITLES = new Set([
+    "The Hero's Journey", "Dan Harmon Story Circle", "Freytag's Pyramid", "Fichtean Curve",
+    "Three Act Structure", "Kishōtenketsu", "Save the Cat", "Seven Point Structure",
+    "Pulp Formula", "McKee Story paradigm", "Into the Woods structure", "Frame Narrative",
+    "Nonlinear Structure", "Rashomon Structure", "In Medias Res",
+    "Eight-Sequence Structure", "Syd Field Paradigm", "Truby 22 Steps", "TV Series Structure"
+  ]);
+
+  static CHARACTER_TITLES = new Set([
+    "The Ally", "The Herald", "The Hero (Jung)", "The Mentor", "The Shadow", "The Shapeshifter",
+    "The Threshold Guardian", "The Trickster", "The Caregiver", "The Creator", "The Everyman",
+    "The Explorer", "The Hero", "The Innocent", "The Jester", "The Lover", "The Magician",
+    "The Outlaw", "The Ruler", "The Sage",
+    "Moral Ascent", "Moral Descent", "Flat Moral", "Moral Transformation",
+    "Want vs Need", "Wound & Ghost", "The Lie & The Truth", "Fatal Flaw", "Antagonist Design", "Character Web"
+  ]);
+
+  // Cards under the "Story & theme" hub (theme + genre + narrative techniques).
+  static STORY_TITLES = new Set([
+    "Theme vs Premise", "Controlling Idea", "Thematic Argument", "Motif & Symbol", "Theme Through Character",
+    "Genre & Conventions", "Monster in the House", "Golden Fleece", "Dude with a Problem", "Rites of Passage",
+    "Buddy Love", "Whydunit", "Superhero", "Drama", "Comedy", "Action", "Adventure", "Thriller", "Horror",
+    "Science Fiction", "Fantasy", "Romance", "Mystery & Crime", "Historical Fiction", "Western",
+    "Flashback", "Flashforward", "Foreshadowing", "Chekhov's Gun", "Red Herring", "Plot Twist",
+    "Deus Ex Machina", "Eucatastrophe", "Poetic Justice", "“Show, Don’t Tell”", "Quibble (Wordplay)"
+  ]);
+
+  /** Append a context-aware actions bar (insert beats / create character sheet). */
+  renderResourceActions(container, title, onBack) {
+    const lang = this.resourceLanguage;
+    const isStructure = WriterToolsView.STRUCTURE_TITLES.has(title);
+    const isCharacter = WriterToolsView.CHARACTER_TITLES.has(title);
+    // Techniques/genres/theme/dialogue/prose/tips that aren't already a
+    // character or structure card get a generic "insert template" action.
+    const isTechnique = !isStructure && !isCharacter && !!(TECHNIQUE_DATA[title] || TIPS_DATA[title]);
+    if (!isStructure && !isCharacter && !isTechnique) return;
+
+    const content = container.querySelector(".resource-detail-content") || container;
+    const bar = content.createDiv({ cls: "resource-detail-actions" });
+
+    if (isStructure) {
+      const btn = bar.createEl("button", { cls: "resource-detail-action-btn" });
+      setIcon(btn.createSpan({ cls: "resource-detail-action-icon" }), "list-plus");
+      btn.createSpan({ text: ui(lang, "insertBeatSheet") });
+      btn.addEventListener("click", () => this.insertStructureAsBeats(container, title));
+    }
+    if (isCharacter) {
+      const btn = bar.createEl("button", { cls: "resource-detail-action-btn" });
+      setIcon(btn.createSpan({ cls: "resource-detail-action-icon" }), "user-plus");
+      btn.createSpan({ text: ui(lang, "createCharacterSheet") });
+      btn.addEventListener("click", () => this.createCharacterSheet(title));
+    }
+    if (isTechnique) {
+      const btn = bar.createEl("button", { cls: "resource-detail-action-btn" });
+      setIcon(btn.createSpan({ cls: "resource-detail-action-icon" }), "file-plus-2");
+      btn.createSpan({ text: ui(lang, "insertTemplate") });
+      btn.addEventListener("click", () => this.insertTechniqueTemplate(title));
+    }
+  }
+
+  /** Create a seeded note from a technique/tip card: definition + key points as a checklist. */
+  async insertTechniqueTemplate(title) {
+    const lang = this.resourceLanguage;
+    const project = this.plugin.activeBook || this.plugin.activeProject;
+    if (!project || !project.path) { new Notice(ui(lang, "noProjectForTemplate")); return; }
+
+    const name = label(lang, title);
+    const data = (TECHNIQUE_DATA[title]?.[lang] ?? TECHNIQUE_DATA[title]?.en)
+      || (TIPS_DATA[title]?.[lang] ?? TIPS_DATA[title]?.en) || {};
+    const tpl = (en, es) => (lang === "es" ? es : en);
+    const lines = ["---", "type: craft-note", `topic: "${name}"`, "---", "", `# ${name}`, ""];
+    (data.intro || []).forEach((p) => { lines.push(p, ""); });
+    const points = data.core || data.techniques || [];
+    if (points.length) {
+      lines.push(`## ${tpl("Apply it", "Aplícalo")}`);
+      points.forEach((p) => lines.push(`- [ ] ${p}`));
+      lines.push("");
+    }
+    if ((data.narrativeFunction || []).length) {
+      lines.push(`## ${tpl("Function", "Función")}`);
+      data.narrativeFunction.forEach((p) => lines.push(`- ${p}`));
+      lines.push("");
+    }
+    lines.push(`> ${tpl("Seeded from Writer Tools →", "Generado desde Writer Tools →")} ${name}`, "");
+    const noteText = lines.join("\n");
+
+    try {
+      const base = `${project.path}/${name.replace(/[\\/:*?"<>|]/g, " ").trim()}`;
+      let path = `${base}.md`;
+      let n = 2;
+      while (this.app.vault.getAbstractFileByPath(path)) { path = `${base} ${n++}.md`; }
+      const file = await this.app.vault.create(path, noteText);
+      new Notice(`${ui(lang, "templateCreated")}: ${name}`);
+      const leaf = this.app.workspace.getLeaf(true);
+      if (leaf && file) await leaf.openFile(file);
+    } catch (e) {
+      console.error("insertTechniqueTemplate failed", e);
+      new Notice(ui(lang, "templateFailed"));
+    }
+  }
+
+  /** Read the rendered structure steps and push them as beats to the active project. */
+  async insertStructureAsBeats(container, title) {
+    const lang = this.resourceLanguage;
+    const project = this.plugin.activeBook || this.plugin.activeProject;
+    if (!project) { new Notice(ui(lang, "noProjectForBeats")); return; }
+    if (!this.plugin.outlineEditorService) { new Notice(ui(lang, "beatsUnavailable")); return; }
+
+    const callouts = Array.from(container.querySelectorAll(".resource-detail-callout"));
+    const beats = callouts.map((c) => ({
+      title: (c.querySelector(".resource-detail-callout-title")?.textContent || "").trim(),
+      notes: (c.querySelector(".resource-detail-callout-body")?.textContent || "").trim()
+    })).filter((b) => b.title);
+
+    if (!beats.length) { new Notice(ui(lang, "beatsUnavailable")); return; }
+
+    try {
+      const structureName = label(lang, title);
+      for (const beat of beats) {
+        await this.plugin.outlineEditorService.addBeat(project, {
+          title: beat.title,
+          notes: beat.notes,
+          goal: structureName,
+          lane: 0
+        });
+      }
+      new Notice(`${beats.length} ${ui(lang, "beatsAdded")} (${structureName})`);
+    } catch (e) {
+      console.error("insertStructureAsBeats failed", e);
+      new Notice(ui(lang, "beatsFailed"));
+    }
+  }
+
+  /** Create a seeded character-sheet note in the active project from a reference card. */
+  async createCharacterSheet(title) {
+    const lang = this.resourceLanguage;
+    const project = this.plugin.activeBook || this.plugin.activeProject;
+    if (!project || !project.path) { new Notice(ui(lang, "noProjectForSheet")); return; }
+
+    const name = label(lang, title);
+    const tpl = (en, es) => (lang === "es" ? es : en);
+    const lines = [
+      "---",
+      "type: character",
+      `archetype: "${name}"`,
+      "---",
+      "",
+      `# ${tpl("Character", "Personaje")} — ${name}`,
+      "",
+      `## ${tpl("Identity", "Identidad")}`,
+      `- ${tpl("Name", "Nombre")}: `,
+      `- ${tpl("Role / archetype", "Rol / arquetipo")}: ${name}`,
+      `- ${tpl("Age / occupation", "Edad / ocupación")}: `,
+      "",
+      `## ${tpl("Engine", "Motor")}`,
+      `- ${tpl("Want (external goal)", "Deseo (meta externa)")}: `,
+      `- ${tpl("Need (internal truth)", "Necesidad (verdad interna)")}: `,
+      `- ${tpl("Wound / ghost", "Herida / fantasma")}: `,
+      `- ${tpl("Lie they believe", "Mentira que cree")}: `,
+      `- ${tpl("Fatal flaw", "Defecto fatal")}: `,
+      "",
+      `## ${tpl("Arc", "Arco")}`,
+      `- ${tpl("Starting state", "Estado inicial")}: `,
+      `- ${tpl("Turning point", "Punto de giro")}: `,
+      `- ${tpl("Ending state", "Estado final")}: `,
+      "",
+      `## ${tpl("Relationships", "Relaciones")}`,
+      "- ",
+      "",
+      `## ${tpl("Notes", "Notas")}`,
+      "",
+      `> ${tpl("Seeded from Writer Tools →", "Generado desde Writer Tools →")} ${name}`,
+      ""
+    ];
+    const content = lines.join("\n");
+
+    try {
+      const base = `${project.path}/${name.replace(/[\\/:*?"<>|]/g, " ").trim()}`;
+      let path = `${base}.md`;
+      let n = 2;
+      while (this.app.vault.getAbstractFileByPath(path)) {
+        path = `${base} ${n++}.md`;
+      }
+      const file = await this.app.vault.create(path, content);
+      new Notice(`${ui(lang, "sheetCreated")}: ${name}`);
+      const leaf = this.app.workspace.getLeaf(true);
+      if (leaf && file) await leaf.openFile(file);
+    } catch (e) {
+      console.error("createCharacterSheet failed", e);
+      new Notice(ui(lang, "sheetFailed"));
+    }
+  }
+
+  // Extra search terms (theorist / family) for cards whose name doesn't carry them.
+  static SEARCH_ALIASES = (() => {
+    const a = {};
+    const campbell = ["The Ally", "The Herald", "The Hero (Jung)", "The Mentor", "The Shadow", "The Shapeshifter", "The Threshold Guardian", "The Trickster"];
+    const jung = ["The Caregiver", "The Creator", "The Everyman", "The Explorer", "The Hero", "The Innocent", "The Jester", "The Lover", "The Magician", "The Outlaw", "The Ruler", "The Sage"];
+    campbell.forEach((k) => { a[k] = "campbell vogler archetype arquetipo"; });
+    jung.forEach((k) => { a[k] = "jung jungian junguiano archetype arquetipo"; });
+    return a;
+  })();
+
+  /** Concatenated body text of a card (definition, key points, sources, examples) for content search. */
+  getResourceSearchText(title, lang) {
+    this._searchTextCache = this._searchTextCache || {};
+    this._searchTextCache[lang] = this._searchTextCache[lang] || {};
+    if (this._searchTextCache[lang][title] !== undefined) return this._searchTextCache[lang][title];
+    const parts = [];
+    const tech = TECHNIQUE_DATA[title]?.[lang] || TECHNIQUE_DATA[title]?.en;
+    if (tech) parts.push(...(tech.intro || []), ...(tech.core || []), ...(tech.narrativeFunction || []), ...(tech.examples || []));
+    const tip = TIPS_DATA[title]?.[lang] || TIPS_DATA[title]?.en;
+    if (tip) parts.push(...(tip.intro || []), ...(tip.techniques || []));
+    const struct = STRUCTURE_DATA[title]?.[lang] || STRUCTURE_DATA[title]?.en;
+    if (struct) parts.push(...(struct.intro || []), ...(struct.examples || []));
+    const pit = PITFALLS_DATA[title]?.[lang] || PITFALLS_DATA[title]?.en;
+    if (pit) parts.push(...(pit.items || []));
+    if (Array.isArray(RESOURCE_SOURCES[title])) parts.push(...RESOURCE_SOURCES[title]);
+    if (WriterToolsView.SEARCH_ALIASES[title]) parts.push(WriterToolsView.SEARCH_ALIASES[title]);
+    const text = parts.join(" ").toLowerCase();
+    this._searchTextCache[lang][title] = text;
+    return text;
+  }
+
+  /** Related cards for a title, made bidirectional (if A links B, B also shows A). */
+  getRelatedTitles(title) {
+    const set = new Set(RESOURCE_RELATED[title] || []);
+    for (const key of Object.keys(RESOURCE_RELATED)) {
+      if (key !== title && Array.isArray(RESOURCE_RELATED[key]) && RESOURCE_RELATED[key].includes(title)) {
+        set.add(key);
+      }
+    }
+    set.delete(title);
+    return Array.from(set);
+  }
+
+  /** Every searchable reference title across all categories (deduplicated). */
+  getAllResourceTitles() {
+    const set = new Set();
+    Object.keys(TECHNIQUE_DATA).forEach((k) => set.add(k));
+    Object.keys(TIPS_DATA).forEach((k) => set.add(k));
+    Object.keys(PITFALLS_DATA).forEach((k) => set.add(k));
+    WriterToolsView.STRUCTURE_TITLES.forEach((k) => set.add(k));
+    WriterToolsView.CHARACTER_TITLES.forEach((k) => set.add(k));
+    return Array.from(set);
   }
 
   getResourceIcon(title) {
@@ -3062,7 +3421,76 @@ export class WriterToolsView extends ItemView {
       "Dialogue (tips)": "message-circle",
       "Exposition (tips)": "file-text",
       "Narration (tips)": "book-open",
-      "Persuasion (tips)": "megaphone"
+      "Persuasion (tips)": "megaphone",
+      // Theme & premise
+      "Theme vs Premise": "scale",
+      "Controlling Idea": "key-round",
+      "Thematic Argument": "gavel",
+      "Motif & Symbol": "gem",
+      "Theme Through Character": "users",
+      // Character engines
+      "Want vs Need": "target",
+      "Wound & Ghost": "ghost",
+      "The Lie & The Truth": "scale",
+      "Fatal Flaw": "crack",
+      "Antagonist Design": "swords",
+      "Character Web": "spline",
+      // Dialogue craft
+      "Subtext": "layers",
+      "On-the-Nose Dialogue": "megaphone",
+      "Voice Differentiation": "mic",
+      "The Scene Turn": "refresh-ccw-dot",
+      "Exposition in Dialogue": "info",
+      "Action Beats & Silence": "pause",
+      // Genre
+      "Genre & Conventions": "library-big",
+      "Monster in the House": "ghost",
+      "Golden Fleece": "map",
+      "Dude with a Problem": "alert-triangle",
+      "Rites of Passage": "hourglass",
+      "Buddy Love": "heart-handshake",
+      "Whydunit": "search",
+      "Superhero": "shield-half",
+      // Screenwriting format & documents
+      "Scene Headings (tips)": "heading",
+      "Action Lines (tips)": "align-left",
+      "Character & Dialogue (tips)": "message-square",
+      "Parentheticals (tips)": "parentheses",
+      "Transitions (tips)": "arrow-right-left",
+      "Montage & Intercut (tips)": "film",
+      "Loglines (tips)": "type",
+      "Treatment & Outline (tips)": "file-text",
+      // Revision
+      "The Rewrite Pass (tips)": "repeat",
+      "Self-Editing Checklist (tips)": "list-checks",
+      "Cutting & Tightening (tips)": "scissors",
+      "Notes & Feedback (tips)": "message-circle-more",
+      "Revision Pitfalls": "alert-triangle",
+      // Structure frameworks
+      "Eight-Sequence Structure": "layers",
+      "Syd Field Paradigm": "columns-3",
+      "Truby 22 Steps": "list-ordered",
+      "TV Series Structure": "tv",
+      // Conventional genres
+      "Drama": "drama",
+      "Comedy": "laugh",
+      "Action": "swords",
+      "Adventure": "compass",
+      "Thriller": "alarm-clock",
+      "Horror": "skull",
+      "Science Fiction": "rocket",
+      "Fantasy": "wand-2",
+      "Romance": "heart",
+      "Mystery & Crime": "search",
+      "Historical Fiction": "landmark",
+      "Western": "tractor",
+      // Prose craft
+      "Point of View & Narrator": "eye",
+      "Scene vs Summary": "clapperboard",
+      "Psychic Distance & Interiority": "brain",
+      "Prose Rhythm & Sentence Variety": "music",
+      "Worldbuilding & Setting": "globe",
+      "Showing & Telling Balance": "eye-off"
     };
     return iconMap[title] || "book";
   }

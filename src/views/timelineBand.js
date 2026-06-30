@@ -442,10 +442,13 @@ export class TimelineBand {
       bar.dataset.pstart = String(beat.start || 0);
       bar.dataset.pspan = String(beat.span || 1);
       bar.style.left = (beat.start || 0) * view.pxPerPage + "px";
-      bar.style.width = Math.max(view.pxPerPage * 0.4, (beat.span || 1) * view.pxPerPage) + "px";
+      const beatW = Math.max(view.pxPerPage * 0.4, (beat.span || 1) * view.pxPerPage);
+      bar.style.width = beatW + "px";
       if (beat.color) bar.style.background = beat.color;
       bar.createSpan({ cls: "folio-tl-beat-title", text: beat.title || "Beat" });
-      if (beat.goal) bar.createSpan({ cls: "folio-tl-beat-goal", text: String(beat.goal) });
+      // The goal acts as a secondary subtitle: only show it once the beat is
+      // wide enough that the title still reads — stretch a beat to reveal it.
+      if (beat.goal && beatW >= 130) bar.createSpan({ cls: "folio-tl-beat-goal", text: String(beat.goal) });
       bar.setAttribute("title", beat.notes || beat.title || "");
       const lh = bar.createDiv({ cls: "folio-tl-handle is-left" });
       const rh = bar.createDiv({ cls: "folio-tl-handle is-right" });

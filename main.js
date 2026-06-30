@@ -7,6 +7,7 @@ var __defProp = Object.defineProperty;
 var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
 var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
@@ -23,6 +24,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+var __publicField = (obj, key, value) => {
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+  return value;
+};
 
 // src/constants/index.js
 function makeDefaultBookConfig() {
@@ -7421,13 +7426,15 @@ var FolioView = class extends import_obsidian17.ItemView {
         })
       );
       menu.addItem(
-        (it) => it.setTitle("New root file").setIcon("file-plus").onClick(() => {
+        (it) => it.setTitle("New root file").setIcon("file-plus").onClick(async () => {
+          const screenplayDefault = await this.plugin.getScreenplayDefaultForFolder(book.path);
           new TextInputModal2(this.plugin.app, {
             title: "New root file",
             placeholder: "File name (without .md)",
             cta: "Create",
             toggleLabel: "Screenplay formatting",
             toggleKey: "screenplay",
+            toggleDefault: screenplayDefault,
             onSubmit: async (value, opts = {}) => {
               try {
                 const name = (value || "").trim();
@@ -7982,6 +7989,2136 @@ var FocusModeStatsModal = class extends import_obsidian18.Modal {
 
 // src/writer-tools/referenceDetails.js
 var import_obsidian19 = require("obsidian");
+
+// src/writer-tools/resourcesExtra.js
+var EXTRA_TECHNIQUE_DATA = {
+  // ── Theme & premise ────────────────────────────────────────────────────────
+  "Theme vs Premise": {
+    en: {
+      introTitle: "Theme vs Premise?",
+      intro: ["Theme is the abstract topic a story explores, such as justice or love. Premise is the specific argument the story makes about that topic, stated as a complete declarative claim the narrative sets out to prove."],
+      core: ["Theme is a subject; premise is an assertion", "Premise can be phrased as one sentence", "Premise predicts the ending", "Theme invites questions, premise answers them"],
+      coreNote: "A theme is a word; a premise is a sentence.",
+      narrativeFunction: ["Focus the story on a single argument", "Guide which scenes belong", "Unify character and plot", "Clarify the intended meaning"],
+      risksTitle: "Common risks",
+      risks: ["Confusing a topic for an argument", "Stating the premise too literally on the page", "Pursuing a premise the plot never proves"],
+      examplesTitle: "Theme vs Premise Examples",
+      examples: ['Romeo and Juliet (love vs. "great love defies even death")', 'The Godfather (family vs. "loyalty to family destroys the self")', 'Macbeth (ambition vs. "ruthless ambition leads to ruin")', 'Breaking Bad (pride vs. "pride corrupts a good man")', 'A Christmas Carol (greed vs. "compassion redeems a miserly soul")']
+    },
+    es: {
+      introTitle: "\xBFTema vs Premisa?",
+      intro: ["El tema es el asunto abstracto que explora una historia, como la justicia o el amor. La premisa es el argumento concreto que la historia plantea sobre ese asunto, formulado como una afirmaci\xF3n completa que la narrativa se propone demostrar."],
+      core: ["El tema es un asunto; la premisa es una afirmaci\xF3n", "La premisa cabe en una sola frase", "La premisa anticipa el desenlace", "El tema plantea preguntas; la premisa las responde"],
+      coreNote: "El tema es una palabra; la premisa es una frase.",
+      narrativeFunction: ["Centrar la historia en un \xFAnico argumento", "Decidir qu\xE9 escenas pertenecen a la obra", "Unificar personaje y trama", "Clarificar el significado pretendido"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Confundir un asunto con un argumento", "Enunciar la premisa de forma demasiado literal", "Perseguir una premisa que la trama nunca demuestra"],
+      examplesTitle: "Ejemplos de Tema vs Premisa",
+      examples: ["Romeo y Julieta (amor vs. \xABel gran amor desaf\xEDa incluso a la muerte\xBB)", "El Padrino (familia vs. \xABla lealtad a la familia destruye al individuo\xBB)", "Macbeth (ambici\xF3n vs. \xABla ambici\xF3n despiadada conduce a la ruina\xBB)", "Breaking Bad (orgullo vs. \xABel orgullo corrompe a un buen hombre\xBB)", "Cuento de Navidad (avaricia vs. \xABla compasi\xF3n redime al avaro\xBB)"]
+    }
+  },
+  "Controlling Idea": {
+    en: {
+      introTitle: "What is a Controlling Idea?",
+      intro: ["Robert McKee's controlling idea expresses a story's ultimate meaning in a single sentence that names a value and the cause that brings it about. It states how and why life changes from one condition to another by the story's end."],
+      core: ["One sentence: value plus cause", "Identifies the final emotional charge", "Predicted by the climax, not the opening", "Either ironic, idealistic, or pessimistic"],
+      coreNote: 'Form: "Value prevails when cause."',
+      narrativeFunction: ["Anchor every scene to a single meaning", "Test whether the climax earns its message", "Resolve conflicting impulses in the draft", "Distinguish honest theme from sentiment"],
+      risksTitle: "Common risks",
+      risks: ["Naming the value but not the cause", "A climax that contradicts the stated idea", "Forcing a moral the story has not dramatized"],
+      examplesTitle: "Controlling Idea Examples",
+      examples: ['Chinatown ("Evil triumphs when good people are powerless")', 'Casablanca ("Love is fulfilled when we sacrifice our own desire")', 'The Verdict ("Justice prevails when one man refuses to compromise")', 'Thelma & Louise ("Freedom is won when we defy a world that cages us")', 'No Country for Old Men ("Evil prevails when the world outpaces those who fight it")']
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es una Idea de Control?",
+      intro: ["La idea de control de Robert McKee expresa el significado \xFAltimo de una historia en una sola frase que nombra un valor y la causa que lo produce. Enuncia c\xF3mo y por qu\xE9 la vida cambia de una condici\xF3n a otra al final del relato."],
+      core: ["Una frase: valor m\xE1s causa", "Identifica la carga emocional final", "La predice el cl\xEDmax, no el inicio", "Ir\xF3nica, idealista o pesimista"],
+      coreNote: "Forma: \xABEl valor prevalece cuando causa\xBB.",
+      narrativeFunction: ["Anclar cada escena a un \xFAnico significado", "Comprobar si el cl\xEDmax justifica su mensaje", "Resolver impulsos contradictorios del borrador", "Distinguir el tema honesto del sentimentalismo"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Nombrar el valor pero no la causa", "Un cl\xEDmax que contradice la idea enunciada", "Imponer una moraleja que la historia no ha dramatizado"],
+      examplesTitle: "Ejemplos de Idea de Control",
+      examples: ["Chinatown (\xABEl mal triunfa cuando los buenos son impotentes\xBB)", "Casablanca (\xABEl amor se cumple cuando sacrificamos nuestro propio deseo\xBB)", "Veredicto final (\xABLa justicia prevalece cuando un hombre se niega a transigir\xBB)", "Thelma y Louise (\xABLa libertad se gana cuando desafiamos a un mundo que nos enjaula\xBB)", "No es pa\xEDs para viejos (\xABEl mal prevalece cuando el mundo supera a quienes lo combaten\xBB)"]
+    }
+  },
+  "Thematic Argument": {
+    en: {
+      introTitle: "What is a Thematic Argument?",
+      intro: ["A thematic argument treats the whole story as a case being argued, with the protagonist proving or disproving a moral proposition through the choices they make under pressure. John Truby calls this the story's moral argument, advanced not by speeches but by consequences."],
+      core: ["Dramatizes a debate, not a statement", "Advanced through choices and consequences", "Protagonist embodies one side", "Resolved by the climactic decision"],
+      coreNote: "The protagonist's final choice is the verdict.",
+      narrativeFunction: ["Convert abstract theme into action", "Give choices moral weight", "Make the ending feel earned", "Reveal character through values under test"],
+      risksTitle: "Common risks",
+      risks: ["Preaching the argument in dialogue", "A conclusion the choices do not support", "Reducing characters to mouthpieces"],
+      examplesTitle: "Thematic Argument Examples",
+      examples: ["A Christmas Carol", "Schindler's List", "Groundhog Day", "Crime and Punishment", "It's a Wonderful Life", "12 Angry Men"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es un Argumento Tem\xE1tico?",
+      intro: ["El argumento tem\xE1tico trata la historia entera como un caso que se debate, donde el protagonista demuestra o refuta una proposici\xF3n moral mediante las decisiones que toma bajo presi\xF3n. John Truby lo llama el argumento moral de la historia, sostenido no con discursos sino con consecuencias."],
+      core: ["Dramatiza un debate, no una afirmaci\xF3n", "Se sostiene con decisiones y consecuencias", "El protagonista encarna una postura", "Se resuelve con la decisi\xF3n del cl\xEDmax"],
+      coreNote: "La decisi\xF3n final del protagonista es el veredicto.",
+      narrativeFunction: ["Convertir el tema abstracto en acci\xF3n", "Dar peso moral a las decisiones", "Hacer que el desenlace parezca merecido", "Revelar al personaje al poner a prueba sus valores"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Predicar el argumento en los di\xE1logos", "Una conclusi\xF3n que las decisiones no respaldan", "Reducir a los personajes a portavoces"],
+      examplesTitle: "Ejemplos de Argumento Tem\xE1tico",
+      examples: ["Cuento de Navidad", "La lista de Schindler", "Atrapado en el tiempo", "Crimen y castigo", "\xA1Qu\xE9 bello es vivir!", "Doce hombres sin piedad"]
+    }
+  },
+  "Motif & Symbol": {
+    en: {
+      introTitle: "What is a Motif & Symbol?",
+      intro: ["A motif is a concrete image, object, or action that recurs throughout a story and accumulates meaning with each appearance. A symbol is such an image standing for an abstract idea, letting theme register through the senses rather than through statement."],
+      core: ["Concrete and repeatable", "Gains meaning through recurrence", "Carries thematic weight indirectly", "Works on the audience subconsciously"],
+      coreNote: "A motif repeats; a symbol stands for something.",
+      narrativeFunction: ["Express theme without exposition", "Create cohesion across scenes", "Track a character's inner change", "Reward attentive audiences"],
+      risksTitle: "Common risks",
+      risks: ["Heavy-handed or obvious symbolism", "Repetition without development", "Meaning the story never supports"],
+      examplesTitle: "Motif & Symbol Examples",
+      examples: ["The green light in The Great Gatsby", "The conch in Lord of the Flies", "Water in Moonlight", "The scarlet letter in The Scarlet Letter", "Rosebud in Citizen Kane", "The mockingbird in To Kill a Mockingbird"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es un Motivo y S\xEDmbolo?",
+      intro: ["Un motivo es una imagen, objeto o acci\xF3n concreta que se repite a lo largo de una historia y acumula significado en cada aparici\xF3n. Un s\xEDmbolo es esa imagen que representa una idea abstracta, permitiendo que el tema se perciba por los sentidos en lugar de enunciarse."],
+      core: ["Concreto y repetible", "Gana significado al repetirse", "Porta peso tem\xE1tico de forma indirecta", "Act\xFAa sobre el p\xFAblico de modo subconsciente"],
+      coreNote: "El motivo se repite; el s\xEDmbolo representa algo.",
+      narrativeFunction: ["Expresar el tema sin exposici\xF3n", "Crear cohesi\xF3n entre escenas", "Seguir el cambio interior de un personaje", "Recompensar al p\xFAblico atento"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Simbolismo obvio o recargado", "Repetici\xF3n sin desarrollo", "Un significado que la historia nunca respalda"],
+      examplesTitle: "Ejemplos de Motivo y S\xEDmbolo",
+      examples: ["La luz verde en El gran Gatsby", "La caracola en El se\xF1or de las moscas", "El agua en Moonlight", "La letra escarlata en La letra escarlata", "Rosebud en Ciudadano Kane", "El ruise\xF1or en Matar a un ruise\xF1or"]
+    }
+  },
+  "Theme Through Character": {
+    en: {
+      introTitle: "What is Theme Through Character?",
+      intro: ["Theme through character dramatizes an argument by having the protagonist and antagonist embody opposing values, so the conflict between them becomes a living debate over the premise. Lajos Egri taught that the antagonist must be the protagonist's equal so the premise is truly tested, not merely asserted."],
+      core: ["Protagonist and antagonist hold opposing values", "Conflict stages the premise line", "Each side argues through action", "Outcome declares which value wins"],
+      coreNote: "The antagonist is the premise's strongest objection.",
+      narrativeFunction: ["Turn theme into character conflict", "Give the antagonist genuine validity", "Test the premise instead of stating it", "Let the climax settle the debate"],
+      risksTitle: "Common risks",
+      risks: ["A straw-man antagonist who cannot win", "Values too similar to generate debate", "Resolving the argument by force, not choice"],
+      examplesTitle: "Theme Through Character Examples",
+      examples: ["The Dark Knight (order vs. chaos)", "Les Mis\xE9rables (mercy vs. law)", "Amadeus (genius vs. mediocrity)", "There Will Be Blood (greed vs. faith)", "Whiplash (greatness vs. cost)", "Captain America: Civil War (liberty vs. security)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Tema a Trav\xE9s del Personaje?",
+      intro: ["El tema a trav\xE9s del personaje dramatiza un argumento haciendo que protagonista y antagonista encarnen valores opuestos, de modo que el conflicto entre ambos se convierte en un debate vivo sobre la premisa. Lajos Egri ense\xF1aba que el antagonista debe estar a la altura del protagonista para que la premisa se ponga a prueba de verdad, no solo se afirme."],
+      core: ["Protagonista y antagonista sostienen valores opuestos", "El conflicto escenifica la premisa", "Cada bando argumenta mediante la acci\xF3n", "El desenlace declara qu\xE9 valor vence"],
+      coreNote: "El antagonista es la mayor objeci\xF3n a la premisa.",
+      narrativeFunction: ["Convertir el tema en conflicto de personajes", "Dar validez genuina al antagonista", "Poner a prueba la premisa en vez de enunciarla", "Dejar que el cl\xEDmax zanje el debate"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un antagonista de paja incapaz de vencer", "Valores demasiado similares para generar debate", "Resolver el argumento por la fuerza y no por elecci\xF3n"],
+      examplesTitle: "Ejemplos de Tema a Trav\xE9s del Personaje",
+      examples: ["El caballero oscuro (orden vs. caos)", "Los miserables (misericordia vs. ley)", "Amadeus (genio vs. mediocridad)", "Pozos de ambici\xF3n (codicia vs. fe)", "Whiplash (grandeza vs. coste)", "Capit\xE1n Am\xE9rica: Civil War (libertad vs. seguridad)"]
+    }
+  },
+  // ── Character engines ───────────────────────────────────────────────────────
+  "Want vs Need": {
+    en: {
+      introTitle: "What is Want vs Need?",
+      intro: ["A character's want is the external, conscious goal they actively pursue; the need is the internal truth or change required to become whole. The gap between them is the spine of a character arc."],
+      core: ["Want is external and conscious", "Need is internal and often unknown", "Pursuit of the want exposes the need", "The two frequently conflict", "Resolution defines the arc's outcome"],
+      coreNote: "Characters chase the want but the story is about the need.",
+      narrativeFunction: ["Generate the arc's central tension", "Drive plot through active pursuit", "Reveal theme through internal change", "Force a climactic choice between want and need"],
+      risksTitle: "Common risks",
+      risks: ["A want with no underlying need feels hollow", "A need too obvious to the character kills the arc", "Confusing plot goal with emotional growth", "Resolving both too neatly"],
+      examplesTitle: "Want vs Need Examples",
+      examples: ["Michael Corleone (The Godfather)", "Woody (Toy Story)", "Scrooge (A Christmas Carol)", "Walter White (Breaking Bad)", "Elsa (Frozen)", "Andrew Neiman (Whiplash)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es Deseo vs Necesidad?",
+      intro: ["El deseo de un personaje es la meta externa y consciente que persigue activamente; la necesidad es la verdad interna o el cambio que requiere para estar completo. La distancia entre ambos es la columna vertebral del arco de personaje."],
+      core: ["El deseo es externo y consciente", "La necesidad es interna y a menudo desconocida", "La b\xFAsqueda del deseo expone la necesidad", "Ambos suelen entrar en conflicto", "Su resoluci\xF3n define el desenlace del arco"],
+      coreNote: "El personaje persigue el deseo, pero la historia trata sobre la necesidad.",
+      narrativeFunction: ["Generar la tensi\xF3n central del arco", "Impulsar la trama mediante la b\xFAsqueda activa", "Revelar el tema a trav\xE9s del cambio interno", "Forzar una elecci\xF3n clim\xE1tica entre deseo y necesidad"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un deseo sin necesidad de fondo resulta hueco", "Una necesidad demasiado evidente para el personaje anula el arco", "Confundir la meta de la trama con el crecimiento emocional", "Resolver ambos de forma demasiado limpia"],
+      examplesTitle: "Ejemplos de Deseo vs Necesidad",
+      examples: ["Michael Corleone (El Padrino)", "Woody (Toy Story)", "Scrooge (Cuento de Navidad)", "Walter White (Breaking Bad)", "Elsa (Frozen)", "Andrew Neiman (Whiplash)"]
+    }
+  },
+  "Wound & Ghost": {
+    en: {
+      introTitle: "What is the Wound & Ghost?",
+      intro: ["The wound is a painful past event that scarred the character; the ghost is the lingering psychological residue that haunts and shapes present behavior. It is the source of the character's defensive coping and false beliefs."],
+      core: ["A specific past trauma or loss", "An ongoing psychological haunting", "Drives avoidance and defense mechanisms", "Roots the character's lie", "Often unresolved at the story's start"],
+      coreNote: "Truby's 'ghost' is the wound that still controls the hero from the past.",
+      narrativeFunction: ["Explain why the character resists change", "Ground the lie and the need in backstory", "Create empathy through hidden pain", "Provide the obstacle the arc must overcome"],
+      risksTitle: "Common risks",
+      risks: ["Over-explaining the wound in exposition", "A trauma disproportionate to the behavior", "Healing the ghost too easily", "Using it as an excuse rather than a force"],
+      examplesTitle: "Wound & Ghost Examples",
+      examples: ["Rick Blaine (Casablanca)", "Bruce Wayne (Batman)", "Will Hunting (Good Will Hunting)", "Theodore (Her)", "Jake LaMotta (Raging Bull)", "Carl Fredricksen (Up)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Herida y el Fantasma?",
+      intro: ["La herida es un suceso doloroso del pasado que marc\xF3 al personaje; el fantasma es el residuo psicol\xF3gico persistente que lo acecha y moldea su conducta presente. Es el origen de sus mecanismos de defensa y de sus creencias falsas."],
+      core: ["Un trauma o p\xE9rdida concretos del pasado", "Un acecho psicol\xF3gico continuo", "Impulsa la evitaci\xF3n y las defensas", "Enra\xEDza la mentira del personaje", "Suele estar sin resolver al inicio de la historia"],
+      coreNote: "El 'fantasma' de Truby es la herida que a\xFAn controla al h\xE9roe desde el pasado.",
+      narrativeFunction: ["Explicar por qu\xE9 el personaje se resiste al cambio", "Anclar la mentira y la necesidad en la historia previa", "Crear empat\xEDa mediante el dolor oculto", "Aportar el obst\xE1culo que el arco debe superar"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Sobreexplicar la herida con exposici\xF3n", "Un trauma desproporcionado respecto a la conducta", "Sanar el fantasma con demasiada facilidad", "Usarlo como excusa en lugar de como fuerza"],
+      examplesTitle: "Ejemplos de Herida y Fantasma",
+      examples: ["Rick Blaine (Casablanca)", "Bruce Wayne (Batman)", "Will Hunting (El indomable Will Hunting)", "Theodore (Her)", "Jake LaMotta (Toro salvaje)", "Carl Fredricksen (Up)"]
+    }
+  },
+  "The Lie & The Truth": {
+    en: {
+      introTitle: "What is The Lie & The Truth?",
+      intro: ["The lie is the false belief the character holds about themselves or the world, born from their wound; the truth is the thematic insight they must accept to grow. The arc traces the journey from lie to truth."],
+      core: ["A flawed belief governs the character", "The lie shields them from past pain", "The truth is the story's thematic premise", "Confronting the lie drives the arc", "Embracing the truth enables change"],
+      coreNote: "Weiland frames the arc as the character abandoning the Lie for the Truth.",
+      narrativeFunction: ["Define the character's starting worldview", "Anchor the story's theme as a counter-argument", "Create internal conflict at each turning point", "Measure growth by movement toward the truth"],
+      risksTitle: "Common risks",
+      risks: ["A lie too vague to dramatize", "Stating the truth instead of revealing it", "Theme that preaches rather than tests", "A conversion that feels unearned"],
+      examplesTitle: "The Lie & The Truth Examples",
+      examples: ["Ebenezer Scrooge (A Christmas Carol)", "Neo (The Matrix)", "Phil Connors (Groundhog Day)", "Tony Stark (Iron Man)", "Jen (The Devil Wears Prada)", "Lightning McQueen (Cars)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es La Mentira y La Verdad?",
+      intro: ["La mentira es la creencia falsa que el personaje sostiene sobre s\xED mismo o el mundo, nacida de su herida; la verdad es la comprensi\xF3n tem\xE1tica que debe aceptar para crecer. El arco recorre el camino de la mentira a la verdad."],
+      core: ["Una creencia err\xF3nea gobierna al personaje", "La mentira lo protege del dolor pasado", "La verdad es la premisa tem\xE1tica de la historia", "Confrontar la mentira impulsa el arco", "Abrazar la verdad posibilita el cambio"],
+      coreNote: "Weiland plantea el arco como el abandono de la Mentira en favor de la Verdad.",
+      narrativeFunction: ["Definir la visi\xF3n del mundo inicial del personaje", "Anclar el tema de la historia como contraargumento", "Crear conflicto interno en cada punto de giro", "Medir el crecimiento por el avance hacia la verdad"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Una mentira demasiado vaga para dramatizar", "Enunciar la verdad en lugar de revelarla", "Un tema que sermonea en vez de poner a prueba", "Una conversi\xF3n que parece inmerecida"],
+      examplesTitle: "Ejemplos de La Mentira y La Verdad",
+      examples: ["Ebenezer Scrooge (Cuento de Navidad)", "Neo (Matrix)", "Phil Connors (Atrapado en el tiempo)", "Tony Stark (Iron Man)", "Jen (El diablo viste de Prada)", "Rayo McQueen (Cars)"]
+    }
+  },
+  "Fatal Flaw": {
+    en: {
+      introTitle: "What is the Fatal Flaw?",
+      intro: ["The fatal flaw (hamartia) is the ingrained trait or error of judgment that propels a character toward downfall or blocks their growth. In classical tragedy it is the crack through which fate enters."],
+      core: ["An intrinsic trait, not mere bad luck", "Often a strength carried to excess", "Blinds the character to consequences", "Drives self-inflicted catastrophe", "Frequently paired with hubris"],
+      coreNote: "Hamartia is a flaw in judgment or character, not a moral verdict on the person.",
+      narrativeFunction: ["Make downfall feel inevitable yet self-caused", "Generate dramatic irony as others see the danger", "Anchor the obstacle to inner change", "Deliver catharsis through recognition"],
+      risksTitle: "Common risks",
+      risks: ["A flaw with no link to the plot's outcome", "Making the character merely unlikable", "Punishing the flaw without recognition", "Confusing a flaw with a quirk"],
+      examplesTitle: "Fatal Flaw Examples",
+      examples: ["Oedipus (pride/rashness)", "Macbeth (ambition)", "Othello (jealousy)", "Anakin Skywalker (fear of loss)", "Gatsby (idealized obsession)", "Michael Scott (need to be loved)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Defecto Fatal?",
+      intro: ["El defecto fatal (hamartia) es el rasgo arraigado o el error de juicio que empuja al personaje hacia su ca\xEDda o bloquea su crecimiento. En la tragedia cl\xE1sica es la grieta por la que entra el destino."],
+      core: ["Un rasgo intr\xEDnseco, no mera mala suerte", "A menudo una virtud llevada al exceso", "Ciega al personaje ante las consecuencias", "Provoca una cat\xE1strofe autoinfligida", "Suele ir unido a la soberbia (hybris)"],
+      coreNote: "La hamartia es un error de juicio o de car\xE1cter, no un veredicto moral sobre la persona.",
+      narrativeFunction: ["Hacer que la ca\xEDda resulte inevitable pero autocausada", "Generar iron\xEDa dram\xE1tica cuando otros ven el peligro", "Anclar el obst\xE1culo al cambio interior", "Producir catarsis mediante el reconocimiento"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un defecto sin v\xEDnculo con el desenlace de la trama", "Hacer al personaje simplemente antip\xE1tico", "Castigar el defecto sin reconocimiento", "Confundir un defecto con una man\xEDa"],
+      examplesTitle: "Ejemplos de Defecto Fatal",
+      examples: ["Edipo (orgullo/impulsividad)", "Macbeth (ambici\xF3n)", "Otelo (celos)", "Anakin Skywalker (miedo a la p\xE9rdida)", "Gatsby (obsesi\xF3n idealizada)", "Michael Scott (necesidad de ser querido)"]
+    }
+  },
+  "Antagonist Design": {
+    en: {
+      introTitle: "What is Antagonist Design?",
+      intro: ["A well-built antagonist wants the same goal as the hero or attacks the same need, forcing direct opposition over a shared stake. The opponent acts as a mirror and the primary source of pressure on the hero's arc."],
+      core: ["Competes for the same goal or value", "Attacks the hero's specific weakness", "Holds a coherent, justified worldview", "Mirrors the hero with a key variation", "Is strong enough to seem capable of winning"],
+      coreNote: "Truby: the best opponent attacks the hero's greatest weakness and necessitates the need.",
+      narrativeFunction: ["Force the hero to confront their flaw", "Embody the counter-argument to the theme", "Escalate stakes through worthy opposition", "Define the hero by contrast"],
+      risksTitle: "Common risks",
+      risks: ["Evil without motivation or logic", "An opponent too weak to threaten", "No thematic connection to the hero", "Villainy that excuses the hero's own flaws"],
+      examplesTitle: "Antagonist Design Examples",
+      examples: ["Hans Gruber (Die Hard)", "The Joker (The Dark Knight)", "Amon Goeth (Schindler's List)", "Nurse Ratched (One Flew Over the Cuckoo's Nest)", "Thanos (Avengers)", "Anton Chigurh (No Country for Old Men)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Dise\xF1o del Antagonista?",
+      intro: ["Un antagonista bien construido desea la misma meta que el h\xE9roe o ataca su misma necesidad, forzando una oposici\xF3n directa sobre algo en disputa. El oponente funciona como espejo y como principal fuente de presi\xF3n sobre el arco del h\xE9roe."],
+      core: ["Compite por la misma meta o valor", "Ataca la debilidad concreta del h\xE9roe", "Sostiene una visi\xF3n del mundo coherente y justificada", "Refleja al h\xE9roe con una variaci\xF3n clave", "Es lo bastante fuerte para parecer capaz de ganar"],
+      coreNote: "Truby: el mejor oponente ataca la mayor debilidad del h\xE9roe y hace ineludible la necesidad.",
+      narrativeFunction: ["Obligar al h\xE9roe a confrontar su defecto", "Encarnar el contraargumento del tema", "Elevar lo que est\xE1 en juego con una oposici\xF3n digna", "Definir al h\xE9roe por contraste"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Maldad sin motivaci\xF3n ni l\xF3gica", "Un oponente demasiado d\xE9bil para amenazar", "Ninguna conexi\xF3n tem\xE1tica con el h\xE9roe", "Una villan\xEDa que excusa los propios defectos del h\xE9roe"],
+      examplesTitle: "Ejemplos de Dise\xF1o del Antagonista",
+      examples: ["Hans Gruber (Jungla de cristal)", "El Joker (El caballero oscuro)", "Amon Goeth (La lista de Schindler)", "La enfermera Ratched (Alguien vol\xF3 sobre el nido del cuco)", "Thanos (Vengadores)", "Anton Chigurh (No Country for Old Men)"]
+    }
+  },
+  "Character Web": {
+    en: {
+      introTitle: "What is the Character Web?",
+      intro: ["The character web is Truby's principle that no character exists in isolation: each is designed in relation to the hero, defining them through opposition or variation on the central theme. Every figure embodies a different possible response to the story's moral question."],
+      core: ["All characters defined against the hero", "Each is a variation on the theme", "Opponents and allies form a system", "Roles contrast moral choices", "The web reveals theme by comparison"],
+      coreNote: "Truby: design characters as a web, never as isolated individuals.",
+      narrativeFunction: ["Articulate theme through contrasting choices", "Make every role earn its place", "Sharpen the hero by surrounding variation", "Unify the cast around one moral question"],
+      risksTitle: "Common risks",
+      risks: ["Characters that duplicate the same function", "Allies with no thematic distinction", "A cast that doesn't reflect the hero", "Subplots disconnected from the theme"],
+      examplesTitle: "Character Web Examples",
+      examples: ["Hamlet (Laertes and Fortinbras as foils)", "Breaking Bad (Walt, Jesse, Gus, Hank)", "Pride and Prejudice (the sisters and suitors)", "The Godfather (the Corleone sons)", "Toy Story (Woody, Buzz, the toys)", "Succession (the Roy siblings)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Red de Personajes?",
+      intro: ["La red de personajes es el principio de Truby seg\xFAn el cual ning\xFAn personaje existe de forma aislada: cada uno se dise\xF1a en relaci\xF3n con el h\xE9roe, defini\xE9ndolo por oposici\xF3n o por variaci\xF3n sobre el tema central. Cada figura encarna una respuesta posible distinta a la pregunta moral de la historia."],
+      core: ["Todos los personajes se definen frente al h\xE9roe", "Cada uno es una variaci\xF3n sobre el tema", "Oponentes y aliados forman un sistema", "Los roles contrastan elecciones morales", "La red revela el tema por comparaci\xF3n"],
+      coreNote: "Truby: dise\xF1a los personajes como una red, nunca como individuos aislados.",
+      narrativeFunction: ["Articular el tema mediante elecciones contrastadas", "Hacer que cada rol justifique su lugar", "Perfilar al h\xE9roe rode\xE1ndolo de variaciones", "Unificar el reparto en torno a una pregunta moral"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Personajes que duplican la misma funci\xF3n", "Aliados sin distinci\xF3n tem\xE1tica", "Un reparto que no refleja al h\xE9roe", "Tramas secundarias desconectadas del tema"],
+      examplesTitle: "Ejemplos de Red de Personajes",
+      examples: ["Hamlet (Laertes y Fortinbras como contrapuntos)", "Breaking Bad (Walt, Jesse, Gus, Hank)", "Orgullo y prejuicio (las hermanas y los pretendientes)", "El Padrino (los hijos Corleone)", "Toy Story (Woody, Buzz, los juguetes)", "Succession (los hermanos Roy)"]
+    }
+  },
+  // ── Dialogue craft ──────────────────────────────────────────────────────────
+  "Subtext": {
+    en: {
+      introTitle: "What is subtext?",
+      intro: ["Subtext is the meaning that lives beneath the spoken line\u2014what a character actually wants, feels, or fears while saying something else. The surface words carry the scene; the real freight rides underneath."],
+      core: ["Characters pursue an objective indirectly, masking intent behind ordinary talk", "The literal content of the line and its true purpose diverge", "Emotion is implied through behavior and word choice, never announced", "The audience reads the gap between what is said and what is meant", "Politeness, deflection, and small talk become vehicles for hidden agendas"],
+      coreNote: "Subtext depends on context: the same line can carry opposite meanings depending on what the audience already knows.",
+      narrativeFunction: ["Creates dramatic tension by withholding direct statement", "Respects the audience's intelligence, inviting active interpretation", "Reveals character through evasion, restraint, and what goes unsaid", "Mirrors real human behavior, where people rarely state their true feelings outright"],
+      risksTitle: "Common risks",
+      risks: ["Burying intent so deep the scene becomes opaque or unreadable", "Relying on subtext the audience has no context to decode", "Inconsistent layering, where some lines are coded and others bluntly literal", "Mistaking vagueness for subtext\u2014lines that mean nothing rather than two things"],
+      examplesTitle: "Subtext Examples",
+      examples: ["Lost in Translation (Coppola)", "Brokeback Mountain", "The Remains of the Day (Ishiguro)", "Mad Men", "Who's Afraid of Virginia Woolf? (Albee)", "Before Sunset (Linklater)", "The Sopranos"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el subtexto?",
+      intro: ["El subtexto es el significado que vive bajo la l\xEDnea hablada: lo que un personaje realmente quiere, siente o teme mientras dice otra cosa. Las palabras sostienen la escena; la verdadera carga viaja por debajo."],
+      core: ["Los personajes persiguen un objetivo de forma indirecta, ocultando su intenci\xF3n tras una charla corriente", "El contenido literal de la l\xEDnea y su prop\xF3sito real divergen", "La emoci\xF3n se sugiere a trav\xE9s del comportamiento y la elecci\xF3n de palabras, nunca se anuncia", "El p\xFAblico lee la brecha entre lo que se dice y lo que se quiere decir", "La cortes\xEDa, la evasi\xF3n y la charla trivial se vuelven veh\xEDculos de agendas ocultas"],
+      coreNote: "El subtexto depende del contexto: la misma l\xEDnea puede tener significados opuestos seg\xFAn lo que el p\xFAblico ya sepa.",
+      narrativeFunction: ["Genera tensi\xF3n dram\xE1tica al evitar la declaraci\xF3n directa", "Respeta la inteligencia del p\xFAblico y lo invita a interpretar activamente", "Revela el personaje a trav\xE9s de la evasi\xF3n, la contenci\xF3n y lo que no se dice", "Refleja la conducta humana real, donde la gente rara vez expresa sus sentimientos sin rodeos"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Enterrar la intenci\xF3n tan hondo que la escena se vuelve opaca o ilegible", "Apoyarse en un subtexto que el p\xFAblico no tiene contexto para descifrar", "Capas inconsistentes, donde algunas l\xEDneas van codificadas y otras son crudamente literales", "Confundir la vaguedad con el subtexto: l\xEDneas que no significan nada en vez de dos cosas"],
+      examplesTitle: "Ejemplos de subtexto",
+      examples: ["Lost in Translation (Coppola)", "Brokeback Mountain", "Los restos del d\xEDa (Ishiguro)", "Mad Men", "\xBFQui\xE9n teme a Virginia Woolf? (Albee)", "Antes del atardecer (Linklater)", "Los Soprano"]
+    }
+  },
+  "On-the-Nose Dialogue": {
+    en: {
+      introTitle: "What is on-the-nose dialogue?",
+      intro: ["On-the-nose dialogue is the failure mode in which characters say exactly what they think, feel, and mean with no gap between word and intent. It is the opposite of subtext, and it flattens drama by leaving nothing for the audience to discover."],
+      core: ["Characters name their emotions directly ('I'm so angry at you right now')", "Information is delivered for the audience's benefit, not the character's need", "Lines answer questions fully and literally, with no evasion or resistance", "Dialogue restates what the action or image already shows", "Everyone speaks their full intent aloud, leaving no hidden agenda"],
+      coreNote: "These are symptoms to diagnose, not rules\u2014on-the-nose lines occasionally serve comedy, children's writing, or deliberate bluntness.",
+      narrativeFunction: ["Replace stated emotion with behavior that lets the audience infer the feeling", "Give characters a reason to conceal, deflect, or only partially answer", "Cut lines that duplicate information the scene already conveys visually", "Bury intent under an opposing surface objective, creating a gap to read"],
+      risksTitle: "Common risks",
+      risks: ["Over-correcting into total opacity, where no intent can be tracked at all", "Stripping necessary clarity from plot-critical beats in the name of subtlety", "Assuming all directness is bad\u2014some characters are blunt by design"],
+      examplesTitle: "On-the-Nose Examples",
+      examples: ["Early-draft exposition fixed by Sorkin/Mamet revisions", "The Room (Wiseau) \u2014 emotions stated flatly", "Attack of the Clones \u2014 romance dialogue criticized as literal", "Daytime soap operas, where feelings are narrated aloud", "After Earth \u2014 widely cited for declarative emotion"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el di\xE1logo obvio (on-the-nose)?",
+      intro: ["El di\xE1logo obvio es el modo de fallo en el que los personajes dicen exactamente lo que piensan, sienten y quieren, sin ninguna brecha entre la palabra y la intenci\xF3n. Es lo contrario del subtexto y aplana el drama al no dejar nada por descubrir al p\xFAblico."],
+      core: ["Los personajes nombran sus emociones directamente ('estoy furioso contigo ahora mismo')", "La informaci\xF3n se entrega para beneficio del p\xFAblico, no por necesidad del personaje", "Las l\xEDneas responden a las preguntas de forma plena y literal, sin evasi\xF3n ni resistencia", "El di\xE1logo repite lo que la acci\xF3n o la imagen ya muestran", "Todos expresan su intenci\xF3n completa en voz alta, sin ninguna agenda oculta"],
+      coreNote: "Son s\xEDntomas a diagnosticar, no reglas: el di\xE1logo obvio a veces sirve a la comedia, la escritura infantil o una franqueza deliberada.",
+      narrativeFunction: ["Sustituir la emoci\xF3n declarada por un comportamiento que deje al p\xFAblico inferir el sentimiento", "Dar a los personajes un motivo para ocultar, esquivar o responder solo en parte", "Recortar las l\xEDneas que duplican informaci\xF3n que la escena ya transmite visualmente", "Enterrar la intenci\xF3n bajo un objetivo de superficie opuesto, creando una brecha que leer"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Sobrecorregir hacia una opacidad total, donde no se puede seguir ninguna intenci\xF3n", "Quitar la claridad necesaria en momentos clave de la trama en nombre de la sutileza", "Asumir que toda franqueza es mala: algunos personajes son directos por dise\xF1o"],
+      examplesTitle: "Ejemplos de di\xE1logo obvio",
+      examples: ["Exposici\xF3n de primeros borradores corregida en revisiones de Sorkin/Mamet", "The Room (Wiseau) \u2014 emociones declaradas sin matiz", "El ataque de los clones \u2014 di\xE1logos rom\xE1nticos criticados por literales", "Telenovelas, donde los sentimientos se narran en voz alta", "After Earth \u2014 citada a menudo por su emoci\xF3n declarativa"]
+    }
+  },
+  "Voice Differentiation": {
+    en: {
+      introTitle: "What is voice differentiation?",
+      intro: ["Voice differentiation is the craft of making each character sound distinct, so a reader could identify who is speaking with the names stripped away. It is built from diction, rhythm, vocabulary, syntax, and the things a character will and won't say."],
+      core: ["Distinct diction and vocabulary tied to background, era, and education", "Individual rhythm and sentence length\u2014clipped, rambling, formal, fragmented", "Recurring verbal tics, idioms, or pet phrases unique to the character", "Differences in directness, profanity, humor, and emotional register", "Worldview leaking into word choice\u2014what each character notices and names"],
+      coreNote: "The test: cover the character names in a script and see whether the speakers remain identifiable.",
+      narrativeFunction: ["Lets the audience track who is speaking without attribution", "Externalizes character history, class, and psychology through speech", "Creates friction when contrasting voices collide in a scene", "Builds a textured, believable world of genuinely separate people"],
+      risksTitle: "Common risks",
+      risks: ["Every character sounding like the writer\u2014one uniform authorial voice", "Reducing voice to a single gimmick or catchphrase instead of full texture", "Tics so heavy they tip into caricature or distract from content", "Dialect spelled phonetically until it becomes unreadable"],
+      examplesTitle: "Voice Differentiation Examples",
+      examples: ["Deadwood (Milch)", "Pulp Fiction (Tarantino)", "The Wire", "Fargo (Coen Brothers)", "Juno (Cody)", "Succession", "Glengarry Glen Ross (Mamet)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la diferenciaci\xF3n de voces?",
+      intro: ["La diferenciaci\xF3n de voces es el oficio de hacer que cada personaje suene distinto, de modo que un lector pueda identificar qui\xE9n habla aunque se borren los nombres. Se construye con la dicci\xF3n, el ritmo, el vocabulario, la sintaxis y lo que un personaje dir\xEDa y no dir\xEDa."],
+      core: ["Dicci\xF3n y vocabulario propios, ligados al origen, la \xE9poca y la educaci\xF3n", "Ritmo y longitud de frase individuales: cortante, divagante, formal, fragmentado", "Tics verbales, modismos o muletillas recurrentes \xFAnicos del personaje", "Diferencias en la franqueza, el lenguaje soez, el humor y el registro emocional", "La visi\xF3n del mundo filtr\xE1ndose en la elecci\xF3n de palabras: lo que cada uno nota y nombra"],
+      coreNote: "La prueba: tapa los nombres de los personajes en un guion y comprueba si los hablantes siguen siendo identificables.",
+      narrativeFunction: ["Permite al p\xFAblico seguir qui\xE9n habla sin necesidad de atribuci\xF3n", "Externaliza la historia, la clase y la psicolog\xEDa del personaje a trav\xE9s del habla", "Crea fricci\xF3n cuando voces contrastantes chocan en una escena", "Construye un mundo cre\xEDble y texturado de personas genuinamente distintas"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Que todos los personajes suenen al autor: una \xFAnica voz autoral uniforme", "Reducir la voz a un solo truco o muletilla en lugar de una textura completa", "Tics tan marcados que caen en la caricatura o distraen del contenido", "Dialecto escrito fon\xE9ticamente hasta volverse ilegible"],
+      examplesTitle: "Ejemplos de diferenciaci\xF3n de voces",
+      examples: ["Deadwood (Milch)", "Pulp Fiction (Tarantino)", "The Wire", "Fargo (hermanos Coen)", "Juno (Cody)", "Succession", "Glengarry Glen Ross (Mamet)"]
+    }
+  },
+  "The Scene Turn": {
+    en: {
+      introTitle: "What is the scene turn?",
+      intro: ["The scene turn is the moment a scene's emotional value shifts from one charge to its opposite\u2014positive to negative, or negative to positive\u2014through the exchange between characters. In McKee's model, a scene that ends on the same value it began is exposition, not drama."],
+      core: ["A scene opens on one value (trust, hope, safety) and closes on its opposite", "The shift is driven by character action and reaction, not coincidence", "A turning point\u2014often a single line or beat\u2014pivots the charge", "Each character enters with an objective and meets resistance", "The change is the reason the scene exists in the story"],
+      coreNote: "Value charges can be tracked beat by beat (+ / -); a scene with no swing usually shouldn't be there.",
+      narrativeFunction: ["Ensures every scene advances or changes the story's emotional state", "Gives actors a clear arc to play from entrance to exit", "Maintains momentum by denying scenes that merely tread water", "Links the micro of the scene to the macro of the act and story arc"],
+      risksTitle: "Common risks",
+      risks: ["Static scenes that begin and end on the same emotional charge", "Engineering a turn so abruptly it feels mechanical or unearned", "Confusing plot events with genuine shifts in dramatic value", "Stacking too many reversals until the swing loses credibility"],
+      examplesTitle: "Scene Turn Examples",
+      examples: ["Michael's restaurant scene in The Godfather", "The 'coffee is for closers' scene in Glengarry Glen Ross", "The interrogation scenes in Breaking Bad", "The diner negotiation in Heat (Pacino/De Niro)", "The opening farmhouse scene in Inglourious Basterds", "The breakup beats in Marriage Story"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el giro de escena?",
+      intro: ["El giro de escena es el momento en que el valor emocional de una escena cambia de una carga a su opuesta \u2014de positiva a negativa, o de negativa a positiva\u2014 a trav\xE9s del intercambio entre personajes. En el modelo de McKee, una escena que termina con el mismo valor con el que empez\xF3 es exposici\xF3n, no drama."],
+      core: ["La escena abre con un valor (confianza, esperanza, seguridad) y cierra con su opuesto", "El cambio lo impulsan la acci\xF3n y la reacci\xF3n de los personajes, no la casualidad", "Un punto de giro \u2014a menudo una sola l\xEDnea o beat\u2014 invierte la carga", "Cada personaje entra con un objetivo y encuentra resistencia", "Ese cambio es la raz\xF3n por la que la escena existe en la historia"],
+      coreNote: "Las cargas de valor pueden rastrearse beat a beat (+ / -); una escena sin oscilaci\xF3n normalmente sobra.",
+      narrativeFunction: ["Asegura que cada escena haga avanzar o cambiar el estado emocional de la historia", "Da a los actores un arco claro que interpretar de la entrada a la salida", "Mantiene el impulso al descartar escenas que solo dan vueltas en el mismo sitio", "Conecta el micro de la escena con el macro del acto y del arco de la historia"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Escenas est\xE1ticas que empiezan y terminan con la misma carga emocional", "Forzar un giro de forma tan abrupta que resulte mec\xE1nico o inmerecido", "Confundir los eventos de trama con cambios genuinos de valor dram\xE1tico", "Acumular tantos giros que la oscilaci\xF3n pierda credibilidad"],
+      examplesTitle: "Ejemplos de giro de escena",
+      examples: ["La escena del restaurante de Michael en El Padrino", "La escena del 'el caf\xE9 es para los que cierran' en Glengarry Glen Ross", "Los interrogatorios en Breaking Bad", "La negociaci\xF3n en la cafeter\xEDa de Heat (Pacino/De Niro)", "La escena inicial de la granja en Malditos bastardos", "Los momentos de ruptura en Historia de un matrimonio"]
+    }
+  },
+  "Exposition in Dialogue": {
+    en: {
+      introTitle: "What is exposition in dialogue?",
+      intro: ["Exposition in dialogue is the art of delivering necessary information\u2014backstory, world rules, relationships\u2014through speech without the clumsy 'As you know, Bob' problem, where characters tell each other things they already know for the audience's sake. The fix is to make information a weapon, a stake, or a casualty of conflict."],
+      core: ["Information surfaces because a character needs it, not because the audience does", "Facts are revealed through conflict, negotiation, or pursuit of an objective", "Exposition is dramatized: paid out in fragments as the scene demands", "Characters resist, distort, or withhold information rather than volunteer it", "The audience pieces facts together rather than receiving them in a lump"],
+      coreNote: "Best practice: convert exposition into ammunition\u2014something one character uses against another.",
+      narrativeFunction: ["Keeps necessary information from stalling forward momentum", "Hides the seams of plot mechanics inside active, charged scenes", "Doubles up\u2014each expository line also reveals character or advances conflict", "Controls reveal timing to manage suspense, surprise, and curiosity"],
+      risksTitle: "Common risks",
+      risks: ["'As you know, Bob'\u2014characters reciting facts both already know", "Info-dumps that halt the scene to brief the audience", "Using a naive newcomer purely as a question-asking delivery device", "Over-withholding until the audience is confused rather than intrigued"],
+      examplesTitle: "Exposition Examples",
+      examples: ["The Social Network (Sorkin) deposition framing", "Jaws \u2014 Quint's Indianapolis monologue", "Michael Clayton", "The opening heist briefing in Inception", "A Few Good Men (Sorkin)", "Margin Call"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la exposici\xF3n en el di\xE1logo?",
+      intro: ["La exposici\xF3n en el di\xE1logo es el arte de entregar la informaci\xF3n necesaria \u2014antecedentes, reglas del mundo, relaciones\u2014 a trav\xE9s del habla sin caer en el torpe problema del 'como ya sabes, Bob', donde los personajes se cuentan cosas que ya conocen solo para el p\xFAblico. La soluci\xF3n es convertir la informaci\xF3n en un arma, una apuesta o una v\xEDctima del conflicto."],
+      core: ["La informaci\xF3n aflora porque un personaje la necesita, no porque la necesite el p\xFAblico", "Los datos se revelan a trav\xE9s del conflicto, la negociaci\xF3n o la b\xFAsqueda de un objetivo", "La exposici\xF3n se dramatiza: se dosifica en fragmentos seg\xFAn lo pida la escena", "Los personajes resisten, distorsionan u ocultan la informaci\xF3n en vez de ofrecerla", "El p\xFAblico arma los datos por s\xED mismo en lugar de recibirlos de golpe"],
+      coreNote: "Buena pr\xE1ctica: convertir la exposici\xF3n en munici\xF3n, algo que un personaje usa contra otro.",
+      narrativeFunction: ["Evita que la informaci\xF3n necesaria frene el impulso de la historia", "Oculta las costuras de la mec\xE1nica de la trama dentro de escenas activas y cargadas", "Duplica funciones: cada l\xEDnea expositiva tambi\xE9n revela personaje o avanza el conflicto", "Controla el momento de cada revelaci\xF3n para gestionar el suspense, la sorpresa y la curiosidad"],
+      risksTitle: "Riesgos comunes",
+      risks: ["'Como ya sabes, Bob': personajes recitando datos que ambos ya conocen", "Volcados de informaci\xF3n que detienen la escena para informar al p\xFAblico", "Usar a un reci\xE9n llegado ingenuo solo como excusa para hacer preguntas", "Ocultar tanto que el p\xFAblico acaba confundido en lugar de intrigado"],
+      examplesTitle: "Ejemplos de exposici\xF3n",
+      examples: ["El encuadre de las declaraciones en La red social (Sorkin)", "Tibur\xF3n \u2014 el mon\xF3logo del Indianapolis de Quint", "Michael Clayton", "El informe inicial del golpe en Origen", "Algunos hombres buenos (Sorkin)", "Margin Call"]
+    }
+  },
+  "Action Beats & Silence": {
+    en: {
+      introTitle: "What are action beats and silence?",
+      intro: ["Action beats and silence are the non-verbal tools that shape dialogue rhythm and carry subtext: the pauses, gestures, business, and stage directions woven between or beneath lines. What a character does\u2014and what they don't say\u2014often speaks louder than the words themselves."],
+      core: ["Pauses and silences that create rhythm, tension, or unspoken weight", "Physical business and gestures that contradict or complicate the spoken line", "Action lines that interrupt, delay, or punctuate the dialogue", "Beats marking shifts in power, thought, or emotional temperature", "Behavior that reveals what a character is unwilling to put into words"],
+      coreNote: "Pinter built whole scenes on the pause; what is withheld can land harder than what is spoken.",
+      narrativeFunction: ["Controls pacing, letting scenes breathe or tighten the screws", "Carries subtext physically when words would be too direct", "Shifts power and status through who acts, who waits, and who looks away", "Gives actors and directors playable behavior beyond the lines"],
+      risksTitle: "Common risks",
+      risks: ["Over-directing actors with excessive parentheticals and stage business", "Pauses inserted for effect that kill momentum instead of building it", "Action lines that describe what the dialogue already makes clear", "Silence used so often it loses its charge and reads as dead air"],
+      examplesTitle: "Action Beats & Silence Examples",
+      examples: ["The Birthday Party / Betrayal (Pinter)", "No Country for Old Men (Coen Brothers)", "Drive (Refn)", "There Will Be Blood", "Lost in Translation (Coppola)", "A Quiet Place", "The films of Yasujiro Ozu"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 son los beats de acci\xF3n y el silencio?",
+      intro: ["Los beats de acci\xF3n y el silencio son las herramientas no verbales que dan forma al ritmo del di\xE1logo y portan el subtexto: las pausas, los gestos, la actividad f\xEDsica y las acotaciones tejidas entre o bajo las l\xEDneas. Lo que un personaje hace \u2014y lo que no dice\u2014 a menudo habla m\xE1s alto que las propias palabras."],
+      core: ["Pausas y silencios que crean ritmo, tensi\xF3n o un peso no dicho", "Actividad f\xEDsica y gestos que contradicen o complican la l\xEDnea hablada", "L\xEDneas de acci\xF3n que interrumpen, retrasan o punt\xFAan el di\xE1logo", "Beats que marcan cambios de poder, de pensamiento o de temperatura emocional", "Conducta que revela lo que un personaje no quiere poner en palabras"],
+      coreNote: "Pinter construy\xF3 escenas enteras sobre la pausa; lo que se calla puede golpear m\xE1s fuerte que lo que se dice.",
+      narrativeFunction: ["Controla el ritmo, dejando respirar las escenas o apretando las tuercas", "Porta el subtexto f\xEDsicamente cuando las palabras ser\xEDan demasiado directas", "Desplaza el poder y el estatus seg\xFAn qui\xE9n act\xFAa, qui\xE9n espera y qui\xE9n aparta la mirada", "Ofrece a actores y directores una conducta jugable m\xE1s all\xE1 de las l\xEDneas"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Sobredirigir a los actores con acotaciones y actividad f\xEDsica excesivas", "Pausas puestas por efecto que matan el impulso en vez de construirlo", "L\xEDneas de acci\xF3n que describen lo que el di\xE1logo ya deja claro", "Silencio usado tan a menudo que pierde su carga y suena a aire muerto"],
+      examplesTitle: "Ejemplos de beats de acci\xF3n y silencio",
+      examples: ["La fiesta de cumplea\xF1os / Traici\xF3n (Pinter)", "No es pa\xEDs para viejos (hermanos Coen)", "Drive (Refn)", "Pozos de ambici\xF3n (There Will Be Blood)", "Lost in Translation (Coppola)", "Un lugar tranquilo", "El cine de Yasujiro Ozu"]
+    }
+  },
+  // ── Genre (Save the Cat story-type genres) ───────────────────────────────────
+  "Genre & Conventions": {
+    en: {
+      introTitle: "What is genre in story-craft?",
+      intro: ["Genre is a promise to the audience: it tells them what kind of emotional experience they signed up for and what events they expect to see. In Blake Snyder's system, genre is defined by a story's structural problem, not its marketing shelf."],
+      core: ["A genre is a category of story, not a setting or tone (horror can be comedy, sci-fi can be romance).", "Each genre carries conventions: recurring elements audiences recognize and crave.", "Each genre has obligatory scenes the story must deliver or the audience feels cheated.", "Genre sets up the central question and the kind of payoff that answers it.", "Knowing your genre tells you which beats are non-negotiable."],
+      coreNote: "The 'obligatory scene' (Coyne/Snyder) is the moment the genre has promised from page one; skipping it breaks the contract.",
+      narrativeFunction: ["Establish the promise early so expectations are correctly set.", "Honor the conventions of the chosen genre while finding fresh execution.", "Build toward and deliver the obligatory scenes the genre demands.", "Subvert knowingly, never accidentally: break a rule only with purpose."],
+      risksTitle: "Common risks",
+      risks: ["Mixing genres without a clear primary, leaving the audience unsure what they are watching.", "Withholding the obligatory scene, which reads as a broken promise rather than a clever twist.", "Copying surface conventions (tropes) without understanding the emotional need beneath them.", "Confusing marketing genre (vampires, spaceships) with story genre (the actual structural engine)."],
+      examplesTitle: "Genre-defining works",
+      examples: ["Jaws (Monster in the House)", "Star Wars (Golden Fleece)", "Die Hard (Dude with a Problem)", "When Harry Met Sally (Buddy Love)", "The Silence of the Lambs (Whydunit)", "Spider-Man (Superhero)", "Ordinary People (Rites of Passage)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el g\xE9nero en la narrativa?",
+      intro: ["El g\xE9nero es una promesa al p\xFAblico: le dice qu\xE9 tipo de experiencia emocional eligi\xF3 y qu\xE9 acontecimientos espera ver. En el sistema de Blake Snyder, el g\xE9nero se define por el problema estructural de la historia, no por su estante comercial."],
+      core: ["Un g\xE9nero es una categor\xEDa de historia, no un escenario ni un tono (el terror puede ser comedia, la ciencia ficci\xF3n puede ser romance).", "Cada g\xE9nero trae convenciones: elementos recurrentes que el p\xFAblico reconoce y desea.", "Cada g\xE9nero tiene escenas obligatorias que la historia debe entregar o el p\xFAblico se siente enga\xF1ado.", "El g\xE9nero plantea la pregunta central y el tipo de recompensa que la responde.", "Conocer tu g\xE9nero te dice qu\xE9 momentos son innegociables."],
+      coreNote: "La 'escena obligatoria' (Coyne/Snyder) es el momento que el g\xE9nero prometi\xF3 desde la primera p\xE1gina; omitirlo rompe el contrato.",
+      narrativeFunction: ["Establecer la promesa pronto para fijar bien las expectativas.", "Honrar las convenciones del g\xE9nero elegido encontrando una ejecuci\xF3n fresca.", "Avanzar hacia las escenas obligatorias que el g\xE9nero exige y entregarlas.", "Subvertir con conocimiento, nunca por accidente: romper una regla solo con un prop\xF3sito."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Mezclar g\xE9neros sin un primario claro, dejando al p\xFAblico sin saber qu\xE9 est\xE1 viendo.", "Negar la escena obligatoria, que se lee como una promesa rota y no como un giro ingenioso.", "Copiar convenciones superficiales (t\xF3picos) sin entender la necesidad emocional que las sustenta.", "Confundir el g\xE9nero comercial (vampiros, naves) con el g\xE9nero de historia (el verdadero motor estructural)."],
+      examplesTitle: "Obras que definen g\xE9nero",
+      examples: ["Tibur\xF3n (El Monstruo en Casa)", "La Guerra de las Galaxias (El Vellocino de Oro)", "Jungla de Cristal (Un Tipo con un Problema)", "Cuando Harry Encontr\xF3 a Sally (Amor de Compa\xF1eros)", "El Silencio de los Corderos (El Porqu\xE9 del Crimen)", "Spider-Man (Superh\xE9roe)", "Gente Corriente (Ritos de Paso)"]
+    }
+  },
+  "Monster in the House": {
+    en: {
+      introTitle: "What is Monster in the House?",
+      intro: ["A monster, a house, and a sin that summons the monster. Characters are trapped in a confined space with a force that wants to kill them, and someone's transgression is what brought it."],
+      core: ["A 'monster': a threat with power, often supernatural or unstoppable, sometimes human.", "A 'house': a confined or sealed space the characters cannot easily escape.", "A 'sin': a moral transgression by someone that invites or unleashes the monster.", "Survival is the engine; the monster picks off victims one by one.", "Scale can stretch the 'house' to a town, ship, planet, or family."],
+      coreNote: "The sin is essential: it makes the horror a moral reckoning, not just random slaughter.",
+      narrativeFunction: ["Define the monster and its rules of power early.", "Seal the house so escape is closed off and stakes are inescapable.", "Reveal the sin that called the monster, assigning hidden guilt.", "Force a half-man (flawed hero) to confront and survive the threat."],
+      risksTitle: "Common risks",
+      risks: ["A monster with no rules, so threat feels arbitrary and tension collapses.", "Characters who could simply leave the house, dissolving the trap.", "Forgetting the sin, reducing the story to a body-count exercise.", "Over-explaining or over-showing the monster until fear evaporates."],
+      examplesTitle: "Monster in the House Examples",
+      examples: ["Jaws", "Alien", "The Exorcist", "Psycho", "A Quiet Place", "Tremors", "Get Out"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es El Monstruo en Casa?",
+      intro: ["Un monstruo, una casa y un pecado que lo invoca. Los personajes quedan atrapados en un espacio cerrado con una fuerza que quiere matarlos, y la transgresi\xF3n de alguien es lo que la trajo."],
+      core: ["Un 'monstruo': una amenaza con poder, a menudo sobrenatural o imparable, a veces humana.", "Una 'casa': un espacio cerrado o sellado del que los personajes no pueden escapar con facilidad.", "Un 'pecado': una transgresi\xF3n moral de alguien que invita o desata al monstruo.", "La supervivencia es el motor; el monstruo elimina a las v\xEDctimas una a una.", "La escala puede estirar la 'casa' a un pueblo, un barco, un planeta o una familia."],
+      coreNote: "El pecado es esencial: convierte el terror en un ajuste de cuentas moral, no en una matanza aleatoria.",
+      narrativeFunction: ["Definir el monstruo y las reglas de su poder desde el principio.", "Sellar la casa para cerrar la huida y volver inevitables las apuestas.", "Revelar el pecado que llam\xF3 al monstruo, asignando una culpa oculta.", "Obligar a un h\xE9roe imperfecto a enfrentarse a la amenaza y sobrevivir."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un monstruo sin reglas, de modo que la amenaza se siente arbitraria y la tensi\xF3n se desploma.", "Personajes que podr\xEDan simplemente marcharse de la casa, disolviendo la trampa.", "Olvidar el pecado, reduciendo la historia a un recuento de cad\xE1veres.", "Explicar o mostrar demasiado al monstruo hasta que el miedo se evapora."],
+      examplesTitle: "Ejemplos de El Monstruo en Casa",
+      examples: ["Tibur\xF3n", "Alien", "El Exorcista", "Psicosis", "Un Lugar Tranquilo", "Temblores", "D\xE9jame Salir"]
+    }
+  },
+  "Golden Fleece": {
+    en: {
+      introTitle: "What is the Golden Fleece?",
+      intro: ["A road, a team, and a prize at the end. A hero sets out on a quest to win something, but the real treasure is the internal growth gained along the way."],
+      core: ["A 'road': a journey across space, time, or stages that structures the plot.", "A 'team' or companions who travel with (or against) the hero.", "A 'prize': the external goal that justifies the trip.", "Episodic incidents that each change the hero a little.", "The true reward is internal: the hero is transformed, not just enriched."],
+      coreNote: "The fleece (external goal) is a pretext; the story is really about who the hero becomes.",
+      narrativeFunction: ["Set a clear goal and the road that leads to it.", "Assemble a team whose members test and reveal the hero.", "String episodic 'beads on a necklace' that each force growth.", "Deliver the prize while showing the deeper internal transformation."],
+      risksTitle: "Common risks",
+      risks: ["Episodes that feel random instead of escalating and changing the hero.", "A road trip where nobody grows, leaving only sightseeing.", "Companions who are decoration rather than mirrors of the hero.", "Focusing on the prize so hard that the inner journey is forgotten."],
+      examplesTitle: "Golden Fleece Examples",
+      examples: ["Star Wars", "The Lord of the Rings: The Fellowship of the Ring", "The Wizard of Oz", "Finding Nemo", "Raiders of the Lost Ark", "The Hangover", "Little Miss Sunshine"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es El Vellocino de Oro?",
+      intro: ["Un camino, un equipo y un premio al final. Un h\xE9roe parte en una b\xFAsqueda para ganar algo, pero el verdadero tesoro es el crecimiento interior que obtiene por el camino."],
+      core: ["Un 'camino': un viaje por el espacio, el tiempo o varias etapas que estructura la trama.", "Un 'equipo' o compa\xF1eros que viajan con (o contra) el h\xE9roe.", "Un 'premio': la meta externa que justifica el viaje.", "Incidentes epis\xF3dicos que cambian al h\xE9roe un poco cada vez.", "La verdadera recompensa es interna: el h\xE9roe se transforma, no solo se enriquece."],
+      coreNote: "El vellocino (la meta externa) es un pretexto; la historia trata en realidad de en qui\xE9n se convierte el h\xE9roe.",
+      narrativeFunction: ["Fijar una meta clara y el camino que conduce a ella.", "Reunir un equipo cuyos miembros pongan a prueba y revelen al h\xE9roe.", "Encadenar episodios como 'cuentas de un collar' que fuercen el crecimiento.", "Entregar el premio mostrando la transformaci\xF3n interna m\xE1s profunda."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Episodios que se sienten aleatorios en lugar de escalar y cambiar al h\xE9roe.", "Un viaje en el que nadie crece, que deja solo paisaje.", "Compa\xF1eros que son decoraci\xF3n en vez de espejos del h\xE9roe.", "Centrarse tanto en el premio que se olvida el viaje interior."],
+      examplesTitle: "Ejemplos de El Vellocino de Oro",
+      examples: ["La Guerra de las Galaxias", "El Se\xF1or de los Anillos: La Comunidad del Anillo", "El Mago de Oz", "Buscando a Nemo", "En Busca del Arca Perdida", "Resac\xF3n en Las Vegas", "Peque\xF1a Miss Sunshine"]
+    }
+  },
+  "Dude with a Problem": {
+    en: {
+      introTitle: "What is Dude with a Problem?",
+      intro: ["An ordinary person is thrust into extraordinary circumstances through no fault of their own. A regular life collides with sudden, overwhelming danger that must be survived."],
+      core: ["An 'ordinary' protagonist: relatable, not specially skilled or chosen.", "A 'sudden event': danger that erupts without warning and without their seeking it.", "High stakes that escalate, usually life-or-death.", "Survival and endurance rather than mastery drive the action.", "The contrast between the everyday person and the impossible situation is the hook."],
+      coreNote: "The hero is innocent: they did not ask for this, which earns audience empathy.",
+      narrativeFunction: ["Ground the hero as believably ordinary before the storm hits.", "Trigger a sudden event that traps them with no easy exit.", "Escalate the stakes so survival grows steadily harder.", "Let the ordinary person find extraordinary resolve to endure."],
+      risksTitle: "Common risks",
+      risks: ["A hero who is secretly a superhero, killing the everyman empathy.", "A problem the protagonist invited, which forfeits their innocence.", "Stakes that plateau instead of escalating, draining tension.", "Coincidences that rescue the hero, undercutting earned survival."],
+      examplesTitle: "Dude with a Problem Examples",
+      examples: ["Die Hard", "Titanic", "North by Northwest", "The Pursuit of Happyness", "Schindler's List", "127 Hours", "Breaking Away"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es Un Tipo con un Problema?",
+      intro: ["Una persona corriente es arrojada a circunstancias extraordinarias sin culpa propia. Una vida normal choca con un peligro repentino y abrumador que debe sobrevivir."],
+      core: ["Un protagonista 'corriente': cercano, sin habilidades especiales ni destino elegido.", "Un 'suceso repentino': un peligro que estalla sin aviso y sin que \xE9l lo busque.", "Apuestas altas que escalan, normalmente de vida o muerte.", "La supervivencia y la resistencia, no el dominio, mueven la acci\xF3n.", "El contraste entre la persona com\xFAn y la situaci\xF3n imposible es el gancho."],
+      coreNote: "El h\xE9roe es inocente: no pidi\xF3 esto, y eso le gana la empat\xEDa del p\xFAblico.",
+      narrativeFunction: ["Asentar al h\xE9roe como cre\xEDblemente corriente antes de que estalle la tormenta.", "Detonar un suceso repentino que lo atrape sin salida f\xE1cil.", "Escalar las apuestas para que sobrevivir sea cada vez m\xE1s dif\xEDcil.", "Permitir que la persona com\xFAn halle una determinaci\xF3n extraordinaria para resistir."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un h\xE9roe que en secreto es un superh\xE9roe, lo que mata la empat\xEDa con el hombre com\xFAn.", "Un problema que el protagonista provoc\xF3, lo que le quita su inocencia.", "Apuestas que se estancan en vez de escalar, agotando la tensi\xF3n.", "Casualidades que rescatan al h\xE9roe, restando m\xE9rito a la supervivencia ganada."],
+      examplesTitle: "Ejemplos de Un Tipo con un Problema",
+      examples: ["Jungla de Cristal", "Titanic", "Con la Muerte en los Talones", "En Busca de la Felicidad", "La Lista de Schindler", "127 Horas", "El Relevo"]
+    }
+  },
+  "Rites of Passage": {
+    en: {
+      introTitle: "What is Rites of Passage?",
+      intro: ["A story about the pain of a universal life change: adolescence, addiction, midlife, grief, death. The real enemy is internal, and the hero must accept what they have been resisting."],
+      core: ["A 'life problem': a transition everyone faces sooner or later.", "The pain is universal and recognizable, not exotic.", "The enemy is internal: the hero's own resistance to change.", "Victory means acceptance and surrender, not defeating an outside foe.", "Often quiet and character-driven rather than plot-driven."],
+      coreNote: "The breakthrough comes when the hero stops fighting reality and embraces the change.",
+      narrativeFunction: ["Name the universal life passage causing the pain.", "Show the hero resisting it through denial, anger, or avoidance.", "Build the internal conflict until resistance becomes unbearable.", "Resolve through acceptance: the hero surrenders and is changed."],
+      risksTitle: "Common risks",
+      risks: ["Externalizing the conflict into a villain, betraying the internal genre.", "Wallowing in misery without movement toward acceptance.", "A 'cure' that feels easy or unearned, cheapening the change.", "Mistaking aimlessness for depth, leaving the story without shape."],
+      examplesTitle: "Rites of Passage Examples",
+      examples: ["Ordinary People", "Days of Wine and Roses", "Manchester by the Sea", "Lady Bird", "Leaving Las Vegas", "When a Man Loves a Woman"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es Ritos de Paso?",
+      intro: ["Una historia sobre el dolor de un cambio vital universal: la adolescencia, la adicci\xF3n, la madurez, el duelo, la muerte. El verdadero enemigo es interno, y el h\xE9roe debe aceptar aquello a lo que se resist\xEDa."],
+      core: ["Un 'problema vital': una transici\xF3n que todos enfrentan tarde o temprano.", "El dolor es universal y reconocible, no ex\xF3tico.", "El enemigo es interno: la propia resistencia del h\xE9roe al cambio.", "La victoria es la aceptaci\xF3n y la rendici\xF3n, no derrotar a un rival externo.", "Suele ser \xEDntima y guiada por el personaje, no por la trama."],
+      coreNote: "El avance llega cuando el h\xE9roe deja de luchar contra la realidad y abraza el cambio.",
+      narrativeFunction: ["Nombrar el paso vital universal que causa el dolor.", "Mostrar al h\xE9roe resisti\xE9ndose mediante negaci\xF3n, ira o evasi\xF3n.", "Acrecentar el conflicto interno hasta que la resistencia sea insoportable.", "Resolver mediante la aceptaci\xF3n: el h\xE9roe se rinde y queda transformado."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Externalizar el conflicto en un villano, traicionando el car\xE1cter interno del g\xE9nero.", "Regodearse en la miseria sin avanzar hacia la aceptaci\xF3n.", "Una 'cura' que se siente f\xE1cil o inmerecida, abaratando el cambio.", "Confundir la falta de rumbo con la profundidad, dejando la historia sin forma."],
+      examplesTitle: "Ejemplos de Ritos de Paso",
+      examples: ["Gente Corriente", "D\xEDas de Vino y Rosas", "Manchester Frente al Mar", "Lady Bird", "Leaving Las Vegas", "Cuando un Hombre Ama a una Mujer"]
+    }
+  },
+  "Buddy Love": {
+    en: {
+      introTitle: "What is Buddy Love?",
+      intro: ["Two people who complete each other. Whether romance or friendship, the story is about a pair who resist, then need, then are transformed by their bond."],
+      core: ["An 'incomplete hero': someone missing a quality the other supplies.", "A 'counterpart': the partner who challenges and completes them.", "A 'complication': the obstacle keeping the pair apart.", "The relationship itself is the plot, not a subplot.", "Works for romance and for platonic buddy stories alike."],
+      coreNote: "The lesson: the hero learns they are better, and more whole, with the other person.",
+      narrativeFunction: ["Introduce two characters who each lack what the other has.", "Force them together so friction reveals their need.", "Raise a complication that drives them apart at the low point.", "Reunite them transformed, completing what each was missing."],
+      risksTitle: "Common risks",
+      risks: ["Partners with no real friction, so there is nothing to overcome.", "A complication so contrived the breakup feels false.", "One character existing only to fix the other, with no arc of their own.", "Resolving the bond before the hero has actually changed."],
+      examplesTitle: "Buddy Love Examples",
+      examples: ["When Harry Met Sally", "Casablanca", "Rain Man", "Brokeback Mountain", "Thelma & Louise", "The Fault in Our Stars", "Lethal Weapon"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es Amor de Compa\xF1eros?",
+      intro: ["Dos personas que se completan mutuamente. Sea romance o amistad, la historia trata de una pareja que primero se resiste, luego se necesita y al fin queda transformada por su v\xEDnculo."],
+      core: ["Un 'h\xE9roe incompleto': alguien al que le falta una cualidad que el otro aporta.", "Una 'contraparte': el compa\xF1ero que lo desaf\xEDa y lo completa.", "Una 'complicaci\xF3n': el obst\xE1culo que mantiene separada a la pareja.", "La relaci\xF3n misma es la trama, no una subtrama.", "Sirve igual para el romance que para las historias de amistad plat\xF3nica."],
+      coreNote: "La lecci\xF3n: el h\xE9roe descubre que es mejor, y m\xE1s completo, junto a la otra persona.",
+      narrativeFunction: ["Presentar a dos personajes a los que les falta lo que el otro tiene.", "Forzar su encuentro para que el roce revele su necesidad mutua.", "Plantear una complicaci\xF3n que los separe en el punto m\xE1s bajo.", "Reunirlos transformados, completando lo que a cada uno le faltaba."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Una pareja sin roce real, de modo que no hay nada que superar.", "Una complicaci\xF3n tan forzada que la ruptura se siente falsa.", "Un personaje que existe solo para arreglar al otro, sin arco propio.", "Resolver el v\xEDnculo antes de que el h\xE9roe haya cambiado de verdad."],
+      examplesTitle: "Ejemplos de Amor de Compa\xF1eros",
+      examples: ["Cuando Harry Encontr\xF3 a Sally", "Casablanca", "Rain Man", "Brokeback Mountain", "Thelma y Louise", "Bajo la Misma Estrella", "Arma Letal"]
+    }
+  },
+  "Whydunit": {
+    en: {
+      introTitle: "What is a Whydunit?",
+      intro: ["A mystery whose point is not who did it but the dark truth uncovered along the way. The investigation peels back layers to expose something disturbing about human nature."],
+      core: ["A 'detective': the figure who pursues the mystery, professional or not.", "A 'secret': the dark truth waiting to be exposed.", "The 'why' matters more than the 'who'.", "The descent uncovers darkness in people, institutions, or the self.", "The detective is often changed, even corrupted, by what they find."],
+      coreNote: "The audience reward is revelation about the human capacity for darkness, not just a solved puzzle.",
+      narrativeFunction: ["Open a mystery whose surface question hides a deeper one.", "Send a detective figure down through escalating layers of truth.", "Expose the dark 'why' behind the crime or secret.", "Mark the detective with the cost of what they have learned."],
+      risksTitle: "Common risks",
+      risks: ["Treating it as a mere puzzle, so the reveal carries no moral weight.", "A 'why' that is shallow or arbitrary, deflating the descent.", "A detective untouched by the darkness, with nothing at stake.", "Withholding clues unfairly so the solution feels like a cheat."],
+      examplesTitle: "Whydunit Examples",
+      examples: ["Chinatown", "The Silence of the Lambs", "Se7en", "Citizen Kane", "Zodiac", "Mystic River", "All the President's Men"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es El Porqu\xE9 del Crimen?",
+      intro: ["Un misterio cuyo sentido no es qui\xE9n lo hizo, sino la verdad oscura que se descubre por el camino. La investigaci\xF3n retira capas hasta exponer algo perturbador sobre la naturaleza humana."],
+      core: ["Un 'detective': la figura que persigue el misterio, sea profesional o no.", "Un 'secreto': la verdad oscura que espera ser revelada.", "El 'porqu\xE9' importa m\xE1s que el 'qui\xE9n'.", "El descenso descubre oscuridad en las personas, las instituciones o uno mismo.", "El detective suele salir cambiado, incluso corrompido, por lo que halla."],
+      coreNote: "La recompensa del p\xFAblico es la revelaci\xF3n sobre la capacidad humana para la oscuridad, no solo un enigma resuelto.",
+      narrativeFunction: ["Abrir un misterio cuya pregunta superficial esconde otra m\xE1s profunda.", "Hacer descender al detective por capas de verdad cada vez m\xE1s hondas.", "Exponer el oscuro 'porqu\xE9' detr\xE1s del crimen o del secreto.", "Marcar al detective con el coste de lo que ha aprendido."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Tratarlo como un mero enigma, de modo que la revelaci\xF3n no tiene peso moral.", "Un 'porqu\xE9' superficial o arbitrario, que desinfla el descenso.", "Un detective al que la oscuridad no roza, sin nada en juego.", "Ocultar pistas de forma injusta para que la soluci\xF3n parezca una trampa."],
+      examplesTitle: "Ejemplos de El Porqu\xE9 del Crimen",
+      examples: ["Chinatown", "El Silencio de los Corderos", "Seven", "Ciudadano Kane", "Zodiac", "Mystic River", "Todos los Hombres del Presidente"]
+    }
+  },
+  "Superhero": {
+    en: {
+      introTitle: "What is the Superhero genre?",
+      intro: ["An extraordinary person dropped into an ordinary world: the opposite of Dude with a Problem. The hero's gift sets them apart, and the struggle is bearing the burden of being special."],
+      core: ["An 'extraordinary' protagonist with a special power, gift, or destiny.", "An 'ordinary world' that cannot fully understand or contain them.", "A 'nemesis' whose power matches or challenges the hero's own.", "The conflict is the price of being different and misunderstood.", "Need not be a literal superhero; any uniquely gifted figure qualifies."],
+      coreNote: "The empathy comes from the loneliness and obligation of being greater than those around you.",
+      narrativeFunction: ["Establish the hero's extraordinary nature or power.", "Place them in an ordinary world that resists or fears them.", "Introduce a worthy nemesis who tests the limits of that power.", "Dramatize the burden and isolation that come with the gift."],
+      risksTitle: "Common risks",
+      risks: ["A hero so powerful nothing threatens them, killing the stakes.", "A nemesis too weak to truly challenge the hero's gift.", "Forgetting the burden, so the power feels like wish-fulfillment only.", "An ordinary world that simply adores the hero, removing the friction."],
+      examplesTitle: "Superhero Examples",
+      examples: ["Spider-Man", "Gladiator", "A Beautiful Mind", "The Matrix", "Frankenstein", "Lawrence of Arabia", "Black Panther"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el g\xE9nero Superh\xE9roe?",
+      intro: ["Una persona extraordinaria ca\xEDda en un mundo corriente: lo opuesto a Un Tipo con un Problema. El don del h\xE9roe lo aparta de los dem\xE1s, y la lucha consiste en soportar la carga de ser especial."],
+      core: ["Un protagonista 'extraordinario' con un poder, don o destino especial.", "Un 'mundo corriente' que no puede comprenderlo ni contenerlo del todo.", "Un 'n\xE9mesis' cuyo poder iguala o desaf\xEDa al del propio h\xE9roe.", "El conflicto es el precio de ser diferente e incomprendido.", "No hace falta un superh\xE9roe literal; sirve cualquier figura singularmente dotada."],
+      coreNote: "La empat\xEDa nace de la soledad y la obligaci\xF3n de ser m\xE1s grande que quienes te rodean.",
+      narrativeFunction: ["Establecer la naturaleza o el poder extraordinario del h\xE9roe.", "Situarlo en un mundo corriente que se le resiste o lo teme.", "Presentar un n\xE9mesis a su altura que ponga a prueba los l\xEDmites de ese poder.", "Dramatizar la carga y el aislamiento que acompa\xF1an al don."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un h\xE9roe tan poderoso que nada lo amenaza, lo que mata las apuestas.", "Un n\xE9mesis demasiado d\xE9bil para desafiar de verdad el don del h\xE9roe.", "Olvidar la carga, de modo que el poder parece solo cumplimiento de deseos.", "Un mundo corriente que simplemente adora al h\xE9roe, eliminando el roce."],
+      examplesTitle: "Ejemplos de Superh\xE9roe",
+      examples: ["Spider-Man", "Gladiator", "Una Mente Maravillosa", "Matrix", "Frankenstein", "Lawrence de Arabia", "Black Panther"]
+    }
+  }
+};
+var EXTRA_TIPS_DATA = {
+  // ── Screenwriting format & documents ────────────────────────────────────────
+  "Scene Headings (tips)": {
+    en: {
+      introTitle: "What is a scene heading?",
+      intro: ["A scene heading (or slugline) opens every scene and tells the reader where and when the action occurs. It is always typed in uppercase and structured as INT./EXT. \u2014 LOCATION \u2014 TIME OF DAY."],
+      techniques: ["INT./EXT. prefix \u2014 Begin with INT. for interiors and EXT. for exteriors; use INT./EXT. when a scene plays both inside and outside (e.g., a moving car).", "Location \u2014 Name the specific setting in caps, moving from general to specific (KITCHEN, then a dash to a sub-area if needed).", "Time of day \u2014 End with DAY or NIGHT; reserve DAWN, DUSK, and MORNING for when the exact light is dramatically essential.", "CONTINUOUS \u2014 Use in place of a time when action flows unbroken from the previous scene without a time jump.", "ESTABLISHING \u2014 Append to flag a wide orienting shot of a location before entering it.", "Uppercase rule \u2014 Type the entire slugline in capitals, separating each element with a space-hyphen-space.", "One line only \u2014 Keep the heading to a single line; never wrap location detail or description into it.", "Consistency \u2014 Spell each recurring location identically every time so script software can track it correctly."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es un encabezado de escena?",
+      intro: ["Un encabezado de escena (o slugline) abre cada escena e indica al lector d\xF3nde y cu\xE1ndo ocurre la acci\xF3n. Siempre se escribe en may\xFAsculas y se estructura como INT./EXT. \u2014 LOCALIZACI\xD3N \u2014 MOMENTO DEL D\xCDA."],
+      techniques: ["Prefijo INT./EXT. \u2014 Empieza con INT. para interiores y EXT. para exteriores; usa INT./EXT. cuando una escena transcurre dentro y fuera (p. ej., un coche en marcha).", "Localizaci\xF3n \u2014 Nombra el escenario concreto en may\xFAsculas, de lo general a lo espec\xEDfico (COCINA y, tras un guion, una subzona si hace falta).", "Momento del d\xEDa \u2014 Termina con DAY o NIGHT; reserva DAWN, DUSK o MORNING para cuando la luz exacta sea dram\xE1ticamente esencial.", "CONTINUOUS \u2014 \xDAsalo en lugar de la hora cuando la acci\xF3n fluye sin interrupci\xF3n desde la escena anterior, sin salto temporal.", "ESTABLISHING \u2014 A\xF1\xE1delo para se\xF1alar un plano general de ubicaci\xF3n antes de entrar en el lugar.", "Regla de may\xFAsculas \u2014 Escribe todo el slugline en may\xFAsculas, separando cada elemento con espacio-guion-espacio.", "Una sola l\xEDnea \u2014 Mant\xE9n el encabezado en una \xFAnica l\xEDnea; nunca metas en \xE9l detalles de localizaci\xF3n ni descripci\xF3n.", "Coherencia \u2014 Escribe cada localizaci\xF3n recurrente de forma id\xE9ntica siempre para que el software de guion la rastree correctamente."]
+    }
+  },
+  "Action Lines (tips)": {
+    en: {
+      introTitle: "What are action lines?",
+      intro: ["Action lines (or scene description) describe what the audience sees and hears between dialogue. They are written in the present tense, in clear visual prose, and run the full width of the page."],
+      techniques: ["Present tense \u2014 Describe everything as it happens now: 'She opens the door,' never 'She opened the door.'", "Concise and visual \u2014 Write only what can be seen or heard on screen; cut internal thoughts and literary flourishes.", "Character names in CAPS \u2014 Capitalize a character's name the first time they appear, then use normal case afterward.", "Sounds and key props \u2014 Put important SOUNDS and crucial PROPS in caps to flag them for the production departments.", "White space \u2014 Break description into short paragraphs of one to four lines so the page reads fast and clean.", "No camera directions in spec \u2014 Avoid CLOSE ON, PAN, or ANGLE; imply shots through what you choose to describe.", "Active voice \u2014 Favor strong verbs and active constructions over passive or 'there is/are' phrasing.", "One image per beat \u2014 Let each paragraph carry a single moment so the reader's eye tracks the action clearly."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 son las l\xEDneas de acci\xF3n?",
+      intro: ["Las l\xEDneas de acci\xF3n (o descripci\xF3n) relatan lo que el p\xFAblico ve y oye entre los di\xE1logos. Se escriben en presente, en prosa visual y clara, y ocupan todo el ancho de la p\xE1gina."],
+      techniques: ["Presente \u2014 Describe todo como si ocurriera ahora: \xABElla abre la puerta\xBB, nunca \xABElla abri\xF3 la puerta\xBB.", "Conciso y visual \u2014 Escribe solo lo que puede verse u o\xEDrse en pantalla; elimina los pensamientos internos y los adornos literarios.", "Nombres en MAY\xDASCULAS \u2014 Capitaliza el nombre de un personaje la primera vez que aparece y luego \xFAsalo en formato normal.", "Sonidos y atrezo clave \u2014 Pon los SONIDOS importantes y el ATREZO crucial en may\xFAsculas para se\xF1alarlos a los departamentos de producci\xF3n.", "Espacio en blanco \u2014 Divide la descripci\xF3n en p\xE1rrafos breves de una a cuatro l\xEDneas para que la p\xE1gina se lea r\xE1pido y limpia.", "Sin indicaciones de c\xE1mara en el spec \u2014 Evita CLOSE ON, PAN o ANGLE; sugiere los planos a trav\xE9s de lo que eliges describir.", "Voz activa \u2014 Prioriza los verbos fuertes y las construcciones activas frente a la voz pasiva o el \xABhay/hab\xEDa\xBB.", "Una imagen por beat \u2014 Deja que cada p\xE1rrafo contenga un solo momento para que la mirada del lector siga la acci\xF3n con claridad."]
+    }
+  },
+  "Character & Dialogue (tips)": {
+    en: {
+      introTitle: "How are character cues and dialogue formatted?",
+      intro: ["Dialogue is introduced by a centered character cue in caps, followed by the spoken lines in a narrower indented block. Standard extensions clarify how and from where a line is delivered."],
+      techniques: ["Character cue \u2014 Center the speaker's name in uppercase directly above their lines, using the same name consistently.", "Dialogue block \u2014 Indent dialogue in a column narrower than action, centered under the cue.", "(V.O.) \u2014 Add after the name for a voice-over: narration or thought heard but not from a present, speaking source.", "(O.S.) and (O.C.) \u2014 Use (O.S.) when a character is off-screen in a scene's space, (O.C.) for off-camera within frame conventions.", "(CONT'D) \u2014 Append when the same character speaks again after an action line interrupts their dialogue.", "(MORE) and (CONT'D) \u2014 When dialogue breaks across a page, place (MORE) at the bottom and the name with (CONT'D) on the next page.", "Avoid wrylie overuse \u2014 Let the dialogue and context carry tone; reserve parentheticals for genuinely unclear delivery.", "Subtext over speeches \u2014 Keep speeches short and let characters mean more than they say rather than over-explaining."]
+    },
+    es: {
+      introTitle: "\xBFC\xF3mo se formatean el nombre del personaje y el di\xE1logo?",
+      intro: ["El di\xE1logo se introduce con el nombre del personaje centrado y en may\xFAsculas, seguido de las l\xEDneas habladas en un bloque sangrado m\xE1s estrecho. Las extensiones est\xE1ndar aclaran c\xF3mo y desde d\xF3nde se dice la l\xEDnea."],
+      techniques: ["Nombre del personaje \u2014 Centra el nombre del hablante en may\xFAsculas justo encima de sus l\xEDneas, usando siempre el mismo nombre.", "Bloque de di\xE1logo \u2014 Sangra el di\xE1logo en una columna m\xE1s estrecha que la acci\xF3n, centrada bajo el nombre.", "(V.O.) \u2014 A\xF1\xE1delo tras el nombre para una voz en off: narraci\xF3n o pensamiento que se oye pero no proviene de una fuente presente.", "(O.S.) y (O.C.) \u2014 Usa (O.S.) cuando el personaje est\xE1 fuera de plano dentro del espacio de la escena, y (O.C.) para fuera de c\xE1mara seg\xFAn convenci\xF3n.", "(CONT'D) \u2014 A\xF1\xE1delo cuando el mismo personaje vuelve a hablar tras una l\xEDnea de acci\xF3n que interrumpe su di\xE1logo.", "(MORE) y (CONT'D) \u2014 Cuando el di\xE1logo se corta entre p\xE1ginas, pon (MORE) al pie y el nombre con (CONT'D) en la p\xE1gina siguiente.", "Evita abusar de las acotaciones \u2014 Deja que el di\xE1logo y el contexto transmitan el tono; reserva los par\xE9ntesis para una entonaci\xF3n realmente ambigua.", "Subtexto antes que discursos \u2014 Mant\xE9n las r\xE9plicas breves y deja que los personajes signifiquen m\xE1s de lo que dicen en vez de explicarlo todo."]
+    }
+  },
+  "Parentheticals (tips)": {
+    en: {
+      introTitle: "What are parentheticals (wrylies)?",
+      intro: ["A parenthetical, or wrylie, is a brief note in parentheses between a character cue and their dialogue that specifies how a line is delivered or to whom. It is used sparingly and only when the intent is not already clear."],
+      techniques: ["Brevity \u2014 Keep it to a word or short phrase such as (whispering) or (to Sam); never write a full sentence.", "Only when needed \u2014 Add a wrylie only when tone, target, or action is genuinely unclear from the dialogue and context.", "Lowercase \u2014 Type wrylies in lowercase, even though character cues above them are in caps.", "Placement \u2014 Set the parenthetical on its own line directly beneath the character cue, indented within the dialogue column.", "No directing the actor \u2014 Avoid telling actors how to emote when the scene already implies it (e.g., redundant (angrily)).", "Mid-dialogue beats \u2014 Use a parenthetical like (beat) or (re: the photo) inside a speech to mark a pause or shift in focus.", "Action vs. wrylie \u2014 Move physical action that runs more than a few words into an action line rather than a parenthetical.", "Consistency \u2014 Apply the same convention throughout so wrylies read as deliberate, not arbitrary."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 son las acotaciones (wrylies)?",
+      intro: ["Una acotaci\xF3n, o wrylie, es una nota breve entre par\xE9ntesis situada entre el nombre del personaje y su di\xE1logo que precisa c\xF3mo se dice una l\xEDnea o a qui\xE9n se dirige. Se usa con moderaci\xF3n y solo cuando la intenci\xF3n no resulta ya evidente."],
+      techniques: ["Brevedad \u2014 Lim\xEDtala a una palabra o frase corta como (susurrando) o (a Sam); nunca escribas una oraci\xF3n completa.", "Solo cuando hace falta \u2014 A\xF1ade una acotaci\xF3n \xFAnicamente cuando el tono, el destinatario o la acci\xF3n no se deduzcan del di\xE1logo y el contexto.", "Min\xFAsculas \u2014 Escribe las acotaciones en min\xFAsculas, aunque el nombre del personaje arriba est\xE9 en may\xFAsculas.", "Ubicaci\xF3n \u2014 Coloca la acotaci\xF3n en su propia l\xEDnea justo debajo del nombre, sangrada dentro de la columna del di\xE1logo.", "No dirigir al actor \u2014 Evita indicar al actor c\xF3mo emocionarse cuando la escena ya lo implica (p. ej., un redundante (con enfado)).", "Beats dentro del di\xE1logo \u2014 Usa una acotaci\xF3n como (beat) o (sobre la foto) dentro de una r\xE9plica para marcar una pausa o un cambio de foco.", "Acci\xF3n frente a acotaci\xF3n \u2014 Lleva la acci\xF3n f\xEDsica de m\xE1s de unas pocas palabras a una l\xEDnea de acci\xF3n, no a un par\xE9ntesis.", "Coherencia \u2014 Aplica la misma convenci\xF3n en todo el guion para que las acotaciones se lean como deliberadas, no arbitrarias."]
+    }
+  },
+  "Transitions (tips)": {
+    en: {
+      introTitle: "What are scene transitions?",
+      intro: ["Transitions describe how one scene moves into the next, such as a cut or dissolve. In a spec script they are right-aligned, written in caps, and used sparingly because editing choices belong to the director."],
+      techniques: ["CUT TO: \u2014 The default hard cut between scenes; often omitted in spec scripts since a new slugline already implies it.", "DISSOLVE TO: \u2014 Signals a softer blend, typically marking a passage of time or a change in mood.", "SMASH CUT: \u2014 An abrupt, jarring cut used for shock or sharp tonal contrast between scenes.", "FADE IN: / FADE OUT. \u2014 FADE IN: opens the script flush left; FADE OUT. closes it, usually before THE END.", "MATCH CUT: \u2014 Links two scenes through a shared visual shape, motion, or composition for thematic effect.", "Right alignment \u2014 Place transitions against the right margin, ending most with a colon (FADE OUT. takes a period).", "Use sparingly \u2014 In spec scripts, lean on slugline changes for cuts and reserve named transitions for deliberate effect.", "Uppercase \u2014 Type all transitions in capitals to match standard formatting."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 son las transiciones de escena?",
+      intro: ["Las transiciones describen c\xF3mo una escena pasa a la siguiente, como un corte o un fundido. En un spec se alinean a la derecha, se escriben en may\xFAsculas y se usan con moderaci\xF3n, porque las decisiones de montaje corresponden al director."],
+      techniques: ["CUT TO: \u2014 El corte directo por defecto entre escenas; suele omitirse en el spec, ya que un nuevo slugline lo implica.", "DISSOLVE TO: \u2014 Indica una mezcla m\xE1s suave, que normalmente marca un paso de tiempo o un cambio de tono.", "SMASH CUT: \u2014 Un corte brusco y abrupto usado para el impacto o el fuerte contraste tonal entre escenas.", "FADE IN: / FADE OUT. \u2014 FADE IN: abre el guion alineado a la izquierda; FADE OUT. lo cierra, normalmente antes de THE END.", "MATCH CUT: \u2014 Enlaza dos escenas mediante una forma, un movimiento o una composici\xF3n visual compartidos, con efecto tem\xE1tico.", "Alineaci\xF3n a la derecha \u2014 Coloca las transiciones contra el margen derecho, terminando la mayor\xEDa con dos puntos (FADE OUT. lleva punto).", "\xDAsalas con moderaci\xF3n \u2014 En el spec, ap\xF3yate en los cambios de slugline para los cortes y reserva las transiciones nombradas para un efecto deliberado.", "May\xFAsculas \u2014 Escribe todas las transiciones en may\xFAsculas conforme al formato est\xE1ndar."]
+    }
+  },
+  "Montage & Intercut (tips)": {
+    en: {
+      introTitle: "How are montages and intercuts formatted?",
+      intro: ["A montage compresses time or shows a process through a sequence of brief images, while an intercut alternates between two simultaneous locations. Both have established formatting that keeps the rapid cutting clear on the page."],
+      techniques: ["MONTAGE header \u2014 Introduce with a heading like 'MONTAGE \u2014 TRAINING FOR THE FIGHT' to label the sequence.", "Lettered or dashed beats \u2014 List each montage image as a short line, often led by a letter (A), B)) or a dash for clarity.", "SERIES OF SHOTS \u2014 Use this label for a tighter list of connected shots advancing a single action or idea.", "END MONTAGE \u2014 Close a montage explicitly so the reader knows normal scene flow resumes.", "INTERCUT \u2014 Use 'INTERCUT \u2014 APARTMENT / OFFICE' to alternate between locations without repeating full sluglines each cut.", "Phone calls \u2014 Establish both ends of a conversation, then write INTERCUT to flip between speakers fluidly.", "Present tense and brevity \u2014 Keep each montage or intercut beat in present tense and as short as a single line.", "Don't overuse \u2014 Reserve montages for genuine time compression; a string of full scenes usually serves story better."]
+    },
+    es: {
+      introTitle: "\xBFC\xF3mo se formatean los montajes y los intercuts?",
+      intro: ["Un montaje comprime el tiempo o muestra un proceso mediante una secuencia de im\xE1genes breves, mientras que un intercut alterna entre dos localizaciones simult\xE1neas. Ambos tienen un formato establecido que mantiene claro en la p\xE1gina el corte r\xE1pido."],
+      techniques: ["Encabezado MONTAGE \u2014 Introd\xFAcelo con un t\xEDtulo como \xABMONTAGE \u2014 ENTRENAMIENTO PARA EL COMBATE\xBB para etiquetar la secuencia.", "Beats con letra o guion \u2014 Enumera cada imagen del montaje como una l\xEDnea corta, a menudo encabezada por una letra (A), B)) o un guion para mayor claridad.", "SERIES OF SHOTS \u2014 Usa esta etiqueta para una lista m\xE1s compacta de planos conectados que hacen avanzar una sola acci\xF3n o idea.", "END MONTAGE \u2014 Cierra el montaje de forma expl\xEDcita para que el lector sepa que se reanuda el flujo normal de escenas.", "INTERCUT \u2014 Usa \xABINTERCUT \u2014 APARTAMENTO / OFICINA\xBB para alternar entre localizaciones sin repetir el slugline completo en cada corte.", "Llamadas telef\xF3nicas \u2014 Establece ambos extremos de la conversaci\xF3n y luego escribe INTERCUT para saltar entre interlocutores con fluidez.", "Presente y brevedad \u2014 Mant\xE9n cada beat de montaje o intercut en presente y tan breve como una sola l\xEDnea.", "No abuses \u2014 Reserva los montajes para una compresi\xF3n real del tiempo; una serie de escenas completas suele servir mejor a la historia."]
+    }
+  },
+  "Loglines (tips)": {
+    en: {
+      introTitle: "What is a logline?",
+      intro: ["A logline is a single sentence that captures the essence of a story by naming its protagonist, goal, and central obstacle. Written in present tense, it sells the concept and hooks a reader in one breath."],
+      techniques: ["One sentence \u2014 Distill the whole story into a single, tight sentence; if it needs two, the hook isn't sharp enough.", "Protagonist \u2014 Identify the hero by descriptive role, not name (e.g., 'a burned-out detective').", "Goal \u2014 State clearly what the protagonist is trying to achieve to give the story direction.", "Obstacle \u2014 Name the central conflict or antagonist that stands in the protagonist's way.", "Irony or hook \u2014 Add the ironic, surprising, or high-stakes twist that makes the premise compelling.", "Present tense \u2014 Write in the present to convey immediacy and active momentum.", "No names \u2014 Omit character and place names; use evocative descriptors so the concept reads universally.", "Stakes implied \u2014 Suggest what is at risk so the reader feels why the story matters."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es una logline?",
+      intro: ["Una logline es una sola frase que captura la esencia de una historia nombrando a su protagonista, su objetivo y su obst\xE1culo central. Escrita en presente, vende el concepto y engancha al lector de un solo aliento."],
+      techniques: ["Una sola frase \u2014 Destila toda la historia en una \xFAnica frase compacta; si necesita dos, el gancho no est\xE1 bastante afinado.", "Protagonista \u2014 Identifica al h\xE9roe por su rol descriptivo, no por su nombre (p. ej., \xABun detective quemado\xBB).", "Objetivo \u2014 Expresa con claridad qu\xE9 intenta lograr el protagonista para dar direcci\xF3n a la historia.", "Obst\xE1culo \u2014 Nombra el conflicto central o el antagonista que se interpone en el camino del protagonista.", "Iron\xEDa o gancho \u2014 A\xF1ade el giro ir\xF3nico, sorprendente o de alto riesgo que hace atractiva la premisa.", "Presente \u2014 Escribe en presente para transmitir inmediatez e impulso activo.", "Sin nombres \u2014 Omite los nombres de personajes y lugares; usa descriptores evocadores para que el concepto se lea de forma universal.", "Riesgo impl\xEDcito \u2014 Sugiere qu\xE9 est\xE1 en juego para que el lector sienta por qu\xE9 importa la historia."]
+    }
+  },
+  "Treatment & Outline (tips)": {
+    en: {
+      introTitle: "What are treatments and outlines?",
+      intro: ["A treatment is a prose summary of a story told in present tense, while an outline maps its structure as a sequence of beats or steps. Both are development tools used to test and refine the narrative before writing pages."],
+      techniques: ["Prose summary \u2014 Write a treatment in present-tense narrative prose, conveying the story's events, tone, and arc.", "Treatment length \u2014 Keep a treatment anywhere from one to a few pages for a pitch, or longer for a detailed sale document.", "Beat sheet \u2014 List the story's major turning points as concise beats to verify structure before scene work.", "Step outline \u2014 Break the story into numbered steps, one short entry per scene or sequence, describing what happens.", "Scene cards \u2014 Summarize each scene on a single card or line so the sequence can be reordered and stress-tested.", "Purpose over polish \u2014 Use these tools to diagnose pacing and causality, not to showcase finished prose.", "Cause and effect \u2014 Ensure each beat or step leads logically to the next, exposing gaps before the draft.", "Present tense throughout \u2014 Maintain present tense across treatment and outline for a consistent, active read."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 son los tratamientos y las escaletas?",
+      intro: ["Un tratamiento es un resumen en prosa de una historia contado en presente, mientras que una escaleta traza su estructura como una secuencia de beats o pasos. Ambos son herramientas de desarrollo que sirven para probar y depurar la narrativa antes de escribir p\xE1ginas."],
+      techniques: ["Resumen en prosa \u2014 Escribe el tratamiento en prosa narrativa en presente, transmitiendo los eventos, el tono y el arco de la historia.", "Extensi\xF3n del tratamiento \u2014 Mant\xE9n el tratamiento entre una y unas pocas p\xE1ginas para un pitch, o m\xE1s extenso para un documento de venta detallado.", "Hoja de beats \u2014 Enumera los grandes puntos de giro como beats concisos para verificar la estructura antes de trabajar las escenas.", "Escaleta \u2014 Divide la historia en pasos numerados, una entrada breve por escena o secuencia, describiendo qu\xE9 ocurre.", "Tarjetas de escena \u2014 Resume cada escena en una sola tarjeta o l\xEDnea para poder reordenar y poner a prueba la secuencia.", "Funci\xF3n antes que pulido \u2014 Usa estas herramientas para diagnosticar el ritmo y la causalidad, no para lucir una prosa acabada.", "Causa y efecto \u2014 Aseg\xFArate de que cada beat o paso conduce l\xF3gicamente al siguiente, revelando los huecos antes del borrador.", "Presente en todo \u2014 Mant\xE9n el presente en el tratamiento y la escaleta para una lectura coherente y activa."]
+    }
+  },
+  // ── Revision & self-editing ─────────────────────────────────────────────────
+  "The Rewrite Pass (tips)": {
+    en: {
+      introTitle: "What is the rewrite pass?",
+      intro: ["Revision works best in focused passes, each targeting one layer of the story, rather than fixing everything at once.", "Working pass by pass keeps your attention sharp and prevents you from polishing prose you may later cut."],
+      techniques: ["Structure pass \u2014 Read for the big shape first: act breaks, scene order, escalation, and whether each scene earns its place.", "Plot and logic pass \u2014 Track cause and effect, setups and payoffs, timelines, and continuity gaps before going deeper.", "Character pass \u2014 Follow one character at a time, checking motivation, consistency, voice, and arc across the whole draft.", "Theme pass \u2014 Ensure the central idea surfaces through events and choices, not lectures, and that the ending answers the question the story asks.", "Dialogue pass \u2014 Read exchanges aloud for distinct voices, subtext, and rhythm; cut the on-the-nose and the redundant.", "Line pass \u2014 Tighten sentences last: word choice, clarity, repetition, and flow, once the structure beneath them is locked.", "One pass, one job \u2014 Resist fixing everything you notice; jot other problems in the margin and address them in their own pass.", "Rest between passes \u2014 Let the draft cool so you return as a reader, not the author, and see what is actually on the page."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el pase de reescritura?",
+      intro: ["La revisi\xF3n funciona mejor en pases enfocados, cada uno dirigido a una capa de la historia, en lugar de arreglarlo todo a la vez.", "Trabajar pase por pase mantiene la atenci\xF3n afilada y evita que pulas una prosa que quiz\xE1 luego elimines."],
+      techniques: ["Pase de estructura \u2014 Lee primero la forma general: quiebres de acto, orden de escenas, escalada y si cada escena se gana su lugar.", "Pase de trama y l\xF3gica \u2014 Rastrea la causa y el efecto, los presagios y sus pagos, las l\xEDneas temporales y los vac\xEDos de continuidad antes de profundizar.", "Pase de personaje \u2014 Sigue a un personaje a la vez, comprobando motivaci\xF3n, coherencia, voz y arco a lo largo de todo el borrador.", "Pase de tema \u2014 Asegura que la idea central emerja a trav\xE9s de los hechos y las decisiones, no de los sermones, y que el final responda a la pregunta que plantea la historia.", "Pase de di\xE1logo \u2014 Lee los intercambios en voz alta buscando voces distintas, subtexto y ritmo; recorta lo demasiado expl\xEDcito y lo redundante.", "Pase de l\xEDnea \u2014 Ajusta las frases al final: elecci\xF3n de palabras, claridad, repetici\xF3n y fluidez, una vez fijada la estructura que las sostiene.", "Un pase, una tarea \u2014 Resiste el impulso de arreglar todo lo que notes; anota otros problemas al margen y ab\xF3rdalos en su propio pase.", "Descansa entre pases \u2014 Deja enfriar el borrador para volver como lector, no como autor, y ver lo que realmente hay en la p\xE1gina."]
+    }
+  },
+  "Self-Editing Checklist (tips)": {
+    en: {
+      introTitle: "What is self-editing?",
+      intro: ["Self-editing is the disciplined craft of revising your own draft with a reader's eye, catching the weaknesses you were too close to see while writing.", "A concrete checklist turns vague dissatisfaction into specific, fixable problems."],
+      techniques: ["Cut filler and throat-clearing \u2014 Delete warm-up sentences, redundant beats, and stage directions the reader already infers.", 'Kill filter words \u2014 Remove "saw," "felt," "realized," "noticed," and "thought" that distance the reader from direct experience.', 'Trim adverbs and weak modifiers \u2014 Replace "-ly" propping and "very/really/just" with stronger, more precise verbs and nouns.', "Vary sentence length and rhythm \u2014 Mix short and long sentences; a string of equal-length lines flattens pace and energy.", "Check POV consistency \u2014 Stay inside your chosen viewpoint; flag head-hopping and details the narrator could not know.", "Prefer the active voice \u2014 Convert passive constructions unless the passive is a deliberate choice for emphasis or mystery.", "Hunt repetition \u2014 Search for pet words, repeated images, and crutch phrases that dull through overuse.", "Read it aloud \u2014 Hear clunky rhythm, tongue-twisters, and unnatural dialogue the eye glides past on the page."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la autoedici\xF3n?",
+      intro: ["La autoedici\xF3n es el oficio disciplinado de revisar tu propio borrador con ojo de lector, detectando las debilidades que estabas demasiado cerca para ver al escribir.", "Una lista de comprobaci\xF3n concreta convierte la insatisfacci\xF3n vaga en problemas espec\xEDficos y solucionables."],
+      techniques: ["Recorta el relleno y los carraspeos \u2014 Elimina las frases de calentamiento, los compases redundantes y las acotaciones que el lector ya deduce.", 'Elimina los verbos de filtro \u2014 Quita "vio", "sinti\xF3", "se dio cuenta", "not\xF3" y "pens\xF3" que distancian al lector de la experiencia directa.', 'Reduce los adverbios y modificadores d\xE9biles \u2014 Sustituye los apoyos en "-mente" y los "muy/realmente/solo" por verbos y sustantivos m\xE1s fuertes y precisos.', "Var\xEDa la longitud y el ritmo de las frases \u2014 Mezcla frases cortas y largas; una hilera de l\xEDneas de igual longitud aplana el ritmo y la energ\xEDa.", "Comprueba la coherencia del punto de vista \u2014 Permanece dentro de tu perspectiva elegida; se\xF1ala los saltos de cabeza y los detalles que el narrador no podr\xEDa conocer.", "Prefiere la voz activa \u2014 Convierte las construcciones pasivas salvo que la pasiva sea una elecci\xF3n deliberada para enfatizar o crear misterio.", "Caza la repetici\xF3n \u2014 Busca palabras recurrentes, im\xE1genes repetidas y muletillas que se embotan por el uso excesivo.", "L\xE9elo en voz alta \u2014 Oye el ritmo torpe, los trabalenguas y el di\xE1logo poco natural que el ojo pasa por alto en la p\xE1gina."]
+    }
+  },
+  "Cutting & Tightening (tips)": {
+    en: {
+      introTitle: "What is cutting and tightening?",
+      intro: ["Cutting and tightening removes everything that does not earn its place, so the remaining words carry more weight and the pace stays alive.", "Most first drafts are too long; the prose grows sharper as it grows shorter."],
+      techniques: ["Kill your darlings \u2014 Cut the clever lines, scenes, and flourishes you love most when they serve your ego rather than the story.", "Enter late, leave early \u2014 Start each scene at the latest possible moment and end it before the energy drains away.", "Trim on-the-nose lines \u2014 Delete dialogue and narration that state outright what the reader already understands from context.", "Compress scenes \u2014 Merge scenes that repeat a function, and summarize transitions the reader can fill in.", "Cut to the conflict \u2014 Remove pleasantries, logistics, and travel that delay the moment the scene actually exists for.", "Tighten every sentence \u2014 Strip redundant words, hedges, and qualifiers until each line says one thing cleanly.", "Replace, don't just delete \u2014 Swap a paragraph of explanation for a single telling image, gesture, or line.", "Test each cut \u2014 If the scene still works without a line, beat, or word, it was not pulling its weight."]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es recortar y comprimir?",
+      intro: ["Recortar y comprimir elimina todo lo que no se gana su lugar, de modo que las palabras restantes pesen m\xE1s y el ritmo siga vivo.", "La mayor\xEDa de los primeros borradores son demasiado largos; la prosa se afila a medida que se acorta."],
+      techniques: ["Mata a tus criaturas queridas \u2014 Recorta las l\xEDneas, escenas y florituras ingeniosas que m\xE1s amas cuando sirven a tu ego y no a la historia.", "Entra tarde, sal temprano \u2014 Comienza cada escena en el momento m\xE1s tard\xEDo posible y term\xEDnala antes de que la energ\xEDa se agote.", "Recorta las l\xEDneas demasiado expl\xEDcitas \u2014 Elimina el di\xE1logo y la narraci\xF3n que enuncian sin m\xE1s lo que el lector ya entiende por el contexto.", "Comprime las escenas \u2014 Fusiona las escenas que repiten una funci\xF3n y resume las transiciones que el lector puede rellenar.", "Ve directo al conflicto \u2014 Quita las cortes\xEDas, la log\xEDstica y los desplazamientos que retrasan el momento para el que la escena existe.", "Ajusta cada frase \u2014 Elimina palabras redundantes, rodeos y matices hasta que cada l\xEDnea diga una cosa con limpieza.", "Sustituye, no solo borres \u2014 Cambia un p\xE1rrafo de explicaci\xF3n por una sola imagen, gesto o l\xEDnea reveladora.", "Pon a prueba cada recorte \u2014 Si la escena sigue funcionando sin una l\xEDnea, comp\xE1s o palabra, no estaba aportando su parte."]
+    }
+  },
+  "Notes & Feedback (tips)": {
+    en: {
+      introTitle: "How do you work with feedback?",
+      intro: ["Feedback is data, not orders: readers reliably tell you where something is wrong, but rarely how to fix it.", "The skill is interpreting reactions to find the real problem and protecting your vision while you do."],
+      techniques: ["Find the note behind the note \u2014 Treat a proposed solution as a symptom; ask what reaction caused it and solve that root cause.", "Listen for where, not what \u2014 Trust readers about where they got bored or confused; distrust their specific prescriptions.", "Use varied beta readers \u2014 Gather a few trusted readers who match your audience, and weigh patterns over any single opinion.", "Hold a table read \u2014 Hear screenplays and dialogue performed aloud to expose dead lines, pacing drags, and unclear beats.", "Look for the pattern \u2014 When several readers flag the same spot, believe it, even if each names a different cause.", "Separate taste from craft \u2014 Distinguish notes about objective problems from notes that simply reflect a reader's personal preference.", "Sleep on it before reacting \u2014 Let the sting of criticism fade so you can judge each note on its merits, not your defensiveness.", "Know when to ignore a note \u2014 Protect the story's core intention; a note that would make it someone else's book can be set aside."]
+    },
+    es: {
+      introTitle: "\xBFC\xF3mo se trabaja con la retroalimentaci\xF3n?",
+      intro: ["La retroalimentaci\xF3n son datos, no \xF3rdenes: los lectores te dicen con fiabilidad d\xF3nde algo falla, pero rara vez c\xF3mo arreglarlo.", "La habilidad est\xE1 en interpretar las reacciones para hallar el problema real y proteger tu visi\xF3n mientras lo haces."],
+      techniques: ["Encuentra la nota detr\xE1s de la nota \u2014 Trata una soluci\xF3n propuesta como un s\xEDntoma; pregunta qu\xE9 reacci\xF3n la caus\xF3 y resuelve esa ra\xEDz.", "Escucha el d\xF3nde, no el qu\xE9 \u2014 Conf\xEDa en los lectores sobre d\xF3nde se aburrieron o confundieron; desconf\xEDa de sus recetas concretas.", "Usa lectores beta variados \u2014 Re\xFAne a unos pocos lectores de confianza que encajen con tu p\xFAblico y valora los patrones por encima de cualquier opini\xF3n aislada.", "Haz una lectura de mesa \u2014 Escucha guiones y di\xE1logos interpretados en voz alta para revelar l\xEDneas muertas, baches de ritmo y compases poco claros.", "Busca el patr\xF3n \u2014 Cuando varios lectores se\xF1alan el mismo punto, cr\xE9elo, aunque cada uno nombre una causa distinta.", "Separa el gusto del oficio \u2014 Distingue las notas sobre problemas objetivos de las que solo reflejan la preferencia personal de un lector.", "Cons\xFAltalo con la almohada antes de reaccionar \u2014 Deja que el escozor de la cr\xEDtica se desvanezca para juzgar cada nota por sus m\xE9ritos, no por tu actitud defensiva.", "Sabe cu\xE1ndo ignorar una nota \u2014 Protege la intenci\xF3n central de la historia; una nota que la convertir\xEDa en el libro de otro puede dejarse de lado."]
+    }
+  }
+};
+var EXTRA_PITFALLS_DATA = {
+  "Revision Pitfalls": {
+    en: { title: "Revision Pitfalls", items: ["Polishing prose before fixing structure", "Endless tinkering without ever finishing", "Editing out the original voice", "Over-explaining after notes", "Applying every note literally", "Revising while still drafting"] },
+    es: { title: "Errores de Revisi\xF3n", items: ["Pulir la prosa antes de arreglar la estructura", "Retoques sin fin sin terminar nunca", "Editar hasta borrar la voz original", "Sobreexplicar tras recibir notas", "Aplicar cada nota al pie de la letra", "Revisar mientras a\xFAn se escribe el borrador"] }
+  }
+};
+var EXTRA_LABELS = {
+  en: {
+    // Theme & premise
+    "Theme vs Premise": "Theme vs Premise",
+    "Controlling Idea": "Controlling Idea",
+    "Thematic Argument": "Thematic Argument",
+    "Motif & Symbol": "Motif & Symbol",
+    "Theme Through Character": "Theme Through Character",
+    // Character engines
+    "Want vs Need": "Want vs Need",
+    "Wound & Ghost": "Wound & Ghost",
+    "The Lie & The Truth": "The Lie & The Truth",
+    "Fatal Flaw": "Fatal Flaw",
+    "Antagonist Design": "Antagonist Design",
+    "Character Web": "Character Web",
+    // Dialogue craft
+    "Subtext": "Subtext",
+    "On-the-Nose Dialogue": "On-the-Nose Dialogue",
+    "Voice Differentiation": "Voice Differentiation",
+    "The Scene Turn": "The Scene Turn",
+    "Exposition in Dialogue": "Exposition in Dialogue",
+    "Action Beats & Silence": "Action Beats & Silence",
+    // Genre
+    "Genre & Conventions": "Genre & Conventions",
+    "Monster in the House": "Monster in the House",
+    "Golden Fleece": "Golden Fleece",
+    "Dude with a Problem": "Dude with a Problem",
+    "Rites of Passage": "Rites of Passage",
+    "Buddy Love": "Buddy Love",
+    "Whydunit": "Whydunit",
+    "Superhero": "Superhero",
+    // Screenwriting format & documents
+    "Scene Headings (tips)": "Scene Headings",
+    "Action Lines (tips)": "Action Lines",
+    "Character & Dialogue (tips)": "Character & Dialogue",
+    "Parentheticals (tips)": "Parentheticals",
+    "Transitions (tips)": "Transitions",
+    "Montage & Intercut (tips)": "Montage & Intercut",
+    "Loglines (tips)": "Loglines",
+    "Treatment & Outline (tips)": "Treatment & Outline",
+    // Revision
+    "The Rewrite Pass (tips)": "The Rewrite Pass",
+    "Self-Editing Checklist (tips)": "Self-Editing Checklist",
+    "Cutting & Tightening (tips)": "Cutting & Tightening",
+    "Notes & Feedback (tips)": "Notes & Feedback",
+    "Revision Pitfalls": "Revision Pitfalls",
+    // Structure frameworks
+    "Eight-Sequence Structure": "Eight-Sequence Structure",
+    "Syd Field Paradigm": "Syd Field Paradigm",
+    "Truby 22 Steps": "Truby's 22 Steps",
+    "TV Series Structure": "TV Series Structure"
+  },
+  es: {
+    // Theme & premise
+    "Theme vs Premise": "Tema vs Premisa",
+    "Controlling Idea": "Idea de Control",
+    "Thematic Argument": "Argumento Tem\xE1tico",
+    "Motif & Symbol": "Motivo y S\xEDmbolo",
+    "Theme Through Character": "Tema a Trav\xE9s del Personaje",
+    // Character engines
+    "Want vs Need": "Deseo vs Necesidad",
+    "Wound & Ghost": "Herida y Fantasma",
+    "The Lie & The Truth": "La Mentira y La Verdad",
+    "Fatal Flaw": "Defecto Fatal",
+    "Antagonist Design": "Dise\xF1o del Antagonista",
+    "Character Web": "Red de Personajes",
+    // Dialogue craft
+    "Subtext": "Subtexto",
+    "On-the-Nose Dialogue": "Di\xE1logo obvio",
+    "Voice Differentiation": "Diferenciaci\xF3n de voces",
+    "The Scene Turn": "El giro de escena",
+    "Exposition in Dialogue": "Exposici\xF3n en el di\xE1logo",
+    "Action Beats & Silence": "Beats de acci\xF3n y silencio",
+    // Genre
+    "Genre & Conventions": "G\xE9nero y convenciones",
+    "Monster in the House": "El Monstruo en Casa",
+    "Golden Fleece": "El Vellocino de Oro",
+    "Dude with a Problem": "Un Tipo con un Problema",
+    "Rites of Passage": "Ritos de Paso",
+    "Buddy Love": "Amor de Compa\xF1eros",
+    "Whydunit": "El Porqu\xE9 del Crimen",
+    "Superhero": "Superh\xE9roe",
+    // Screenwriting format & documents
+    "Scene Headings (tips)": "Encabezados de escena",
+    "Action Lines (tips)": "L\xEDneas de acci\xF3n",
+    "Character & Dialogue (tips)": "Personaje y di\xE1logo",
+    "Parentheticals (tips)": "Acotaciones",
+    "Transitions (tips)": "Transiciones",
+    "Montage & Intercut (tips)": "Montaje e intercut",
+    "Loglines (tips)": "Loglines",
+    "Treatment & Outline (tips)": "Tratamiento y escaleta",
+    // Revision
+    "The Rewrite Pass (tips)": "El pase de reescritura",
+    "Self-Editing Checklist (tips)": "Lista de autoedici\xF3n",
+    "Cutting & Tightening (tips)": "Recortar y comprimir",
+    "Notes & Feedback (tips)": "Notas y retroalimentaci\xF3n",
+    "Revision Pitfalls": "Errores de revisi\xF3n",
+    // Structure frameworks
+    "Eight-Sequence Structure": "Estructura de Ocho Secuencias",
+    "Syd Field Paradigm": "Paradigma de Syd Field",
+    "Truby 22 Steps": "Los 22 Pasos de Truby",
+    "TV Series Structure": "Estructura de Serie de TV"
+  }
+};
+var RESOURCE_SOURCES = {
+  // Theme & premise
+  "Theme vs Premise": ["Lajos Egri \u2014 The Art of Dramatic Writing", "John Truby \u2014 The Anatomy of Story"],
+  "Controlling Idea": ["Robert McKee \u2014 Story (1997)"],
+  "Thematic Argument": ["John Truby \u2014 The Anatomy of Story", "Robert McKee \u2014 Story"],
+  "Motif & Symbol": ["M. H. Abrams \u2014 A Glossary of Literary Terms"],
+  "Theme Through Character": ["Lajos Egri \u2014 The Art of Dramatic Writing"],
+  // Character engines
+  "Want vs Need": ["John Truby \u2014 The Anatomy of Story", "K. M. Weiland \u2014 Creating Character Arcs"],
+  "Wound & Ghost": ["John Truby \u2014 The Anatomy of Story", "K. M. Weiland \u2014 Creating Character Arcs"],
+  "The Lie & The Truth": ["K. M. Weiland \u2014 Creating Character Arcs"],
+  "Fatal Flaw": ["Aristotle \u2014 Poetics (hamartia)"],
+  "Antagonist Design": ["John Truby \u2014 The Anatomy of Story"],
+  "Character Web": ["John Truby \u2014 The Anatomy of Story"],
+  // Dialogue craft
+  "Subtext": ["Robert McKee \u2014 Dialogue (2016)", "Robert McKee \u2014 Story"],
+  "On-the-Nose Dialogue": ["Robert McKee \u2014 Dialogue"],
+  "The Scene Turn": ["Robert McKee \u2014 Story (scene design)"],
+  "Exposition in Dialogue": ["Robert McKee \u2014 Dialogue"],
+  "Voice Differentiation": ["Robert McKee \u2014 Dialogue (2016)"],
+  "Action Beats & Silence": ["David Mamet \u2014 On Directing Film", "Harold Pinter (the dramatic pause)"],
+  // Genre
+  "Genre & Conventions": ["Blake Snyder \u2014 Save the Cat!", "Shawn Coyne \u2014 The Story Grid"],
+  "Monster in the House": ["Blake Snyder \u2014 Save the Cat!"],
+  "Golden Fleece": ["Blake Snyder \u2014 Save the Cat!"],
+  "Dude with a Problem": ["Blake Snyder \u2014 Save the Cat!"],
+  "Rites of Passage": ["Blake Snyder \u2014 Save the Cat!"],
+  "Buddy Love": ["Blake Snyder \u2014 Save the Cat!"],
+  "Whydunit": ["Blake Snyder \u2014 Save the Cat!"],
+  "Superhero": ["Blake Snyder \u2014 Save the Cat!"],
+  // Screenwriting format & documents
+  "Scene Headings (tips)": ["Christopher Riley \u2014 The Hollywood Standard"],
+  "Action Lines (tips)": ["Christopher Riley \u2014 The Hollywood Standard"],
+  "Character & Dialogue (tips)": ["Christopher Riley \u2014 The Hollywood Standard"],
+  "Parentheticals (tips)": ["Christopher Riley \u2014 The Hollywood Standard"],
+  "Transitions (tips)": ["Christopher Riley \u2014 The Hollywood Standard"],
+  "Montage & Intercut (tips)": ["Christopher Riley \u2014 The Hollywood Standard"],
+  "Loglines (tips)": ["Blake Snyder \u2014 Save the Cat!", "Christopher Lockhart \u2014 The Inside Pitch"],
+  "Treatment & Outline (tips)": ["Syd Field \u2014 Screenplay"],
+  // Structure frameworks
+  "The Hero's Journey": ["Joseph Campbell \u2014 The Hero with a Thousand Faces", "Christopher Vogler \u2014 The Writer's Journey"],
+  "Freytag's Pyramid": ["Gustav Freytag \u2014 Die Technik des Dramas (1863)"],
+  "Dan Harmon Story Circle": ["Dan Harmon \u2014 Story Structure 101 (Channel 101)", "Adapted from Joseph Campbell"],
+  "Three Act Structure": ["Aristotle \u2014 Poetics", "Syd Field \u2014 Screenplay"],
+  "Fichtean Curve": ["Named for Johann Gottlieb Fichte", "John Gardner \u2014 The Art of Fiction"],
+  "Kish\u014Dtenketsu": ["Classical East Asian form (q\u01D0-ch\xE9ng-zhu\u01CEn-h\xE9 / ki-sh\u014D-ten-ketsu)"],
+  "Save the Cat": ["Blake Snyder \u2014 Save the Cat! (2005)"],
+  "Seven Point Structure": ["Dan Wells \u2014 7-Point Story Structure", "Adapted from Lester Dent's Master Fiction Plot"],
+  "Pulp Formula": ["Lester Dent \u2014 Master Fiction Plot Formula"],
+  "McKee Story paradigm": ["Robert McKee \u2014 Story (1997)"],
+  "Into the Woods structure": ["John Yorke \u2014 Into the Woods (2013)"],
+  "Frame Narrative": ["G\xE9rard Genette \u2014 Narrative Discourse", "e.g. The Decameron; One Thousand and One Nights"],
+  "Nonlinear Structure": ["G\xE9rard Genette \u2014 Narrative Discourse (anachrony)"],
+  "Rashomon Structure": ["Ry\u016Bnosuke Akutagawa \u2014 In a Grove", "Akira Kurosawa \u2014 Rashomon (1950)"],
+  "In Medias Res": ["Horace \u2014 Ars Poetica"],
+  "Eight-Sequence Structure": ["Paul Joseph Gulino \u2014 Screenwriting: The Sequence Approach", "Frank Daniel"],
+  "Syd Field Paradigm": ["Syd Field \u2014 Screenplay (1979)"],
+  "Truby 22 Steps": ["John Truby \u2014 The Anatomy of Story"],
+  "TV Series Structure": ["Pamela Douglas \u2014 Writing the TV Drama Series", "Jeffrey Davis \u2014 TV Writing"],
+  // Named narrative devices
+  "Chekhov's Gun": ["Anton Chekhov (the principle of narrative economy)"],
+  "Deus Ex Machina": ["Aristotle \u2014 Poetics (named and criticized)"],
+  "Eucatastrophe": ["J.R.R. Tolkien \u2014 On Fairy-Stories"],
+  // Revision
+  "The Rewrite Pass (tips)": ["Renni Browne & Dave King \u2014 Self-Editing for Fiction Writers"],
+  "Self-Editing Checklist (tips)": ["Renni Browne & Dave King \u2014 Self-Editing for Fiction Writers", "William Zinsser \u2014 On Writing Well"],
+  "Cutting & Tightening (tips)": ["Stephen King \u2014 On Writing", "Strunk & White \u2014 The Elements of Style"],
+  "Notes & Feedback (tips)": ["Anne Lamott \u2014 Bird by Bird"]
+};
+var RESOURCE_RELATED = {
+  // Theme & premise
+  "Theme vs Premise": ["Controlling Idea", "Thematic Argument", "Theme Through Character"],
+  "Controlling Idea": ["Theme vs Premise", "Thematic Argument", "McKee Story paradigm"],
+  "Thematic Argument": ["Controlling Idea", "The Lie & The Truth", "Character Web"],
+  "Motif & Symbol": ["Theme vs Premise", "\u201CShow, Don\u2019t Tell\u201D"],
+  "Theme Through Character": ["Antagonist Design", "Thematic Argument", "Controlling Idea"],
+  // Character engines
+  "Want vs Need": ["Wound & Ghost", "The Lie & The Truth", "Moral Transformation"],
+  "Wound & Ghost": ["Want vs Need", "The Lie & The Truth", "Fatal Flaw"],
+  "The Lie & The Truth": ["Want vs Need", "Wound & Ghost", "Thematic Argument"],
+  "Fatal Flaw": ["Wound & Ghost", "Moral Descent", "The Shadow"],
+  "Antagonist Design": ["Character Web", "The Shadow", "Theme Through Character"],
+  "Character Web": ["Antagonist Design", "Theme Through Character", "Thematic Argument"],
+  // Dialogue craft
+  "Subtext": ["On-the-Nose Dialogue", "Action Beats & Silence", "\u201CShow, Don\u2019t Tell\u201D"],
+  "On-the-Nose Dialogue": ["Subtext", "Exposition in Dialogue", "Writing-Level Pitfalls"],
+  "Voice Differentiation": ["Subtext", "Dialogue (tips)"],
+  "The Scene Turn": ["McKee Story paradigm", "Action Beats & Silence"],
+  "Exposition in Dialogue": ["On-the-Nose Dialogue", "Exposition (tips)"],
+  "Action Beats & Silence": ["Subtext", "The Scene Turn"],
+  // Genre
+  "Genre & Conventions": ["Save the Cat", "Monster in the House", "Golden Fleece"],
+  "Monster in the House": ["Genre & Conventions", "Whydunit"],
+  "Golden Fleece": ["The Hero's Journey", "Genre & Conventions"],
+  "Dude with a Problem": ["Superhero", "Genre & Conventions"],
+  "Rites of Passage": ["Moral Transformation", "Genre & Conventions"],
+  "Buddy Love": ["Want vs Need", "Genre & Conventions"],
+  "Whydunit": ["Monster in the House", "Genre & Conventions"],
+  "Superhero": ["Dude with a Problem", "Genre & Conventions"],
+  // Screenwriting
+  "Character & Dialogue (tips)": ["Subtext", "Parentheticals (tips)"],
+  "Loglines (tips)": ["Treatment & Outline (tips)", "Genre & Conventions"],
+  "Treatment & Outline (tips)": ["Loglines (tips)", "Eight-Sequence Structure"],
+  // Structure frameworks
+  "Eight-Sequence Structure": ["Three Act Structure", "Syd Field Paradigm", "Save the Cat"],
+  "Syd Field Paradigm": ["Three Act Structure", "Eight-Sequence Structure"],
+  "Truby 22 Steps": ["The Hero's Journey", "Character Web", "Want vs Need"],
+  "TV Series Structure": ["Save the Cat", "Seven Point Structure"],
+  // Revision
+  "The Rewrite Pass (tips)": ["Self-Editing Checklist (tips)", "Cutting & Tightening (tips)", "Revision Pitfalls"],
+  "Self-Editing Checklist (tips)": ["The Rewrite Pass (tips)", "Cutting & Tightening (tips)"],
+  "Cutting & Tightening (tips)": ["Self-Editing Checklist (tips)", "The Scene Turn"],
+  "Notes & Feedback (tips)": ["The Rewrite Pass (tips)", "Revision Pitfalls"],
+  // A few links from existing classics into the new material
+  "Save the Cat": ["Genre & Conventions", "TV Series Structure"],
+  "The Hero's Journey": ["Truby 22 Steps", "Golden Fleece"],
+  "McKee Story paradigm": ["Controlling Idea", "The Scene Turn"]
+};
+var DIAGNOSE_PROBLEMS = [
+  {
+    id: "saggy-middle",
+    icon: "trending-down",
+    label: { en: "My second act sags", es: "Mi segundo acto se cae" },
+    cards: ["Save the Cat", "Eight-Sequence Structure", "Fichtean Curve", "Three Act Structure"]
+  },
+  {
+    id: "passive-hero",
+    icon: "user-x",
+    label: { en: "My protagonist is passive", es: "Mi protagonista es pasivo" },
+    cards: ["Want vs Need", "Fatal Flaw", "Character Web"]
+  },
+  {
+    id: "on-the-nose",
+    icon: "megaphone",
+    label: { en: "My dialogue is on-the-nose", es: "Mi di\xE1logo es demasiado obvio" },
+    cards: ["Subtext", "On-the-Nose Dialogue", "Exposition in Dialogue"]
+  },
+  {
+    id: "weak-villain",
+    icon: "swords",
+    label: { en: "My villain is weak", es: "Mi villano es flojo" },
+    cards: ["Antagonist Design", "Character Web", "Theme Through Character"]
+  },
+  {
+    id: "unclear-theme",
+    icon: "compass",
+    label: { en: "I don't know what it's about", es: "No s\xE9 de qu\xE9 trata" },
+    cards: ["Theme vs Premise", "Controlling Idea", "Thematic Argument"]
+  },
+  {
+    id: "info-dump",
+    icon: "info",
+    label: { en: "I'm info-dumping", es: "Estoy volcando informaci\xF3n" },
+    cards: ["Exposition in Dialogue", "Scene vs Summary", "Worldbuilding & Setting"]
+  },
+  {
+    id: "flat-character",
+    icon: "minus",
+    label: { en: "My character doesn't change", es: "Mi personaje no cambia" },
+    cards: ["Want vs Need", "The Lie & The Truth", "Wound & Ghost", "Moral Transformation"]
+  },
+  {
+    id: "low-tension",
+    icon: "activity",
+    label: { en: "There are no stakes", es: "No hay nada en juego" },
+    cards: ["Fichtean Curve", "The Scene Turn", "Thriller"]
+  },
+  {
+    id: "slow-open",
+    icon: "play",
+    label: { en: "My opening is slow", es: "Mi apertura es lenta" },
+    cards: ["In Medias Res", "Loglines (tips)", "Pulp Formula"]
+  },
+  {
+    id: "scene-nowhere",
+    icon: "refresh-ccw-dot",
+    label: { en: "This scene goes nowhere", es: "Esta escena no avanza" },
+    cards: ["The Scene Turn", "Scene vs Summary"]
+  },
+  {
+    id: "revise",
+    icon: "repeat",
+    label: { en: "My draft is a mess", es: "Mi borrador es un caos" },
+    cards: ["The Rewrite Pass (tips)", "Self-Editing Checklist (tips)", "Cutting & Tightening (tips)"]
+  },
+  {
+    id: "purple-prose",
+    icon: "scissors",
+    label: { en: "My prose is overwritten", es: "Mi prosa est\xE1 recargada" },
+    cards: ["Prose Rhythm & Sentence Variety", "Showing & Telling Balance", "Cutting & Tightening (tips)"]
+  },
+  {
+    id: "genre-beats",
+    icon: "library-big",
+    label: { en: "I don't know my genre's beats", es: "No conozco los beats de mi g\xE9nero" },
+    cards: ["Genre & Conventions", "Save the Cat"]
+  }
+];
+var EXTRA_UI = {
+  en: {
+    // Hub category titles
+    storyResources: "Story & theme",
+    craftResources: "Craft",
+    storyIntro: "What a story is about and the shapes it can take: theme and premise, genre conventions, and the techniques that control how a story unfolds.",
+    craftIntro: "The line-by-line craft of telling it well \u2014 dialogue, prose, screenplay format, and revision.",
+    // Legacy / sub-category titles
+    themeResources: "Theme & premise",
+    genreResources: "Genre",
+    screenwritingResources: "Screenwriting",
+    dialogueResources: "Dialogue",
+    // Section labels
+    characterEngines: "Character engines",
+    screenSequence: "Screen & sequence",
+    themeArchitecture: "Theme & meaning",
+    genreSystem: "Story types (Save the Cat)",
+    genreConventional: "Genres",
+    proseCraft: "Prose craft",
+    screenwritingFormat: "Screenplay format",
+    screenwritingDocs: "Story documents",
+    dialogueCraft: "Dialogue craft",
+    revisionEditing: "Revision & editing",
+    // Medium badges
+    mediumProse: "Prose",
+    mediumScreen: "Screen",
+    mediumBoth: "Both",
+    // Section heading defaults (localized fallbacks for the generic renderers)
+    steps: "Steps",
+    whyThisWorks: "Why this works",
+    commonRisks: "Common risks",
+    writingTipsHeading: "Writing tips",
+    whyArchetype: "Why this archetype works",
+    commonInternalConflicts: "Common internal conflicts",
+    // Misc
+    themeIntro: "Theme is what a story is really about; premise is the argument it makes. These tools turn an abstract idea into a structural force the whole story can prove.",
+    genreIntro: "Genre is a promise to the audience. Each story-type carries its own conventions and obligatory scenes \u2014 know which beats are non-negotiable before you break them.",
+    screenwritingIntro: "Industry-standard screenplay format and the development documents that come before pages.",
+    dialogueIntro: "Dialogue carries character, conflict, and subtext. These are the deeper craft tools beyond sentence-level tips.",
+    searchPlaceholder: "Search resources\u2026",
+    searchNoResults: "No resources match your search.",
+    sourcesHeading: "Sources & further reading",
+    relatedHeading: "Related",
+    affiliationDisclaimer: "Folio is an independent project and is not affiliated with, authorized by, or endorsed by the authors, works, or trademark holders referenced here. Frameworks and techniques are summarized in our own words for educational reference; names such as \u201CSave the Cat!\u201D and \u201CFinal Draft\u201D are trademarks of their respective owners. Film, TV, and book titles are cited only as examples of the concepts discussed.",
+    // Reference → action
+    insertBeatSheet: "Insert as beats",
+    createCharacterSheet: "Create character sheet",
+    beatsAdded: "beats added to the beat board",
+    noProjectForBeats: "Open a project first to add beats.",
+    beatsUnavailable: "No beats could be created from this framework.",
+    beatsFailed: "Could not add beats. See console for details.",
+    noProjectForSheet: "Open a project first to create a character sheet.",
+    sheetCreated: "Character sheet created",
+    sheetFailed: "Could not create the character sheet. See console for details.",
+    insertTemplate: "Insert as note",
+    templateCreated: "Craft note created",
+    templateFailed: "Could not create the note. See console for details.",
+    noProjectForTemplate: "Open a project first to create a note.",
+    comingSoon: "Content coming soon.",
+    diagnoseTitle: "I'm stuck on\u2026",
+    diagnoseHint: "Pick a problem \u2014 jump straight to the cards that help.",
+    diagnoseFixes: "What helps",
+    revealSpoiler: "Click to reveal (spoiler)"
+  },
+  es: {
+    storyResources: "Historia y tema",
+    craftResources: "Oficio",
+    storyIntro: "De qu\xE9 trata una historia y qu\xE9 formas puede adoptar: tema y premisa, convenciones de g\xE9nero y las t\xE9cnicas que controlan c\xF3mo se despliega el relato.",
+    craftIntro: "El oficio l\xEDnea a l\xEDnea de contarlo bien: di\xE1logo, prosa, formato de guion y revisi\xF3n.",
+    themeResources: "Tema y premisa",
+    genreResources: "G\xE9nero",
+    screenwritingResources: "Guion",
+    dialogueResources: "Di\xE1logo",
+    characterEngines: "Motor del personaje",
+    screenSequence: "Pantalla y secuencia",
+    themeArchitecture: "Tema y significado",
+    genreSystem: "Tipos de historia (Save the Cat)",
+    genreConventional: "G\xE9neros",
+    proseCraft: "Oficio de prosa",
+    screenwritingFormat: "Formato de guion",
+    screenwritingDocs: "Documentos de la historia",
+    dialogueCraft: "Oficio del di\xE1logo",
+    revisionEditing: "Revisi\xF3n y edici\xF3n",
+    mediumProse: "Prosa",
+    mediumScreen: "Guion",
+    mediumBoth: "Ambos",
+    steps: "Pasos",
+    whyThisWorks: "Por qu\xE9 funciona",
+    commonRisks: "Riesgos frecuentes",
+    writingTipsHeading: "Consejos de escritura",
+    whyArchetype: "Por qu\xE9 funciona este arquetipo",
+    commonInternalConflicts: "Conflictos internos frecuentes",
+    themeIntro: "El tema es de qu\xE9 trata realmente una historia; la premisa es el argumento que sostiene. Estas herramientas convierten una idea abstracta en una fuerza estructural que toda la historia puede demostrar.",
+    genreIntro: "El g\xE9nero es una promesa al p\xFAblico. Cada tipo de historia trae sus convenciones y escenas obligatorias: conoce qu\xE9 momentos son innegociables antes de romperlos.",
+    screenwritingIntro: "Formato de guion est\xE1ndar de la industria y los documentos de desarrollo previos a las p\xE1ginas.",
+    dialogueIntro: "El di\xE1logo porta personaje, conflicto y subtexto. Estas son las herramientas de oficio m\xE1s profundas, m\xE1s all\xE1 de los consejos a nivel de frase.",
+    searchPlaceholder: "Buscar recursos\u2026",
+    searchNoResults: "Ning\xFAn recurso coincide con tu b\xFAsqueda.",
+    sourcesHeading: "Fuentes y lecturas",
+    relatedHeading: "Relacionado",
+    affiliationDisclaimer: "Folio es un proyecto independiente y no est\xE1 afiliado, autorizado ni respaldado por los autores, obras o titulares de marcas aqu\xED mencionados. Los marcos y t\xE9cnicas se resumen con nuestras propias palabras como referencia educativa; nombres como \xABSave the Cat!\xBB y \xABFinal Draft\xBB son marcas de sus respectivos propietarios. Los t\xEDtulos de cine, televisi\xF3n y libros se citan solo como ejemplos de los conceptos tratados.",
+    // Referencia → acción
+    insertBeatSheet: "Insertar como beats",
+    createCharacterSheet: "Crear ficha de personaje",
+    beatsAdded: "beats a\xF1adidos al beat board",
+    noProjectForBeats: "Abre un proyecto primero para a\xF1adir beats.",
+    beatsUnavailable: "No se han podido crear beats a partir de este marco.",
+    beatsFailed: "No se pudieron a\xF1adir los beats. Revisa la consola.",
+    noProjectForSheet: "Abre un proyecto primero para crear una ficha.",
+    sheetCreated: "Ficha de personaje creada",
+    sheetFailed: "No se pudo crear la ficha. Revisa la consola.",
+    insertTemplate: "Insertar como nota",
+    templateCreated: "Nota de oficio creada",
+    templateFailed: "No se pudo crear la nota. Revisa la consola.",
+    noProjectForTemplate: "Abre un proyecto primero para crear una nota.",
+    comingSoon: "Contenido pr\xF3ximamente.",
+    diagnoseTitle: "Estoy atascado en\u2026",
+    diagnoseHint: "Elige un problema y salta directo a las fichas que ayudan.",
+    diagnoseFixes: "Qu\xE9 ayuda",
+    revealSpoiler: "Pulsa para revelar (spoiler)"
+  }
+};
+
+// src/writer-tools/resourcesExtra2.js
+var EXTRA2_TECHNIQUE_DATA = {
+  // ── Conventional genres ─────────────────────────────────────────────────────
+  "Drama": {
+    en: {
+      introTitle: "What is Drama?",
+      intro: ["Drama centers on emotionally charged human conflict, putting believable characters under pressure until they are forced to change. Its promise is recognition: the audience sees its own struggles dignified and made meaningful."],
+      core: ["Grounded, psychologically real characters", "Stakes that are personal and emotional rather than spectacular", "Moral or interpersonal conflict with no easy answer", "A protagonist forced toward difficult choices", "Subtext and restraint over melodrama"],
+      coreNote: "Conflict comes from character, not catastrophe.",
+      narrativeFunction: ["Establish the protagonist's flaw and the wound behind it", "Force an escalating crisis that no compromise can dodge", "Stage a confrontation that lays the inner conflict bare", "Resolve through a costly choice that changes the character"],
+      risksTitle: "Common risks",
+      risks: ["Melodrama: emotion inflated beyond what the story earns", "Talking-head scenes that explain feelings instead of dramatizing them", "Passive protagonists who suffer but never choose", "Tidy resolutions that betray the messiness of the conflict"],
+      examplesTitle: "Drama Examples",
+      examples: ["Manchester by the Sea", "Kramer vs. Kramer", "Marriage Story", "A Little Life (Hanya Yanagihara)", "Stoner (John Williams)", "Ordinary People", "Revolutionary Road (Richard Yates)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Drama?",
+      intro: ["El drama gira en torno al conflicto humano cargado de emoci\xF3n, sometiendo a personajes cre\xEDbles a una presi\xF3n que los obliga a cambiar. Su promesa es el reconocimiento: el p\xFAblico ve sus propias luchas dignificadas y dotadas de sentido."],
+      core: ["Personajes realistas y psicol\xF3gicamente veros\xEDmiles", "Riesgos personales y emocionales antes que espectaculares", "Conflicto moral o interpersonal sin respuesta f\xE1cil", "Un protagonista forzado a decisiones dif\xEDciles", "Subtexto y contenci\xF3n en lugar de melodrama"],
+      coreNote: "El conflicto nace del personaje, no de la cat\xE1strofe.",
+      narrativeFunction: ["Establecer el defecto del protagonista y la herida que lo origina", "Provocar una crisis creciente que ning\xFAn acuerdo pueda esquivar", "Plantear una confrontaci\xF3n que desnude el conflicto interior", "Resolver mediante una decisi\xF3n costosa que transforme al personaje"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Melodrama: emoci\xF3n inflada m\xE1s all\xE1 de lo que la historia justifica", "Escenas habladas que explican sentimientos en lugar de dramatizarlos", "Protagonistas pasivos que sufren pero nunca eligen", "Desenlaces pulcros que traicionan el desorden del conflicto"],
+      examplesTitle: "Ejemplos de Drama",
+      examples: ["Manchester frente al mar", "Kramer contra Kramer", "Historia de un matrimonio", "Tan poca vida (Hanya Yanagihara)", "Stoner (John Williams)", "Gente corriente", "V\xEDa revolucionaria (Richard Yates)"]
+    }
+  },
+  "Comedy": {
+    en: {
+      introTitle: "What is Comedy?",
+      intro: ["Comedy exploits the gap between expectation and reality to provoke laughter, usually following a flawed character through chaos toward harmony. Its promise is delight and relief: the world is absurd, yet survivable."],
+      core: ["A comic flaw or fixed attitude that invites trouble", "Escalation: small mistakes snowball into disaster", "Reversals, misunderstandings, and mistaken identity", "A distinct comic tone (satire, farce, romantic, deadpan)", "Order restored, often with the fool wiser or humbled"],
+      coreNote: "Character is rigid; the world keeps moving.",
+      narrativeFunction: ["Set up the comic premise and the character's blind spot", "Launch the inciting misunderstanding or harebrained plan", "Build to a set-piece where the deception or chaos peaks", "Resolve with exposure, reconciliation, and restored order"],
+      risksTitle: "Common risks",
+      risks: ["Jokes that stall the story instead of advancing it", "Mean-spirited humor with no warmth toward the characters", "Comic logic that ignores cause and consequence", "A premise milked past the point of diminishing returns"],
+      examplesTitle: "Comedy Examples",
+      examples: ["Some Like It Hot", "Bridesmaids", "Groundhog Day", "Lucky Jim (Kingsley Amis)", "Three Men in a Boat (Jerome K. Jerome)", "The Grand Budapest Hotel", "Catch-22 (Joseph Heller)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Comedia?",
+      intro: ["La comedia explota la distancia entre la expectativa y la realidad para provocar la risa, normalmente siguiendo a un personaje imperfecto a trav\xE9s del caos hacia la armon\xEDa. Su promesa es el placer y el alivio: el mundo es absurdo, pero se puede sobrevivir a \xE9l."],
+      core: ["Un defecto c\xF3mico o actitud r\xEDgida que atrae problemas", "Escalada: los peque\xF1os errores se vuelven un desastre", "Reveses, malentendidos y confusiones de identidad", "Un tono c\xF3mico definido (s\xE1tira, farsa, rom\xE1ntico, inexpresivo)", "El orden restaurado, a menudo con el necio m\xE1s sabio o humillado"],
+      coreNote: "El personaje es r\xEDgido; el mundo no deja de moverse.",
+      narrativeFunction: ["Plantear la premisa c\xF3mica y el punto ciego del personaje", "Desencadenar el malentendido o el plan descabellado inicial", "Construir hasta una escena cumbre donde el caos o el enga\xF1o estalla", "Resolver con el destape, la reconciliaci\xF3n y el orden restaurado"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Chistes que frenan la historia en lugar de hacerla avanzar", "Humor cruel sin afecto alguno hacia los personajes", "L\xF3gica c\xF3mica que ignora causa y consecuencia", "Una premisa exprimida m\xE1s all\xE1 de su rendimiento"],
+      examplesTitle: "Ejemplos de Comedia",
+      examples: ["Con faldas y a lo loco", "La boda de mi mejor amiga", "Atrapado en el tiempo", "La suerte de Jim (Kingsley Amis)", "Tres hombres en una barca (Jerome K. Jerome)", "El Gran Hotel Budapest", "Trampa 22 (Joseph Heller)"]
+    }
+  },
+  "Action": {
+    en: {
+      introTitle: "What is Action?",
+      intro: ["Action drives a capable protagonist through a chain of physical conflicts against a clear, dangerous opponent. Its promise is kinetic momentum and the visceral thrill of competence under threat."],
+      core: ["A capable, goal-driven protagonist", "A concrete, formidable antagonist with a ticking threat", "Set-piece sequences that escalate in scale and danger", "Clear physical stakes and visible cause-and-effect", "Forward pace that rarely lets the hero rest"],
+      coreNote: "Momentum is the genre; stillness is the enemy.",
+      narrativeFunction: ["Open with an action beat that proves the hero's skill", "Trigger the central threat that forces the hero into motion", "Escalate through rising set-pieces and a midpoint setback", "Deliver a climactic showdown that defeats the antagonist directly"],
+      risksTitle: "Common risks",
+      risks: ["Spectacle without stakes: explosions no one cares about", "Invincible heroes who are never truly in danger", "Incoherent geography that makes action hard to follow", "Disposable villains with no threat or motivation"],
+      examplesTitle: "Action Examples",
+      examples: ["Die Hard", "Mad Max: Fury Road", "John Wick", "The Bourne Identity (Robert Ludlum)", "Terminator 2: Judgment Day", "First Blood (David Morrell)", "Mission: Impossible \u2014 Fallout"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Acci\xF3n?",
+      intro: ["La acci\xF3n lleva a un protagonista competente a trav\xE9s de una cadena de conflictos f\xEDsicos contra un oponente claro y peligroso. Su promesa es el impulso cin\xE9tico y la emoci\xF3n visceral de la pericia bajo amenaza."],
+      core: ["Un protagonista competente y orientado a un objetivo", "Un antagonista concreto y temible con una amenaza inminente", "Secuencias cumbre que crecen en escala y peligro", "Riesgos f\xEDsicos claros y causa-efecto visible", "Un ritmo hacia adelante que apenas deja descansar al h\xE9roe"],
+      coreNote: "El impulso es el g\xE9nero; la quietud, el enemigo.",
+      narrativeFunction: ["Abrir con una escena de acci\xF3n que demuestre la habilidad del h\xE9roe", "Desencadenar la amenaza central que obliga al h\xE9roe a moverse", "Escalar mediante escenas crecientes y un rev\xE9s en el punto medio", "Ofrecer un enfrentamiento final que derrote al antagonista de frente"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Espect\xE1culo sin riesgo: explosiones que a nadie importan", "H\xE9roes invencibles que nunca est\xE1n en verdadero peligro", "Geograf\xEDa incoherente que vuelve la acci\xF3n dif\xEDcil de seguir", "Villanos prescindibles sin amenaza ni motivaci\xF3n"],
+      examplesTitle: "Ejemplos de Acci\xF3n",
+      examples: ["Jungla de cristal", "Mad Max: Furia en la carretera", "John Wick", "El caso Bourne (Robert Ludlum)", "Terminator 2: El juicio final", "Acorralado (David Morrell)", "Misi\xF3n imposible: Fallout"]
+    }
+  },
+  "Adventure": {
+    en: {
+      introTitle: "What is Adventure?",
+      intro: ["Adventure sends a protagonist on a journey into the unknown in pursuit of a goal, treasure, or destination. Its promise is wonder, exploration, and the transformation earned by leaving the ordinary world behind."],
+      core: ["A clear quest, destination, or objective", "Journey into unfamiliar, often perilous territory", "Episodic obstacles, allies, and discoveries en route", "A vivid, immersive world that rewards exploration", "Growth: the traveler returns changed"],
+      coreNote: "The road, not the room, is the stage.",
+      narrativeFunction: ["Pull the hero out of the ordinary world with a call to adventure", "Cross the threshold into unknown territory", "String escalating trials, marvels, and reversals along the route", "Reach the goal and return transformed by the journey"],
+      risksTitle: "Common risks",
+      risks: ["A travelogue of incidents with no rising arc", "A passive hero swept along rather than driving the quest", "Wonder described but never felt by the characters", "A destination that fails to pay off the long journey"],
+      examplesTitle: "Adventure Examples",
+      examples: ["Raiders of the Lost Ark", "The Hobbit (J.R.R. Tolkien)", "Indiana Jones and the Last Crusade", "Treasure Island (Robert Louis Stevenson)", "The Princess Bride", "Around the World in Eighty Days (Jules Verne)", "Life of Pi (Yann Martel)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Aventura?",
+      intro: ["La aventura lanza a un protagonista a un viaje hacia lo desconocido en pos de una meta, un tesoro o un destino. Su promesa es el asombro, la exploraci\xF3n y la transformaci\xF3n que se gana al dejar atr\xE1s el mundo ordinario."],
+      core: ["Una b\xFAsqueda, destino u objetivo claro", "Viaje a un territorio desconocido y a menudo peligroso", "Obst\xE1culos, aliados y hallazgos epis\xF3dicos en el camino", "Un mundo v\xEDvido e inmersivo que premia la exploraci\xF3n", "Crecimiento: el viajero regresa cambiado"],
+      coreNote: "El escenario es el camino, no la habitaci\xF3n.",
+      narrativeFunction: ["Sacar al h\xE9roe del mundo ordinario con una llamada a la aventura", "Cruzar el umbral hacia el territorio desconocido", "Encadenar pruebas, prodigios y reveses crecientes en la ruta", "Alcanzar la meta y regresar transformado por el viaje"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un cuaderno de viaje de episodios sin arco ascendente", "Un h\xE9roe pasivo arrastrado en vez de impulsar la b\xFAsqueda", "Asombro descrito pero nunca sentido por los personajes", "Un destino que no compensa el largo viaje"],
+      examplesTitle: "Ejemplos de Aventura",
+      examples: ["En busca del arca perdida", "El hobbit (J.R.R. Tolkien)", "Indiana Jones y la \xFAltima cruzada", "La isla del tesoro (Robert Louis Stevenson)", "La princesa prometida", "La vuelta al mundo en ochenta d\xEDas (Julio Verne)", "La vida de Pi (Yann Martel)"]
+    }
+  },
+  "Thriller": {
+    en: {
+      introTitle: "What is a Thriller?",
+      intro: ["A thriller keeps the audience in sustained tension as a protagonist races against a powerful threat with high, often lethal stakes. Its promise is suspense: dread for what comes next, and relief when danger is narrowly survived."],
+      core: ["A protagonist in escalating danger", "A formidable, proactive antagonist or conspiracy", "A ticking clock or relentless pursuit", "Cliffhangers and reversals that tighten the screws", "Stakes that grow more personal as they grow more dire"],
+      coreNote: "Suspense lives in what the audience fears, not what surprises them.",
+      narrativeFunction: ["Hook with an inciting threat that endangers the protagonist", "Plunge the hero out of safety and onto the back foot", "Escalate through pursuit, betrayal, and a midpoint twist", "Build to a final confrontation where the hero turns the tables"],
+      risksTitle: "Common risks",
+      risks: ["Tension that sags between set-pieces", "A villain who outclasses the hero so completely it kills suspense", "Idiot-plot logic: danger that depends on characters acting dumb", "A twist that cheats setup the audience was never given"],
+      examplesTitle: "Thriller Examples",
+      examples: ["The Silence of the Lambs", "Gone Girl (Gillian Flynn)", "North by Northwest", "The Day of the Jackal (Frederick Forsyth)", "Se7en", "The Girl with the Dragon Tattoo (Stieg Larsson)", "No Country for Old Men"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es un Thriller?",
+      intro: ["El thriller mantiene al p\xFAblico en tensi\xF3n sostenida mientras un protagonista corre contra una amenaza poderosa con riesgos altos, a menudo letales. Su promesa es el suspense: el temor por lo que viene y el alivio cuando el peligro se sortea por poco."],
+      core: ["Un protagonista en peligro creciente", "Un antagonista o conspiraci\xF3n temible y proactivo", "Una cuenta atr\xE1s o una persecuci\xF3n implacable", "Giros y momentos de tensi\xF3n que aprietan las tuercas", "Riesgos que se vuelven m\xE1s personales a medida que se agravan"],
+      coreNote: "El suspense vive en lo que el p\xFAblico teme, no en lo que lo sorprende.",
+      narrativeFunction: ["Enganchar con una amenaza inicial que pone en peligro al protagonista", "Arrancar al h\xE9roe de su seguridad y dejarlo a la defensiva", "Escalar mediante persecuci\xF3n, traici\xF3n y un giro en el punto medio", "Construir hasta una confrontaci\xF3n final donde el h\xE9roe da la vuelta a la situaci\xF3n"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Tensi\xF3n que decae entre las escenas clave", "Un villano que supera al h\xE9roe hasta anular el suspense", "L\xF3gica tramposa: peligros que dependen de personajes torpes", "Un giro que traiciona una preparaci\xF3n que nunca se mostr\xF3"],
+      examplesTitle: "Ejemplos de Thriller",
+      examples: ["El silencio de los corderos", "Perdida (Gillian Flynn)", "Con la muerte en los talones", "Chacal (Frederick Forsyth)", "Seven", "Los hombres que no amaban a las mujeres (Stieg Larsson)", "No es pa\xEDs para viejos"]
+    }
+  },
+  "Horror": {
+    en: {
+      introTitle: "What is Horror?",
+      intro: ["Horror confronts characters and audience with a threat that violates the natural or moral order, evoking fear, dread, and revulsion. Its promise is the safe experience of terror, and the catharsis of facing what we most fear."],
+      core: ["A monstrous or uncanny threat that breaks the rules of reality", "Dread built through atmosphere, isolation, and the unknown", "Vulnerable characters and a sense of inescapable doom", "Escalation from unease to confrontation", "A thematic fear underneath the surface scares"],
+      coreNote: "Dread is the slow build; horror is the payoff.",
+      narrativeFunction: ["Establish normalcy, then breach it with the first scare or kill", "Lull into false safety before the threat returns worse", "Strip away escape, allies, and explanations as the dread mounts", "Force a final confrontation with the monster, survived or not"],
+      risksTitle: "Common risks",
+      risks: ["Cheap jump-scares with no accumulated dread", "Characters making absurd choices to serve the plot", "Over-explaining the monster until the mystery dies", "Gore substituting for genuine fear or meaning"],
+      examplesTitle: "Horror Examples",
+      examples: ["The Shining", "Hereditary", "Dracula (Bram Stoker)", "The Haunting of Hill House (Shirley Jackson)", "Get Out", "Pet Sematary (Stephen King)", "Alien"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Terror?",
+      intro: ["El terror enfrenta a personajes y p\xFAblico a una amenaza que viola el orden natural o moral, evocando miedo, angustia y repulsi\xF3n. Su promesa es la experiencia segura del espanto y la catarsis de afrontar lo que m\xE1s tememos."],
+      core: ["Una amenaza monstruosa o siniestra que rompe las reglas de la realidad", "Angustia construida con atm\xF3sfera, aislamiento y lo desconocido", "Personajes vulnerables y una sensaci\xF3n de fatalidad ineludible", "Escalada de la inquietud a la confrontaci\xF3n", "Un miedo tem\xE1tico bajo los sustos de superficie"],
+      coreNote: "La angustia es la construcci\xF3n lenta; el terror, la recompensa.",
+      narrativeFunction: ["Establecer la normalidad y luego quebrarla con el primer susto o muerte", "Adormecer con una falsa seguridad antes de que la amenaza vuelva peor", "Despojar de escapatoria, aliados y explicaciones mientras crece el pavor", "Forzar una confrontaci\xF3n final con el monstruo, sobrevivida o no"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Sustos baratos sin angustia acumulada", "Personajes que toman decisiones absurdas para servir a la trama", "Explicar el monstruo hasta matar el misterio", "Gore que sustituye al miedo o al significado genuino"],
+      examplesTitle: "Ejemplos de Terror",
+      examples: ["El resplandor", "Hereditary", "Dr\xE1cula (Bram Stoker)", "La maldici\xF3n de Hill House (Shirley Jackson)", "D\xE9jame salir", "Cementerio de animales (Stephen King)", "Alien"]
+    }
+  },
+  "Science Fiction": {
+    en: {
+      introTitle: "What is Science Fiction?",
+      intro: ["Science fiction extrapolates from science, technology, or society to imagine worlds that could be, then tests human beings within them. Its promise is the sense of wonder and the thought experiment: what if, and what would it cost us?"],
+      core: ["A central novum: one rationalized change to the world", "Internally consistent rules and consequences", "Speculation that pressures a human or social question", "World-building revealed through story, not lecture", "Ideas with stakes that touch character, not just concept"],
+      coreNote: "The premise is a question; the plot is its proof.",
+      narrativeFunction: ["Introduce the world and its governing speculative rule", "Disrupt the status quo, exposing the idea's true implications", "Push the premise to its logical extreme through escalating consequence", "Resolve by confronting the cost or meaning of the central idea"],
+      risksTitle: "Common risks",
+      risks: ["Exposition dumps that explain the world instead of dramatizing it", "Cool concepts with no human stakes attached", "Inconsistent rules that break the speculative contract", "Technology as a magic wand that solves the plot conveniently"],
+      examplesTitle: "Science Fiction Examples",
+      examples: ["Blade Runner", "Dune (Frank Herbert)", "Arrival", "The Left Hand of Darkness (Ursula K. Le Guin)", "The Matrix", "Neuromancer (William Gibson)", "Ex Machina"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Ciencia Ficci\xF3n?",
+      intro: ["La ciencia ficci\xF3n extrapola a partir de la ciencia, la tecnolog\xEDa o la sociedad para imaginar mundos posibles y poner a prueba al ser humano dentro de ellos. Su promesa es el sentido de la maravilla y el experimento mental: \xBFqu\xE9 pasar\xEDa si, y qu\xE9 nos costar\xEDa?"],
+      core: ["Un novum central: un \xFAnico cambio racionalizado del mundo", "Reglas y consecuencias internamente coherentes", "Especulaci\xF3n que presiona una cuesti\xF3n humana o social", "Construcci\xF3n de mundo revelada por la historia, no por el discurso", "Ideas con riesgos que tocan al personaje, no solo al concepto"],
+      coreNote: "La premisa es una pregunta; la trama, su demostraci\xF3n.",
+      narrativeFunction: ["Presentar el mundo y la regla especulativa que lo rige", "Quebrar el statu quo y exponer las verdaderas implicaciones de la idea", "Llevar la premisa a su extremo l\xF3gico mediante consecuencias crecientes", "Resolver enfrentando el coste o el sentido de la idea central"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Cascadas de exposici\xF3n que explican el mundo en vez de dramatizarlo", "Conceptos atractivos sin riesgo humano asociado", "Reglas incoherentes que rompen el contrato especulativo", "La tecnolog\xEDa como varita m\xE1gica que resuelve la trama por conveniencia"],
+      examplesTitle: "Ejemplos de Ciencia Ficci\xF3n",
+      examples: ["Blade Runner", "Dune (Frank Herbert)", "La llegada", "La mano izquierda de la oscuridad (Ursula K. Le Guin)", "Matrix", "Neuromante (William Gibson)", "Ex Machina"]
+    }
+  },
+  "Fantasy": {
+    en: {
+      introTitle: "What is Fantasy?",
+      intro: ["Fantasy builds a world where magic or the supernatural is real and operates by its own internal laws. Its promise is enchantment and mythic scale: a secondary world that feels vast, meaningful, and morally charged."],
+      core: ["A magic system or supernatural order with consistent rules", "An immersive secondary world with its own history and cultures", "A quest, prophecy, or struggle against a great evil", "Mythic stakes that mirror moral or personal ones", "A protagonist who grows into power or destiny"],
+      coreNote: "Magic must have rules and a price.",
+      narrativeFunction: ["Establish the world and its magical laws through lived detail", "Issue the call: quest, prophecy, or threat that uproots the hero", "Test the hero against rising magical and moral obstacles", "Confront the great evil in a climax that costs something real"],
+      risksTitle: "Common risks",
+      risks: ["Magic without limits, draining all tension from conflict", "World-building that smothers story under lore", "Derivative chosen-one quests with no fresh angle", "Good-versus-evil so flat the stakes feel weightless"],
+      examplesTitle: "Fantasy Examples",
+      examples: ["The Lord of the Rings (J.R.R. Tolkien)", "A Game of Thrones (George R.R. Martin)", "Pan's Labyrinth", "The Name of the Wind (Patrick Rothfuss)", "Spirited Away", "The Earthsea Cycle (Ursula K. Le Guin)", "The Fellowship of the Ring"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Fantas\xEDa?",
+      intro: ["La fantas\xEDa construye un mundo donde la magia o lo sobrenatural es real y opera seg\xFAn sus propias leyes internas. Su promesa es el encantamiento y la escala m\xEDtica: un mundo secundario que se siente vasto, significativo y cargado de moral."],
+      core: ["Un sistema de magia u orden sobrenatural con reglas coherentes", "Un mundo secundario inmersivo con su propia historia y culturas", "Una b\xFAsqueda, profec\xEDa o lucha contra un gran mal", "Riesgos m\xEDticos que reflejan los morales o personales", "Un protagonista que crece hacia el poder o el destino"],
+      coreNote: "La magia debe tener reglas y un precio.",
+      narrativeFunction: ["Establecer el mundo y sus leyes m\xE1gicas mediante el detalle vivido", "Lanzar la llamada: b\xFAsqueda, profec\xEDa o amenaza que desarraiga al h\xE9roe", "Poner a prueba al h\xE9roe contra obst\xE1culos m\xE1gicos y morales crecientes", "Enfrentar al gran mal en un cl\xEDmax que cueste algo real"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Magia sin l\xEDmites que vac\xEDa de tensi\xF3n el conflicto", "Construcci\xF3n de mundo que asfixia la historia bajo el saber inventado", "B\xFAsquedas del elegido derivativas sin un enfoque nuevo", "Un bien contra mal tan plano que los riesgos pierden peso"],
+      examplesTitle: "Ejemplos de Fantas\xEDa",
+      examples: ["El Se\xF1or de los Anillos (J.R.R. Tolkien)", "Juego de tronos (George R.R. Martin)", "El laberinto del fauno", "El nombre del viento (Patrick Rothfuss)", "El viaje de Chihiro", "Historias de Terramar (Ursula K. Le Guin)", "La comunidad del anillo"]
+    }
+  },
+  "Romance": {
+    en: {
+      introTitle: "What is Romance?",
+      intro: ["Romance follows the development of a love relationship between two people as the central, emotionally driving plot. Its promise is emotional fulfillment: a satisfying, optimistic ending for the central couple."],
+      core: ["Two characters with chemistry and a reason to resist", "An internal and external obstacle keeping them apart", "Emotional intimacy that deepens across the story", "A turning point that forces vulnerability or commitment", "An emotionally satisfying, hopeful ending"],
+      coreNote: "The genre demands a happy or hopeful ending for the couple.",
+      narrativeFunction: ["The meet-cute: the first charged encounter between the leads", "Forced proximity and growing attraction against the obstacle", "The dark moment: a breakup or betrayal that drives them apart", "The grand gesture and reunion that earns the happy ending"],
+      risksTitle: "Common risks",
+      risks: ["A conflict so flimsy it could end with one honest conversation", "Instalove that skips the work of earning the bond", "Toxic dynamics framed as romantic tension", "Chemistry asserted by the narrator but never felt on the page"],
+      examplesTitle: "Romance Examples",
+      examples: ["Pride and Prejudice (Jane Austen)", "When Harry Met Sally", "Outlander (Diana Gabaldon)", "Call Me by Your Name", "The Notebook (Nicholas Sparks)", "Brokeback Mountain", "Jane Eyre (Charlotte Bront\xEB)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Romance?",
+      intro: ["El romance sigue el desarrollo de una relaci\xF3n amorosa entre dos personas como trama central y motor emocional. Su promesa es la plenitud emocional: un final satisfactorio y optimista para la pareja protagonista."],
+      core: ["Dos personajes con qu\xEDmica y un motivo para resistirse", "Un obst\xE1culo interno y otro externo que los mantienen separados", "Una intimidad emocional que se profundiza a lo largo del relato", "Un punto de inflexi\xF3n que fuerza la vulnerabilidad o el compromiso", "Un final esperanzador y emocionalmente satisfactorio"],
+      coreNote: "El g\xE9nero exige un final feliz o esperanzador para la pareja.",
+      narrativeFunction: ["El primer encuentro: el chispazo inicial entre los protagonistas", "Cercan\xEDa forzada y atracci\xF3n creciente frente al obst\xE1culo", "El momento oscuro: una ruptura o traici\xF3n que los separa", "El gran gesto y el reencuentro que justifican el final feliz"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un conflicto tan endeble que se resolver\xEDa con una conversaci\xF3n sincera", "Amor a primera vista que se salta el trabajo de ganarse el v\xEDnculo", "Din\xE1micas t\xF3xicas presentadas como tensi\xF3n rom\xE1ntica", "Qu\xEDmica afirmada por el narrador pero nunca sentida en la p\xE1gina"],
+      examplesTitle: "Ejemplos de Romance",
+      examples: ["Orgullo y prejuicio (Jane Austen)", "Cuando Harry encontr\xF3 a Sally", "Forastera (Diana Gabaldon)", "Ll\xE1mame por tu nombre", "El diario de Noa (Nicholas Sparks)", "Brokeback Mountain", "Jane Eyre (Charlotte Bront\xEB)"]
+    }
+  },
+  "Mystery & Crime": {
+    en: {
+      introTitle: "What is Mystery & Crime?",
+      intro: ["Mystery and crime stories revolve around a transgression and the pursuit of truth or justice, inviting the audience to piece together what happened. Their promise is the satisfaction of a puzzle fairly posed and fairly solved."],
+      core: ["A crime or puzzle that anchors the story", "An investigator (or perpetrator) we follow closely", "Clues, red herrings, and a fair-play trail of evidence", "A pool of suspects with motives and secrets", "A logical solution that recontextualizes what we saw"],
+      coreNote: "Play fair: the reader must have a chance to solve it.",
+      narrativeFunction: ["The crime: establish the transgression and its stakes", "The investigation: gather clues, interrogate suspects, hit dead ends", "The complication: a twist, second crime, or false solution", "The reveal: expose the truth and account for every clue"],
+      risksTitle: "Common risks",
+      risks: ["Withholding clues so the solution feels arbitrary", "The culprit introduced too late to be guessable", "Coincidence or confession standing in for deduction", "Red herrings that cheat rather than mislead fairly"],
+      examplesTitle: "Mystery & Crime Examples",
+      examples: ["The Maltese Falcon (Dashiell Hammett)", "Knives Out", "And Then There Were None (Agatha Christie)", "Chinatown", "The Big Sleep (Raymond Chandler)", "Zodiac", "In Cold Blood (Truman Capote)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Misterio y crimen?",
+      intro: ["Las historias de misterio y crimen giran en torno a una transgresi\xF3n y la b\xFAsqueda de la verdad o la justicia, invitando al p\xFAblico a reconstruir lo sucedido. Su promesa es la satisfacci\xF3n de un enigma planteado y resuelto con limpieza."],
+      core: ["Un crimen o enigma que ancla la historia", "Un investigador (o un culpable) al que seguimos de cerca", "Pistas, se\xF1uelos y un rastro de pruebas de juego limpio", "Un grupo de sospechosos con motivos y secretos", "Una soluci\xF3n l\xF3gica que resignifica lo que vimos"],
+      coreNote: "Juega limpio: el lector debe poder resolverlo.",
+      narrativeFunction: ["El crimen: establecer la transgresi\xF3n y sus riesgos", "La investigaci\xF3n: reunir pistas, interrogar sospechosos, chocar con callejones sin salida", "La complicaci\xF3n: un giro, un segundo crimen o una soluci\xF3n falsa", "La revelaci\xF3n: exponer la verdad y dar cuenta de cada pista"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Ocultar pistas hasta que la soluci\xF3n parece arbitraria", "Presentar al culpable demasiado tarde para poder adivinarlo", "Sustituir la deducci\xF3n por la casualidad o la confesi\xF3n", "Se\xF1uelos que hacen trampa en vez de despistar con limpieza"],
+      examplesTitle: "Ejemplos de Misterio y crimen",
+      examples: ["El halc\xF3n malt\xE9s (Dashiell Hammett)", "Pu\xF1ales por la espalda", "Diez negritos (Agatha Christie)", "Chinatown", "El sue\xF1o eterno (Raymond Chandler)", "Zodiac", "A sangre fr\xEDa (Truman Capote)"]
+    }
+  },
+  "Historical Fiction": {
+    en: {
+      introTitle: "What is Historical Fiction?",
+      intro: ["Historical fiction sets invented characters and stories within a faithfully rendered past, letting the period shape the drama. Its promise is immersion: to live inside another era and feel how its forces pressed on ordinary lives."],
+      core: ["A specific, well-researched historical period and place", "Period-accurate detail in custom, speech, and constraint", "Characters whose choices are bounded by their era", "Private lives intersecting with public history", "A theme that resonates between past and present"],
+      coreNote: "Research serves story; it is not the story.",
+      narrativeFunction: ["Immerse the reader in the period through grounded sensory detail", "Tie the protagonist's personal stakes to a historical force", "Escalate as public events close in on private lives", "Resolve in a way true to the period yet meaningful now"],
+      risksTitle: "Common risks",
+      risks: ["Research dumped as exposition that stalls the story", "Modern values and speech anachronistically imposed on the past", "Famous events name-dropped without dramatic purpose", "Costume-drama surface with no real period mindset beneath"],
+      examplesTitle: "Historical Fiction Examples",
+      examples: ["Wolf Hall (Hilary Mantel)", "The Name of the Rose (Umberto Eco)", "Schindler's List", "Beloved (Toni Morrison)", "Barry Lyndon", "The Pillars of the Earth (Ken Follett)", "12 Years a Slave"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Ficci\xF3n hist\xF3rica?",
+      intro: ["La ficci\xF3n hist\xF3rica sit\xFAa personajes e historias inventadas dentro de un pasado fielmente recreado, dejando que la \xE9poca moldee el drama. Su promesa es la inmersi\xF3n: vivir dentro de otra era y sentir c\xF3mo sus fuerzas presionaban las vidas corrientes."],
+      core: ["Un periodo y lugar hist\xF3rico concreto y bien documentado", "Detalle fiel a la \xE9poca en costumbres, habla y limitaciones", "Personajes cuyas decisiones est\xE1n acotadas por su tiempo", "Vidas privadas que se cruzan con la historia p\xFAblica", "Un tema que resuena entre el pasado y el presente"],
+      coreNote: "La documentaci\xF3n sirve a la historia; no es la historia.",
+      narrativeFunction: ["Sumergir al lector en la \xE9poca mediante detalle sensorial concreto", "Ligar los riesgos personales del protagonista a una fuerza hist\xF3rica", "Escalar a medida que los acontecimientos p\xFAblicos cercan las vidas privadas", "Resolver de un modo fiel a la \xE9poca pero significativo hoy"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Documentaci\xF3n volcada como exposici\xF3n que frena la historia", "Valores y habla modernos impuestos anacr\xF3nicamente al pasado", "Acontecimientos c\xE9lebres mencionados sin prop\xF3sito dram\xE1tico", "Una superficie de drama de \xE9poca sin verdadera mentalidad detr\xE1s"],
+      examplesTitle: "Ejemplos de Ficci\xF3n hist\xF3rica",
+      examples: ["En la corte del lobo (Hilary Mantel)", "El nombre de la rosa (Umberto Eco)", "La lista de Schindler", "Beloved (Toni Morrison)", "Barry Lyndon", "Los pilares de la Tierra (Ken Follett)", "12 a\xF1os de esclavitud"]
+    }
+  },
+  "Western": {
+    en: {
+      introTitle: "What is a Western?",
+      intro: ["The Western dramatizes the clash between wilderness and civilization on a lawless frontier, where an individual's code is tested against a brutal landscape. Its promise is the myth of the frontier: freedom, violence, and the cost of taming the wild."],
+      core: ["A frontier setting on the edge of civilization", "A lone protagonist living by a personal code", "The tension between lawlessness and encroaching order", "A reckoning settled by violence", "Landscape as character and moral crucible"],
+      coreNote: "Civilization arrives, and someone must pay for it.",
+      narrativeFunction: ["Establish the frontier and the stranger or settler who enters it", "Introduce a lawless threat the community cannot face alone", "Force the reluctant hero to take up the code and act", "Settle the conflict in a showdown that exacts a price"],
+      risksTitle: "Common risks",
+      risks: ["Cardboard hero-versus-villain morality with no nuance", "Stereotyped or erased Indigenous and frontier peoples", "Iconography borrowed without the genre's underlying conflict", "Nostalgia that ignores the frontier's real brutality"],
+      examplesTitle: "Western Examples",
+      examples: ["The Searchers", "Lonesome Dove (Larry McMurtry)", "Unforgiven", "Blood Meridian (Cormac McCarthy)", "True Grit (Charles Portis)", "Once Upon a Time in the West", "No Country for Old Men (Cormac McCarthy)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es un Western?",
+      intro: ["El western dramatiza el choque entre lo salvaje y la civilizaci\xF3n en una frontera sin ley, donde el c\xF3digo de un individuo se pone a prueba frente a un paisaje brutal. Su promesa es el mito de la frontera: libertad, violencia y el precio de domar lo salvaje."],
+      core: ["Un escenario fronterizo al borde de la civilizaci\xF3n", "Un protagonista solitario que vive seg\xFAn un c\xF3digo personal", "La tensi\xF3n entre la ausencia de ley y el orden que avanza", "Un ajuste de cuentas resuelto con violencia", "El paisaje como personaje y crisol moral"],
+      coreNote: "La civilizaci\xF3n llega, y alguien debe pagar por ella.",
+      narrativeFunction: ["Establecer la frontera y al forastero o colono que llega a ella", "Introducir una amenaza sin ley que la comunidad no puede afrontar sola", "Forzar al h\xE9roe reticente a asumir el c\xF3digo y actuar", "Saldar el conflicto en un duelo que cobra su precio"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Una moral plana de h\xE9roe contra villano sin matices", "Pueblos ind\xEDgenas y fronterizos estereotipados o borrados", "Iconograf\xEDa tomada prestada sin el conflicto de fondo del g\xE9nero", "Una nostalgia que ignora la brutalidad real de la frontera"],
+      examplesTitle: "Ejemplos de Western",
+      examples: ["Centauros del desierto", "Lonesome Dove (Larry McMurtry)", "Sin perd\xF3n", "Meridiano de sangre (Cormac McCarthy)", "Valor de ley (Charles Portis)", "Hasta que lleg\xF3 su hora", "No es pa\xEDs para viejos (Cormac McCarthy)"]
+    }
+  },
+  // ── Prose craft ─────────────────────────────────────────────────────────────
+  "Point of View & Narrator": {
+    en: {
+      introTitle: "What is Point of View?",
+      intro: ["Point of view is the position from which a story is told, defined by the narrator's person, knowledge, and reliability. The choice governs what the reader can know and how intimately they know it."],
+      core: ["Person: first (I), second (you), or third (he/she/they)", "Access: limited to one mind, or omniscient across many", "Narrative distance: how close or far the lens sits from a character", "Reliability: whether the narrator's account can be trusted", "Consistency: a chosen POV is established early and held"],
+      coreNote: "Third limited and first person dominate modern fiction; true omniscience is harder to sustain than it looks.",
+      narrativeFunction: ["Controls the flow of information and what can be withheld", "Shapes reader sympathy by deciding whose head we inhabit", "Creates suspense or dramatic irony through limited or unreliable knowledge", "Sets the tone and voice that color the entire narrative"],
+      risksTitle: "Common risks",
+      risks: ["Head-hopping: sliding between characters' minds within a scene", "Filtering everything through 'she saw,' 'he felt,' which adds distance", "Reporting information the POV character could not plausibly know", "Switching POV without a clear break or reason"],
+      examplesTitle: "Point of View Examples",
+      examples: ["The Great Gatsby \u2014 Fitzgerald (first-person observer, Nick)", "Mrs Dalloway \u2014 Woolf (roving close third / omniscient)", "The Remains of the Day \u2014 Ishiguro (unreliable first person)", "Bright Lights, Big City \u2014 McInerney (sustained second person)", "Middlemarch \u2014 Eliot (Victorian omniscience)", "The Sound and the Fury \u2014 Faulkner (shifting first-person sections)", "A Visit from the Goon Squad \u2014 Egan (multiple POVs across chapters)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el punto de vista?",
+      intro: ["El punto de vista es la posici\xF3n desde la que se narra una historia, definida por la persona, el conocimiento y la fiabilidad del narrador. Esa elecci\xF3n determina qu\xE9 puede saber el lector y con cu\xE1nta intimidad lo sabe."],
+      core: ["Persona: primera (yo), segunda (t\xFA) o tercera (\xE9l/ella/ellos)", "Acceso: limitado a una mente o omnisciente sobre muchas", "Distancia narrativa: cu\xE1n cerca o lejos se sit\xFAa la lente del personaje", "Fiabilidad: si se puede confiar en el relato del narrador", "Coherencia: el punto de vista elegido se establece pronto y se mantiene"],
+      coreNote: "La tercera limitada y la primera persona dominan la ficci\xF3n moderna; la omnisciencia verdadera es m\xE1s dif\xEDcil de sostener de lo que parece.",
+      narrativeFunction: ["Controla el flujo de informaci\xF3n y lo que puede ocultarse", "Moldea la simpat\xEDa del lector al decidir en qu\xE9 mente habitamos", "Crea suspense o iron\xEDa dram\xE1tica mediante un conocimiento limitado o poco fiable", "Fija el tono y la voz que ti\xF1en toda la narraci\xF3n"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Salto de cabezas: deslizarse entre las mentes de varios personajes dentro de una escena", "Filtrarlo todo con \xABvio\xBB, \xABsinti\xF3\xBB, lo que a\xF1ade distancia", "Narrar informaci\xF3n que el personaje focal no podr\xEDa conocer de forma veros\xEDmil", "Cambiar de punto de vista sin un corte o motivo claro"],
+      examplesTitle: "Ejemplos de punto de vista",
+      examples: ["El gran Gatsby \u2014 Fitzgerald (primera persona testigo, Nick)", "La se\xF1ora Dalloway \u2014 Woolf (tercera cercana itinerante / omnisciente)", "Los restos del d\xEDa \u2014 Ishiguro (primera persona poco fiable)", "Luces de ne\xF3n \u2014 McInerney (segunda persona sostenida)", "Middlemarch \u2014 Eliot (omnisciencia victoriana)", "El ruido y la furia \u2014 Faulkner (secciones en primera persona cambiantes)", "El tiempo es un canalla \u2014 Egan (m\xFAltiples puntos de vista por cap\xEDtulo)"]
+    }
+  },
+  "Scene vs Summary": {
+    en: {
+      introTitle: "What is Scene vs Summary?",
+      intro: ["Scene dramatizes events in real time, moment by moment, with action and dialogue; summary compresses time and reports what happened. Skilled fiction alternates the two to control pace and emphasis."],
+      core: ["Scene: real-time, dramatized, scene clock ticks moment to moment", "Summary: compressed time, narrated, days or years in a sentence", "Scene foregrounds; summary bridges and contextualizes", "Scene-sequel: a scene of action followed by a beat of reaction and decision", "Proportion signals importance to the reader"],
+      coreNote: "Summary is not a failure; it is the connective tissue that earns the scenes their weight.",
+      narrativeFunction: ["Scenes deliver the dramatic, emotional high points up close", "Summary covers the dull or repetitive stretches quickly", "Alternation sets the rhythm of tension and release", "Sequels let the reader absorb consequence and anticipate the next move"],
+      risksTitle: "Common risks",
+      risks: ["Dramatizing trivial moments that should be summarized", "Summarizing the climactic events readers came to witness", "Flat pacing from scenes of uniform length and intensity", "Skipping the sequel, so emotional consequence never lands"],
+      examplesTitle: "Scene vs Summary Examples",
+      examples: ["Pride and Prejudice \u2014 Austen (summary bridges between set-piece scenes)", "Olive Kitteridge \u2014 Strout (compressed years framing intimate scenes)", "The Road \u2014 McCarthy (spare scenes punctuating bleak summary)", "A Little Life \u2014 Yanagihara (long summary spans, devastating scenes)", "Great Expectations \u2014 Dickens (summarized growing-up, dramatized encounters)", "Atonement \u2014 McEwan (a single afternoon stretched into scene)", "Stoner \u2014 Williams (a whole life summarized, key scenes slowed down)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es escena vs resumen?",
+      intro: ["La escena dramatiza los acontecimientos en tiempo real, momento a momento, con acci\xF3n y di\xE1logo; el resumen comprime el tiempo y relata lo sucedido. La buena ficci\xF3n alterna ambos para controlar el ritmo y el \xE9nfasis."],
+      core: ["Escena: tiempo real, dramatizada, el reloj avanza momento a momento", "Resumen: tiempo comprimido, narrado, d\xEDas o a\xF1os en una frase", "La escena pone en primer plano; el resumen enlaza y contextualiza", "Escena-secuela: una escena de acci\xF3n seguida de un comp\xE1s de reacci\xF3n y decisi\xF3n", "La proporci\xF3n le se\xF1ala al lector qu\xE9 es importante"],
+      coreNote: "El resumen no es un fracaso; es el tejido conectivo que da peso a las escenas.",
+      narrativeFunction: ["Las escenas muestran de cerca los puntos \xE1lgidos dram\xE1ticos y emocionales", "El resumen despacha r\xE1pido los tramos tediosos o repetitivos", "La alternancia marca el ritmo de tensi\xF3n y descanso", "Las secuelas permiten al lector asimilar las consecuencias y anticipar lo siguiente"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Dramatizar momentos triviales que deber\xEDan resumirse", "Resumir los acontecimientos culminantes que el lector vino a presenciar", "Ritmo plano por escenas de longitud e intensidad uniformes", "Saltarse la secuela, de modo que la consecuencia emocional no cala"],
+      examplesTitle: "Ejemplos de escena vs resumen",
+      examples: ["Orgullo y prejuicio \u2014 Austen (el resumen enlaza escenas de conjunto)", "Olive Kitteridge \u2014 Strout (a\xF1os comprimidos que enmarcan escenas \xEDntimas)", "La carretera \u2014 McCarthy (escenas austeras que punt\xFAan un resumen sombr\xEDo)", "Tan poca vida \u2014 Yanagihara (largos tramos de resumen, escenas devastadoras)", "Grandes esperanzas \u2014 Dickens (la infancia resumida, los encuentros dramatizados)", "Expiaci\xF3n \u2014 McEwan (una sola tarde estirada en escena)", "Stoner \u2014 Williams (toda una vida resumida, escenas clave ralentizadas)"]
+    }
+  },
+  "Psychic Distance & Interiority": {
+    en: {
+      introTitle: "What is Psychic Distance?",
+      intro: ["Psychic distance, a term from John Gardner's The Art of Fiction, describes how near or far the prose sits from a character's consciousness. It runs on a sliding scale, from a distant external report to deep immersion inside the character's thoughts."],
+      core: ["A continuum from far ('It was winter in the year 1853') to near ('God, was she sick of this')", "Interiority: rendering thought, sensation, and judgment from within", "Free indirect discourse: a character's idiom and view inside third-person narration", "Distance can shift fluidly within a scene, even a paragraph", "Closeness builds intimacy; distance grants perspective and irony"],
+      coreNote: "Gardner's scale moves from naming the character abstractly toward inhabiting their unfiltered inner voice.",
+      narrativeFunction: ["Controls intimacy and how strongly the reader bonds with a character", "Free indirect style fuses narrator and character voice without quotation", "Pulling back lets the narrator judge, summarize, or pan across", "Modulating distance shapes emotional intensity scene by scene"],
+      risksTitle: "Common risks",
+      risks: ["Jarring, unmotivated jumps between far and near distance", "Overusing thought verbs ('she thought,' 'he realized') that re-add distance", "Staying so close the reader loses orientation and context", "Free indirect discourse that blurs whose judgment is being voiced"],
+      examplesTitle: "Psychic Distance Examples",
+      examples: ["Emma \u2014 Austen (free indirect discourse, Emma's self-deceptions)", "Mrs Dalloway \u2014 Woolf (deep interiority, shifting distance)", "The Dead \u2014 Joyce (free indirect style closing on Gabriel)", "Beloved \u2014 Morrison (immersive interiority across minds)", "Disgrace \u2014 Coetzee (cool close third on Lurie)", "Ulysses \u2014 Joyce (interior monologue at its deepest)", "Wolf Hall \u2014 Mantel (tight, present third on Cromwell)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la distancia ps\xEDquica?",
+      intro: ["La distancia ps\xEDquica, t\xE9rmino de The Art of Fiction de John Gardner, describe cu\xE1n cerca o lejos se sit\xFAa la prosa de la conciencia de un personaje. Funciona como una escala gradual, del relato externo distante a la inmersi\xF3n profunda en sus pensamientos."],
+      core: ["Un continuo de lo lejano (\xABEra invierno en el a\xF1o 1853\xBB) a lo cercano (\xABDios, qu\xE9 harta estaba de esto\xBB)", "Interioridad: plasmar pensamiento, sensaci\xF3n y juicio desde dentro", "Estilo indirecto libre: el habla y la mirada del personaje dentro de la tercera persona", "La distancia puede variar con fluidez dentro de una escena, incluso de un p\xE1rrafo", "La cercan\xEDa crea intimidad; la distancia ofrece perspectiva e iron\xEDa"],
+      coreNote: "La escala de Gardner va de nombrar al personaje en abstracto a habitar su voz interior sin filtros.",
+      narrativeFunction: ["Controla la intimidad y la fuerza del v\xEDnculo del lector con el personaje", "El estilo indirecto libre funde la voz del narrador y la del personaje sin comillas", "Alejarse permite al narrador juzgar, resumir o hacer una panor\xE1mica", "Modular la distancia moldea la intensidad emocional escena a escena"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Saltos bruscos e injustificados entre la distancia lejana y la cercana", "Abusar de verbos de pensamiento (\xABpens\xF3\xBB, \xABse dio cuenta\xBB) que reintroducen distancia", "Quedarse tan cerca que el lector pierde orientaci\xF3n y contexto", "Estilo indirecto libre que difumina de qui\xE9n es el juicio que se expresa"],
+      examplesTitle: "Ejemplos de distancia ps\xEDquica",
+      examples: ["Emma \u2014 Austen (estilo indirecto libre, los autoenga\xF1os de Emma)", "La se\xF1ora Dalloway \u2014 Woolf (interioridad profunda, distancia cambiante)", "Los muertos \u2014 Joyce (estilo indirecto libre que se cierra sobre Gabriel)", "Beloved \u2014 Morrison (interioridad inmersiva entre varias mentes)", "Desgracia \u2014 Coetzee (tercera cercana y fr\xEDa sobre Lurie)", "Ulises \u2014 Joyce (mon\xF3logo interior en su forma m\xE1s honda)", "En la corte del lobo \u2014 Mantel (tercera ce\xF1ida y en presente sobre Cromwell)"]
+    }
+  },
+  "Prose Rhythm & Sentence Variety": {
+    en: {
+      introTitle: "What is Prose Rhythm?",
+      intro: ["Prose rhythm is the music of writing: the patterns of sentence length, stress, sound, and pause that shape how text feels to read. Variety in that pattern keeps prose alive and controls pace."],
+      core: ["Sentence-length variation: short for impact, long for flow or accumulation", "Cadence: the rise and fall of stresses and phrasing", "Sound: assonance, alliteration, and the weight of word choice", "Punctuation and paragraphing as instruments of pacing", "White space and the length of paragraphs steer the eye and breath"],
+      coreNote: "Reading aloud is the surest test of rhythm; the ear catches what the eye skims.",
+      narrativeFunction: ["Short, clipped sentences accelerate tension and action", "Long, flowing sentences slow time and build immersion", "Variation prevents monotony and signals shifts in mood", "A well-placed fragment lands emphasis like a drumbeat"],
+      risksTitle: "Common risks",
+      risks: ["Monotonous sentences of the same length and shape", "Overlong sentences that lose the reader's grip", "Choppiness from too many short sentences in a row", "Sound clashes: unintended rhyme, repetition, or tongue-twisters"],
+      examplesTitle: "Prose Rhythm Examples",
+      examples: ["A Farewell to Arms \u2014 Hemingway (terse, rhythmic understatement)", "Beloved \u2014 Morrison (incantatory, musical cadence)", "Blood Meridian \u2014 McCarthy (long biblical accretions)", "The Bluest Eye \u2014 Morrison (varied, lyrical phrasing)", "Lolita \u2014 Nabokov (sonorous, playful sound)", "The Old Man and the Sea \u2014 Hemingway (plain, propulsive simplicity)", "Mrs Dalloway \u2014 Woolf (flowing, breath-long sentences)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el ritmo de la prosa?",
+      intro: ["El ritmo de la prosa es la m\xFAsica de la escritura: los patrones de longitud de frase, acento, sonido y pausa que determinan c\xF3mo se siente al leer. La variedad en ese patr\xF3n mantiene viva la prosa y controla el ritmo."],
+      core: ["Variaci\xF3n en la longitud de las frases: cortas para el impacto, largas para el fluir o la acumulaci\xF3n", "Cadencia: el ascenso y descenso de los acentos y el fraseo", "Sonido: asonancia, aliteraci\xF3n y el peso de la elecci\xF3n de palabras", "La puntuaci\xF3n y el reparto en p\xE1rrafos como instrumentos del ritmo", "El espacio en blanco y la longitud de los p\xE1rrafos gu\xEDan la vista y la respiraci\xF3n"],
+      coreNote: "Leer en voz alta es la prueba m\xE1s segura del ritmo; el o\xEDdo capta lo que la vista pasa por alto.",
+      narrativeFunction: ["Las frases cortas y secas aceleran la tensi\xF3n y la acci\xF3n", "Las frases largas y fluidas ralentizan el tiempo y crean inmersi\xF3n", "La variaci\xF3n evita la monoton\xEDa y se\xF1ala cambios de \xE1nimo", "Un fragmento bien colocado remata el \xE9nfasis como un golpe de tambor"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Frases mon\xF3tonas de la misma longitud y forma", "Frases demasiado largas que pierden el agarre del lector", "Entrecortamiento por demasiadas frases cortas seguidas", "Choques sonoros: rima involuntaria, repetici\xF3n o trabalenguas"],
+      examplesTitle: "Ejemplos de ritmo de la prosa",
+      examples: ["Adi\xF3s a las armas \u2014 Hemingway (sobriedad r\xEDtmica y contenida)", "Beloved \u2014 Morrison (cadencia musical y de letan\xEDa)", "Meridiano de sangre \u2014 McCarthy (largas acumulaciones b\xEDblicas)", "Ojos azules \u2014 Morrison (fraseo l\xEDrico y variado)", "Lolita \u2014 Nabokov (sonido sonoro y juguet\xF3n)", "El viejo y el mar \u2014 Hemingway (simplicidad llana y propulsora)", "La se\xF1ora Dalloway \u2014 Woolf (frases fluidas, del largo de un aliento)"]
+    }
+  },
+  "Worldbuilding & Setting": {
+    en: {
+      introTitle: "What is Worldbuilding?",
+      intro: ["Worldbuilding is the craft of constructing a believable place, time, and social reality for a story, then revealing it in controlled doses. Setting grounds the reader in sensory specifics while exposition stays subordinate to scene."],
+      core: ["Sensory grounding: concrete detail of sight, sound, smell, texture", "The iceberg: most of the world is known to the author, little is shown", "Exposition control: information released as the story needs it", "Internal consistency: rules and logic that hold throughout", "Setting as character: place that exerts pressure on the people in it"],
+      coreNote: "Hemingway's iceberg theory: what is omitted, if the writer truly knows it, strengthens what remains on the page.",
+      narrativeFunction: ["Anchors the reader concretely in time and place", "Establishes mood, atmosphere, and thematic resonance", "Constrains and pressures characters through plausible rules", "A few telling details imply a whole world economically"],
+      risksTitle: "Common risks",
+      risks: ["Info-dumps that halt the story to explain the world", "Generic settings with no specific, telling detail", "Worldbuilding for its own sake, untethered from character or plot", "Inconsistencies that break the reader's belief"],
+      examplesTitle: "Worldbuilding Examples",
+      examples: ["The Lord of the Rings \u2014 Tolkien (deep, layered secondary world)", "Beloved \u2014 Morrison (post-slavery Ohio rendered viscerally)", "The Name of the Rose \u2014 Eco (medieval abbey, dense and exact)", "Hills Like White Elephants \u2014 Hemingway (iceberg setting, all subtext)", "Dune \u2014 Herbert (ecology, religion, and politics of Arrakis)", "The Road \u2014 McCarthy (stripped, ash-gray apocalypse)", "One Hundred Years of Solitude \u2014 Garc\xEDa M\xE1rquez (Macondo)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el worldbuilding?",
+      intro: ["El worldbuilding es el arte de construir un lugar, un tiempo y una realidad social cre\xEDbles para una historia, y luego revelarlos en dosis controladas. La ambientaci\xF3n ancla al lector en detalles sensoriales mientras la exposici\xF3n queda subordinada a la escena."],
+      core: ["Anclaje sensorial: detalle concreto de vista, sonido, olor y textura", "El iceberg: el autor conoce casi todo el mundo, pero muestra poco", "Control de la exposici\xF3n: la informaci\xF3n se libera seg\xFAn la necesita la historia", "Coherencia interna: reglas y l\xF3gica que se sostienen de principio a fin", "La ambientaci\xF3n como personaje: un lugar que presiona a quienes lo habitan"],
+      coreNote: "Teor\xEDa del iceberg de Hemingway: lo omitido, si el escritor de verdad lo conoce, refuerza lo que queda en la p\xE1gina.",
+      narrativeFunction: ["Ancla al lector de forma concreta en un tiempo y un lugar", "Establece el \xE1nimo, la atm\xF3sfera y la resonancia tem\xE1tica", "Limita y presiona a los personajes mediante reglas veros\xEDmiles", "Unos pocos detalles reveladores sugieren todo un mundo con econom\xEDa"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Volcados de informaci\xF3n que detienen la historia para explicar el mundo", "Ambientaciones gen\xE9ricas sin un detalle espec\xEDfico y revelador", "Worldbuilding por s\xED mismo, desligado del personaje o la trama", "Incoherencias que rompen la credibilidad del lector"],
+      examplesTitle: "Ejemplos de worldbuilding",
+      examples: ["El Se\xF1or de los Anillos \u2014 Tolkien (mundo secundario hondo y estratificado)", "Beloved \u2014 Morrison (el Ohio de la posesclavitud plasmado con crudeza)", "El nombre de la rosa \u2014 Eco (abad\xEDa medieval, densa y exacta)", "Colinas como elefantes blancos \u2014 Hemingway (ambientaci\xF3n iceberg, puro subtexto)", "Dune \u2014 Herbert (ecolog\xEDa, religi\xF3n y pol\xEDtica de Arrakis)", "La carretera \u2014 McCarthy (apocalipsis desnudo, gris ceniza)", "Cien a\xF1os de soledad \u2014 Garc\xEDa M\xE1rquez (Macondo)"]
+    }
+  },
+  "Showing & Telling Balance": {
+    en: {
+      introTitle: "What is Showing and Telling?",
+      intro: ["Showing dramatizes through action, sensory detail, and dialogue so the reader infers; telling states information or emotion directly. Mature craft is not 'always show' but knowing precisely when each serves the story."],
+      core: ["Showing: rendering a moment so the reader experiences and concludes", "Telling: stating facts, transitions, or feeling efficiently and directly", "Tell to compress, orient, and pace; show to immerse and reveal", "The strongest emotional beats are usually shown, not announced", "Both modes work together; the question is proportion and placement"],
+      coreNote: "'Always show, never tell' is a half-truth; well-placed telling is the mark of a confident writer.",
+      narrativeFunction: ["Showing creates immersion and lets readers draw their own conclusions", "Telling covers ground quickly and keeps the story from bloating", "Telling can frame, interpret, or land a thematic point", "The interplay controls intimacy, pace, and where attention falls"],
+      risksTitle: "Common risks",
+      risks: ["Telling the reader an emotion the scene should let them feel", "Over-showing trivial transitions that telling would dispatch faster", "Redundancy: showing an action, then telling its meaning anyway", "Stage-direction prose that describes everything and reveals nothing"],
+      examplesTitle: "Showing and Telling Examples",
+      examples: ["Hills Like White Elephants \u2014 Hemingway (almost pure showing)", "The Remains of the Day \u2014 Ishiguro (telling that withholds the truth)", "A Christmas Carol \u2014 Dickens (confident authorial telling)", "Cathedral \u2014 Carver (showing through spare action and dialogue)", "Middlemarch \u2014 Eliot (interpretive telling by the narrator)", "Jesus' Son \u2014 Johnson (vivid showing, sudden tonal telling)", "The Things They Carried \u2014 O'Brien (showing and telling interwoven)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es mostrar y contar?",
+      intro: ["Mostrar dramatiza mediante la acci\xF3n, el detalle sensorial y el di\xE1logo para que el lector deduzca; contar enuncia la informaci\xF3n o la emoci\xF3n de forma directa. El oficio maduro no es \xABmostrar siempre\xBB, sino saber con precisi\xF3n cu\xE1ndo sirve cada uno a la historia."],
+      core: ["Mostrar: plasmar un momento para que el lector lo experimente y concluya", "Contar: enunciar hechos, transiciones o emociones con eficacia y de forma directa", "Contar para comprimir, orientar y dar ritmo; mostrar para sumergir y revelar", "Los momentos emocionales m\xE1s fuertes suelen mostrarse, no anunciarse", "Ambos modos trabajan juntos; la cuesti\xF3n es la proporci\xF3n y la ubicaci\xF3n"],
+      coreNote: "\xABMostrar siempre, nunca contar\xBB es una verdad a medias; un contar bien colocado es se\xF1al de un escritor con confianza.",
+      narrativeFunction: ["Mostrar crea inmersi\xF3n y deja que el lector saque sus propias conclusiones", "Contar cubre terreno r\xE1pido y evita que la historia se hinche", "Contar puede enmarcar, interpretar o rematar un punto tem\xE1tico", "El juego entre ambos controla la intimidad, el ritmo y d\xF3nde recae la atenci\xF3n"],
+      risksTitle: "Riesgos comunes",
+      risks: ["Contarle al lector una emoci\xF3n que la escena deber\xEDa dejarle sentir", "Mostrar en exceso transiciones triviales que contar despachar\xEDa antes", "Redundancia: mostrar una acci\xF3n y luego contar igualmente su significado", "Prosa de acotaci\xF3n que lo describe todo y no revela nada"],
+      examplesTitle: "Ejemplos de mostrar y contar",
+      examples: ["Colinas como elefantes blancos \u2014 Hemingway (casi puro mostrar)", "Los restos del d\xEDa \u2014 Ishiguro (un contar que oculta la verdad)", "Canci\xF3n de Navidad \u2014 Dickens (un contar autorial seguro)", "Catedral \u2014 Carver (mostrar mediante acci\xF3n y di\xE1logo austeros)", "Middlemarch \u2014 Eliot (un contar interpretativo del narrador)", "Hijo de Jes\xFAs \u2014 Johnson (mostrar v\xEDvido, contar de tono s\xFAbito)", "Las cosas que llevaban los hombres que lucharon \u2014 O'Brien (mostrar y contar entretejidos)"]
+    }
+  }
+};
+var EXTRA2_LABELS = {
+  en: {
+    "Drama": "Drama",
+    "Comedy": "Comedy",
+    "Action": "Action",
+    "Adventure": "Adventure",
+    "Thriller": "Thriller",
+    "Horror": "Horror",
+    "Science Fiction": "Science Fiction",
+    "Fantasy": "Fantasy",
+    "Romance": "Romance",
+    "Mystery & Crime": "Mystery & Crime",
+    "Historical Fiction": "Historical Fiction",
+    "Western": "Western",
+    "Point of View & Narrator": "Point of View & Narrator",
+    "Scene vs Summary": "Scene vs Summary",
+    "Psychic Distance & Interiority": "Psychic Distance & Interiority",
+    "Prose Rhythm & Sentence Variety": "Prose Rhythm & Sentence Variety",
+    "Worldbuilding & Setting": "Worldbuilding & Setting",
+    "Showing & Telling Balance": "Showing & Telling Balance"
+  },
+  es: {
+    "Drama": "Drama",
+    "Comedy": "Comedia",
+    "Action": "Acci\xF3n",
+    "Adventure": "Aventura",
+    "Thriller": "Thriller",
+    "Horror": "Terror",
+    "Science Fiction": "Ciencia ficci\xF3n",
+    "Fantasy": "Fantas\xEDa",
+    "Romance": "Romance",
+    "Mystery & Crime": "Misterio y crimen",
+    "Historical Fiction": "Ficci\xF3n hist\xF3rica",
+    "Western": "Western",
+    "Point of View & Narrator": "Punto de vista y narrador",
+    "Scene vs Summary": "Escena vs resumen",
+    "Psychic Distance & Interiority": "Distancia ps\xEDquica e interioridad",
+    "Prose Rhythm & Sentence Variety": "Ritmo de la prosa",
+    "Worldbuilding & Setting": "Worldbuilding y ambientaci\xF3n",
+    "Showing & Telling Balance": "Mostrar y contar"
+  }
+};
+
+// src/writer-tools/resourcesStructures.js
+var STRUCTURE_DATA = {
+  "The Hero's Journey": {
+    en: {
+      introTitle: "What is the Hero's Journey?",
+      intro: ["The Hero's Journey is a mythic structure that frames story as transformation: a character leaves the familiar, faces trials, dies symbolically, and returns changed. It's less a rigid formula than a map for meaning and growth."],
+      core: ["A movement from comfort to challenge to return", "External trials that force internal change", "Symbolic death and rebirth", "A concluding \u201Cgift\u201D brought back to the world"],
+      stepsTitle: "Steps (classic model)",
+      stepGroups: [
+        { title: "ACT I", items: [
+          { title: "Ordinary World", body: "Establish the Hero's baseline life, limitations, and unmet need.", icon: "earth" },
+          { title: "Call to Adventure", body: "A disruption offers a mission, opportunity, or threat that demands response.", icon: "phone-incoming" },
+          { title: "Refusal of the Call", body: "Fear, duty, or doubt causes hesitation; the Hero resists change.", icon: "phone-off" },
+          { title: "Meeting the Mentor", body: "Guidance appears: training, tools, wisdom, or encouragement.", icon: "graduation-cap" },
+          { title: "Crossing the First Threshold", body: "The Hero commits and enters the \u201Cspecial world,\u201D leaving the old life behind.", icon: "brick-wall" }
+        ] },
+        { title: "ACT II", items: [
+          { title: "Tests, Allies, Enemies", body: "The rules of the new world are learned; relationships and rivalries form.", icon: "line-squiggle" },
+          { title: "Approach to the Inmost Cave", body: "Preparation for the central crisis; tensions tighten and stakes clarify.", icon: "mountain" },
+          { title: "Ordeal", body: "A major confrontation with death, failure, or the deepest fear.", icon: "swords" },
+          { title: "Reward (Seizing the Sword)", body: "The Hero gains something: knowledge, power, object, love, or self-belief.", icon: "trophy" }
+        ] },
+        { title: "ACT III", items: [
+          { title: "The Road Back", body: "Consequences arrive; the Hero must return with the reward under pressure.", icon: "arrow-big-left" },
+          { title: "Resurrection", body: "A final test proves transformation. The Hero confronts the core flaw one last time.", icon: "user-round-plus" },
+          { title: "Return with the Elixir", body: "The Hero returns changed, bringing value to others: healing, truth, freedom, hope.", icon: "gem" }
+        ] }
+      ],
+      whyTitle: "Why this works",
+      why: "These steps externalize inner change: the world forces the Hero to become someone new.",
+      examplesTitle: "Hero's Journey Examples",
+      examples: ["Star Wars", "The Matrix", "The Lord of the Rings", "Moana", "Harry Potter"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Viaje del H\xE9roe?",
+      intro: ["El Viaje del H\xE9roe es una estructura m\xEDtica que plantea la historia como transformaci\xF3n: un personaje abandona lo familiar, afronta pruebas, muere simb\xF3licamente y regresa cambiado. M\xE1s que una f\xF3rmula r\xEDgida, es un mapa hacia el sentido y el crecimiento."],
+      core: ["Un movimiento de la comodidad al desaf\xEDo y al regreso", "Pruebas externas que fuerzan un cambio interno", "Muerte y renacimiento simb\xF3licos", "Un \u201Cregalo\u201D final que se trae de vuelta al mundo"],
+      stepsTitle: "Pasos (modelo cl\xE1sico)",
+      stepGroups: [
+        { title: "ACTO I", items: [
+          { title: "Mundo Ordinario", body: "Establece la vida de partida del H\xE9roe, sus limitaciones y su necesidad insatisfecha.", icon: "earth" },
+          { title: "Llamada a la Aventura", body: "Una alteraci\xF3n ofrece una misi\xF3n, oportunidad o amenaza que exige una respuesta.", icon: "phone-incoming" },
+          { title: "Rechazo de la Llamada", body: "El miedo, el deber o la duda provocan vacilaci\xF3n; el H\xE9roe se resiste al cambio.", icon: "phone-off" },
+          { title: "Encuentro con el Mentor", body: "Aparece una gu\xEDa: entrenamiento, herramientas, sabidur\xEDa o aliento.", icon: "graduation-cap" },
+          { title: "Cruce del Primer Umbral", body: "El H\xE9roe se compromete y entra en el \u201Cmundo especial\u201D, dejando atr\xE1s su vida anterior.", icon: "brick-wall" }
+        ] },
+        { title: "ACTO II", items: [
+          { title: "Pruebas, Aliados, Enemigos", body: "Se aprenden las reglas del nuevo mundo; se forman relaciones y rivalidades.", icon: "line-squiggle" },
+          { title: "Acercamiento a la Caverna M\xE1s Profunda", body: "Preparaci\xF3n para la crisis central; las tensiones aumentan y lo que est\xE1 en juego se aclara.", icon: "mountain" },
+          { title: "Calvario", body: "Una gran confrontaci\xF3n con la muerte, el fracaso o el miedo m\xE1s profundo.", icon: "swords" },
+          { title: "Recompensa (Apoderarse de la Espada)", body: "El H\xE9roe obtiene algo: conocimiento, poder, un objeto, amor o confianza en s\xED mismo.", icon: "trophy" }
+        ] },
+        { title: "ACTO III", items: [
+          { title: "El Camino de Regreso", body: "Llegan las consecuencias; el H\xE9roe debe regresar con la recompensa bajo presi\xF3n.", icon: "arrow-big-left" },
+          { title: "Resurrecci\xF3n", body: "Una prueba final demuestra la transformaci\xF3n. El H\xE9roe se enfrenta a su defecto esencial una \xFAltima vez.", icon: "user-round-plus" },
+          { title: "Regreso con el Elixir", body: "El H\xE9roe regresa cambiado, aportando valor a los dem\xE1s: sanaci\xF3n, verdad, libertad, esperanza.", icon: "gem" }
+        ] }
+      ],
+      whyTitle: "Por qu\xE9 funciona",
+      why: "Estos pasos externalizan el cambio interno: el mundo obliga al H\xE9roe a convertirse en alguien nuevo.",
+      examplesTitle: "Ejemplos del Viaje del H\xE9roe",
+      examples: ["La guerra de las galaxias", "Matrix", "El Se\xF1or de los Anillos", "Vaiana", "Harry Potter"]
+    }
+  },
+  "Dan Harmon Story Circle": {
+    en: {
+      introTitle: "What is the Story Circle?",
+      intro: ["The Story Circle compresses transformation into a repeatable loop: a character wants something, leaves comfort, pays a price, and returns changed. It's designed to be practical for episodes as well as features."],
+      core: ["Motivation-driven steps", "Clear cause-and-effect", "Repeatable structure (especially for TV)", "Emphasis on change and cost"],
+      stepsTitle: "Steps (8-step circle)",
+      steps: [
+        { title: "YOU (COMFORT)", body: "Establish the character's normal world and identity.", icon: "fish" },
+        { title: "NEED (DESIRE)", body: "The character wants or needs something that disrupts balance.", icon: "candy" },
+        { title: "GO (ENTER UNFAMILIAR)", body: "The character leaves comfort and enters a new situation.", icon: "log-in" },
+        { title: "SEARCH (ADAPT)", body: "The character explores the new world and tries strategies that may fail.", icon: "map" },
+        { title: "FIND (GET WHAT THEY WANTED)", body: "The character achieves the goal\u2014or seems to.", icon: "search-check" },
+        { title: "TAKE (PAY A PRICE)", body: "There is a cost: sacrifice, loss, compromise, or consequence.", icon: "hand-coins" },
+        { title: "RETURN (BACK TO FAMILIAR)", body: "The character returns to a version of their old world.", icon: "arrow-big-left" },
+        { title: "CHANGE (TRANSFORMED)", body: "The character is different: wiser, broken, empowered, humbled, etc.", icon: "user-pen" }
+      ],
+      examplesTitle: "Story Circle Examples",
+      examples: ["Episodic TV arcs", "Community", "Rick and Morty", "Character-centered short stories"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el C\xEDrculo de la Historia?",
+      intro: ["El C\xEDrculo de la Historia comprime la transformaci\xF3n en un bucle repetible: un personaje desea algo, abandona la comodidad, paga un precio y regresa cambiado. Est\xE1 dise\xF1ado para ser pr\xE1ctico tanto en episodios como en largometrajes."],
+      core: ["Pasos impulsados por la motivaci\xF3n", "Causa y efecto claros", "Estructura repetible (especialmente para televisi\xF3n)", "\xC9nfasis en el cambio y su coste"],
+      stepsTitle: "Pasos (c\xEDrculo de 8 pasos)",
+      steps: [
+        { title: "T\xDA (COMODIDAD)", body: "Establece el mundo normal y la identidad del personaje.", icon: "fish" },
+        { title: "NECESIDAD (DESEO)", body: "El personaje quiere o necesita algo que rompe el equilibrio.", icon: "candy" },
+        { title: "IR (ENTRAR EN LO DESCONOCIDO)", body: "El personaje abandona la comodidad y entra en una nueva situaci\xF3n.", icon: "log-in" },
+        { title: "BUSCAR (ADAPTARSE)", body: "El personaje explora el nuevo mundo y prueba estrategias que pueden fracasar.", icon: "map" },
+        { title: "ENCONTRAR (CONSEGUIR LO QUE QUER\xCDA)", body: "El personaje logra el objetivo, o eso parece.", icon: "search-check" },
+        { title: "TOMAR (PAGAR UN PRECIO)", body: "Hay un coste: sacrificio, p\xE9rdida, concesi\xF3n o consecuencia.", icon: "hand-coins" },
+        { title: "REGRESAR (VOLVER A LO FAMILIAR)", body: "El personaje regresa a una versi\xF3n de su mundo anterior.", icon: "arrow-big-left" },
+        { title: "CAMBIAR (TRANSFORMADO)", body: "El personaje es distinto: m\xE1s sabio, roto, empoderado, humillado, etc.", icon: "user-pen" }
+      ],
+      examplesTitle: "Ejemplos del C\xEDrculo de la Historia",
+      examples: ["Arcos de televisi\xF3n epis\xF3dica", "Community", "Rick and Morty", "Relatos cortos centrados en el personaje"]
+    }
+  },
+  "Three Act Structure": {
+    en: {
+      introTitle: "What is the Three Act Structure?",
+      intro: ["A story divided into Setup, Confrontation, and Resolution. It's the most common modern narrative skeleton because it aligns with audience attention and escalating stakes."],
+      stepsTitle: "Steps (typical beats)",
+      numberedSteps: true,
+      steps: ["ACT I \u2014 Setup", "1. Opening / Status Quo \u2014 Introduce the protagonist, their world, and the core problem-space.", "2. Inciting Incident \u2014 A disruption creates a new problem or opportunity.", "3. Debate / Refusal \u2014 The protagonist hesitates, resists, or explores alternatives.", "4. Act I Break (Commitment) \u2014 The protagonist commits and can't go back.", "ACT II \u2014 Confrontation", "5. Rising Complications \u2014 Obstacles escalate; stakes increase; plans fail.", "6. Midpoint Shift \u2014 A major reveal or reversal changes the story's direction and intensity.", "7. Bad Guys Close In / Pressure Peaks \u2014 Consequences compound; resources thin; relationships strain.", "8. All Is Lost \u2014 The lowest point; apparent defeat or devastating cost.", "9. Dark Night of the Soul \u2014 Reflection and decision: who will the protagonist become?", "ACT III \u2014 Resolution", "10. Act III Break (New plan) \u2014 The protagonist acts with new clarity, courage, or strategy.", "11. Climax \u2014 The decisive confrontation that resolves the central conflict.", "12. Denouement \u2014 Aftermath: new equilibrium; consequences; thematic closure."],
+      examplesTitle: "Three Act Examples",
+      examples: ["Most Hollywood films", "Contemporary commercial novels", "Studio-driven storytelling"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Estructura en Tres Actos?",
+      intro: ["Una historia dividida en Planteamiento, Confrontaci\xF3n y Resoluci\xF3n. Es el esqueleto narrativo moderno m\xE1s com\xFAn porque se ajusta a la atenci\xF3n del p\xFAblico y a una tensi\xF3n creciente."],
+      stepsTitle: "Pasos (beats t\xEDpicos)",
+      numberedSteps: true,
+      steps: ["ACTO I \u2014 Planteamiento", "1. Apertura / Statu Quo \u2014 Presenta al protagonista, su mundo y el espacio del conflicto central.", "2. Incidente Incitador \u2014 Una alteraci\xF3n crea un nuevo problema u oportunidad.", "3. Debate / Rechazo \u2014 El protagonista vacila, se resiste o explora alternativas.", "4. Quiebre del Acto I (Compromiso) \u2014 El protagonista se compromete y ya no puede volver atr\xE1s.", "ACTO II \u2014 Confrontaci\xF3n", "5. Complicaciones Crecientes \u2014 Los obst\xE1culos se intensifican; sube lo que est\xE1 en juego; los planes fracasan.", "6. Giro del Punto Medio \u2014 Una gran revelaci\xF3n o vuelco cambia la direcci\xF3n e intensidad de la historia.", "7. Los Villanos se Acercan / La Presi\xF3n Alcanza su Tope \u2014 Las consecuencias se acumulan; los recursos escasean; las relaciones se tensan.", "8. Todo Est\xE1 Perdido \u2014 El punto m\xE1s bajo; derrota aparente o coste devastador.", "9. Noche Oscura del Alma \u2014 Reflexi\xF3n y decisi\xF3n: \xBFen qui\xE9n se convertir\xE1 el protagonista?", "ACTO III \u2014 Resoluci\xF3n", "10. Quiebre del Acto III (Nuevo plan) \u2014 El protagonista act\xFAa con nueva claridad, valor o estrategia.", "11. Cl\xEDmax \u2014 La confrontaci\xF3n decisiva que resuelve el conflicto central.", "12. Desenlace \u2014 Las secuelas: nuevo equilibrio; consecuencias; cierre tem\xE1tico."],
+      examplesTitle: "Ejemplos de Tres Actos",
+      examples: ["La mayor\xEDa de las pel\xEDculas de Hollywood", "Novelas comerciales contempor\xE1neas", "Narrativa dirigida por estudios"]
+    }
+  },
+  "Freytag's Pyramid": {
+    en: {
+      introTitle: "What is Freytag's Pyramid?",
+      intro: ["A classical five-part model of dramatic tension, often associated with tragedy. It formalizes a rise to climax followed by a decline into resolution."],
+      stepsTitle: "Steps (5-part model)",
+      steps: ["1. Exposition \u2014 Introduce setting, characters, and the initial balance.", "2. Rising Action \u2014 Complications build; conflict intensifies; choices narrow.", "3. Climax \u2014 The turning point\u2014the peak tension where fate changes direction.", "4. Falling Action \u2014 Consequences unfold; momentum turns toward inevitable outcome.", "5. Denouement / Catastrophe \u2014 Final resolution, often with moral or tragic closure."],
+      examplesTitle: "Freytag Examples",
+      examples: ["Classical tragedies", "Shakespearean drama", "Traditional stage plays"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la Pir\xE1mide de Freytag?",
+      intro: ["Un modelo cl\xE1sico de tensi\xF3n dram\xE1tica en cinco partes, a menudo asociado con la tragedia. Formaliza un ascenso hacia el cl\xEDmax seguido de un descenso hacia la resoluci\xF3n."],
+      stepsTitle: "Pasos (modelo de 5 partes)",
+      steps: ["1. Exposici\xF3n \u2014 Presenta el escenario, los personajes y el equilibrio inicial.", "2. Acci\xF3n Creciente \u2014 Se acumulan complicaciones; el conflicto se intensifica; las opciones se reducen.", "3. Cl\xEDmax \u2014 El punto de inflexi\xF3n: la tensi\xF3n m\xE1xima donde el destino cambia de rumbo.", "4. Acci\xF3n Descendente \u2014 Se despliegan las consecuencias; el impulso se dirige hacia el desenlace inevitable.", "5. Desenlace / Cat\xE1strofe \u2014 Resoluci\xF3n final, a menudo con un cierre moral o tr\xE1gico."],
+      examplesTitle: "Ejemplos de Freytag",
+      examples: ["Tragedias cl\xE1sicas", "Drama shakespeariano", "Obras de teatro tradicionales"]
+    }
+  },
+  "Fichtean Curve": {
+    en: {
+      introTitle: "What is the Fichtean Curve?",
+      intro: ["A structure built from a chain of escalating crises with minimal exposition. The story begins close to conflict and continues increasing pressure until climax."],
+      stepsTitle: "Steps (crisis chain)",
+      steps: ["1. Immediate Hook / First Crisis \u2014 Start near a problem, not far before it.", "2. Crisis Escalation 1 \u2014 The protagonist responds; the response creates new complications.", "3. Crisis Escalation 2 \u2014 Stakes rise; setbacks compound; options shrink.", "4. Crisis Escalation 3 \u2014 Pressure intensifies; emotional and practical costs deepen.", "5. Major Crisis / Low Point \u2014 A near-defeat moment that forces a decisive shift.", "6. Climax \u2014 The protagonist commits fully and confronts the core conflict.", "7. Short Resolution \u2014 Quick wrap-up; consequences and new stability."],
+      examplesTitle: "Fichtean Curve Examples",
+      examples: ["Thrillers", "Page-turner genre fiction", "Serialized storytelling"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la curva fichteana?",
+      intro: ["Una estructura construida a partir de una cadena de crisis cada vez mayores con una exposici\xF3n m\xEDnima. La historia comienza cerca del conflicto y sigue aumentando la presi\xF3n hasta el cl\xEDmax."],
+      stepsTitle: "Pasos (cadena de crisis)",
+      steps: ["1. Gancho inmediato / Primera crisis \u2014 Empieza cerca de un problema, no mucho antes de \xE9l.", "2. Escalada de crisis 1 \u2014 El protagonista responde; la respuesta genera nuevas complicaciones.", "3. Escalada de crisis 2 \u2014 Lo que est\xE1 en juego aumenta; los reveses se acumulan; las opciones se reducen.", "4. Escalada de crisis 3 \u2014 La presi\xF3n se intensifica; los costes emocionales y pr\xE1cticos se profundizan.", "5. Gran crisis / Punto m\xE1s bajo \u2014 Un momento de casi derrota que obliga a un cambio decisivo.", "6. Cl\xEDmax \u2014 El protagonista se compromete por completo y se enfrenta al conflicto central.", "7. Resoluci\xF3n breve \u2014 Cierre r\xE1pido; consecuencias y nueva estabilidad."],
+      examplesTitle: "Ejemplos de la curva fichteana",
+      examples: ["Thrillers", "Ficci\xF3n de g\xE9nero absorbente", "Narrativa serializada"]
+    }
+  },
+  "Kish\u014Dtenketsu": {
+    en: {
+      introTitle: "What is Kish\u014Dtenketsu?",
+      intro: ["Kish\u014Dtenketsu is a four-part structure that emphasizes development and contrast rather than conflict. It's common in East Asian storytelling and works well for narratives driven by discovery, theme, or perspective."],
+      stepsTitle: "Steps (4-part model)",
+      steps: ["1. Ki (Introduction) \u2014 Establish the situation, characters, and core idea.", "2. Sh\u014D (Development) \u2014 Expand the situation; deepen detail and context without major disruption.", "3. Ten (Turn / Twist) \u2014 Introduce a surprising contrast or shift: a new angle, reveal, or reframing event.", "4. Ketsu (Conclusion) \u2014 Synthesize: show how the contrast changes meaning; resolve by integration rather than victory."],
+      examplesTitle: "Kish\u014Dtenketsu Examples",
+      examples: ["Many slice-of-life stories", "Certain anime and manga arcs", "Essays or thematic short fiction", "Some puzzle-like narratives"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el kish\u014Dtenketsu?",
+      intro: ["El kish\u014Dtenketsu es una estructura de cuatro partes que enfatiza el desarrollo y el contraste en lugar del conflicto. Es habitual en la narrativa de Asia Oriental y funciona bien para relatos impulsados por el descubrimiento, el tema o la perspectiva."],
+      stepsTitle: "Pasos (modelo de 4 partes)",
+      steps: ["1. Ki (Introducci\xF3n) \u2014 Establece la situaci\xF3n, los personajes y la idea central.", "2. Sh\u014D (Desarrollo) \u2014 Ampl\xEDa la situaci\xF3n; profundiza el detalle y el contexto sin una gran disrupci\xF3n.", "3. Ten (Giro / Vuelta de tuerca) \u2014 Introduce un contraste o cambio sorprendente: un nuevo \xE1ngulo, una revelaci\xF3n o un acontecimiento que replantea todo.", "4. Ketsu (Conclusi\xF3n) \u2014 Sintetiza: muestra c\xF3mo el contraste cambia el significado; se resuelve por integraci\xF3n en lugar de por victoria."],
+      examplesTitle: "Ejemplos de kish\u014Dtenketsu",
+      examples: ["Muchas historias costumbristas (slice of life)", "Ciertos arcos de anime y manga", "Ensayos o relatos breves tem\xE1ticos", "Algunas narrativas tipo rompecabezas"]
+    }
+  },
+  "Save the Cat": {
+    en: {
+      introTitle: "What is Save the Cat?",
+      intro: ["Save the Cat is a commercial beat sheet designed to maximize audience engagement. It focuses on emotional timing, clarity, and likeability, especially for film and genre fiction."],
+      core: ["Strong emotional beats", "Clear pacing", "Audience empathy", "Market-tested structure"],
+      stepsTitle: "Steps (15-beat model)",
+      steps: ["1. Opening Image \u2014 A snapshot of the protagonist's world before change.", "2. Theme Stated \u2014 A line or moment hints at the story's central lesson.", "3. Setup \u2014 Introduce characters, flaws, relationships, and stakes.", "4. Catalyst \u2014 The inciting incident that disrupts normal life.", "5. Debate \u2014 The protagonist hesitates and weighs options.", "6. Break into Act II \u2014 Commitment to the journey.", "7. B Story \u2014 A secondary plot, often emotional or relational.", "8. Fun and Games \u2014 The \u201Cpromise of the premise\u201D; the story delivers on genre.", "9. Midpoint \u2014 A major reversal: false victory or false defeat.", "10. Bad Guys Close In \u2014 Pressure increases; plans unravel.", "11. All Is Lost \u2014 Apparent defeat; emotional or literal low point.", "12. Dark Night of the Soul \u2014 Reflection and internal reckoning.", "13. Break into Act III \u2014 New insight leads to decisive action.", "14. Finale \u2014 The protagonist applies what they've learned to win or lose meaningfully.", "15. Final Image \u2014 A mirror of the opening image, showing change."],
+      examplesTitle: "Save the Cat Examples",
+      examples: ["Most studio films", "Romantic comedies", "High-concept genre movies", "Animated features"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es Save the Cat?",
+      intro: ["Save the Cat es una hoja de beats comercial dise\xF1ada para maximizar la conexi\xF3n con el p\xFAblico. Se centra en el ritmo emocional, la claridad y la simpat\xEDa, especialmente para el cine y la ficci\xF3n de g\xE9nero."],
+      core: ["Beats emocionales potentes", "Ritmo claro", "Empat\xEDa del p\xFAblico", "Estructura probada en el mercado"],
+      stepsTitle: "Pasos (modelo de 15 beats)",
+      steps: ["1. Imagen inicial \u2014 Una instant\xE1nea del mundo del protagonista antes del cambio.", "2. Tema planteado \u2014 Una frase o momento insin\xFAa la lecci\xF3n central de la historia.", "3. Planteamiento \u2014 Presenta a los personajes, sus defectos, sus relaciones y lo que est\xE1 en juego.", "4. Catalizador \u2014 El incidente incitador que altera la vida normal.", "5. Debate \u2014 El protagonista duda y sopesa sus opciones.", "6. Entrada en el segundo acto \u2014 Compromiso con el viaje.", "7. Historia B \u2014 Una trama secundaria, a menudo emocional o relacional.", "8. Diversi\xF3n y juegos \u2014 La \xABpromesa de la premisa\xBB; la historia cumple con su g\xE9nero.", "9. Punto medio \u2014 Un gran giro: falsa victoria o falsa derrota.", "10. Los malos se acercan \u2014 La presi\xF3n aumenta; los planes se desmoronan.", "11. Todo est\xE1 perdido \u2014 Derrota aparente; punto m\xE1s bajo emocional o literal.", "12. Noche oscura del alma \u2014 Reflexi\xF3n y ajuste de cuentas interno.", "13. Entrada en el tercer acto \u2014 Una nueva comprensi\xF3n conduce a la acci\xF3n decisiva.", "14. Desenlace \u2014 El protagonista aplica lo aprendido para ganar o perder de forma significativa.", "15. Imagen final \u2014 Un reflejo de la imagen inicial que muestra el cambio."],
+      examplesTitle: "Ejemplos de Save the Cat",
+      examples: ["La mayor\xEDa de las pel\xEDculas de estudio", "Comedias rom\xE1nticas", "Pel\xEDculas de g\xE9nero de alto concepto", "Largometrajes de animaci\xF3n"]
+    }
+  },
+  "Seven Point Structure": {
+    en: {
+      introTitle: "What is the Seven Point Structure?",
+      intro: ["A clean, flexible structure focused on cause-and-effect turning points. It emphasizes clarity and momentum."],
+      core: ["Fewer beats, higher impact", "Clear reversals", "Strong midpoint logic"],
+      stepsTitle: "Steps (7-point model)",
+      numberedSteps: true,
+      steps: ["1. Hook \u2014 Introduce the protagonist and the central problem.", "2. Plot Turn 1 \u2014 An event pushes the protagonist into action.", "3. Pinch Point 1 \u2014 Pressure reveals the antagonist's power.", "4. Midpoint \u2014 The protagonist shifts from reactive to proactive.", "5. Pinch Point 2 \u2014 Stakes intensify; consequences loom.", "6. Plot Turn 2 \u2014 Final commitment toward resolution.", "7. Resolution \u2014 Conflict concludes; new status quo established."],
+      examplesTitle: "Seven Point Examples",
+      examples: ["Fantasy and sci-fi novels", "Plot-driven fiction", "Serialized narratives"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la estructura de siete puntos?",
+      intro: ["Una estructura limpia y flexible centrada en los puntos de inflexi\xF3n de causa y efecto. Enfatiza la claridad y el impulso."],
+      core: ["Menos beats, mayor impacto", "Giros claros", "L\xF3gica de punto medio s\xF3lida"],
+      stepsTitle: "Pasos (modelo de 7 puntos)",
+      numberedSteps: true,
+      steps: ["1. Gancho \u2014 Presenta al protagonista y el problema central.", "2. Giro de trama 1 \u2014 Un acontecimiento empuja al protagonista a la acci\xF3n.", "3. Punto de tensi\xF3n 1 \u2014 La presi\xF3n revela el poder del antagonista.", "4. Punto medio \u2014 El protagonista pasa de reactivo a proactivo.", "5. Punto de tensi\xF3n 2 \u2014 Lo que est\xE1 en juego se intensifica; las consecuencias se ciernen.", "6. Giro de trama 2 \u2014 Compromiso final hacia la resoluci\xF3n.", "7. Resoluci\xF3n \u2014 El conflicto concluye; se establece un nuevo statu quo."],
+      examplesTitle: "Ejemplos de siete puntos",
+      examples: ["Novelas de fantas\xEDa y ciencia ficci\xF3n", "Ficci\xF3n impulsada por la trama", "Narrativas serializadas"]
+    }
+  },
+  "Pulp Formula": {
+    en: {
+      introTitle: "What is the Pulp Formula?",
+      intro: ["A fast-paced structure designed for entertainment, clarity, and momentum. It prioritizes action, stakes, and accessibility over thematic subtlety."],
+      core: ["Immediate engagement", "Clear heroes and villains", "Escalating danger", "High momentum"],
+      stepsTitle: "Steps (common pulp rhythm)",
+      steps: ["1. Immediate Hook \u2014 Start with action or danger.", "2. Clear Goal \u2014 The protagonist knows what must be done.", "3. Obstacle Chain \u2014 Continuous challenges and reversals.", "4. Escalation \u2014 Stakes increase rapidly.", "5. Cliffhanger or Crisis \u2014 A major setback or revelation.", "6. Final Confrontation \u2014 Direct clash with the antagonist.", "7. Swift Resolution \u2014 Loose ends tied quickly."],
+      examplesTitle: "Pulp Examples",
+      examples: ["Adventure serials", "Noir fiction", "Action thrillers", "Comic storytelling"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la F\xF3rmula Pulp?",
+      intro: ["Una estructura de ritmo r\xE1pido dise\xF1ada para el entretenimiento, la claridad y el impulso. Prioriza la acci\xF3n, lo que est\xE1 en juego y la accesibilidad por encima de la sutileza tem\xE1tica."],
+      core: ["Enganche inmediato", "H\xE9roes y villanos claros", "Peligro en aumento", "Gran impulso"],
+      stepsTitle: "Pasos (ritmo pulp habitual)",
+      steps: ["1. Gancho inmediato \u2014 Empieza con acci\xF3n o peligro.", "2. Objetivo claro \u2014 El protagonista sabe lo que hay que hacer.", "3. Cadena de obst\xE1culos \u2014 Desaf\xEDos y reveses continuos.", "4. Escalada \u2014 Lo que est\xE1 en juego aumenta r\xE1pidamente.", "5. Suspense o crisis \u2014 Un rev\xE9s o revelaci\xF3n importante.", "6. Confrontaci\xF3n final \u2014 Choque directo con el antagonista.", "7. Resoluci\xF3n r\xE1pida \u2014 Los cabos sueltos se atan con celeridad."],
+      examplesTitle: "Ejemplos pulp",
+      examples: ["Seriales de aventuras", "Ficci\xF3n noir", "Thrillers de acci\xF3n", "Narrativa de c\xF3mic"]
+    }
+  },
+  "McKee Story paradigm": {
+    en: {
+      introTitle: "What is the McKee Paradigm?",
+      intro: ["Robert McKee's model emphasizes story as a sequence of value changes driven by conflict and choice. It focuses on scene design and narrative causality."],
+      core: ["Value shifts", "Progressive complications", "Scene-level causality", "Strong climax logic"],
+      stepsTitle: "Structural principles",
+      steps: ["1. Inciting Incident \u2014 A radical change disrupts balance.", "2. Progressive Complications \u2014 Each action leads to greater difficulty.", "3. Crisis \u2014 A decision between irreconcilable values.", "4. Climax \u2014 Action that resolves the crisis.", "5. Resolution \u2014 The world stabilizes in a new form."],
+      examplesTitle: "McKee Examples",
+      examples: ["Prestige drama", "Character-driven films", "Serious literary narratives"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el paradigma de McKee?",
+      intro: ["El modelo de Robert McKee concibe la historia como una secuencia de cambios de valor impulsados por el conflicto y la elecci\xF3n. Se centra en el dise\xF1o de escenas y la causalidad narrativa."],
+      core: ["Cambios de valor", "Complicaciones progresivas", "Causalidad a nivel de escena", "L\xF3gica s\xF3lida del cl\xEDmax"],
+      stepsTitle: "Principios estructurales",
+      steps: ["1. Incidente incitante \u2014 Un cambio radical altera el equilibrio.", "2. Complicaciones progresivas \u2014 Cada acci\xF3n conduce a una mayor dificultad.", "3. Crisis \u2014 Una decisi\xF3n entre valores irreconciliables.", "4. Cl\xEDmax \u2014 La acci\xF3n que resuelve la crisis.", "5. Resoluci\xF3n \u2014 El mundo se estabiliza en una nueva forma."],
+      examplesTitle: "Ejemplos de McKee",
+      examples: ["Drama de prestigio", "Pel\xEDculas centradas en el personaje", "Narrativas literarias serias"]
+    }
+  },
+  "Into the Woods structure": {
+    en: {
+      introTitle: "What is the Into the Woods structure?",
+      intro: ["John Yorke's model views story as a five-act, fractal pattern: order, disorder, repair, collapse, and transformation. It emphasizes repetition at multiple scales."],
+      core: ["Five-part rhythm", "Fractal repetition", "Moral consequence", "Thematic depth"],
+      stepsTitle: "Steps (5-act pattern)",
+      steps: ["1. Order \u2014 Establish a flawed equilibrium.", "2. Disruption \u2014 A desire or problem breaks order.", "3. Attempted Repair \u2014 Characters try to fix things.", "4. Collapse \u2014 Efforts fail; chaos peaks.", "5. New Order \u2014 A transformed equilibrium emerges."],
+      examplesTitle: "Into the Woods Examples",
+      examples: ["British television drama", "Prestige serialized storytelling", "Thematic narratives"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la estructura de Into the Woods?",
+      intro: ["El modelo de John Yorke entiende la historia como un patr\xF3n fractal de cinco actos: orden, desorden, reparaci\xF3n, colapso y transformaci\xF3n. Hace hincapi\xE9 en la repetici\xF3n a m\xFAltiples escalas."],
+      core: ["Ritmo en cinco partes", "Repetici\xF3n fractal", "Consecuencia moral", "Profundidad tem\xE1tica"],
+      stepsTitle: "Pasos (patr\xF3n de 5 actos)",
+      steps: ["1. Orden \u2014 Establecer un equilibrio imperfecto.", "2. Disrupci\xF3n \u2014 Un deseo o problema rompe el orden.", "3. Intento de reparaci\xF3n \u2014 Los personajes intentan arreglar las cosas.", "4. Colapso \u2014 Los esfuerzos fracasan; el caos alcanza su punto m\xE1ximo.", "5. Nuevo orden \u2014 Surge un equilibrio transformado."],
+      examplesTitle: "Ejemplos de Into the Woods",
+      examples: ["Drama televisivo brit\xE1nico", "Narrativa seriada de prestigio", "Narrativas tem\xE1ticas"]
+    }
+  },
+  "Frame Narrative": {
+    en: {
+      introTitle: "What is a Frame Narrative?",
+      intro: ["A story within a story. An outer narrative contextualizes or reframes an inner narrative."],
+      core: ["Nested storytelling", "Perspective mediation", "Interpretive distance"],
+      stepsTitle: "Structural layers",
+      steps: ["1. Outer Frame \u2014 Establish the narrator or context.", "2. Inner Story \u2014 The primary narrative is told.", "3. Interruption or Commentary \u2014 The frame reacts or reframes meaning.", "4. Return to Frame \u2014 The story closes with new understanding."],
+      examplesTitle: "Frame Narrative Examples",
+      examples: ["Frankenstein", "The Princess Bride", "Heart of Darkness", "Arabian Nights"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es una narrativa marco?",
+      intro: ["Una historia dentro de otra historia. Una narrativa externa contextualiza o reencuadra una narrativa interna."],
+      core: ["Narraci\xF3n anidada", "Mediaci\xF3n de la perspectiva", "Distancia interpretativa"],
+      stepsTitle: "Capas estructurales",
+      steps: ["1. Marco externo \u2014 Establecer al narrador o el contexto.", "2. Historia interna \u2014 Se cuenta la narrativa principal.", "3. Interrupci\xF3n o comentario \u2014 El marco reacciona o reencuadra el significado.", "4. Regreso al marco \u2014 La historia se cierra con una nueva comprensi\xF3n."],
+      examplesTitle: "Ejemplos de narrativa marco",
+      examples: ["Frankenstein", "La princesa prometida", "El coraz\xF3n de las tinieblas", "Las mil y una noches"]
+    }
+  },
+  "Nonlinear Structure": {
+    en: {
+      introTitle: "What is a Nonlinear Structure?",
+      intro: ["A narrative told out of chronological order. Meaning emerges from juxtaposition rather than sequence."],
+      core: ["Fragmented timeline", "Pattern recognition", "Active audience participation"],
+      stepsTitle: "Common nonlinear patterns",
+      steps: ["Reverse chronology", "Interwoven timelines", "Fragmented memory", "Circular narratives"],
+      examplesTitle: "Nonlinear Examples",
+      examples: ["Memento", "Pulp Fiction", "Westworld", "Slaughterhouse-Five"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es una estructura no lineal?",
+      intro: ["Una narraci\xF3n contada fuera del orden cronol\xF3gico. El significado surge de la yuxtaposici\xF3n m\xE1s que de la secuencia."],
+      core: ["L\xEDnea temporal fragmentada", "Reconocimiento de patrones", "Participaci\xF3n activa del p\xFAblico"],
+      stepsTitle: "Patrones no lineales comunes",
+      steps: ["Cronolog\xEDa inversa", "L\xEDneas temporales entrelazadas", "Memoria fragmentada", "Narrativas circulares"],
+      examplesTitle: "Ejemplos no lineales",
+      examples: ["Memento", "Pulp Fiction", "Westworld", "Matadero cinco"]
+    }
+  },
+  "Rashomon Structure": {
+    en: {
+      introTitle: "What is a Rashomon Structure?",
+      intro: ["A narrative that presents multiple, conflicting perspectives of the same event, emphasizing subjectivity and truth ambiguity."],
+      core: ["Multiple narrators", "Contradictory accounts", "Truth as unstable"],
+      stepsTitle: "Structural pattern",
+      steps: ["1. Single event", "2. Multiple retellings", "3. Contradictions revealed", "4. Ambiguity preserved"],
+      examplesTitle: "Rashomon Examples",
+      examples: ["Rashomon", "Hero", "The Affair", "Gone Girl (partial)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es una estructura Rashomon?",
+      intro: ["Una narraci\xF3n que presenta m\xFAltiples perspectivas contradictorias del mismo suceso, enfatizando la subjetividad y la ambig\xFCedad de la verdad."],
+      core: ["M\xFAltiples narradores", "Relatos contradictorios", "La verdad como algo inestable"],
+      stepsTitle: "Patr\xF3n estructural",
+      steps: ["1. Un solo suceso", "2. M\xFAltiples versiones", "3. Contradicciones reveladas", "4. Ambig\xFCedad preservada"],
+      examplesTitle: "Ejemplos de Rashomon",
+      examples: ["Rashomon", "Hero", "The Affair", "Perdida (parcial)"]
+    }
+  },
+  "In Medias Res": {
+    en: {
+      introTitle: "What is In Medias Res?",
+      intro: ["A narrative that begins in the middle of action, then later provides context for how events reached that point."],
+      core: ["Immediate engagement", "Delayed exposition", "Momentum-first storytelling"],
+      stepsTitle: "Structural pattern",
+      steps: ["1. Mid-action opening", "2. Audience confusion", "3. Gradual backfill", "4. Recontextualization", "5. Continuation to resolution"],
+      examplesTitle: "In Medias Res Examples",
+      examples: ["The Odyssey", "Breaking Bad (cold opens)", "Mad Max: Fury Road", "Fight Club"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es In Medias Res?",
+      intro: ["Una narraci\xF3n que comienza en mitad de la acci\xF3n y, m\xE1s adelante, ofrece el contexto de c\xF3mo los acontecimientos llegaron a ese punto."],
+      core: ["Implicaci\xF3n inmediata", "Exposici\xF3n diferida", "Narraci\xF3n que prioriza el impulso"],
+      stepsTitle: "Patr\xF3n estructural",
+      steps: ["1. Apertura en plena acci\xF3n", "2. Confusi\xF3n del p\xFAblico", "3. Relleno gradual del contexto", "4. Recontextualizaci\xF3n", "5. Continuaci\xF3n hasta la resoluci\xF3n"],
+      examplesTitle: "Ejemplos de In Medias Res",
+      examples: ["La Odisea", "Breaking Bad (aperturas en fr\xEDo)", "Mad Max: Furia en la carretera", "El club de la lucha"]
+    }
+  },
+  "Eight-Sequence Structure": {
+    en: {
+      introTitle: "What is the Eight-Sequence Structure?",
+      intro: ["A feature film built as eight sequences of roughly 10-15 minutes, each a self-contained mini-movie with its own tension, goal, and resolution.", "Developed by Frank Daniel and codified by Paul Joseph Gulino, it maps onto the three acts: Act 1 (sequences 1-2), Act 2 (sequences 3-6), Act 3 (sequences 7-8)."],
+      coreHeading: "Core characteristics",
+      core: ["Manageable, reel-sized units", "Each sequence has its own dramatic arc", "Escalating tension across the whole"],
+      stepsTitle: "Steps (8 sequences)",
+      steps: ["1. Sequence 1 (Status Quo & Inciting Incident) \u2014 Establish the world, the protagonist, and the disturbance that sets the story in motion.", "2. Sequence 2 (Predicament & Lock-In) \u2014 Define the central tension and commit the protagonist to a course of action; close Act 1.", "3. Sequence 3 (First Obstacle & Raising Stakes) \u2014 The protagonist's initial attempt at the goal meets early resistance.", "4. Sequence 4 (First Culmination & Midpoint) \u2014 A major reversal or revelation recontextualizes the goal and pushes toward the midpoint.", "5. Sequence 5 (Subplot & Rising Action) \u2014 Complications deepen as subplots intertwine and pressure mounts.", "6. Sequence 6 (Main Culmination & Lowest Point) \u2014 The strongest opposition forces a crisis; the protagonist hits the all-is-lost moment, ending Act 2.", "7. Sequence 7 (New Tension & Final Push) \u2014 Armed with new understanding, the protagonist regroups for the final confrontation.", "8. Sequence 8 (Resolution) \u2014 The climax resolves the central tension and a new equilibrium is established."],
+      whyTitle: "Why this works",
+      why: "Breaking a feature into reel-sized chunks keeps each stretch dramatically active, preventing the sagging second act by giving every sequence its own goal, conflict, and payoff.",
+      examplesTitle: "Eight-Sequence Examples",
+      examples: ["Casablanca", "Toy Story", "Die Hard", "The Silence of the Lambs", "North by Northwest"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la estructura de ocho secuencias?",
+      intro: ["Un largometraje construido como ocho secuencias de aproximadamente 10-15 minutos, cada una una minipel\xEDcula aut\xF3noma con su propia tensi\xF3n, objetivo y resoluci\xF3n.", "Desarrollada por Frank Daniel y codificada por Paul Joseph Gulino, se corresponde con los tres actos: Acto 1 (secuencias 1-2), Acto 2 (secuencias 3-6), Acto 3 (secuencias 7-8)."],
+      coreHeading: "Caracter\xEDsticas principales",
+      core: ["Unidades manejables, del tama\xF1o de un rollo", "Cada secuencia tiene su propio arco dram\xE1tico", "Tensi\xF3n creciente a lo largo del conjunto"],
+      stepsTitle: "Pasos (8 secuencias)",
+      steps: ["1. Secuencia 1 (Statu quo e incidente incitador) \u2014 Establece el mundo, el protagonista y la perturbaci\xF3n que pone en marcha la historia.", "2. Secuencia 2 (Aprieto y compromiso) \u2014 Define la tensi\xF3n central y compromete al protagonista con un curso de acci\xF3n; cierra el Acto 1.", "3. Secuencia 3 (Primer obst\xE1culo y aumento de lo que est\xE1 en juego) \u2014 El primer intento del protagonista por alcanzar el objetivo encuentra una resistencia inicial.", "4. Secuencia 4 (Primera culminaci\xF3n y punto medio) \u2014 Un giro o revelaci\xF3n importante recontextualiza el objetivo y empuja hacia el punto medio.", "5. Secuencia 5 (Subtrama y acci\xF3n ascendente) \u2014 Las complicaciones se profundizan a medida que las subtramas se entrelazan y aumenta la presi\xF3n.", "6. Secuencia 6 (Culminaci\xF3n principal y punto m\xE1s bajo) \u2014 La oposici\xF3n m\xE1s fuerte provoca una crisis; el protagonista llega al momento en que todo est\xE1 perdido, cerrando el Acto 2.", "7. Secuencia 7 (Nueva tensi\xF3n y empuje final) \u2014 Con una nueva comprensi\xF3n, el protagonista se reagrupa para la confrontaci\xF3n final.", "8. Secuencia 8 (Resoluci\xF3n) \u2014 El cl\xEDmax resuelve la tensi\xF3n central y se establece un nuevo equilibrio."],
+      whyTitle: "Por qu\xE9 funciona",
+      why: "Dividir un largometraje en fragmentos del tama\xF1o de un rollo mantiene cada tramo dram\xE1ticamente activo, evitando el decaimiento del segundo acto al dar a cada secuencia su propio objetivo, conflicto y recompensa.",
+      examplesTitle: "Ejemplos de ocho secuencias",
+      examples: ["Casablanca", "Toy Story", "Jungla de cristal", "El silencio de los corderos", "Con la muerte en los talones"]
+    }
+  },
+  "Syd Field Paradigm": {
+    en: {
+      introTitle: "What is the Syd Field Paradigm?",
+      intro: ["A three-act model that organizes a screenplay around fixed structural anchors: two plot points, two pinch points, and a midpoint.", "Introduced in Screenplay, it treats structure as a paradigm of setup, confrontation, and resolution held together by clear turning points."],
+      coreHeading: "Core characteristics",
+      core: ["Fixed structural anchors", "Plot points end each act", "Pinch points sustain conflict"],
+      stepsTitle: "Steps (paradigm beats)",
+      steps: ["1. Setup \u2014 Establish the protagonist, world, and dramatic premise.", "2. Inciting Incident \u2014 An event disrupts the status quo and raises the central question.", "3. Plot Point I \u2014 A decisive turn spins the story in a new direction and ends Act 1.", "4. Pinch 1 \u2014 A reminder of the antagonistic force applies pressure in the first half of Act 2.", "5. Midpoint \u2014 A major shift raises the stakes and recommits the protagonist to the goal.", "6. Pinch 2 \u2014 Renewed pressure from the opposition drives toward the act's crisis.", "7. Plot Point II \u2014 A second decisive turn launches the story into Act 3.", "8. Climax \u2014 The protagonist confronts the central conflict head-on.", "9. Resolution \u2014 The aftermath settles the story and reveals the new normal."],
+      whyTitle: "Why this works",
+      why: "By fixing turning points at predictable structural positions, the paradigm gives writers reliable targets that keep momentum building from setup through resolution.",
+      examplesTitle: "Syd Field Paradigm Examples",
+      examples: ["Chinatown", "Thelma & Louise", "Star Wars", "The Matrix", "Witness"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el Paradigma de Syd Field?",
+      intro: ["Un modelo de tres actos que organiza un guion en torno a anclajes estructurales fijos: dos puntos de giro, dos puntos de presi\xF3n y un punto medio.", "Presentado en El libro del guion, trata la estructura como un paradigma de planteamiento, confrontaci\xF3n y resoluci\xF3n sostenido por puntos de giro claros."],
+      coreHeading: "Caracter\xEDsticas principales",
+      core: ["Anclajes estructurales fijos", "Los puntos de giro cierran cada acto", "Los puntos de presi\xF3n sostienen el conflicto"],
+      stepsTitle: "Pasos (tiempos del paradigma)",
+      steps: ["1. Planteamiento \u2014 Establece al protagonista, el mundo y la premisa dram\xE1tica.", "2. Incidente incitador \u2014 Un suceso altera el statu quo y plantea la pregunta central.", "3. Punto de giro I \u2014 Un giro decisivo lanza la historia en una nueva direcci\xF3n y cierra el Acto 1.", "4. Presi\xF3n 1 \u2014 Un recordatorio de la fuerza antagonista ejerce presi\xF3n en la primera mitad del Acto 2.", "5. Punto medio \u2014 Un cambio importante eleva lo que est\xE1 en juego y vuelve a comprometer al protagonista con su objetivo.", "6. Presi\xF3n 2 \u2014 La presi\xF3n renovada de la oposici\xF3n empuja hacia la crisis del acto.", "7. Punto de giro II \u2014 Un segundo giro decisivo lanza la historia hacia el Acto 3.", "8. Cl\xEDmax \u2014 El protagonista se enfrenta de lleno al conflicto central.", "9. Resoluci\xF3n \u2014 Las consecuencias asientan la historia y revelan la nueva normalidad."],
+      whyTitle: "Por qu\xE9 funciona",
+      why: "Al fijar los puntos de giro en posiciones estructurales predecibles, el paradigma ofrece a los guionistas objetivos fiables que mantienen el impulso en aumento desde el planteamiento hasta la resoluci\xF3n.",
+      examplesTitle: "Ejemplos del Paradigma de Syd Field",
+      examples: ["Chinatown", "Thelma & Louise", "La guerra de las galaxias", "Matrix", "Testigo en peligro"]
+    }
+  },
+  "Truby 22 Steps": {
+    en: {
+      introTitle: "What are Truby's 22 Steps?",
+      intro: ["A 22-step framework for organic story design that grows plot out of a character's moral and psychological need rather than imposing external act beats.", "Drawn from John Truby's The Anatomy of Story, the steps trace a continuous chain from weakness and desire to self-revelation and a new equilibrium."],
+      coreHeading: "Core characteristics",
+      core: ["Character-driven, organic structure", "Moral plus psychological need", "Designed around self-revelation"],
+      stepsTitle: "Steps (22-step model)",
+      steps: ["1. Self-Revelation, Need, and Desire \u2014 Conceive the ending first: what the hero will learn and want.", "2. Ghost and Story World \u2014 The wound from the past that haunts the hero, set within a defined world.", "3. Weakness and Need \u2014 The hero's flaw and the psychological or moral change required to overcome it.", "4. Inciting Event \u2014 An event that jolts the hero and prompts a response.", "5. Desire \u2014 The specific external goal the hero pursues, driving the plot.", "6. Ally or Allies \u2014 Companions who help and reflect the hero.", "7. Opponent and/or Mystery \u2014 The antagonist who competes for the same goal.", "8. Fake-Ally Opponent \u2014 A character who appears to help but secretly opposes the hero.", "9. First Revelation and Decision \u2014 New information changes the hero's understanding and choice of action.", "10. Plan \u2014 The hero's strategy for reaching the goal.", "11. Opponent's Plan and Main Counterattack \u2014 The antagonist's countering scheme and offensive.", "12. Drive \u2014 The hero's escalating campaign of actions toward the goal.", "13. Attack by Ally \u2014 An ally challenges the hero's methods or morality.", "14. Apparent Defeat \u2014 The hero believes the goal is lost; the lowest point.", "15. Second Revelation and Decision \u2014 Renewed motivation as new information spurs a fresh decision.", "16. Audience Revelation \u2014 The audience learns something the hero does not.", "17. Third Revelation and Decision \u2014 A further discovery sharpens the hero's resolve and direction.", "18. Gate, Gauntlet, Visit to Death \u2014 Intensifying pressure as the hero faces a symbolic or literal brush with death.", "19. Battle \u2014 The final conflict between hero and opponent.", "20. Self-Revelation \u2014 The hero grasps the truth about themselves, learning the need.", "21. Moral Decision \u2014 The hero acts on that revelation through a choice that proves real change.", "22. New Equilibrium \u2014 A new, higher (or lower) level of order settles after the desire is resolved."],
+      whyTitle: "Why this works",
+      why: "Because each step springs causally from the hero's need rather than a fixed timetable, the framework produces a tightly woven, character-rooted plot that culminates in earned change.",
+      examplesTitle: "Truby 22 Steps Examples",
+      examples: ["The Godfather", "Tootsie", "Casablanca", "Vertigo", "It's a Wonderful Life"]
+    },
+    es: {
+      introTitle: "\xBFCu\xE1les son los 22 Pasos de Truby?",
+      intro: ["Un marco de 22 pasos para el dise\xF1o org\xE1nico de historias que hace crecer la trama a partir de la necesidad moral y psicol\xF3gica de un personaje, en lugar de imponer tiempos de acto externos.", "Extra\xEDdos de La anatom\xEDa del guion de John Truby, los pasos trazan una cadena continua desde la debilidad y el deseo hasta la autorrevelaci\xF3n y un nuevo equilibrio."],
+      coreHeading: "Caracter\xEDsticas principales",
+      core: ["Estructura org\xE1nica impulsada por el personaje", "Necesidad moral y psicol\xF3gica", "Dise\xF1ado en torno a la autorrevelaci\xF3n"],
+      stepsTitle: "Pasos (modelo de 22 pasos)",
+      steps: ["1. Autorrevelaci\xF3n, necesidad y deseo \u2014 Concibe primero el final: qu\xE9 aprender\xE1 y qu\xE9 querr\xE1 el h\xE9roe.", "2. Fantasma y mundo de la historia \u2014 La herida del pasado que atormenta al h\xE9roe, situada en un mundo definido.", "3. Debilidad y necesidad \u2014 El defecto del h\xE9roe y el cambio psicol\xF3gico o moral necesario para superarlo.", "4. Suceso incitador \u2014 Un suceso que sacude al h\xE9roe y provoca una respuesta.", "5. Deseo \u2014 El objetivo externo concreto que persigue el h\xE9roe y que impulsa la trama.", "6. Aliado o aliados \u2014 Compa\xF1eros que ayudan y reflejan al h\xE9roe.", "7. Oponente y/o misterio \u2014 El antagonista que compite por el mismo objetivo.", "8. Falso aliado oponente \u2014 Un personaje que parece ayudar pero que en secreto se opone al h\xE9roe.", "9. Primera revelaci\xF3n y decisi\xF3n \u2014 La nueva informaci\xF3n cambia la comprensi\xF3n del h\xE9roe y su elecci\xF3n de acci\xF3n.", "10. Plan \u2014 La estrategia del h\xE9roe para alcanzar el objetivo.", "11. Plan del oponente y contraataque principal \u2014 El plan opuesto del antagonista y su ofensiva.", "12. Impulso \u2014 La campa\xF1a creciente de acciones del h\xE9roe hacia el objetivo.", "13. Ataque del aliado \u2014 Un aliado cuestiona los m\xE9todos o la moral del h\xE9roe.", "14. Derrota aparente \u2014 El h\xE9roe cree que el objetivo est\xE1 perdido; el punto m\xE1s bajo.", "15. Segunda revelaci\xF3n y decisi\xF3n \u2014 Motivaci\xF3n renovada cuando la nueva informaci\xF3n impulsa una nueva decisi\xF3n.", "16. Revelaci\xF3n al p\xFAblico \u2014 El p\xFAblico descubre algo que el h\xE9roe no sabe.", "17. Tercera revelaci\xF3n y decisi\xF3n \u2014 Un nuevo descubrimiento agudiza la determinaci\xF3n y el rumbo del h\xE9roe.", "18. Puerta, prueba, visita a la muerte \u2014 Presi\xF3n creciente mientras el h\xE9roe afronta un roce simb\xF3lico o literal con la muerte.", "19. Batalla \u2014 El conflicto final entre el h\xE9roe y el oponente.", "20. Autorrevelaci\xF3n \u2014 El h\xE9roe comprende la verdad sobre s\xED mismo y aprende la necesidad.", "21. Decisi\xF3n moral \u2014 El h\xE9roe act\xFAa seg\xFAn esa revelaci\xF3n mediante una elecci\xF3n que demuestra un cambio real.", "22. Nuevo equilibrio \u2014 Un nuevo nivel de orden, m\xE1s alto (o m\xE1s bajo), se asienta una vez resuelto el deseo."],
+      whyTitle: "Por qu\xE9 funciona",
+      why: "Como cada paso surge de forma causal de la necesidad del h\xE9roe y no de un cronograma fijo, el marco produce una trama bien tejida y arraigada en el personaje que culmina en un cambio merecido.",
+      examplesTitle: "Ejemplos de los 22 Pasos de Truby",
+      examples: ["El padrino", "Tootsie", "Casablanca", "V\xE9rtigo", "\xA1Qu\xE9 bello es vivir!"]
+    }
+  },
+  "TV Series Structure": {
+    en: {
+      introTitle: "What is TV Series Structure?",
+      intro: ["A model for episodic and serialized television built around act breaks, interwoven plotlines, and arcs that span both the episode and the season.", "Episodes open with a teaser, divide into network act breaks, and balance an A-story against supporting B and C plots while a runner threads through the whole."],
+      coreHeading: "Core characteristics",
+      core: ["Act breaks engineered for ad cuts", "Layered A/B/C plots", "Episode arc within a season arc"],
+      stepsTitle: "Steps (key concepts)",
+      steps: ["1. Cold Open / Teaser \u2014 A pre-titles hook that establishes the episode's question and draws the viewer in.", "2. Act Breaks \u2014 Network drama divides into four or five acts, each ending on a cliffhanger before a commercial.", "3. A Plot \u2014 The episode's main story, carrying the most screen time and stakes.", "4. B and C Plots \u2014 Secondary and tertiary stories that complement, contrast, or relieve the A plot.", "5. The Runner \u2014 A light recurring thread or joke that recurs across the episode for cohesion.", "6. Serialized vs. Episodic \u2014 Choosing between self-contained episodes and ongoing storylines that build week to week.", "7. The Break / Beat Sheet \u2014 The writers' room 'breaks' the story into beats on a board before scripting.", "8. Season Arc vs. Episode Arc \u2014 Balancing a satisfying single-episode story against the longer character and plot arcs of the season.", "9. The Button / Tag \u2014 A short closing scene after the climax that lands a final beat, laugh, or hook into the next episode."],
+      whyTitle: "Why this works",
+      why: "Layering self-contained episode stories over longer season arcs keeps each installment satisfying while building the momentum that brings viewers back week after week.",
+      examplesTitle: "TV Series Structure Examples",
+      examples: ["Breaking Bad", "The Wire", "Friends", "The Sopranos", "Lost"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la estructura de serie de televisi\xF3n?",
+      intro: ["Un modelo para la televisi\xF3n epis\xF3dica y serializada construido en torno a cortes de acto, tramas entrelazadas y arcos que abarcan tanto el episodio como la temporada.", "Los episodios abren con un teaser, se dividen en cortes de acto televisivos y equilibran una trama A frente a tramas secundarias B y C, mientras un hilo conductor recorre el conjunto."],
+      coreHeading: "Caracter\xEDsticas principales",
+      core: ["Cortes de acto dise\xF1ados para las pausas publicitarias", "Tramas A/B/C en capas", "Arco del episodio dentro del arco de la temporada"],
+      stepsTitle: "Pasos (conceptos clave)",
+      steps: ["1. Apertura en fr\xEDo / Teaser \u2014 Un gancho antes de los cr\xE9ditos que plantea la pregunta del episodio y atrae al espectador.", "2. Cortes de acto \u2014 El drama televisivo se divide en cuatro o cinco actos, cada uno terminando en un momento de suspense antes de un anuncio.", "3. Trama A \u2014 La historia principal del episodio, con el mayor tiempo en pantalla y lo que m\xE1s est\xE1 en juego.", "4. Tramas B y C \u2014 Historias secundarias y terciarias que complementan, contrastan o aligeran la trama A.", "5. El hilo conductor \u2014 Un hilo o chiste recurrente y ligero que reaparece a lo largo del episodio para dar cohesi\xF3n.", "6. Serializado vs. epis\xF3dico \u2014 Elegir entre episodios autoconclusivos y tramas continuas que crecen semana a semana.", "7. El desglose / Hoja de tiempos \u2014 La sala de guionistas 'desglosa' la historia en tiempos en una pizarra antes de escribir el guion.", "8. Arco de temporada vs. arco de episodio \u2014 Equilibrar una historia satisfactoria de un solo episodio con los arcos m\xE1s largos de personaje y trama de la temporada.", "9. El remate / Coda \u2014 Una breve escena de cierre tras el cl\xEDmax que aterriza un \xFAltimo tiempo, risa o gancho hacia el siguiente episodio."],
+      whyTitle: "Por qu\xE9 funciona",
+      why: "Superponer historias autoconclusivas de episodio sobre arcos m\xE1s largos de temporada mantiene cada entrega satisfactoria a la vez que genera el impulso que hace volver a los espectadores semana tras semana.",
+      examplesTitle: "Ejemplos de estructura de serie de televisi\xF3n",
+      examples: ["Breaking Bad", "The Wire", "Friends", "Los Soprano", "Perdidos"]
+    }
+  }
+};
 
 // src/writer-tools/resourcesI18n.js
 var ARCHETYPE_DATA = {
@@ -9431,6 +11568,764 @@ var PITFALLS_DATA = {
     es: { title: "Errores de Escritura", items: ["Sobreexposici\xF3n", "Di\xE1logo demasiado expl\xEDcito", "Contar en lugar de mostrar", "Prosa recargada", "Tono inconsistente"] }
   }
 };
+Object.assign(TECHNIQUE_DATA, EXTRA_TECHNIQUE_DATA);
+Object.assign(TECHNIQUE_DATA, EXTRA2_TECHNIQUE_DATA);
+Object.assign(TIPS_DATA, EXTRA_TIPS_DATA);
+Object.assign(PITFALLS_DATA, EXTRA_PITFALLS_DATA);
+Object.assign(LABEL_I18N.en, EXTRA_LABELS.en);
+Object.assign(LABEL_I18N.es, EXTRA_LABELS.es);
+Object.assign(LABEL_I18N.en, EXTRA2_LABELS.en);
+Object.assign(LABEL_I18N.es, EXTRA2_LABELS.es);
+Object.assign(UI_I18N.en, EXTRA_UI.en);
+Object.assign(UI_I18N.es, EXTRA_UI.es);
+
+// src/writer-tools/resourcesExampleNotes.js
+var EXAMPLE_NOTES = {
+  "ally": [
+    { en: "Can't carry the Ring, so he hauls Frodo up Mount Doom on his back instead.", es: "El Anillo no puede llevarlo, as\xED que se echa a Frodo a la espalda y lo sube al Monte del Destino." },
+    { en: "Walks out on the Horcrux hunt, then comes crawling back to help destroy them. He chooses the loyalty.", es: "Planta la b\xFAsqueda de los Horrocruxes y luego vuelve para ayudar a destruirlos. Esa lealtad la elige." },
+    { en: "Reads the books, remembers the spell. Her devotion just looks like being good at things.", es: "Lee los libros, se acuerda del hechizo. Su devoci\xF3n tiene cara de competencia." },
+    { en: "Barely speaks, unreadable to strangers, and never once wavers on Han.", es: "Casi no habla, los de fuera no lo descifran, y con Han jam\xE1s titubea." },
+    { en: "Watson gawks at Holmes like anyone would, and that ordinary wonder is what makes the genius legible. His decency does the rest.", es: "Watson se pasma ante Holmes como cualquiera, y ese asombro corriente vuelve legible al genio. Su decencia hace el resto." },
+    { en: "Even the comic-relief hobbits get dragged into the war. Tells you how far the stakes have spread.", es: "Hasta los hobbits del alivio c\xF3mico terminan metidos en la guerra. Ah\xED ves hasta d\xF3nde lleg\xF3 todo." },
+    { en: "Right beside Katniss walks the gentleness she's terrified of losing, a quiet warning the whole way.", es: "Justo al lado de Katniss camina la ternura que teme perder, una advertencia callada todo el trayecto." }
+  ],
+  "herald": [
+    { en: "The call arrives as Leia's recording, a message Luke can't answer back, so he has to go chasing it.", es: "El llamado llega como la grabaci\xF3n de Leia, un mensaje que Luke no puede responder, y le toca salir tras \xE9l." },
+    { en: "Announces nothing. Just bolts past muttering about being late, and Alice takes off after him.", es: "No anuncia nada. Pasa disparado farfullando que llega tarde, y Alicia sale tras \xE9l." },
+    { en: "Bringing the news isn't enough for Hagrid; he knocks the door between two worlds clean off its hinges.", es: "Traer la noticia se le queda corto a Hagrid: derriba a golpes la puerta entre dos mundos." },
+    { en: "By the hundreds the letters keep arriving, until nobody under that roof can pretend not to see them.", es: "Por cientos siguen llegando las cartas, hasta que en esa casa ya nadie puede hacer como que no las ve." },
+    { en: "Hand a pirate the black spot and he knows he's marked to die. This call is a sentence you run from.", es: "Ponle a un pirata la mancha negra y sabe que est\xE1 sentenciado. Este llamado es una condena de la que se huye." },
+    { en: "Not a word of explanation until Neo swallows the red pill. No agreement, no call.", es: "Ni una palabra de explicaci\xF3n hasta que Neo se traga la pastilla roja. Sin aceptaci\xF3n no hay llamado." },
+    { en: "One midnight ride, and it isn't a single hero he wakes but a whole population reaching for their guns.", es: "Una cabalgata de medianoche, y no despierta a un h\xE9roe sino a un pueblo entero que echa mano de las armas." }
+  ],
+  "heroJung": [
+    { en: "Her real strength is deciding to believe in people even after watching the worst of them.", es: "Su verdadera fuerza es decidir que cree en la gente aun despu\xE9s de ver lo peor que tiene." },
+    { en: "All the serum does is dial up the brave, decent kid already standing there. He was worth it before the muscles.", es: "El suero no hace m\xE1s que subirle el volumen al chico valiente y decente que ya estaba ah\xED. Val\xEDa antes de los m\xFAsculos." },
+    { en: "Nearly untouchable, and still his own fury gets Patroclus killed and, in the end, him too.", es: "Casi intocable, y aun as\xED su propia furia mata a Patroclo y, al final, a \xE9l tambi\xE9n." },
+    { en: "Old now, slower, and he goes at the dragon anyway. His will gets tested right when his body can't carry it.", es: "Viejo ya, m\xE1s lento, y va al drag\xF3n igual. La voluntad se le prueba justo cuando el cuerpo ya no aguanta." },
+    { en: "He wins his freedom and his revenge. He just has to die in the arena to get them.", es: "Gana su libertad y su venganza. Solo que las consigue muriendo en la arena." }
+  ],
+  "mentor": [
+    { en: "Down he goes against the Balrog, and only once he's gone does Frodo quit leaning and finally act on his own.", es: "Cae peleando con el Balrog, y solo entonces Frodo deja de apoyarse en \xE9l y act\xFAa por su cuenta." },
+    { en: "He guides Harry the whole time while hiding the worst part, that he's raising the boy to walk knowingly to his death.", es: "Gu\xEDa a Harry todo el tiempo mientras le oculta lo peor: lo est\xE1 criando para que camine a sabiendas hacia su muerte." },
+    { en: "Wax on, wax off looks like chores until the motions turn into Daniel's karate behind his back.", es: "Pule y encera parece tarea de la casa, hasta que los movimientos se vuelven el karate de Daniel sin que se entere." },
+    { en: "Small, strange, about as unwarlike as they come, and that forces Luke to throw out his picture of a master.", es: "Peque\xF1o, raro, lo menos guerrero que hay, y eso obliga a Luke a tirar a la basura su idea de un maestro." },
+    { en: "Even as he's training the X-Men he second-guesses his own road, which keeps him human and able to be wrong.", es: "Hasta mientras entrena a los X-Men duda de su propio camino, y eso lo mantiene humano y capaz de equivocarse." },
+    { en: "Turns out the slippers could've taken Dorothy home from the start. Glinda only says so once she's lived the lesson.", es: "Resulta que los zapatos pod\xEDan llevar a Dorothy a casa desde el principio. Glinda se lo dice solo cuando ya vivi\xF3 la lecci\xF3n." },
+    { en: "A burnt-out drunk who'd rather not get involved, and that's precisely why his survival tips land.", es: "Un borracho acabado que preferir\xEDa no meterse, y por eso justamente su consejo de supervivencia cala." },
+    { en: "No lecture from Rafiki. He shows Simba his father's face in the water and shoves him back toward the throne.", es: "Nada de serm\xF3n de Rafiki. Le muestra a Simba la cara de su padre en el agua y lo empuja de vuelta al trono." },
+    { en: "Before a shred of proof exists, he's certain Neo is the One, handing over the faith Neo still hasn't found.", es: "Antes de que haya una sola prueba, est\xE1 seguro de que Neo es el Elegido, prest\xE1ndole la fe que Neo todav\xEDa no tiene." }
+  ],
+  "shadow": [
+    { en: "More than a villain, he's a warning. This is what Luke turns into the day he meets cruelty with cruelty.", es: "M\xE1s que un villano, es una advertencia. En esto se convierte Luke el d\xEDa que responde a la crueldad con crueldad." },
+    { en: "Same prophecy, opposite call. Voldemort is the spot where Harry could've chosen fear over love.", es: "La misma profec\xEDa, la elecci\xF3n contraria. Voldemort es el punto donde Harry pudo elegir el miedo en lugar del amor." },
+    { en: "All he wants is to rule and own the lot, which is the flat reverse of the mercy the Ring-bearers keep picking.", es: "Lo \xFAnico que quiere es dominar y poseerlo todo, justo lo contrario de la piedad que los portadores eligen una y otra vez." },
+    { en: "Joker isn't really fighting Batman so much as finishing him off, order and chaos sharing one coin.", es: "Joker no pelea tanto contra Batman como lo completa, orden y caos en una misma moneda." },
+    { en: "Envy with a crown on it. Scar is the entitlement Simba has to grow out of, the bloodline turned rotten.", es: "Envidia con corona. Scar es la prepotencia de la que Simba debe salir, el mismo linaje echado a perder." },
+    { en: "What unsettles is the math; by his own brutal arithmetic, Thanos figures he's rescuing the universe by killing half of it.", es: "Lo que inquieta es la cuenta; seg\xFAn su brutal aritm\xE9tica, Thanos cree que rescata al universo matando a la mitad." },
+    { en: "Survival stops being the point of Ahab's hunt for the white whale. Obsession takes over, and the whole crew goes down with him.", es: "La supervivencia deja de ser el punto en la caza de Ahab tras la ballena blanca. La obsesi\xF3n manda, y toda la tripulaci\xF3n se hunde con \xE9l." }
+  ],
+  "shapeshifter": [
+    { en: "The romance keeps everyone off balance. Neither Batman nor we can settle on friend or threat.", es: "El romance mantiene a todos en vilo. Ni Batman ni nosotros nos decidimos entre aliada o amenaza." },
+    { en: "The whole book is rigged to make us read Snape wrong, and the last reveal sends you back over every scene.", es: "Todo el libro est\xE1 trucado para que leamos mal a Snape, y la revelaci\xF3n final te manda de vuelta sobre cada escena." },
+    { en: "Two voices bicker out loud inside one body, and you're never sure which one currently has the wheel.", es: "Dos voces discuten en voz alta dentro de un solo cuerpo, y nunca sabes cu\xE1l lleva el volante en ese momento." },
+    { en: "Sure, Mystique can wear anyone's face, but the question that never goes away is whose side she's on.", es: "Claro, Mystique puede ponerse la cara de cualquiera, pero la duda que no se va es de qu\xE9 lado est\xE1." },
+    { en: "Fakes his own death, lies to the people on his own team. Where Fury actually stands is anybody's guess.", es: "Finge su muerte, le miente hasta a su propio equipo. D\xF3nde est\xE1 parado Fury de verdad, vaya uno a saber." },
+    { en: "Every crisis, she rebuilds herself from scratch, doing whatever the next disaster demands to come out alive.", es: "Con cada crisis se rehace desde cero, haciendo lo que pida el siguiente desastre con tal de salir viva." }
+  ],
+  "thresholdGuardian": [
+    { en: "Her weapon is a riddle, no sword in sight, and anyone who can't answer dies on the spot.", es: "Su arma es un acertijo, ni rastro de espada, y quien no responde muere ah\xED mismo." },
+    { en: "Cerberus faces inward, guarding the way out, so the threshold only counts once you're already down in the underworld.", es: "Cerbero mira hacia adentro, cuida la salida, as\xED que el umbral solo cuenta cuando ya est\xE1s abajo en el inframundo." },
+    { en: "Today's gatekeeper doesn't throw a punch. The bouncer just rules on whether you belong inside the club.", es: "El guardi\xE1n de hoy no reparte golpes. El de la puerta solo dictamina si perteneces dentro del club." },
+    { en: "Faceless, endless, they barely test a skill. What they test is whether the heroes can just keep moving.", es: "Sin rostro, sin fin, apenas prueban una habilidad. Lo que prueban es si los h\xE9roes pueden seguir avanzando." },
+    { en: "Filler guards, around only to be slipped past. They mark a crossing and carry no personality at all.", es: "Guardias de relleno, ah\xED solo para esquivarlos. Marcan un cruce y no tienen personalidad alguna." },
+    { en: "Parked right on top of the hoard, the dragon makes beating it and claiming the prize one and the same move.", es: "Posado encima mismo del bot\xEDn, el drag\xF3n vuelve un solo gesto vencerlo y llevarse el premio." },
+    { en: "Tuned to confirm you've got the controls down, the first boss is a gate built to barely hold.", es: "Calibrado para confirmar que ya dominas los controles, el primer jefe es una puerta hecha para ceder por poco." }
+  ],
+  "trickster": [
+    { en: "His chaos runs on a grudge. The overlooked brother lashing back at a family that always slotted him under Thor.", es: "Su caos corre sobre un rencor. El hermano relegado devolviendo el golpe a una familia que siempre lo puso debajo de Thor." },
+    { en: "Nobody reads him, and that's the whole design. Stay unpredictable and every exit stays open.", es: "Nadie lo descifra, y ese es justo el dise\xF1o. Mantente impredecible y toda salida queda abierta." },
+    { en: "He talks straight at the camera, fully aware he's in a cartoon and bending its rules to come out on top.", es: "Le habla de frente a la c\xE1mara, sabiendo de sobra que est\xE1 en un dibujo y torciendo sus reglas para salirse con la suya." },
+    { en: "Stuck in a superhero movie, Deadpool spends it mocking the genre and firing jokes at his own film's rules.", es: "Atrapado en una de superh\xE9roes, Deadpool se la pasa burl\xE1ndose del g\xE9nero y disparando chistes a las reglas de su propia pel\xEDcula." },
+    { en: "A trickster running on nothing. The Joker makes chaos for the sake of it, no grudge, no goal underneath.", es: "Un bromista que no corre sobre nada. El Joker arma caos porque s\xED, sin rencor ni meta debajo." },
+    { en: "One love potion sends the wrong couples falling for each other, laying bare how random desire really is.", es: "Una poci\xF3n de amor manda a las parejas equivocadas a enamorarse, dejando al desnudo lo azaroso que es el deseo." },
+    { en: "His selfishness keeps blowing up everybody's noble plans, and somehow that's what keeps the cause honest.", es: "Su ego\xEDsmo no para de reventar los planes nobles de todos, y de alg\xFAn modo eso es lo que mantiene honesta la causa." }
+  ],
+  "caregiver": [
+    { en: "Keeping the house standing while the father's off at war reads as real labor here, not soft background virtue.", es: "Sostener la casa con el padre en la guerra se lee aqu\xED como trabajo de verdad, no como virtud decorativa de fondo." },
+    { en: "Out of guidance to give, he simply scoops Frodo up and carries him the rest of the way.", es: "Sin m\xE1s gu\xEDa que ofrecer, sencillamente alza a Frodo y lo carga lo que falta del camino." },
+    { en: "Her care built Peter's whole sense of right, and that with great power line only really bites once she's gone.", es: "Su cuidado le arm\xF3 a Peter todo su sentido del bien, y eso de un gran poder solo muerde de verdad cuando ella falta." },
+    { en: "She'll knit you a sweater and then duel a Death Eater for her kids. Tenderness and ferocity in one body.", es: "Te teje un su\xE9ter y enseguida se bate con un mort\xEDfago por sus hijos. Ternura y fiereza en un mismo cuerpo." },
+    { en: "Built for one job, healing, Baymax gives you caregiving in its pure form with no selfishness to claw past.", es: "Hecho para una sola cosa, sanar, Baymax te da el cuidado en estado puro, sin ego\xEDsmo que vencer." },
+    { en: "His anxious love hardens into control, and he has to learn that keeping Nemo safe can't mean shutting out every risk.", es: "Su amor ansioso se endurece en control, y tiene que aprender que cuidar a Nemo no puede ser cerrarle todo riesgo." }
+  ],
+  "creator": [
+    { en: "He stitches a living creature together, then bolts in horror. The maker undone by the thing he refuses to tend.", es: "Cose una criatura viva y luego sale huyendo horrorizado. El creador deshecho por aquello que se niega a cuidar." },
+    { en: "Building never stops for him. He even rebuilds his own wrecked body into a suit he can disappear inside.", es: "Construir no se le detiene nunca. Hasta rehace su propio cuerpo destrozado en un traje donde desaparecer." },
+    { en: "Objects aren't his medium. He builds whole worlds out of other people's imaginations and makes them stick around.", es: "Su material no son los objetos. Levanta mundos enteros con la imaginaci\xF3n ajena y los hace perdurar." },
+    { en: "That time machine is no mere gadget; it's the invention that sets the whole plot in motion.", es: "Esa m\xE1quina del tiempo no es un simple aparato; es el invento que echa a andar la trama entera." },
+    { en: "Writing is how Jo grabs the reins of her own life, laying claim to an independence her world won't hand a woman.", es: "Escribir es como Jo toma las riendas de su vida, reclamando una independencia que su mundo no le entrega a una mujer." },
+    { en: "Decades ahead of their moment, his sketches leave the world to catch up long after he's in the ground.", es: "Adelantados d\xE9cadas a su momento, sus bocetos dejan al mundo alcanz\xE1ndolo mucho despu\xE9s de que \xE9l est\xE9 bajo tierra." }
+  ],
+  "everyman": [
+    { en: "His plainness is both the joke and the anchor. Bathrobe and tea size up cosmic absurdity on a human scale.", es: "Su sencillez es a la vez el chiste y el ancla. La bata y el t\xE9 miden el absurdo c\xF3smico a escala humana." },
+    { en: "He'd sooner stay put with his books and his pantry, so the adventure feels foisted on him rather than answered.", es: "Antes se quedar\xEDa en casa con sus libros y su despensa, as\xED que la aventura se le impone m\xE1s que llamarlo." },
+    { en: "Jim is the audience parked inside the office, and his jokes put words to the boredom we all clock at work.", es: "Jim es el p\xFAblico metido dentro de la oficina, y sus bromas le ponen palabras al aburrimiento que todos fichamos en el trabajo." },
+    { en: "Too plain to turn cynical, he lets history pass right through him without leaving a stain.", es: "Demasiado simple para volverse c\xEDnico, deja que la historia lo atraviese sin dejarle mancha." },
+    { en: "The least ambitious soul in all Middle-earth, which makes the burden the remarkable thing, never the hobbit.", es: "El alma menos ambiciosa de toda la Tierra Media, lo que vuelve notable a la carga, nunca al hobbit." }
+  ],
+  "explorer": [
+    { en: "He hunts relics only to hand them off to a museum. Chasing them beats keeping them, every time.", es: "Persigue reliquias para acabar entreg\xE1ndolas a un museo. La cacer\xEDa le gana al bot\xEDn, siempre." },
+    { en: "Pure curiosity sends her into the tombs, pulled by the unknown itself and no cause whatsoever.", es: "Pura curiosidad la manda a las tumbas, tirada por lo desconocido en s\xED y por ninguna causa." },
+    { en: "Crossing past the reef isn't an escape for Moana. It's the only road to finding out who she actually is.", es: "Cruzar el arrecife no es escape para Moana. Es el \xFAnico camino a descubrir qui\xE9n es de verdad." },
+    { en: "Raft and river win out for Huck over a society itching to sivilize him with all its rules.", es: "La balsa y el r\xEDo le ganan a Huck por sobre una sociedad ansiosa de civilizarlo a punta de reglas." },
+    { en: "Exploring was never a phase for the Doctor, it's the whole of him. The open universe is home, not a holiday.", es: "Explorar nunca fue una etapa para el Doctor, es \xE9l entero. El universo abierto es su hogar, no unas vacaciones." }
+  ],
+  "hero": [
+    { en: "What he gives up is what grows him, and at the end he walks into the forest of his own accord to let Voldemort kill him.", es: "Lo que entrega es lo que lo hace crecer, y al final entra al bosque por voluntad propia para dejar que Voldemort lo mate." },
+    { en: "The quest grinds Frodo down rather than lifting him up. Growth, for him, is just holding on while it eats away at him.", es: "La misi\xF3n lo muele a Frodo en vez de elevarlo. Su crecimiento es solo resistir mientras lo va carcomiendo." },
+    { en: "She steps up to save her sister, and that private act of love gets hammered into a public symbol she's stuck carrying.", es: "Da un paso al frente por su hermana, y ese acto \xEDntimo de amor se forja en un s\xEDmbolo p\xFAblico que le toca cargar." },
+    { en: "Before she's allowed near a fight, Mulan has to pass as a man, so growing up costs her the truth of who she is.", es: "Antes de que la dejen pelear, Mulan tiene que pasar por hombre, as\xED que crecer le cuesta la verdad de qui\xE9n es." },
+    { en: "Growing up, for Luke, means saving his father, so the journey mends the past as much as it wins the future.", es: "Madurar, para Luke, es salvar a su padre, as\xED que el viaje remienda el pasado tanto como gana el futuro." },
+    { en: "No villain to topple drives Simba's growth. It's going home to face the guilt over his father's death he ran from.", es: "No es derrocar a un villano lo que mueve el crecimiento de Simba. Es volver a casa a encarar la culpa por la muerte de su padre, de la que huy\xF3." },
+    { en: "Her real obstacle is the snap verdict she passed on Darcy. The entire arc is Elizabeth walking it back.", es: "Su verdadero obst\xE1culo es el veredicto apresurado que dict\xF3 sobre Darcy. Todo el arco es Elizabeth desdici\xE9ndose." }
+  ],
+  "innocent": [
+    { en: "Faced with a lion and a witch, her first move is to reason with them kindly.", es: "Ante un le\xF3n y una bruja, su primer impulso es razonar con ellos por las buenas." },
+    { en: "Looking for the good in people never occurs to him. He can't picture a world where it isn't already there.", es: "Buscar lo bueno en la gente ni se le pasa por la cabeza. No concibe que pueda no estar ya ah\xED." },
+    { en: "Takes every word at face value and the sarcasm sails right past him, since it never crosses his mind that someone might mean harm.", es: "Se cree todo al pie de la letra y el sarcasmo le pasa de largo, porque jam\xE1s se le ocurre que alguien quiera hacer da\xF1o." },
+    { en: "All that sweetness is built to be smashed. They shoot his mother to gut the audience.", es: "Toda esa dulzura est\xE1 hecha para hacerse a\xF1icos. Matan a su madre para destrozar al espectador." },
+    { en: "Her kindness doubles as control. She stages other people's happy moments in secret while ducking her own life.", es: "Su bondad es tambi\xE9n una forma de control. Orquesta en secreto la felicidad ajena mientras le saca el cuerpo a su propia vida." }
+  ],
+  "jester": [
+    { en: "The drunken-clown routine is pure costume. Under it, he's forever working out how to stay alive.", es: "El numerito de payaso borracho es puro disfraz. Por debajo, no para de calcular c\xF3mo seguir vivo." },
+    { en: "Joke after joke, and all that laughter buries the fact that he's a near-omnipotent being chained up as a slave.", es: "Chiste tras chiste, y tanta risa entierra que es un ser casi todopoderoso encadenado como esclavo." },
+    { en: "Mocked for his size, he throws the first punchline so it lands before anyone's contempt can.", es: "Burlado por su tama\xF1o, suelta \xE9l el primer chiste para que pegue antes que el desprecio ajeno." },
+    { en: "No authority holds him, so he breaks his own cartoon's rules, talks straight to us, and edits reality on a whim.", es: "Ninguna autoridad lo sujeta, as\xED que rompe las reglas de su propio dibujo, nos habla de frente y edita la realidad a su antojo." },
+    { en: "Nothing cruel in the pranks. He treats human love affairs like a comedy somebody hired him to stage.", es: "Nada de crueldad en las travesuras. Trata los amor\xEDos humanos como una comedia que alguien le encarg\xF3 montar." }
+  ],
+  "lover": [
+    { en: "Their love refuses to wait. Handed days instead of years, they'd sooner die together than watch it dim.", es: "Su amor se niega a esperar. Con d\xEDas en lugar de a\xF1os, antes mueren juntos que verlo apagarse." },
+    { en: "One night with Jack, and she kept faith with that memory the rest of her life.", es: "Una noche con Jack, y le guard\xF3 fidelidad a ese recuerdo el resto de su vida." },
+    { en: '"As you wish" says everything. He loves by serving Buttercup, and not even death gets in his way.', es: '"Como desees" lo dice todo. Ama sirviendo a Buttercup, y ni la muerte le frena.' },
+    { en: "She mistakes obsession for love. Wanting the wrong man with her whole heart is the tragedy.", es: "Confunde la obsesi\xF3n con el amor. Querer al hombre equivocado con toda el alma es la tragedia." },
+    { en: "He loves Rose by letting her go. Clinging would betray the very freedom that pulled them together.", es: "Ama a Rose solt\xE1ndola. Aferrarse traicionar\xEDa la libertad misma que los junt\xF3." }
+  ],
+  "magician": [
+    { en: "Spells matter less than his knack for knowing which small hope to light in each person.", es: "Los hechizos importan menos que su don para saber qu\xE9 peque\xF1a esperanza prender en cada cual." },
+    { en: "Muscle isn't his weapon. He combs through millions of futures to find the single one where they win.", es: "El m\xFAsculo no es su arma. Rastrea millones de futuros hasta dar con el \xFAnico en que ganan." },
+    { en: "The throne holds no pull for him. He builds the king and the kingdom meant to outlast him.", es: "El trono no le tira nada. Construye al rey y al reino que han de sobrevivirle." },
+    { en: "Knowledge is the power here, no telekinesis involved. Once he sees the world is code, he bends its rules.", es: "El poder aqu\xED es conocimiento, sin telequinesis de por medio. En cuanto ve que el mundo es c\xF3digo, dobla sus reglas." },
+    { en: "Plotting a victory he'll never live to see, he guides Harry by withholding the truth as much as sharing it.", es: "Trama una victoria que no vivir\xE1 para ver, y gu\xEDa a Harry tanto callando la verdad como cont\xE1ndola." }
+  ],
+  "outlaw": [
+    { en: "His own revenge is already settled. The rebellion is theater, staged to outlive the man behind the mask.", es: "Su venganza ya est\xE1 saldada. La rebeli\xF3n es teatro, montado para sobrevivir al hombre tras la m\xE1scara." },
+    { en: "Robbing the rich to feed the poor, he goes after the corrupt king who twists the law rather than the law itself.", es: "Roba a los ricos para alimentar a los pobres, y la emprende con el rey corrupto que tuerce la ley, no con la ley." },
+    { en: "Money brought him to the cause, never ideals. Freedom, for him, is owing nothing to anyone, rebels included.", es: "Lo trajo el dinero a la causa, nunca los ideales. Libertad, para \xE9l, es no deberle nada a nadie, ni a los rebeldes." },
+    { en: "He topples one tyranny just to raise another. The rebellion curdles into the same order it set out to smash.", es: "Derriba una tiran\xEDa solo para levantar otra. La rebeli\xF3n cuaja en el mismo orden que sali\xF3 a destruir." },
+    { en: "All her defiance is just staying alive, but the revolution turns it into a symbol she never asked to be.", es: "Todo su desaf\xEDo es solo seguir viva, pero la revoluci\xF3n lo convierte en un s\xEDmbolo que ella nunca pidi\xF3 ser." }
+  ],
+  "ruler": [
+    { en: "He guards the kingdom with no thought of himself, keeping it whole to pass on to his son Simba.", es: "Custodia el reino sin pensar en s\xED mismo, para entreg\xE1rselo intacto a su hijo Simba." },
+    { en: "The whole saga, he keeps refusing the crown. He only takes it once the fear of who he is leaves him.", es: "Toda la saga rechazando la corona. Solo la toma cuando se le va el miedo a qui\xE9n es." },
+    { en: "The crown eats her private life. To hold the throne, she lets go of being an ordinary woman.", es: "La corona se le come la vida privada. Por conservar el trono, renuncia a ser una mujer corriente." },
+    { en: "Order, to him, is the family name over everything. The only law he enforces is the Lannister legacy.", es: "El orden, para \xE9l, es el apellido por encima de todo. La \xFAnica ley que impone es el legado Lannister." },
+    { en: "He props his order up on lies he keeps repeating, and the secrets he hauls around weigh on him too.", es: "Apuntala su orden sobre mentiras que repite sin cesar, y los secretos que arrastra tambi\xE9n le pesan." }
+  ],
+  "sage": [
+    { en: "He lets Vader cut him down on purpose, so the lesson outlives a duel he was never going to win.", es: "Deja que Vader lo abata a prop\xF3sito, para que la lecci\xF3n sobreviva a un duelo que no iba a ganar." },
+    { en: "Sooner executed than recant. Truth, to him, isn't something you abandon just to keep breathing.", es: "Antes la ejecuci\xF3n que retractarse. La verdad, para \xE9l, no se abandona solo por seguir respirando." },
+    { en: "He could bend everyone to his mind, and still he picks the harder road of trying to understand.", es: "Podr\xEDa doblegar a todos con su mente, y aun as\xED escoge el camino m\xE1s arduo de comprender." },
+    { en: "Silence is how he teaches, trusting Harry to arrive at the truth he could simply have handed over.", es: "Ense\xF1a a base de silencio, fi\xE1ndose de que Harry llegue a la verdad que pudo simplemente entregarle." },
+    { en: "His logic reads as discipline rather than chill. He thinks clearest right where emotion would lead him astray.", es: "Su l\xF3gica es disciplina m\xE1s que frialdad. Piensa m\xE1s claro justo donde la emoci\xF3n lo desviar\xEDa." }
+  ],
+  "moralAscent": [
+    { en: "Fear cracks him open, never insight. The ghosts march him to his own grave, and generosity is the only way out.", es: "Lo abre en canal el miedo, nunca la lucidez. Los fantasmas lo llevan a su propia tumba, y la generosidad es la \xFAnica salida." },
+    { en: "Honor comes to him by defying his father, not obeying him, when he breaks ranks to do right.", es: "El honor le llega desafiando a su padre, no obedeci\xE9ndolo, cuando rompe filas para hacer lo correcto." },
+    { en: "A bishop pardons a theft Valjean plainly committed, and that mercy remakes the man for good.", es: "Un obispo le perdona un robo que Valjean cometi\xF3 sin duda, y esa misericordia lo rehace para siempre." },
+    { en: "A kidnapping kicks it off, no twinge of conscience. He sees what his weapons do and rebuilds his whole life around it.", es: "Lo arranca un secuestro, ning\xFAn remordimiento. Ve lo que hacen sus armas y reconstruye su vida entera en torno a eso." },
+    { en: "The gruffness is armor, never malice. His arc is owning up to the fact that he was never the monster they all dreaded.", es: "La brusquedad es coraza, nunca maldad. Su arco es reconocer que nunca fue el monstruo que todos tem\xEDan." },
+    { en: "She grows by shedding the very disguise that started it all, earning honor only when she quits pretending to be a man.", es: "Crece quit\xE1ndose el disfraz que lo empez\xF3 todo, y gana honor solo cuando deja de fingir que es un hombre." }
+  ],
+  "moralDescent": [
+    { en: '"For my family" justifies everything, and the descent is watching that lie outlast every body it leaves behind.', es: '"Por mi familia" lo justifica todo, y el descenso es ver esa mentira sobrevivir a cada cad\xE1ver que va dejando.' },
+    { en: "Terror of losing Padm\xE9 damns him, not wickedness. He commits horrors to head off a death he winds up causing.", es: "Lo condena el pavor a perder a Padm\xE9, no la maldad. Comete atrocidades por frenar una muerte que acaba causando \xE9l." },
+    { en: "He never picks evil out loud. Each step is grudging and reasonable, and one door further from his soul.", es: "Nunca elige el mal en voz alta. Cada paso es a rega\xF1adientes y razonable, y una puerta m\xE1s lejos de su alma." },
+    { en: "The witches don't push him over. They just hand the ambition he already carried a permission slip to act.", es: "Las brujas no lo empujan al vac\xEDo. Solo le dan a la ambici\xF3n que ya cargaba un permiso para actuar." },
+    { en: "No ambition in him, just hunger. The Ring rots him like a habit until conscience drops to a whisper.", es: "Nada de ambici\xF3n en \xE9l, solo ansia. El Anillo lo pudre como un vicio hasta que la conciencia baja a un susurro." },
+    { en: "Pride is the whole descent. He murders criminals to forge a flawless world, never once doubting he's the just one.", es: "La soberbia es todo el descenso. Mata criminales para forjar un mundo perfecto, sin dudar ni una vez que el justo es \xE9l." }
+  ],
+  "flatMoral": [
+    { en: 'He stays put while the story bends everyone else toward him. "I can do this all day" is the entire arc.', es: '\xC9l no se mueve mientras el relato dobla a los dem\xE1s hacia \xE9l. "Puedo hacer esto todo el d\xEDa" es el arco entero.' },
+    { en: "Same from start to finish. The real question is whether cold London can hold out against his manners, and it can't.", es: "Igual de principio a fin. La pregunta de verdad es si el Londres fr\xEDo aguanta su cortes\xEDa, y no aguanta." },
+    { en: "He loses the case yet never his principles, and that steadiness puts the racist town that won on trial.", es: "Pierde el caso pero jam\xE1s sus principios, y esa firmeza sienta en el banquillo al pueblo racista que gan\xF3." },
+    { en: "He never changes. What the story asks is whether a world this cruel even deserves someone this incorruptible.", es: "\xC9l nunca cambia. Lo que el relato pregunta es si un mundo tan cruel merece siquiera a alguien tan incorruptible." },
+    { en: "She lands already whole. Human cruelty doesn't harden her, it only confirms what she'd chosen to believe.", es: "Llega ya entera. La crueldad humana no la endurece, solo confirma lo que hab\xEDa elegido creer." },
+    { en: "Murders all around her, and she stays plainly decent. The quiet point of the film is the contrast, not any growth.", es: "Asesinatos por todas partes, y ella sigue siendo sencillamente decente. El punto callado del filme es el contraste, no un cambio." }
+  ],
+  "moralTransformation": [
+    { en: "One look undoes decades of evil. Watching his son tortured, Vader hurls the Emperor down the shaft.", es: "Una mirada deshace d\xE9cadas de maldad. Al ver a su hijo torturado, Vader lanza al Emperador al abismo." },
+    { en: "It all turns on a single decision to believe. The moment Neo accepts he's the One, the bullets stop dead.", es: "Todo gira en una sola decisi\xF3n de creer. En cuanto Neo acepta que es el Elegido, las balas se paran en seco." },
+    { en: "Her certainty shifts while her goodness holds. Lecter swaps her black-and-white read on evil for something grayer.", es: "Se le mueve la certeza mientras su bondad aguanta. Lecter le cambia su lectura del mal en blanco y negro por una m\xE1s gris." },
+    { en: 'The scorned "Kingslayer" wins his honor back the instant he turns around to pull Brienne off the bear.', es: 'El despreciado "Matarreyes" se gana de vuelta el honor en el instante en que da media vuelta a sacar a Brienne del oso.' },
+    { en: "Acceptance carries her, never effort. Her ice powers were never the threat; her dread of them was.", es: "La lleva la aceptaci\xF3n, nunca el esfuerzo. Sus poderes de hielo nunca fueron la amenaza; lo fue el pavor que les ten\xEDa." },
+    { en: "Refusing to let prison rewrite him is the transformation itself. Nineteen years, and he stays exactly himself.", es: "Negarse a que la c\xE1rcel lo reescriba es la transformaci\xF3n misma. Diecinueve a\xF1os, y sigue siendo exactamente \xE9l." }
+  ],
+  "Flashback": [
+    { en: "Each past explains some present choice on the island, so we keep judging these people by the lives they left.", es: "Cada pasado explica alguna elecci\xF3n presente en la isla, as\xED que seguimos juzgando a esta gente por la vida que dej\xF3 atr\xE1s." },
+    { en: "Vito's rise and Michael's fall sit side by side in the cut, the father's gains throwing the son's losses into relief.", es: "El ascenso de Vito y la ca\xEDda de Michael van pegados en el montaje, y las ganancias del padre realzan las p\xE9rdidas del hijo." },
+    { en: `The flashbacks won't agree with each other, so memory comes off as unreliable and "Rosebud" stays unexplained by design.`, es: 'Los flashbacks no se ponen de acuerdo entre s\xED, as\xED que la memoria queda como poco fiable y "Rosebud" se queda sin explicar a prop\xF3sito.' },
+    { en: "Two timelines run shoulder to shoulder, so the past doesn't just explain the hero, it assembles him before our eyes.", es: "Dos l\xEDneas de tiempo corren hombro con hombro, as\xED que el pasado no solo explica al h\xE9roe, lo ensambla ante nuestros ojos." },
+    { en: "The memory comes apart even as it plays, so the form itself shows it being erased while he reaches for it.", es: "El recuerdo se descompone mientras transcurre, as\xED que la forma misma lo muestra borr\xE1ndose mientras \xE9l tira de \xE9l." }
+  ],
+  "Flashforward": [
+    { en: "The cold open dangles an effect with no cause, so the whole season becomes the answer to its own riddle.", es: "El arranque cuelga un efecto sin causa, y la temporada entera se vuelve la respuesta a su propio enigma." },
+    { en: "The future shows up with the names blacked out. We get the night of the murder, never the culprit, and the dread climbs.", es: "El futuro asoma con los nombres tachados. Nos dan la noche del crimen, nunca al culpable, y el terror trepa." },
+    { en: 'Perception is the whole trick. Her "flashbacks" turn out to be the future, because she lives time out of order.', es: 'La percepci\xF3n es todo el truco. Sus "flashbacks" resultan ser el futuro, porque ella vive el tiempo desordenado.' },
+    { en: "Knowing how each character dies before they do reshapes how we watch them live every single scene.", es: "Saber c\xF3mo muere cada personaje antes que \xE9l reconfigura c\xF3mo lo vemos vivir cada escena." },
+    { en: "Death narrates and spoils its own tale, so we're already grieving these people before we've finished meeting them.", es: "La Muerte narra y revienta su propio cuento, as\xED que ya lloramos a esta gente antes de terminar de conocerla." }
+  ],
+  "Foreshadowing": [
+    { en: "The prologue spoils it up front: they both die. So the dread isn't about what happens, it's about watching them walk into it step by step.", es: "El pr\xF3logo ya lo cuenta: los dos mueren. Por eso el suspense no est\xE1 en qu\xE9 pasa, sino en verlos caminar hacia ello paso a paso." },
+    { en: "Torn-up warning signs and a couple of victims, all before the shark ever shows its fin. It terrifies you before you even see it.", es: "Carteles de aviso destrozados y un par de v\xEDctimas, todo antes de que el tibur\xF3n asome la aleta. Aterra antes incluso de aparecer." },
+    { en: "First time through, the pink teddy bear is just a stray image. Rewatch it and the color cues are quietly pointing at who dies next.", es: "La primera vez, el oso de peluche rosa es solo una imagen suelta. Al revisar, los colores se\xF1alan en voz baja qui\xE9n muere despu\xE9s." },
+    { en: "Lennie keeps crushing soft things by accident, a mouse here, a puppy there. By the time he kills Curley's wife, it's awful and somehow expected.", es: "Lennie aplasta cosas suaves sin querer, un rat\xF3n aqu\xED, un cachorro all\xE1. Cuando mata a la mujer de Curley, duele y a la vez ya lo ve\xEDas venir." },
+    { en: "Watch it again and every odd little beat turns into a clue that Bruce was dead the whole time. Hidden right out in the open.", es: "Vuelve a verla y cada momento raro se convierte en una pista de que Bruce llevaba muerto desde el principio. Escondido a plena vista." }
+  ],
+  "Chekhov's Gun": [
+    { en: "Hang a rifle on the wall in act one and Chekhov says it had better go off later. Leave it unfired and you've broken a promise to the audience.", es: "Si cuelgas un rifle en la pared en el primer acto, Ch\xE9jov dice que m\xE1s vale que dispare luego. Dejarlo sin usar es romper una promesa al p\xFAblico." },
+    { en: "Looks like a worthless trinket, so you stop thinking about it. That's the trick, because the Ring is the whole plot and calling it junk keeps it hidden.", es: "Parece una baratija sin valor, as\xED que dejas de pensar en \xE9l. Ah\xED est\xE1 el truco: el Anillo es toda la trama, y llamarlo chatarra lo mantiene oculto." },
+    { en: "Hitchcock flashes the knife early. So the shower stabbing reads as something the film set up, never as a random shock.", es: "Hitchcock ense\xF1a el cuchillo pronto. Por eso el apu\xF1alamiento en la ducha se nota preparado y nunca cae como un susto al azar." },
+    { en: "Chigurh keeps reaching for that coin. What starts as a casual bet at a gas station ends up deciding whether a man lives or dies.", es: "Chigurh vuelve una y otra vez a esa moneda. Lo que arranca como una apuesta casual en una gasolinera acaba decidiendo si un hombre vive o muere." }
+  ],
+  "Red Herring": [
+    { en: "Every suspect in the whodunit is planted to look guilty, just to burn your suspicion on the wrong person.", es: "Cada sospechoso del misterio est\xE1 puesto ah\xED para parecer culpable, solo para que gastes tus sospechas en quien no es." },
+    { en: "So much fake guilt gets thrown around, blood, a staged suicide, that the nurse who seems too nice slips right past us. She did it.", es: "Se lanza tanta culpa falsa, sangre, un suicidio fingido, que la enfermera demasiado amable se nos cuela del todo. Fue ella." },
+    { en: "Doyle waves the obvious suspect in your face so the tiny clue Holmes catches sails by. When he lays it out, it feels like a revelation.", es: "Doyle te agita al sospechoso obvio delante para que la pista m\xEDnima que Holmes pilla se te escape. Cuando la explica, suena a revelaci\xF3n." },
+    { en: "Amy's diary works on us. We pity the victim and trust her voice, and that trust is precisely why her faked murder blindsides us.", es: "El diario de Amy nos manipula. Compadecemos a la v\xEDctima y nos fiamos de su voz, y esa confianza es justo lo que nos ciega ante su asesinato fingido." },
+    { en: "Pile on enough shady relatives and the one real clue vanishes under decades of family scandal.", es: "Amontona suficientes parientes turbios y la \xFAnica pista de verdad desaparece bajo d\xE9cadas de esc\xE1ndalo familiar." }
+  ],
+  "Plot Twist": [
+    { en: "Learn that Malcolm's dead and you want to start over from the top. No new scene gets added; every scene you already saw just means something else now.", es: "Descubre que Malcolm est\xE1 muerto y te entran ganas de empezar de cero. No se a\xF1ade ninguna escena; cada una que ya viste pasa a significar otra cosa." },
+    { en: "It's not really that Tyler is the narrator. The kicker is that the movie was running the same con on you that it ran on him.", es: "El golpe no es del todo que Tyler sea el narrador. Lo bueno es que la pel\xEDcula te hac\xEDa el mismo timo que a \xE9l, todo el rato." },
+    { en: "The haunted-house logic gets flipped. Turns out the ghosts terrorizing the family are the living, and the mother and her kids are the dead ones.", es: "La l\xF3gica de la casa encantada se da la vuelta. Resulta que los fantasmas que aterran a la familia son los vivos, y la madre y sus hijos son los muertos." },
+    { en: "Hunting down his daughter's tormentor, he discovers he engineered his own torture. The whole revenge was built to point back at him.", es: "Mientras caza al verdugo de su hija, descubre que \xE9l mismo orquest\xF3 su propia tortura. Toda la venganza estaba montada para apuntarle a \xE9l." },
+    { en: "The detective combing the asylum turns out to be a patient there. Every bit of his investigation was a staged role-play meant to cure him.", es: "El detective que peina el manicomio resulta ser un interno. Cada parte de su investigaci\xF3n era una representaci\xF3n montada para curarlo." }
+  ],
+  "Deus Ex Machina": [
+    { en: "Literally 'god from the machine.' Greek playwrights would lower a god by crane to tidy up the mess, and that's where the name for a lazy ending comes from.", es: "Literalmente 'dios desde la m\xE1quina'. Los dramaturgos griegos bajaban a un dios con una gr\xFAa para arreglar el l\xEDo, y de ah\xED viene el nombre del final perezoso." },
+    { en: "Humanity can't lay a finger on the aliens. Then plain old germs finish them off, so the victory drops in from outside and no hero earns it.", es: "La humanidad no logra ni rozar a los alien\xEDgenas. Luego unos microbios cualquiera acaban con ellos, as\xED que la victoria cae de fuera y ning\xFAn h\xE9roe la gana." },
+    { en: "Out of nowhere the hero has a power nobody mentioned, conveniently right on cue. The rescue feels cheap because nothing led up to it.", es: "De la nada el h\xE9roe tiene un poder que nadie hab\xEDa mencionado, justo en el momento oportuno. El rescate sabe a poco porque nada lo prepar\xF3." },
+    { en: "A god reaches down and lifts the favored hero clear of danger. The whole conflict ends from above, with the characters barely lifting a finger.", es: "Un dios baja la mano y levanta al h\xE9roe favorito fuera del peligro. Todo el conflicto se cierra desde arriba, sin que los personajes apenas muevan un dedo." }
+  ],
+  "Eucatastrophe": [
+    { en: "Tolkien made up the word for it. Gollum bites the Ring off and tumbles into the lava, which means Frodo's failure is exactly what saves everyone.", es: "Tolkien se invent\xF3 la palabra para esto. Gollum arranca el Anillo de un mordisco y cae a la lava, as\xED que el fracaso de Frodo es justo lo que salva a todos." },
+    { en: "Aslan comes back on an older rule: an innocent death cancels the witch's power. Because the rescue obeys a law already in place, it plays fair.", es: "Aslan vuelve por una ley m\xE1s antigua, la de que una muerte inocente anula el poder de la bruja. Como el rescate obedece una norma ya existente, juega limpio." },
+    { en: "The whole town turns up with cash to save George, all because he'd helped them for years. That happy ending is paid for in full.", es: "El pueblo entero aparece con dinero para salvar a George, todo porque llevaba a\xF1os ayud\xE1ndolos. Ese final feliz est\xE1 pagado hasta el \xFAltimo c\xE9ntimo." },
+    { en: "Harry pulls through thanks to his mother's love, or a choice he made books ago. The rescue reads as a payoff that was always owed to him.", es: "Harry sale adelante gracias al amor de su madre, o a una decisi\xF3n que tom\xF3 libros atr\xE1s. El rescate se lee como una recompensa que siempre se le deb\xEDa." }
+  ],
+  "Poetic Justice": [
+    { en: "The villain dies in the very trap he rigged for his victims. Punishment and crime line up perfectly.", es: "El villano muere en la misma trampa que arm\xF3 para sus v\xEDctimas. Castigo y crimen encajan a la perfecci\xF3n." },
+    { en: "A fable is there to teach you something, so by the last page you're already waiting for the cruel one to get exactly what his cruelty earned.", es: "Una f\xE1bula est\xE1 para ense\xF1arte algo, as\xED que para la \xFAltima p\xE1gina ya esperas que el cruel reciba justo lo que se gan\xF3 con su crueldad." },
+    { en: "Greed or panic usually does the criminal in. His undoing grows out of his own flaw long before the detective ever closes the net.", es: "La avaricia o el p\xE1nico suelen acabar con el criminal. Su perdici\xF3n brota de su propio defecto mucho antes de que el detective cierre el cerco." },
+    { en: "Shakespeare loves killing the schemer with his own scheme. Picture Claudius downing his own poison, and order clicks back into place.", es: "A Shakespeare le encanta matar al intrigante con su propia intriga. Imagina a Claudio trag\xE1ndose su propio veneno, y el orden vuelve a su sitio." }
+  ],
+  "\u201CShow, Don\u2019t Tell\u201D": [
+    { en: "Don't write 'she was nervous.' Show her hands shaking and let us work it out, because a feeling we catch ourselves hits twice as hard.", es: "No escribas 'estaba nerviosa'. Muestra sus manos temblando y deja que lo deduzcamos, porque un sentimiento que pillamos solos golpea el doble." },
+    { en: "Film thinks in pictures. One glance, one small gesture, can carry love or fear further than any line that says it aloud.", es: "El cine piensa en im\xE1genes. Una mirada, un peque\xF1o gesto, llevan el amor o el miedo m\xE1s lejos que cualquier frase que lo diga en voz alta." },
+    { en: "Minimalists cut the author's commentary entirely. So a plain detail, an untouched plate of food, has to carry all the sadness by itself.", es: "Los minimalistas eliminan por completo el comentario del autor. As\xED un detalle simple, un plato de comida intacto, tiene que cargar \xE9l solo con toda la tristeza." },
+    { en: "Most of the emotion stays under the surface with Hemingway, an iceberg with only the tip showing, which is why the bare sentences weigh so much.", es: "Con Hemingway casi toda la emoci\xF3n se queda bajo la superficie, un iceberg del que solo asoma la punta, y por eso las frases escuetas pesan tanto." }
+  ],
+  "Quibble (Wordplay)": [
+    { en: "A Shakespeare pun carries two meanings at once, packing a grave theme and a filthy joke into one line.", es: "Un juego de palabras de Shakespeare lleva dos sentidos a la vez, metiendo un tema grave y un chiste guarro en una sola l\xEDnea." },
+    { en: "Wilde takes a tired old saying and turns it inside out, landing the laugh and the dig at society in one tidy line.", es: "Wilde coge un dicho viejo y manido y lo pone del rev\xE9s, soltando la risa y el dardo a la sociedad en una misma frase pulida." },
+    { en: "In court or in politics the quibble is a weapon. Fight long enough over what a single word really means and you can win or lose the entire case.", es: "En los tribunales o en la pol\xEDtica, el juego de palabras es un arma. Pelea lo suficiente por lo que significa una sola palabra y ganas o pierdes el caso entero." },
+    { en: "Screwball comedies fire double meanings so fast you can barely keep up. The speed itself is the punchline.", es: "Las comedias screwball disparan dobles sentidos tan r\xE1pido que apenas los sigues. La propia velocidad es el remate." }
+  ],
+  "Theme vs Premise": [
+    { en: "'Love' is just what it's about. 'Love is worth dying for' is the actual claim, and the lovers dying is the proof on the table.", es: "'El amor' es solo de qu\xE9 va. 'El amor vale morir por \xE9l' es la afirmaci\xF3n de verdad, y las muertes de los amantes son la prueba sobre la mesa." },
+    { en: "Say 'family' and you've said nothing yet. 'Devotion to family destroys a man' actually claims something, and Michael's cold final shot backs it up.", es: "Di 'familia' y a\xFAn no has dicho nada. 'La devoci\xF3n a la familia destruye a un hombre' s\xED afirma algo, y el plano final g\xE9lido de Michael lo respalda." },
+    { en: "'Ambition' names a subject and nothing more. 'Ruthless ambition leads to ruin' actually takes a side, with Macbeth's bloody collapse as the evidence.", es: "'Ambici\xF3n' nombra un asunto y nada m\xE1s. 'La ambici\xF3n despiadada lleva a la ruina' s\xED toma partido, con el derrumbe sangriento de Macbeth como prueba." },
+    { en: "'Pride' is the topic; the argument is that pride corrupts a good man. You watch it happen as Walt drifts from teacher to drug lord.", es: "'Orgullo' es el tema; la tesis es que el orgullo corrompe a un buen hombre. Lo ves ocurrir mientras Walt deriva de profesor a narco." },
+    { en: "'Greed' on its own sits there neutral. The bet is that compassion can redeem a miser, and Scrooge waking up a changed man settles it.", es: "'Avaricia' a secas se queda ah\xED, neutral. La apuesta es que la compasi\xF3n puede redimir a un avaro, y Scrooge despertando hecho otro lo zanja." }
+  ],
+  "Controlling Idea": [
+    { en: "The idea points to a cause: evil only wins when good people are powerless. Cross walking away from all of it makes the case.", es: "La idea apunta a una causa: el mal solo vence cuando los buenos est\xE1n indefensos. Que Cross se marche de rositas lo deja demostrado." },
+    { en: "Love gets fulfilled through sacrifice. That's the whole reason Rick puts Ilsa on the plane instead of holding onto her.", es: "El amor se cumple a trav\xE9s del sacrificio. Esa es toda la raz\xF3n por la que Rick mete a Ilsa en el avi\xF3n en lugar de retenerla." },
+    { en: "Justice wins here because one man flat-out refuses to cut a deal. Galvin turning down the easy settlement is what lets it happen.", es: "Aqu\xED la justicia gana porque un hombre se niega en redondo a aceptar el trato. Que Galvin rechace el arreglo f\xE1cil es lo que la hace posible." },
+    { en: "Freedom comes from defying a world built to cage you. Read that way, driving off the cliff is no suicide, just the idea pushed all the way.", es: "La libertad nace de desafiar a un mundo hecho para enjaularte. Visto as\xED, saltar por el precipicio no es suicidio, solo la idea llevada hasta el final." },
+    { en: "Even the bleak version still names a cause: evil wins because the world outruns the people fighting it, Sheriff Bell standing there helpless.", es: "Hasta la versi\xF3n sombr\xEDa sigue nombrando una causa: el mal gana porque el mundo corre m\xE1s que quienes lo combaten, con el sheriff Bell ah\xED, impotente." }
+  ],
+  "Thematic Argument": [
+    { en: "Results carry the point, not a speech. What proves compassion can redeem Scrooge is his rewritten future, not the promise he made.", es: "Lo que sostiene el argumento son los resultados, no un discurso. Lo que prueba que la compasi\xF3n puede redimir a Scrooge es su futuro reescrito, no la promesa que hizo." },
+    { en: "Each bribe Schindler hands over counts as evidence. The case builds out of what saving one more life actually costs him.", es: "Cada soborno que entrega Schindler cuenta como prueba. El argumento se va construyendo con lo que salvar una vida m\xE1s le cuesta de verdad." },
+    { en: "Phil living the same day over and over is how the film proves it. Only after burning ages on pure selfishness does his turn toward others ring true.", es: "Que Phil viva el mismo d\xEDa una y otra vez es como la pel\xEDcula lo demuestra. Solo tras quemar siglos en puro ego\xEDsmo, su giro hacia los dem\xE1s suena sincero." },
+    { en: "Guilt makes Raskolnikov physically ill. His suffering does the arguing, not a lecture, proving that the confession is what finally heals him.", es: "La culpa pone a Rask\xF3lnikov f\xEDsicamente enfermo. Su sufrimiento es lo que argumenta, no un serm\xF3n, y demuestra que la confesi\xF3n es lo que al fin lo cura." },
+    { en: "Show us the town as it would be with no George in it, and you've made the case. Those 'what if he'd never lived' scenes argue better than any speech could.", es: "Ens\xE9\xF1anos el pueblo tal como ser\xEDa sin George, y ya tienes el argumento. Esas escenas de 'y si nunca hubiera existido' convencen mejor que cualquier discurso." },
+    { en: "One juror pulls the case apart fact by fact and wins the others over little by little, so reason ends up beating prejudice on the evidence itself.", es: "Un jurado desarma el caso dato a dato y se va ganando a los dem\xE1s poco a poco, de modo que la raz\xF3n acaba venciendo al prejuicio con las propias pruebas." }
+  ],
+  "Motif & Symbol": [
+    { en: "That green light sits across the bay, always a little too far to reach. The distance is what makes Gatsby's longing something you can actually see.", es: "Esa luz verde est\xE1 al otro lado de la bah\xEDa, siempre un poco demasiado lejos. La distancia es lo que vuelve visible el anhelo de Gatsby." },
+    { en: "The conch means 'order' only while the boys still agree to obey it. When it shatters, that's their entire pact breaking apart, not just a shell cracking.", es: "La caracola significa 'orden' solo mientras los ni\xF1os siguen aceptando obedecerla. Cuando se hace a\xF1icos, es su pacto entero rompi\xE9ndose, no solo una concha parti\xE9ndose." },
+    { en: "Water keeps surfacing at every major turn in Chiron's life, knotting his three chapters together as moments where everything shifts.", es: "El agua reaparece en cada giro importante de la vida de Chiron, anudando sus tres cap\xEDtulos como momentos en que todo cambia." },
+    { en: "At first the 'A' is a brand of shame. Over time the town starts reading it as 'Able' instead, the same letter, given a new meaning by how Hester lives.", es: "Al principio la 'A' es una marca de verg\xFCenza. Con el tiempo el pueblo empieza a leerla como 'Able', la misma letra, con otro sentido por c\xF3mo vive Hester." },
+    { en: "Rosebud hits hard precisely because the truth barely reaches us, a whole lost childhood crammed into one word no living soul can unpack.", es: "Rosebud golpea fuerte justamente porque la verdad apenas nos llega, una infancia perdida entera apretujada en una palabra que ning\xFAn vivo puede descifrar." },
+    { en: "Killing a mockingbird is a sin because all it does is sing and harm nobody. The bird stands in for every innocent the town grinds down.", es: "Matar un ruise\xF1or es pecado porque lo \xFAnico que hace es cantar sin da\xF1ar a nadie. El p\xE1jaro representa a cada inocente que el pueblo aplasta." }
+  ],
+  "Theme Through Character": [
+    { en: "The Joker keeps daring Batman to break a rule, and chaos only wins if order does.", es: "El Joker no para de retar a Batman a romper una regla, y el caos solo gana si el orden cede." },
+    { en: "Javert hunts the law like a believer. Valjean's mercy doesn't change his mind; it ends him.", es: "Javert persigue la ley como un creyente. El perd\xF3n de Valjean no lo convence, lo aniquila." },
+    { en: "Because Salieri narrates, the loser gets to make the case. He recognizes genius and can't bring himself to forgive it.", es: "Como Salieri narra, le toca al perdedor exponer el caso. Reconoce el genio y no logra perdonarlo." },
+    { en: "Both men claw at the same oil patch, and by the end greed and faith have scooped each other empty.", es: "Los dos se disputan la misma tierra petrolera, y al final codicia y fe se han vaciado la una a la otra." },
+    { en: "Fletcher's right that comfort smothers greatness. The awful part is how well his cruelty pays off.", es: "Fletcher tiene raz\xF3n en que la comodidad ahoga la grandeza. Lo terrible es lo bien que rinde su crueldad." },
+    { en: "Same friend, both of them. So the rupture tears apart a brotherhood rather than two clean ideologies.", es: "El mismo amigo, los dos. As\xED que la ruptura parte una hermandad, no dos ideolog\xEDas limpias." }
+  ],
+  "Want vs Need": [
+    { en: "Every cold move Michael makes to guard his family scoops out the thing he claims to guard.", es: "Cada movida fr\xEDa que hace Michael para proteger a su familia ahueca justo lo que dice proteger." },
+    { en: "What stops Woody is fear of being replaced. What he needs is to believe love can stretch to fit more.", es: "Lo que frena a Woody es el miedo a que lo reemplacen. Lo que necesita es creer que el amor da para m\xE1s." },
+    { en: "No riches, no peace and quiet. The ghosts just make Scrooge mourn everyone he shoved away.", es: "Ni riquezas ni paz y tranquilidad. Los esp\xEDritus solo hacen que Scrooge llore a todos los que apart\xF3." },
+    { en: "Walt keeps hiding behind 'I did it for the family' right up to the finale, where he owns up: it was for him.", es: "Walt se escuda en 'lo hice por la familia' hasta el \xFAltimo episodio, donde lo reconoce: fue por \xE9l." },
+    { en: "'Conceal, don't feel' dresses hiding up as virtue. Elsa needs to let people stand close to the danger instead.", es: "'Oc\xFAltalo, no sientas' disfraza de virtud el esconderse. Elsa necesita dejar que la gente se acerque al peligro." },
+    { en: "Andrew gets exactly the greatness he chased, and that's precisely why the price reads as horror.", es: "Andrew consigue justo la grandeza que persegu\xEDa, y por eso mismo el precio se lee como horror." }
+  ],
+  "Wound & Ghost": [
+    { en: "Paris took Ilsa from Rick. We catch it only in flashback, and the cynicism is scar tissue over the wound.", es: "Par\xEDs le quit\xF3 a Ilsa. Solo lo vemos en flashback, y el cinismo de Rick es la cicatriz que cubre la herida." },
+    { en: "Bruce reshapes his parents' murder into a mission with no end date, so he never has to stop grieving.", es: "Bruce convierte el asesinato de sus padres en una misi\xF3n sin fecha de cierre, para no dejar nunca de sufrir." },
+    { en: "Will ditches Skylar before she gets the chance to leave, turning abandonment into something he runs.", es: "Will planta a Skylar antes de que ella pueda irse, y as\xED el abandono pasa a ser algo que \xE9l maneja." },
+    { en: "An OS with no body can't betray Theodore the way his wife did. That's exactly why he can love it.", es: "Un sistema sin cuerpo no puede traicionar a Theodore como lo hizo su esposa. Por eso justamente puede amarlo." },
+    { en: "Anyone Jake loves becomes a threat, and his fists end up confessing the shame his mouth won't.", es: "Cualquiera que Jake ame se vuelve una amenaza, y sus pu\xF1os terminan confesando la verg\xFCenza que su boca calla." },
+    { en: "Carl's old dream turns into the literal house he hauls behind him, dragging at him until he finally cuts it loose.", es: "El viejo sue\xF1o de Carl se vuelve la casa que arrastra literalmente, tirando de \xE9l hasta que por fin la suelta." }
+  ],
+  "The Lie & The Truth": [
+    { en: "Scrooge is sure no one ever loved him. The ghosts dig up the love he had and tossed aside.", es: "Scrooge est\xE1 seguro de que nunca lo amaron. Los esp\xEDritus desentierran el amor que tuvo y tir\xF3." },
+    { en: "Neo finds out the real world is brutal, and also that freedom only counts once he picks it anyway.", es: "Neo descubre que el mundo real es brutal, y tambi\xE9n que la libertad solo cuenta si lo elige igual." },
+    { en: "Only when Phil quits faking kindness and genuinely wants good for people does the loop let him go.", es: "Solo cuando Phil deja de fingir bondad y de verdad quiere el bien de la gente, el bucle lo deja ir." },
+    { en: "Shrapnel inching toward Tony's heart makes the lie physical. The weapons he sold are aimed back at him.", es: "La metralla que se acerca al coraz\xF3n de Tony vuelve f\xEDsica la mentira. Las armas que vendi\xF3 lo apuntan a \xE9l." },
+    { en: "Andy figures playing along is just being clever. What actually corrupted her was selling out her friends, the job was never the problem.", es: "Andy cree que seguir el juego es solo ser lista. Lo que de veras la corrompi\xF3 fue vender a sus amigos; el trabajo nunca fue el problema." },
+    { en: "Giving up the win to shove a stranded friend across the line teaches McQueen what the lie really cost: more than any Cup.", es: "Ceder la victoria para empujar a un amigo varado hasta la meta le ense\xF1a a McQueen lo que costaba la mentira: m\xE1s que cualquier Copa." }
+  ],
+  "Fatal Flaw": [
+    { en: "Oedipus's flaw doubles as his gift. The dogged questioning that cracked the Sphinx now sentences him.", es: "El defecto de Edipo es a la vez su don. La indagaci\xF3n tenaz que venci\xF3 a la Esfinge ahora lo sentencia." },
+    { en: "He doesn't own the ambition alone. Lady Macbeth feeds it too, and the flaw rots the marriage along with the man.", es: "La ambici\xF3n no es suya sola. Lady Macbeth tambi\xE9n la alimenta, y el defecto pudre el matrimonio junto con el hombre." },
+    { en: "Underneath Othello's jealousy sits the fear that he doesn't belong. Iago just hands the outsider a reason to doubt.", es: "Bajo los celos de Othello est\xE1 el miedo a no encajar. Iago solo le da al forastero un motivo para dudar." },
+    { en: "Love turned possessive is Anakin's ruin. He grips people so tightly he'll damn them just to hold on.", es: "Amor vuelto posesi\xF3n es la perdici\xF3n de Anakin. Aprieta tanto a la gente que la condena con tal de no soltarla." },
+    { en: "To Gatsby, Daisy is a past waiting to be rebuilt, and he won't admit she's a woman who already moved on.", es: "Para Gatsby, Daisy es un pasado por reconstruir, y se niega a admitir que es una mujer que ya sigui\xF3 adelante." },
+    { en: "Michael needs the staff to adore him, so he courts the very people he should be managing, swapping authority for approval.", es: "Michael necesita que el equipo lo adore, as\xED que corteja justo a quienes deber\xEDa dirigir, cambiando autoridad por aprobaci\xF3n." }
+  ],
+  "Antagonist Design": [
+    { en: "Gruber's terrorist front fools even his own crew. The menace really kicks in when we learn it's all just greed.", es: "La fachada terrorista de Gruber enga\xF1a hasta a su banda. La amenaza de verdad llega cuando vemos que todo es pura codicia." },
+    { en: "Wanting nothing, the Joker goes straight for Batman's need, gambling that the one rule is just self-interest dressed up.", es: "Como no quiere nada, el Joker va directo a la necesidad de Batman, apostando a que la \xFAnica regla es inter\xE9s propio disfrazado." },
+    { en: "Goeth and Schindler run on the same charm, the same appetites. That overlap shows how thin the line between them is.", es: "Goeth y Schindler funcionan con el mismo encanto, los mismos apetitos. Ese solape muestra qu\xE9 delgada es la l\xEDnea entre ambos." },
+    { en: "Ratched rules through paperwork, never muscle. She punishes by obeying the rules she wrote herself.", es: "Ratched manda con papeleo, jam\xE1s con fuerza. Castiga obedeciendo las reglas que ella misma escribi\xF3." },
+    { en: "Thanos runs on the same sacrifice-the-few logic the heroes use, and his certainty is what unsettles them.", es: "Thanos opera con la misma l\xF3gica de sacrificar a unos pocos que usan los h\xE9roes, y su certeza es lo que los inquieta." },
+    { en: "A coin flip picks who Chigurh kills, turning him into an instrument rather than a man with a motive.", es: "Una moneda decide a qui\xE9n mata Chigurh, lo que lo vuelve un instrumento m\xE1s que un hombre con un motivo." }
+  ],
+  "Character Web": [
+    { en: "Laertes and Fortinbras both avenge their fathers without hesitating, and each one shames the delay Hamlet keeps choosing.", es: "Laertes y Fortinbras vengan a sus padres sin titubear, y cada uno averg\xFCenza la demora que Hamlet sigue eligiendo." },
+    { en: "Jesse is the conscience Walt sheds, Gus the endpoint he grows into, Hank the law forever at his heels.", es: "Jesse es la conciencia que Walt abandona, Gus el final en que se convierte, Hank la ley siempre pis\xE1ndole los talones." },
+    { en: "Every suitor embodies a different theory of marriage, which turns Elizabeth's choice into a verdict on the whole theme.", es: "Cada pretendiente encarna una teor\xEDa distinta del matrimonio, lo que vuelve la elecci\xF3n de Elizabeth un veredicto sobre el tema entero." },
+    { en: "Sonny's fury and Fredo's weakness fix the outer edges Michael steers clear of, sketching out his icy middle ground.", es: "La furia de Sonny y la debilidad de Fredo fijan los extremos que Michael esquiva, dibujando su g\xE9lido punto medio." },
+    { en: "Buzz first swallows the very delusion Woody ridicules, then turns around and teaches Woody where he fits among the toys.", es: "Buzz primero se traga la misma ilusi\xF3n de la que Woody se burla, y luego le ense\xF1a a Woody su lugar entre los juguetes." },
+    { en: "Each Roy kid wrestles the same question, what their father's love is worth, and every answer they reach is a wreck.", es: "Cada hijo Roy lidia con la misma pregunta, cu\xE1nto vale el amor de su padre, y toda respuesta a la que llegan es un desastre." }
+  ],
+  "Subtext": [
+    { en: "Their jet-lagged chatter is just an excuse to stay in the room. The conversation that matters is the one they keep dodging.", es: "Su ch\xE1chara de jet lag es solo una excusa para quedarse en el cuarto. La conversaci\xF3n que importa es la que esquivan." },
+    { en: "Ennis's flat 'I ain't no queer' carries the whole tragedy. He says it to keep the longing in the ground.", es: "El seco 'no soy maric\xF3n' de Ennis carga la tragedia entera. Lo dice para mantener el deseo bajo tierra." },
+    { en: "Behind professionalism is where Stevens hides. Every stiff courtesy to Kenton gauges exactly what he won't let himself feel.", es: "Tras el profesionalismo se esconde Stevens. Cada cortes\xEDa r\xEDgida hacia Kenton mide justo lo que no se permite sentir." },
+    { en: "Don sells products by selling feelings he'd never cop to having, so every pitch doubles as a confession in disguise.", es: "Don vende productos vendiendo emociones que jam\xE1s admitir\xEDa tener, as\xED que cada presentaci\xF3n es una confesi\xF3n disfrazada." },
+    { en: "Cruelty stands in for love here. George and Martha go at each other because tenderness would expose the son they invented.", es: "La crueldad hace de amor aqu\xED. George y Martha se atacan porque la ternura revelar\xEDa al hijo que inventaron." },
+    { en: "Arguing over whether romance lasts lets them ask, without ever asking, whether theirs still might.", es: "Discutir si el romance dura les permite preguntar, sin preguntarlo nunca, si el suyo a\xFAn podr\xEDa." },
+    { en: "Tony talks mob business, but it's his own fears he's circling, in the only tongue that feels safe to him.", es: "Tony habla de asuntos de la mafia, pero son sus propios miedos los que rodea, en la \xFAnica lengua que siente segura." }
+  ],
+  "On-the-Nose Dialogue": [
+    { en: "Put the drafts side by side: the beat only lands once the information turns into ammunition in a fight instead of a flat announcement.", es: "Pon las versiones lado a lado: el momento solo funciona cuando la informaci\xF3n se vuelve munici\xF3n en una pelea en vez de un anuncio plano." },
+    { en: "'You're tearing me apart, Lisa!' went meme because the line names the feeling instead of letting behavior carry it.", es: "'\xA1Me est\xE1s destrozando, Lisa!' se volvi\xF3 meme porque la frase nombra el sentimiento en lugar de dejar que la conducta lo lleve." },
+    { en: "Anakin and Padm\xE9 just announce their love, so the romance comes off like a status report instead of a seduction.", es: "Anakin y Padm\xE9 sin m\xE1s anuncian su amor, as\xED que el romance suena a parte de estado en vez de a seducci\xF3n." },
+    { en: "Soaps spell out every emotion aloud on purpose, so a viewer who looks away for a minute never loses the thread.", es: "Las telenovelas deletrean cada emoci\xF3n en voz alta a prop\xF3sito, para que quien mira a otro lado un minuto no pierda el hilo." },
+    { en: "Told to name his fear out loud, the boy ends up playing the label rather than the fear underneath it.", es: "Como le mandan nombrar su miedo en voz alta, el ni\xF1o acaba interpretando la etiqueta y no el miedo que hay debajo." }
+  ],
+  "Voice Differentiation": [
+    { en: "Swearengen curses in full Shakespeare. Bullock's silences are a voice too, marking everything he keeps back.", es: "Swearengen maldice en pleno Shakespeare. Los silencios de Bullock tambi\xE9n son voz, marcan todo lo que se guarda." },
+    { en: "Jules preaches scripture while Vincent goes on about trivia. It's their obsessions, more than the slang, that separate them.", es: "Jules predica las escrituras mientras Vincent divaga sobre nimiedades. Son sus obsesiones, m\xE1s que la jerga, las que los separan." },
+    { en: "Every institution carries its own jargon, so the words in a line tip you off about which world the speaker belongs to.", es: "Cada instituci\xF3n arrastra su propia jerga, as\xED que las palabras de una frase te avisan de qu\xE9 mundo es quien habla." },
+    { en: "Marge's politeness isn't trim. Her unstoppable niceness is the thing that finally cracks the killers' clipped, frozen talk.", es: "La cortes\xEDa de Marge no es adorno. Su amabilidad imparable es lo que al fin quiebra el habla seca y helada de los asesinos." },
+    { en: "Juno's invented slang pins her to one very specific teenager. Hand it to any adult and it rings false.", es: "La jerga inventada de Juno la clava a una adolescente muy concreta. D\xE1sela a cualquier adulto y suena falsa." },
+    { en: "Kendall's borrowed buzzwords broadcast how empty he is, while Logan barely opens his mouth because the power is already his.", es: "Las muletillas prestadas de Kendall pregonan lo vac\xEDo que est\xE1, mientras Logan apenas abre la boca porque el poder ya es suyo." },
+    { en: "Roma seduces, Levene grovels, and each pitch exposes the man, so style alone maps out the office pecking order.", es: "Roma seduce, Levene suplica, y cada discurso desnuda al hombre, as\xED que el puro estilo traza el escalaf\xF3n de la oficina." }
+  ],
+  "The Scene Turn": [
+    { en: "Cornered flips to lethal the second Michael walks back from the bathroom with a gun in his hand.", es: "Acorralado pasa a letal en el segundo en que Michael vuelve del ba\xF1o con un arma en la mano." },
+    { en: "Blake recasts the salesmen's own jobs as a threat, and suddenly the sales floor feels like a firing line.", es: "Blake reconvierte los empleos de los vendedores en una amenaza, y de pronto la oficina de ventas parece un pelot\xF3n de fusilamiento." },
+    { en: "Control is the currency here. Whoever's sitting on more knowledge owns the room by the time the scene ends.", es: "El control es la moneda aqu\xED. Quien guarda m\xE1s conocimiento domina la sala para cuando termina la escena." },
+    { en: "Two pros share coffee and real respect, then calmly promise to kill each other. That warmth is what makes the turn tragic.", es: "Dos profesionales comparten caf\xE9 y respeto aut\xE9ntico, y luego, tranquilos, prometen matarse. Esa calidez es lo que vuelve tr\xE1gico el giro." },
+    { en: "Landa wields politeness as the weapon, and the turn arrives when the farmer grasps the courtesy was a trap from the first word.", es: "Landa empu\xF1a la cortes\xEDa como arma, y el giro llega cuando el granjero capta que la amabilidad fue una trampa desde la primera palabra." },
+    { en: "The shouting match cuts deep because both walked in dead set on staying civil, and just couldn't.", es: "La pelea a gritos corta hondo porque ambos entraron resueltos a mantener la calma, y no pudieron." }
+  ],
+  "Exposition in Dialogue": [
+    { en: "The lawsuit recasts the backstory as a brawl. Every fact is contested, so just telling it becomes an attack.", es: "La demanda reconvierte la historia en una ri\xF1a. Cada dato se disputa, as\xED que contarla ya es un ataque." },
+    { en: "Quint's trauma accounts for his obsession, so the backstory stacks up dread and reveals the man before the hunt even starts.", es: "El trauma de Quint da cuenta de su obsesi\xF3n, as\xED que la historia acumula pavor y revela al hombre antes de que empiece la caza." },
+    { en: "Facts surface while Clayton works the crisis live, so we pick up the stakes by watching him handle them.", es: "Los datos afloran mientras Clayton trabaja la crisis en vivo, as\xED que captamos lo que est\xE1 en juego vi\xE9ndolo lidiar con ello." },
+    { en: "Cobb lays out the rules by recruiting skeptics who push back, and the lecture quietly becomes a negotiation.", es: "Cobb expone las reglas reclutando esc\xE9pticos que replican, y la lecci\xF3n se vuelve, sin ruido, una negociaci\xF3n." },
+    { en: "Witness by witness, Kaffee pries the truth loose, so every fact reads as a win he had to wrestle for rather than a handout.", es: "Testigo a testigo, Kaffee arranca la verdad, as\xED que cada dato se lee como una victoria peleada y no como un regalo." },
+    { en: "The junior analysts can't read the numbers, so watching the seniors explain them is what dramatizes the crash on its way.", es: "Los analistas j\xF3venes no saben leer los n\xFAmeros, as\xED que ver a los veteranos explicarlos es lo que dramatiza el colapso que se viene." }
+  ],
+  "Action Beats & Silence": [
+    { en: "Pinter scores his pauses like notes on a staff, and the menace settles on whoever won't fill the silence.", es: "Pinter compone sus pausas como notas en un pentagrama, y la amenaza recae en quien no quiere llenar el silencio." },
+    { en: "Handing the decision to a coin flip, Chigurh lets chance speak, and the silence turns into a stranger's death sentence.", es: "Al entregar la decisi\xF3n a una moneda, Chigurh deja hablar al azar, y el silencio se vuelve sentencia de muerte para un desconocido." },
+    { en: "The Driver keeps quiet so everyone else gives themselves away. His stillness works like an interrogation.", es: "El conductor se queda callado para que los dem\xE1s se delaten. Su quietud funciona como un interrogatorio." },
+    { en: "Plainview's silent digging announces his will before a word leaves his mouth. We read the ambition in how he works.", es: "El cavar silencioso de Plainview anuncia su voluntad antes de que salga una palabra de su boca. Leemos la ambici\xF3n en c\xF3mo trabaja." },
+    { en: "An unsung lyric, a glance held a beat too long, and the attraction gets to exist without a confession neither could afford.", es: "Una letra que no se canta, una mirada sostenida un segundo de m\xE1s, y la atracci\xF3n puede existir sin una confesi\xF3n que ninguno podr\xEDa permitirse." },
+    { en: "Here silence is a rule for staying alive, so the smallest gesture carries deadly weight no spoken word would ever risk.", es: "Aqu\xED el silencio es una regla para seguir vivo, as\xED que el gesto m\xE1s m\xEDnimo carga un peso mortal que ninguna palabra arriesgar\xEDa." },
+    { en: "Ozu cuts to an empty room to give grief somewhere to settle, and the feeling gathers in the space between the lines.", es: "Ozu corta a una habitaci\xF3n vac\xEDa para darle al duelo d\xF3nde posarse, y el sentimiento se junta en el hueco entre las frases." }
+  ],
+  "Genre & Conventions": [
+    { en: "On land the shark can't be touched. The moment they board Quint's boat, the 'house' clamps shut around them.", es: "En tierra no hay quien toque al tibur\xF3n. En cuanto suben al barco de Quint, la 'casa' se cierra de golpe sobre ellos." },
+    { en: "Sure, the droids are the prize. The thing Luke actually carries home from the trip is faith in the Force.", es: "Vale, los droides son el premio. Lo que Luke se trae de vuelta del viaje es la fe en la Fuerza." },
+    { en: "He never asked for any of this. Just a cop dropping in on his wife, and those bare feet mark him as the trapped everyman.", es: "\xC9l no busc\xF3 nada de esto. Solo un poli que pasa a ver a su mujer, y esos pies descalzos lo se\xF1alan como el hombre com\xFAn atrapado." },
+    { en: "A kiss won't carry it. You need years of two friends bickering and circling before they cave and admit they need each other.", es: "Un beso no basta. Hacen falta a\xF1os de dos amigos pic\xE1ndose y rond\xE1ndose antes de rendirse y admitir que se necesitan." },
+    { en: "Clarice cracks it across a table from Lecter, never in a chase. Psychology drives this one, and the action stays offstage.", es: "Clarice lo resuelve frente a frente con Lecter, nunca en una persecuci\xF3n. Aqu\xED manda la psicolog\xEDa y la acci\xF3n se queda fuera." },
+    { en: "The bite was the easy part. Peter's weight to carry is knowing that letting the robber walk cost Uncle Ben his life.", es: "El mordisco fue lo f\xE1cil. La carga de Peter es saber que dejar escapar al ladr\xF3n le cost\xF3 la vida al t\xEDo Ben." },
+    { en: "At its core: a son who lived through the boating accident, and a mother who can't forgive him for being the one who lived.", es: "En el fondo: un hijo que sobrevivi\xF3 al accidente de barco y una madre incapaz de perdonarle ser el que sigue vivo." }
+  ],
+  "Monster in the House": [
+    { en: "Beaches stay open because the mayor wants the tourist money. Greed is what summons the shark, never the fish.", es: "Las playas siguen abiertas porque el alcalde quiere el dinero del turismo. Lo que invoca al tibur\xF3n es la avaricia, jam\xE1s el pez." },
+    { en: "Scene by scene the 'house' contracts as the crew dies off, till nothing's left but the ship's corridors closing in.", es: "Escena a escena la 'casa' se contrae mientras la tripulaci\xF3n cae, hasta que solo quedan los pasillos de la nave cerr\xE1ndose." },
+    { en: "You can't evacuate when the monster's sealed inside a little girl. The priests are stuck fighting it from within her.", es: "No puedes evacuar cuando el monstruo est\xE1 sellado dentro de una ni\xF1a. A los curas no les queda m\xE1s que combatirlo desde dentro de ella." },
+    { en: "Norman is the monster and the house both, and that corpse upstairs is the buried sin that twisted him into what he is.", es: "Norman es el monstruo y la casa a la vez, y ese cad\xE1ver de arriba es el pecado enterrado que lo retorci\xF3 hasta volverlo lo que es." },
+    { en: "Rule flipped clean over: the monsters hunt by sound, so silence is the only thing keeping the family alive.", es: "La regla queda del rev\xE9s: los monstruos cazan por el sonido, as\xED que el silencio es lo \xFAnico que mantiene viva a la familia." },
+    { en: "No walls anywhere, and the open desert still pins them like a cage. The ground underfoot is the monster.", es: "Ni una pared a la vista, y aun as\xED el desierto abierto los acorrala como una jaula. La tierra bajo sus pies es el monstruo." },
+    { en: "The smile at the door is the deadbolt. Manners keep Chris inside far more effectively than any chain would.", es: "La sonrisa en la puerta es el cerrojo. Los modales retienen a Chris dentro mucho mejor que cualquier cadena." }
+  ],
+  "Golden Fleece": [
+    { en: "Every stop along the way sands the farm boy down into a pilot. The road's only job is to grow his belief, one step at a time.", es: "Cada parada del camino va limando al granjero hasta dejar un piloto. La carretera solo existe para forjarle la fe, paso a paso." },
+    { en: "Whoever holds the Ring rots, so the fellowship's true test is deciding who they trust to carry the thing.", es: "Quien sostiene el Anillo se pudre, as\xED que la verdadera prueba de la comunidad es decidir en qui\xE9n conf\xEDan para portarlo." },
+    { en: "Those shoes could've taken her home from minute one. The road only exists to get her ready to believe that.", es: "Esos zapatos pod\xEDan llevarla a casa desde el primer minuto. El camino solo existe para que llegue a cre\xE9rselo." },
+    { en: "Crossing the ocean to find Nemo is the easy reading. The real lesson lands on an anxious dad who has to loosen his grip.", es: "Cruzar el oc\xE9ano por Nemo es la lectura f\xE1cil. La lecci\xF3n de verdad recae en un padre ansioso que tiene que soltar las riendas." },
+    { en: "When the Ark opens, his faith goes on trial. Surviving means shutting his eyes and refusing the one look he wants.", es: "Al abrirse el Arca, su fe pasa a juicio. Sobrevivir es cerrar los ojos y negarse a la \xFAnica mirada que ans\xEDa." },
+    { en: "Piecing the lost night back together plays like a treasure map, and friendship is all they carry home sober.", es: "Reconstruir la noche perdida funciona como un mapa del tesoro, y la amistad es lo \xFAnico que se llevan a casa sobrios." },
+    { en: "That yellow VW bus is the whole team. Every breakdown drags the family out to shove it down the road together.", es: "Ese furg\xF3n amarillo es el equipo entero. Cada aver\xEDa saca a la familia a empujarlo por la carretera juntos." }
+  ],
+  "Dude with a Problem": [
+    { en: "He showed up for a Christmas party and got a war. That innocence is the entire engine of the trapped everyman.", es: "Lleg\xF3 a una fiesta de Navidad y le toc\xF3 una guerra. Esa inocencia es todo el motor del hombre com\xFAn atrapado." },
+    { en: "Class and romance mean nothing to the iceberg. One sudden catastrophe smashes everyone's plans in the same instant.", es: "Al iceberg le dan igual la clase y el romance. Una sola cat\xE1strofe s\xFAbita rompe los planes de todos en el mismo instante." },
+    { en: "Spies chase Thornhill convinced he's a man named Kaplan who was never real. The danger lands on him by sheer mistake.", es: "Los esp\xEDas persiguen a Thornhill crey\xE9ndolo un tal Kaplan que nunca existi\xF3. El peligro le cae por puro error." },
+    { en: "Here the extraordinary threat is plain poverty, grinding hard enough to swallow everything while he raises his boy alone.", es: "Aqu\xED la amenaza extraordinaria es la pobreza pelada, lo bastante feroz para trag\xE1rselo todo mientras cr\xEDa solo a su hijo." },
+    { en: "History drops Schindler into the Holocaust with no say in it, and bit by bit the ordinary man becomes a rescuer.", es: "La historia deja caer a Schindler en el Holocausto sin que \xE9l decida nada, y poco a poco el hombre com\xFAn se vuelve salvador." },
+    { en: "Arm wedged under a boulder in a slot canyon, his survival narrows to one unthinkable act: cut it off.", es: "Con el brazo atrapado bajo una roca en un ca\xF1\xF3n angosto, su supervivencia se reduce a un acto impensable: cort\xE1rselo." },
+    { en: "A snobbish town's contempt is the 'sudden danger,' and the bike race becomes the proving ground for one ordinary kid.", es: "El desprecio de un pueblo clasista es el 'peligro s\xFAbito', y la carrera de bicis se vuelve el terreno donde un chico com\xFAn se juega su val\xEDa." }
+  ],
+  "Rites of Passage": [
+    { en: "Survivor's guilt is the enemy. Healing means letting his cold mother walk out instead of clawing for her love.", es: "El enemigo es la culpa del superviviente. Sanar es dejar que su madre fr\xEDa se marche en vez de pelear por su cari\xF1o." },
+    { en: "Two drinkers in one marriage. He only scrapes his way to sobriety by watching her refuse to come along.", es: "Dos bebedores en un matrimonio. \xC9l solo ara\xF1a la sobriedad viendo que ella se niega a acompa\xF1arlo." },
+    { en: "The passage is swallowing a hard truth: some grief never closes. All he manages is to move far enough away to bear it.", es: "El tr\xE1nsito es tragarse una verdad dura: hay duelos que no cierran. Lo \xFAnico que logra es alejarse lo bastante para soportarlo." },
+    { en: "Inner and literal at once. Only once she's left Sacramento does she realize she'd loved it the whole time.", es: "Interior y literal a la vez. Solo cuando ya ha dejado Sacramento cae en que lo quer\xEDa desde siempre." },
+    { en: "What he keeps dodging is that he's drinking himself to death on purpose, and the film flatly denies him any rescue.", es: "Lo que no para de esquivar es que est\xE1 bebiendo hasta morir a prop\xF3sito, y la pel\xEDcula le niega de plano cualquier rescate." },
+    { en: "The journey belongs to the family, not the addict. Her getting sober rips open every role they'd built around her drinking.", es: "El viaje es de la familia, no de la adicta. Que ella se desintoxique destapa cada papel que hab\xEDan armado en torno a su bebida." }
+  ],
+  "Buddy Love": [
+    { en: "All that theorizing about friendship is just a way to dodge the romance. The bond only snaps into place when they quit arguing and kiss.", es: "Tanta teor\xEDa sobre la amistad no es m\xE1s que una excusa para esquivar el romance. El v\xEDnculo solo encaja cuando dejan de discutir y se besan." },
+    { en: "Completion here looks like surrender. What changes Rick is precisely putting Ilsa on that plane and letting her go.", es: "Aqu\xED completarse parece una rendici\xF3n. Lo que cambia a Rick es justamente subir a Ilsa a ese avi\xF3n y dejarla ir." },
+    { en: "Charlie shows up chasing Raymond's money and leaves actually caring. The autistic brother reshapes him without trying at all.", es: "Charlie aparece persiguiendo el dinero de Raymond y se va queri\xE9ndolo de verdad. El hermano autista lo transforma sin propon\xE9rselo." },
+    { en: "A world that won't permit their love is fatal to it, so the bond and its wreckage show up hand in hand.", es: "Un mundo que no tolera su amor lo condena, as\xED que el v\xEDnculo y su ruina aparecen de la mano." },
+    { en: "Their friendship sets into a pact against every pursuer, and dying together beats getting caught.", es: "Su amistad cuaja en un pacto contra cada perseguidor, y morir juntas supera con creces dejarse atrapar." },
+    { en: "Cancer squeezes the whole romance tight. They fall hard and fast because the clock is loud for both of them.", es: "El c\xE1ncer aprieta el romance entero. Caen r\xE1pido y fuerte porque el reloj suena alto para los dos." },
+    { en: "The case is barely an excuse. What truly completes Riggs and Murtaugh is a suicidal cop stumbling into a family.", es: "El caso apenas es un pretexto. Lo que de verdad completa a Riggs y Murtaugh es un poli suicida que tropieza con una familia." }
+  ],
+  "Whydunit": [
+    { en: "Gittes cracks the case and loses anyway. The bleak takeaway is that powerful men walk free no matter what.", es: "Gittes resuelve el caso y pierde igual. La moraleja sombr\xEDa es que los poderosos salen impunes pase lo que pase." },
+    { en: "Buffalo Bill isn't where the dread lives. It's how readily Clarice slips into a killer's head to catch one.", es: "El pavor no vive en Buffalo Bill. Vive en la facilidad con que Clarice se mete en la cabeza de un asesino para cazar a otro." },
+    { en: "John Doe's motive is a sermon on the seven sins, and he maneuvers the detective into committing the last one for him.", es: "El m\xF3vil de John Doe es un serm\xF3n sobre los siete pecados, y maniobra para que el detective le cometa el \xFAltimo." },
+    { en: "Only we ever learn that 'Rosebud' was a childhood sled. Not one character ever discovers why Kane became Kane.", es: "Solo nosotros llegamos a saber que 'Rosebud' era un trineo de la infancia. Ning\xFAn personaje descubre jam\xE1s por qu\xE9 Kane fue Kane." },
+    { en: "Nobody ever nails the killer, and that absence is the whole point. With no closure, the detectives' obsession just keeps swelling.", es: "Nadie llega nunca a atrapar al asesino, y esa ausencia es justo lo que importa. Sin cierre, la obsesi\xF3n de los detectives no para de hincharse." },
+    { en: "Reopening a childhood abduction tears apart the three men who survived it and ends in a man killed for nothing.", es: "Reabrir un secuestro de la infancia despedaza a los tres hombres que lo vivieron y acaba en un hombre muerto para nada." },
+    { en: "The Watergate trail climbs instead of narrowing. What unsettles is realizing just how far up the corruption goes.", es: "El rastro del Watergate asciende en lugar de estrecharse. Lo que inquieta es darse cuenta de hasta d\xF3nde sube la corrupci\xF3n." }
+  ],
+  "Superhero": [
+    { en: "That mask cuts Peter off more than it lifts him up. His gift costs him everyone he's forced to lie to.", es: "Esa m\xE1scara a\xEDsla a Peter m\xE1s de lo que lo eleva. Su don le cuesta toda la gente a la que se ve obligado a mentir." },
+    { en: "Maximus is so beloved he becomes a threat to Commodus's throne. The exceptional man is dangerous merely by drawing breath.", es: "A Maximus lo adoran tanto que se vuelve una amenaza para el trono de C\xF3modo. El hombre excepcional es peligroso solo por respirar." },
+    { en: "His genius and his hallucinations spring from the same well, which leaves him unable to ever fully trust his own eyes.", es: "Su genio y sus alucinaciones brotan del mismo pozo, lo que lo deja sin poder fiarse nunca del todo de sus propios ojos." },
+    { en: "Neo sees straight through to the Matrix's code. Being the special one means the illusion is something he can no longer share.", es: "Neo ve directamente el c\xF3digo tras Matrix. Ser el elegido significa que la ilusi\xF3n ya es algo que no puede compartir." },
+    { en: "Victor's the gifted maker; the creature is the power he walked away from. He flatly refuses to own what he built.", es: "Victor es el creador dotado; la criatura es el poder del que se desentendi\xF3. Se niega en redondo a responder por lo que construy\xF3." },
+    { en: "His gift welds the desert tribes together yet roots him nowhere, a stranger in the Arab world and the British one alike.", es: "Su don suelda a las tribus del desierto y a la vez lo deja sin ra\xEDz en ninguna parte, un extra\xF1o tanto en el mundo \xE1rabe como en el brit\xE1nico." },
+    { en: "A throne is his burden. T'Challa rules a hidden, advanced nation, and Killmonger pushes him to share its power with everyone.", es: "Su carga es un trono. T'Challa gobierna una naci\xF3n oculta y avanzada, y Killmonger lo empuja a compartir su poder con el mundo entero." }
+  ],
+  "Drama": [
+    { en: "Grief that won't lift. The broken man simply cannot move home to raise his nephew, and the film refuses to fake a recovery.", es: "Un duelo que no levanta. El hombre roto sencillamente no puede volver a casa a criar a su sobrino, y la pel\xEDcula se niega a fingir una recuperaci\xF3n." },
+    { en: "Huge stakes hiding in a father learning to make French toast. The whole custody battle lives in tiny domestic details.", es: "Hay un drama enorme escondido en un padre que aprende a hacer tostadas francesas. Toda la pelea por la custodia vive en minucias dom\xE9sticas." },
+    { en: "Empathy split down the middle, so evenly that both spouses are right and both are wrecked at the very same moment.", es: "La empat\xEDa partida por la mitad, con tanta exactitud que ambos c\xF3nyuges tienen raz\xF3n y a los dos se les parte el coraz\xF3n en el mismo momento." },
+    { en: "Suffering heaped onto Jude past anything realistic, all to test whether his friends' love can hold a life it can never repair.", es: "Sufrimiento amontonado sobre Jude m\xE1s all\xE1 de todo realismo, para probar si el amor de sus amigos sostiene una vida que nunca podr\xE1 reparar." },
+    { en: "A quiet professor's string of small defeats turns devastating. No spectacle required for drama to gut you.", es: "La sarta de peque\xF1as derrotas de un profesor discreto se vuelve demoledora. El drama no necesita espect\xE1culo para destrozarte." },
+    { en: "The conflict hides in a family's silences after the son dies, where grief slowly sours into blame.", es: "El conflicto se esconde en los silencios de una familia tras la muerte del hijo, donde el duelo se agria despacio en reproche." },
+    { en: "A couple tears itself apart dreaming of Paris, an escape that deep down neither of them actually wants to make.", es: "Una pareja se hace pedazos so\xF1ando con Par\xEDs, una huida que en el fondo ninguno de los dos quiere emprender de verdad." }
+  ],
+  "Comedy": [
+    { en: "The screwball gold standard. Two musicians on the run in drag, timing that never misses, and a closing line that waves off every flaw.", es: "El patr\xF3n oro del screwball. Dos m\xFAsicos huyendo vestidos de mujer, una sincron\xEDa que nunca falla y una frase final que ignora todo defecto." },
+    { en: "Proof a women-led comedy could go gross-out physical and stay emotionally honest in the same breath.", es: "La prueba de que una comedia liderada por mujeres pod\xEDa ser f\xEDsicamente bestia y a la vez emocionalmente honesta." },
+    { en: "One day on a loop, spun into high-concept comedy, and the payoff is the better man Phil keeps choosing to become.", es: "Un d\xEDa en bucle convertido en comedia de alto concepto, y la recompensa es el hombre mejor en que Phil insiste en convertirse." },
+    { en: "Social humiliation and academic snobbery, mined for every laugh. Each time Jim tries to climb out, the hole gets deeper.", es: "Humillaci\xF3n social y esnobismo acad\xE9mico, exprimidos hasta la \xFAltima risa. Cada vez que Jim intenta salir, el hoyo se hace m\xE1s hondo." },
+    { en: "A founding comic travel book, and the joke is the rambling: those off-topic asides are the whole point.", es: "Un libro c\xF3mico de viajes fundacional, y el chiste son las divagaciones: esos apartes fuera de tema lo son todo." },
+    { en: "Whimsy machined to the millimeter. Nested stories and deadpan symmetry make the comic style itself the subject.", es: "Capricho fabricado al mil\xEDmetro. Historias anidadas y simetr\xEDa impasible convierten el propio estilo c\xF3mico en el tema." },
+    { en: "Its satire spins on a logic trap: only the crazy get grounded, yet asking to be grounded proves you're sane.", es: "Su s\xE1tira gira sobre una trampa l\xF3gica: solo libran de volar a los locos, pero pedir que te libren prueba que est\xE1s cuerdo." }
+  ],
+  "Action": [
+    { en: "Modern action's template. One trapped everyman, one office tower, escalation that never lets up, and a steady stream of wisecracks.", es: "El molde de la acci\xF3n moderna. Un hombre com\xFAn atrapado, una torre de oficinas, una escalada que no afloja y un goteo de r\xE9plicas ingeniosas." },
+    { en: "Action boiled down to pure motion. A car chase stretched to feature length, with the plot riding entirely on the road.", es: "Acci\xF3n reducida a puro movimiento. Una persecuci\xF3n de coches estirada a largometraje, con la trama cabalgando por completo sobre la carretera." },
+    { en: "Gunfight choreography reinvented by keeping every shot clean and legible, until you actually feel Wick's grief land in the action.", es: "Coreograf\xEDa de tiroteos reinventada manteniendo cada disparo limpio y legible, hasta que sientes de verdad el duelo de Wick en la acci\xF3n." },
+    { en: "It kicked off the amnesiac-spy thriller. Half the tension is Bourne realizing mid-fight just how lethal he already is.", es: "Arranc\xF3 el thriller del esp\xEDa amn\xE9sico. La mitad de la tensi\xF3n es Bourne descubriendo en plena pelea lo letal que ya es." },
+    { en: "It raised the sequel bar. Groundbreaking effects pressed into the service of relentless chases and a story that's surprisingly tender.", es: "Subi\xF3 el list\xF3n de la secuela. Efectos revolucionarios puestos al servicio de persecuciones implacables y una historia sorprendentemente tierna." },
+    { en: "Where the one-man-army myth was born. A hunted veteran turns the woods themselves into a weapon against the cops.", es: "Donde naci\xF3 el mito del ej\xE9rcito de un solo hombre. Un veterano acosado convierte el propio bosque en un arma contra la polic\xEDa." },
+    { en: "Peak real-stunt action. The suspense gets built out of actual, ever-bigger set-pieces, shot with brutal, painstaking choreography.", es: "Cima de la acci\xF3n con acrobacias reales. El suspense se construye con secuencias aut\xE9nticas y cada vez mayores, rodadas con una coreograf\xEDa meticulosa." }
+  ],
+  "Adventure": [
+    { en: "Classic pulp adventure. A globe-trotting hunt for an ancient relic, with cliffhanger momentum tuned to perfection.", es: "Aventura pulp cl\xE1sica. Una caza trotamundos de una reliquia antigua, con el impulso de cliffhanger afinado a la perfecci\xF3n." },
+    { en: "It set the there-and-back quest. Homebody Bilbo gets hauled out the door and comes back changed less by the gold than by the road.", es: "Fij\xF3 la b\xFAsqueda de ida y vuelta. Al casero Bilbo lo arrancan de casa y vuelve cambiado menos por el oro que por el camino." },
+    { en: "Adventure laced with heart. The grail hunt quietly becomes a father and son patching things up across continents.", es: "Aventura con coraz\xF3n. La caza del grial se transforma sin ruido en un padre y un hijo reconcili\xE1ndose por varios continentes." },
+    { en: "It invented the treasure-map adventure, with sly Long John Silver showing the boy exactly what the prize ends up costing.", es: "Invent\xF3 la aventura del mapa del tesoro, con el astuto Long John Silver mostr\xE1ndole al ni\xF1o justo lo que el premio acaba costando." },
+    { en: "A self-aware fairy-tale adventure that juggles sword fights, romance and jokes without ever breaking the spell.", es: "Una aventura de cuento autoconsciente que hace malabares con duelos de espada, romance y bromas sin romper jam\xE1s el hechizo." },
+    { en: "The grand-journey adventure, where wit and a hard deadline turn a gentleman's wager into worldwide suspense.", es: "La aventura del gran viaje, donde el ingenio y un plazo f\xE9rreo convierten la apuesta de un caballero en suspense mundial." },
+    { en: "Survival adventure doubling as a spiritual test. A boy, a tiger, and an ocean that keep putting his faith on trial.", es: "Aventura de supervivencia que es tambi\xE9n una prueba espiritual. Un ni\xF1o, un tigre y un oc\xE9ano que no dejan de poner su fe a prueba." }
+  ],
+  "Thriller": [
+    { en: "It perfected the procedural thriller. To corner one killer, rookie Clarice has to sit and interview another.", es: "Perfeccion\xF3 el thriller procedimental. Para acorralar a un asesino, la novata Clarice tiene que sentarse a entrevistar a otro." },
+    { en: "The domestic thriller, reinvented around a mid-book twist, with Amy's faked diary playing the reader for a fool.", es: "El thriller dom\xE9stico, reinventado en torno a un giro a mitad de libro, con el diario falso de Amy tom\xE1ndole el pelo al lector." },
+    { en: "The wrong-man blueprint. Mistaken identity feeds rising paranoia, which fires off one propulsive chase after another.", es: "El molde del hombre equivocado. La identidad confundida alimenta una paranoia creciente que dispara una persecuci\xF3n trepidante tras otra." },
+    { en: "Dread built from nothing but method and logistics, an unstoppable countdown toward an assassin no one can even name.", es: "Angustia levantada solo con m\xE9todo y log\xEDstica, una cuenta atr\xE1s imparable hacia un asesino que nadie consigue siquiera nombrar." },
+    { en: "It darkened the serial-killer thriller for good. That bleak finish, the cop gunning down Doe, was the trap waiting all along.", es: "Oscureci\xF3 el thriller del asesino en serie para siempre. Ese final sombr\xEDo, el poli abatiendo a Doe, era la trampa que esperaba desde el principio." },
+    { en: "Investigation welded to social expos\xE9, with an outsider hacker digging a wealthy family's buried evil back up.", es: "Investigaci\xF3n soldada a una denuncia social, con una hacker marginal desenterrando el mal oculto de una familia rica." },
+    { en: "It pares the thriller down to raw dread. Blind chance and an unstoppable killer stay one step ahead of the law the whole way.", es: "Desnuda el thriller hasta el pavor en bruto. El azar ciego y un asesino imparable van un paso por delante de la ley todo el rato." }
+  ],
+  "Horror": [
+    { en: "The hotel just turns up the volume on what Jack already drags inside him. Hard to tell where the haunting stops and the rotting marriage begins.", es: "El hotel no hace m\xE1s que subirle el volumen a lo que Jack ya arrastra dentro. Cuesta saber d\xF3nde acaba el espanto y d\xF3nde empieza el matrimonio podrido." },
+    { en: "Every scare lands on a grief beat before it lands on you, so when the demonic finale hits, mourning has already earned it.", es: "Cada susto pasa primero por una nota de duelo, as\xED que cuando llega el final demon\xEDaco, el luto ya se lo gan\xF3." },
+    { en: "Letters, diaries, ship logs. The horror feels pieced together from evidence the characters can't yet read.", es: "Cartas, diarios, bit\xE1coras de barco. El horror parece reconstruido con pruebas que los personajes todav\xEDa no saben leer." },
+    { en: "Is the house haunted or is Eleanor unraveling? Jackson never says, and that withheld answer is exactly where the dread lives.", es: "\xBFEst\xE1 la casa embrujada o Eleanor se desquicia? Jackson nunca lo dice, y en esa respuesta que falta vive el espanto." },
+    { en: "Polite liberal smiles hide the threat, so once it's out, you go back and read all that friendliness as the trap it was.", es: "La amenaza se esconde tras sonrisas progresistas y corteses, y cuando estalla, relees toda esa amabilidad como la trampa que era." },
+    { en: "The monster is love that won't let the dead stay dead. King puts the taboo in the father's grief, far from any burial ground.", es: "El monstruo es un amor que no deja descansar a los muertos. King pone el tab\xFA en el duelo del padre, lejos de cualquier cementerio." },
+    { en: "Those corridors turn the crew into prey wandering a maze. The architecture does as much of the scaring as the creature.", es: "Esos pasillos vuelven a la tripulaci\xF3n presa perdida en un laberinto. La arquitectura asusta tanto como la criatura." }
+  ],
+  "Science Fiction": [
+    { en: "Give the replicants four years and mortality becomes the whole exam. Roy's mercy answers what humanity costs, while Deckard just watches.", es: "Dale cuatro a\xF1os a los replicantes y la mortalidad se vuelve el examen entero. La piedad de Roy responde qu\xE9 cuesta ser humano; Deckard solo mira." },
+    { en: "Herbert lays down the desert ecology first and lets religion and politics sprout from scarce water, so the world ends up steering the plot.", es: "Herbert asienta primero la ecolog\xEDa del desierto y deja que religi\xF3n y pol\xEDtica broten de la falta de agua, de modo que el mundo termina llevando la trama." },
+    { en: "Learning the aliens' language rewires how Louise feels time. A translation puzzle becomes a grief she walks into already knowing how it ends.", es: "Aprender la lengua alien\xEDgena le recablea a Louise el sentido del tiempo. Un acertijo de traducci\xF3n se vuelve un duelo al que entra sabiendo ya el final." },
+    { en: "Strip gender out of a whole society and Le Guin can show how much of 'otherness' we make up. Biology had little to do with it.", es: "Qu\xEDtale el g\xE9nero a una sociedad entera y Le Guin ense\xF1a cu\xE1nta 'otredad' nos inventamos. La biolog\xEDa tuvo poco que ver." },
+    { en: "Once Neo learns reality is a cell, everything after boils down to one question: swallow the pill and wake up, or don't.", es: "Cuando Neo descubre que la realidad es una celda, todo lo dem\xE1s se reduce a una pregunta: tragar la p\xEDldora y despertar, o no." },
+    { en: "Gibson coined cyberspace and the matrix, and later sci-fi went on borrowing the words as if they'd always named real things.", es: "Gibson acu\xF1\xF3 el ciberespacio y la matriz, y la ciencia ficci\xF3n posterior sigui\xF3 tomando prestadas las palabras como si siempre hubieran nombrado cosas reales." },
+    { en: "One house, one prisoner. The Turing test slides into courtship, and Ava passes by turning the man's empathy back on him.", es: "Una casa, un prisionero. El test de Turing se desliza hacia el cortejo, y Ava lo aprueba volviendo la empat\xEDa del hombre contra \xE9l." }
+  ],
+  "Fantasy": [
+    { en: "Power tempts every last character, so the moral weight falls on whoever can say no. Putting the ring in the smallest hands is the entire argument.", es: "El poder tienta hasta al \xFAltimo personaje, as\xED que el peso moral cae en quien sepa decir no. Poner el anillo en las manos m\xE1s peque\xF1as es todo el argumento." },
+    { en: "Martin rigs the rules so virtue gets punished, and that's how readers learn his world's brutal laws: by watching honorable people die under them.", es: "Martin ama\xF1a las reglas para que la virtud salga castigada, y as\xED el lector aprende las brutales leyes de su mundo: viendo morir bajo ellas a los honorables." },
+    { en: "Keep the magic ambiguous and Ofelia's fairy tale can be two things at once, both a way out of fascism and a sentence passed on it. Del Toro keeps it.", es: "Mant\xE9n la magia ambigua y el cuento de Ofelia puede ser dos cosas a la vez, escape del fascismo y condena sobre \xE9l. Del Toro la mantiene." },
+    { en: "Magic costs study, true names, music, so the wonder feels paid for. And the frame quietly reminds us legends get edited by the people who tell them.", es: "La magia cuesta estudio, nombres verdaderos, m\xFAsica, as\xED que la maravilla est\xE1 pagada. Y el marco recuerda bajito que las leyendas las edita quien las cuenta." },
+    { en: "Names and labor run the spirit world. Chihiro doesn't beat its rules; she survives by learning to live inside them.", es: "Nombres y trabajo rigen el mundo de los esp\xEDritus. Chihiro no vence sus reglas; sobrevive aprendiendo a vivir dentro de ellas." },
+    { en: "Cast a spell and you pay a price that keeps the world in balance. Underneath the magic system, Le Guin has really written a code of ethics.", es: "Lanza un hechizo y pagas un precio que mantiene el mundo en equilibrio. Bajo el sistema de magia, Le Guin escribi\xF3 en realidad un c\xF3digo \xE9tico." },
+    { en: "At the council, strangers turn into a pact. A roomful of different peoples becomes one quest the moment they agree to share the load.", es: "En el consejo, los extra\xF1os se vuelven pacto. Una sala de pueblos distintos se hace una sola misi\xF3n en cuanto acuerdan repartir la carga." }
+  ],
+  "Romance": [
+    { en: "Their misjudgments run both ways and stay specific, so the courtship inches forward each time one of them fixes a flaw the other named.", es: "Sus juicios errados van en ambas direcciones y siguen siendo concretos, as\xED que el cortejo avanza cada vez que uno corrige un defecto que el otro le se\xF1al\xF3." },
+    { en: "The film insists friendship and desire can't share a room, then spends years using this couple to prove itself wrong.", es: "La pel\xEDcula insiste en que amistad y deseo no caben en la misma habitaci\xF3n, y luego pasa a\xF1os usando a esta pareja para llevarse la contraria." },
+    { en: "Time travel raises the cost of staying. Claire has to keep picking Jamie over the constant tug of her own century.", es: "El viaje en el tiempo encarece quedarse. Claire tiene que seguir eligiendo a Jamie por encima del tir\xF3n constante de su propio siglo." },
+    { en: "An expiry date hangs over the romance from day one, so every tender moment carries the shadow of the summer running out.", es: "Una fecha de caducidad pende sobre el romance desde el primer d\xEDa, y cada momento tierno arrastra la sombra del verano agot\xE1ndose." },
+    { en: "He reads their own story back to her, again and again, to hold onto a love her memory keeps erasing. The framing makes devotion something you can watch.", es: "\xC9l le relee, una y otra vez, la historia de ambos para aferrarse a un amor que su memoria sigue borrando. El recurso vuelve la devoci\xF3n algo que puedes ver." },
+    { en: "The genre's happy ending gets withheld on purpose. What traps these men is the hiding, and from that their love never gets free.", es: "El final feliz del g\xE9nero se niega a prop\xF3sito. Lo que atrapa a estos hombres es el ocultarse, y de ah\xED su amor no escapa nunca." },
+    { en: "Jane turns Rochester down until she can meet him as an equal, so what marriage finally gives her is fairness rather than rescue.", es: "Jane rechaza a Rochester hasta poder encontrarlo de igual a igual, as\xED que lo que el matrimonio le da al fin es igualdad y no rescate." }
+  ],
+  "Mystery & Crime": [
+    { en: "The falcon is worthless, and that's the joke. What drives every betrayal in the case is the greed, never the thing itself.", es: "El halc\xF3n no vale nada, y ah\xED est\xE1 el chiste. Lo que mueve cada traici\xF3n del caso es la codicia, jam\xE1s el objeto en s\xED." },
+    { en: "Johnson shows you the killer early, so the puzzle quietly switches from whodunit to how-she-covers-her-tracks, and it stays fair the whole way.", es: "Johnson te ense\xF1a al asesino pronto, as\xED que el enigma cambia sin avisar de qui\xE9n-lo-hizo a c\xF3mo-borra-sus-huellas, y sigue siendo limpio hasta el final." },
+    { en: "Cut off the island and you cut off outside help and outside suspects both, leaving a sealed set of clues the reader can check end to end.", es: "A\xEDsla la isla y cortas de golpe la ayuda de fuera y los sospechosos de fuera, dejando un conjunto sellado de pistas que el lector puede revisar de cabo a rabo." },
+    { en: "Turns out the crime is the whole rotten system. Cracking it only confirms that justice here was never on the table.", es: "Resulta que el crimen es el sistema podrido entero. Resolverlo solo confirma que la justicia, aqu\xED, nunca estuvo sobre la mesa." },
+    { en: "Voice matters more to Chandler than the solution does. The plot ties itself in knots and survives anyway, carried by the detective's wit.", es: "A Chandler le importa m\xE1s la voz que la soluci\xF3n. La trama se enreda en nudos y aun as\xED sobrevive, sostenida por el ingenio del detective." },
+    { en: "Fincher refuses the solution the genre promised, and the refusal makes the obsession the real subject. Closure never arrives.", es: "Fincher niega la soluci\xF3n que el g\xE9nero prometi\xF3, y esa negativa convierte la obsesi\xF3n en el verdadero tema. El desenlace no llega nunca." },
+    { en: "Capote knows the ending going in, so the suspense has to come from the killers' minds. True crime gets invented as a novelist's craft along the way.", es: "Capote entra sabiendo el final, as\xED que el suspenso tiene que salir de la mente de los asesinos. De camino, el true crime queda inventado como oficio de novelista." }
+  ],
+  "Historical Fiction": [
+    { en: "We get the Tudor court through Cromwell's watchful, scheming head, and that makes the era feel lived rather than a parade of men in costume.", es: "La corte Tudor nos llega por la cabeza vigilante y calculadora de Cromwell, y eso hace que la \xE9poca se sienta vivida y no un desfile de hombres disfrazados." },
+    { en: "Eco buries a murder inside theological argument, so what really becomes the setting is the period's fears, the dread of laughter and of books.", es: "Eco entierra un crimen dentro de una disputa teol\xF3gica, as\xED que el verdadero escenario son los miedos de la \xE9poca, el pavor a la risa y a los libros." },
+    { en: "Schindler's ambiguity drives the whole thing. Watch a profiteer change by degrees and history's scale lands through one compromised man.", es: "La ambig\xFCedad de Schindler mueve todo. Mira a un aprovechado cambiar por grados y la escala de la historia aterriza a trav\xE9s de un hombre comprometido." },
+    { en: "Morrison turns the past into a ghost that keeps coming back, so slavery stops being backdrop and starts pressing, hard, on the present.", es: "Morrison convierte el pasado en un fantasma que vuelve y vuelve, as\xED que la esclavitud deja de ser tel\xF3n y empieza a presionar, fuerte, sobre el presente." },
+    { en: "Kubrick's painterly tableaux make manners the actual drama. The era's rituals close around Barry tighter than any twist could.", es: "Los cuadros pict\xF3ricos de Kubrick hacen de los modales el verdadero drama. Los rituales de la \xE9poca se cierran sobre Barry m\xE1s que cualquier giro." },
+    { en: "Watch one cathedral go up slowly across several generations and distant medieval history shrinks into a single ambition you can hand down.", es: "Mira una sola catedral alzarse despacio a lo largo de varias generaciones y la lejana historia medieval se encoge en una ambici\xF3n que puedes legar." },
+    { en: "Working from a real memoir, the film won't do melodrama. It lets the documented details carry an ordeal almost too heavy to look at.", es: "Partiendo de unas memorias reales, la pel\xEDcula se niega al melodrama. Deja que los detalles documentados carguen un calvario casi imposible de mirar." }
+  ],
+  "Western": [
+    { en: "Ethan's search sours into racism, and that souring exposes the lone-rider myth for what it is: an obsession the frontier can't wash clean.", es: "La b\xFAsqueda de Ethan se agria en racismo, y ese agrio deja al desnudo el mito del jinete solitario: una obsesi\xF3n que la frontera no logra limpiar." },
+    { en: "Underneath the cattle drive, the real subject is loss. Every mile north measures how fast the open frontier these men love is closing behind them.", es: "Bajo el arreo de ganado, el verdadero tema es la p\xE9rdida. Cada milla al norte mide c\xF3mo se cierra, a su espalda, la frontera abierta que estos hombres aman." },
+    { en: "Eastwood makes killing clumsy and stomach-turning, dismantling the clean, easy violence the genre had been selling for decades.", es: "Eastwood hace que matar sea torpe y revuelva el est\xF3mago, desmontando la violencia limpia y f\xE1cil que el g\xE9nero llevaba d\xE9cadas vendiendo." },
+    { en: "McCarthy wrings all meaning out of the violence. The frontier turns into a stage for an indifferent universe, with no code left to put to the test.", es: "McCarthy le exprime todo sentido a la violencia. La frontera se vuelve escenario de un universo indiferente, sin ning\xFAn c\xF3digo que poner a prueba." },
+    { en: "Hand the code to a fourteen-year-old and frontier justice gets measured against a child's flat, unbending idea of what a debt is.", es: "Pon el c\xF3digo en boca de una ni\xF1a de catorce a\xF1os y la justicia fronteriza queda medida contra la idea plana e inflexible que una cr\xEDa tiene de una deuda." },
+    { en: "As the railroad arrives, Leone slows the showdowns until they become ritual, staging the frontier's death as one long operatic elegy.", es: "Mientras llega el ferrocarril, Leone ralentiza los duelos hasta volverlos rito, escenificando la muerte de la frontera como una larga eleg\xEDa oper\xEDstica." },
+    { en: "Chigurh is what the frontier became, random and unstoppable, and Sheriff Bell's old code simply has nothing to say back to him.", es: "Chigurh es en lo que se convirti\xF3 la frontera, aleatorio e imparable, y el viejo c\xF3digo del sheriff Bell sencillamente no tiene nada que responderle." }
+  ],
+  "Point of View & Narrator": [
+    { en: "Nick stands half inside the story and half out, and that's the trick. From there he can romanticize Gatsby while quietly damning the world that grinds him down.", es: "Nick se planta medio dentro de la historia y medio fuera, y ah\xED est\xE1 el truco. Desde ah\xED puede idealizar a Gatsby mientras condena en voz baja al mundo que lo tritura." },
+    { en: "The narration slips between strangers in the middle of a thought, until the perceiving mind turns out to be the city itself, not any single person.", es: "La narraci\xF3n resbala de un extra\xF1o a otro a media idea, hasta que la mente que percibe resulta ser la ciudad misma y no una sola persona." },
+    { en: "Stevens's careful, dignified prose is the trap. Everything he can't bring himself to say about Miss Kenton tells us what he refuses to feel.", es: "La prosa cuidada y digna de Stevens es la trampa. Todo lo que no consigue decir sobre Miss Kenton nos dice lo que se niega a sentir." },
+    { en: "Writing in 'you' drags the reader straight into the protagonist's denial, so you live the breakdown and stand outside watching it at the same time.", es: "Escribir en 't\xFA' arrastra al lector de lleno a la negaci\xF3n del protagonista, de modo que vives el derrumbe y a la vez lo miras desde fuera." },
+    { en: "Eliot's narrator judges and forgives in a single breath, putting that godlike vantage to work teaching sympathy as a skill you can practice.", es: "La narradora de Eliot juzga y perdona en un mismo aliento, poniendo esa mirada omnisciente a ense\xF1ar la empat\xEDa como una destreza que se practica." },
+    { en: "Benjy's section comes with no timeline at all, so the reader has to assemble the order he never can. The point of view is the difficulty.", es: "La secci\xF3n de Benjy llega sin cronolog\xEDa ninguna, as\xED que el lector tiene que montar el orden que \xE9l jam\xE1s puede. El punto de vista es la dificultad." },
+    { en: "Egan keeps handing the narration to minor characters, and the full picture only assembles from voices that never once share a page.", es: "Egan no para de ceder la narraci\xF3n a personajes secundarios, y el cuadro completo solo se arma con voces que jam\xE1s comparten una p\xE1gina." }
+  ],
+  "Scene vs Summary": [
+    { en: "Austen summarizes the traveling and the waiting on purpose, saving her energy for the dialogue scenes where character actually gets decided.", es: "Austen resume a prop\xF3sito los viajes y la espera, guardando su energ\xEDa para las escenas de di\xE1logo donde de verdad se decide el car\xE1cter." },
+    { en: "Strout folds decades into a single sentence, so the moment she stops and plays one scene out in full, the contrast is what makes it ache.", es: "Strout pliega d\xE9cadas en una sola frase, de modo que cuando se detiene y despliega una escena entera, el contraste es lo que la vuelve dolorosa." },
+    { en: "All that grim summary of walking and walking rations out the rare full scenes, the way the survivors hoard every last scrap they find.", es: "Tanto resumen sombr\xEDo de caminar y caminar raciona las escasas escenas completas, igual que los supervivientes acaparan hasta la \xFAltima migaja que hallan." },
+    { en: "Yanagihara summarizes the good years and stops to dramatize the wounds, so the very shape of the book matches how a trauma survivor remembers.", es: "Yanagihara resume los a\xF1os buenos y se para a dramatizar las heridas, de modo que la forma misma del libro calca c\xF3mo recuerda un superviviente del trauma." },
+    { en: "Dickens fast-forwards through Pip growing up and then slows hard on the encounters that change him, flagging which moments actually made the man.", es: "Dickens acelera el crecimiento de Pip y luego frena en seco en los encuentros que lo cambian, se\xF1alando qu\xE9 momentos hicieron de verdad al hombre." },
+    { en: "Stretch one afternoon into a full scene and a child's small misreading can swell into a crime, which the rest of the book is content to summarize.", es: "Estira una tarde hasta convertirla en escena entera y el peque\xF1o malentendido de una ni\xF1a puede inflarse en un crimen que el resto del libro se contenta con resumir." },
+    { en: "Williams summarizes a quiet life so that a handful of slowed-down scenes can carry the whole weight of it, and an ordinary man comes out monumental.", es: "Williams resume una vida discreta para que un pu\xF1ado de escenas ralentizadas carguen todo su peso, y un hombre com\xFAn sale de ah\xED monumental." }
+  ],
+  "Psychic Distance & Interiority": [
+    { en: "Free indirect discourse smuggles Emma's confident, wrong judgments in as if they were narration, so we trust them right up until we outgrow them.", es: "El estilo indirecto libre cuela los juicios seguros y errados de Emma como si fueran narraci\xF3n, as\xED que confiamos en ellos justo hasta que los superamos." },
+    { en: "Woolf shifts the focus mid-sentence, gliding out from inside a thought to the open street, until the mind seems stitched right into the world.", es: "Woolf cambia el foco a media frase, desliz\xE1ndose desde dentro de un pensamiento hasta la calle, hasta que la mente parece cosida directamente al mundo." },
+    { en: "The prose hangs just outside Gabriel until the final snow, then closes in as his whole self-image collapses into something like humility.", es: "La prosa se queda justo fuera de Gabriel hasta la nieve final, y entonces se acerca mientras toda su autoimagen se derrumba en algo parecido a la humildad." },
+    { en: "Morrison plunges into minds that slavery scarred and uses that closeness to make inherited memory feel like the reader's own.", es: "Morrison se zambulle en mentes que marc\xF3 la esclavitud y usa esa cercan\xEDa para que la memoria heredada se sienta del propio lector." },
+    { en: "Coetzee keeps us close to Lurie yet won't pass along his excuses, so all that intimacy ends up putting him on moral trial.", es: "Coetzee nos mantiene cerca de Lurie pero no nos pasa sus excusas, de modo que toda esa intimidad acaba poni\xE9ndolo en juicio moral." },
+    { en: "Joyce throws out narration entirely and writes thought before it's been tidied, so the distance bottoms out at zero and the grammar dissolves with it.", es: "Joyce tira la narraci\xF3n entera y escribe el pensamiento antes de que se ordene, as\xED la distancia toca fondo en cero y la gram\xE1tica se disuelve con ella." },
+    { en: "Present-tense close third locks us into Cromwell's right-now and denies us hindsight, so we read power exactly as he's improvising it.", es: "El tercero cercano en presente nos encierra en el ahora mismo de Cromwell y nos niega la retrospectiva, as\xED leemos el poder justo mientras \xE9l lo improvisa." }
+  ],
+  "Prose Rhythm & Sentence Variety": [
+    { en: "Clipped sentences keep the feeling penned in, so the rhythm grieves where the words won't, and pressure quietly builds in everything left out.", es: "Las frases cortadas mantienen el sentimiento encerrado, as\xED el ritmo hace el duelo donde las palabras no, y la presi\xF3n se acumula callada en todo lo omitido." },
+    { en: "Morrison's repetitions move like liturgy, the recurring phrases lifting the prose toward the cadence of grief spoken aloud and remembered.", es: "Las repeticiones de Morrison se mueven como liturgia, las frases recurrentes elevando la prosa hacia la cadencia de un duelo dicho en voz alta y recordado." },
+    { en: "Chain the clauses with 'and' and nothing gets ranked above anything else, so the violence comes flat and inevitable, no horror flagged as worse.", es: "Encadena las cl\xE1usulas con 'y' y nada queda por encima de nada, as\xED la violencia llega plana e inevitable, sin que ning\xFAn horror se marque como peor." },
+    { en: "Morrison drops a curt line right beside a long one so tenderness and damage breathe together, and that variety carries the meaning.", es: "Morrison deja una l\xEDnea seca justo al lado de una larga para que ternura y da\xF1o respiren juntas, y esa variedad es la que carga el sentido." },
+    { en: "Nabokov turns the sound itself into bait, the seductive music drawing in readers who can't help savoring Humbert's lovely sentences.", es: "Nabokov convierte el sonido mismo en cebo, la m\xFAsica seductora atrayendo a lectores que no pueden evitar saborear las bellas frases de Humbert." },
+    { en: "Plain, repeating sentences mirror the labor, each one coming down like another pull on the old man's oars.", es: "Frases sencillas que se repiten reflejan el esfuerzo, cada una cayendo como otra remada del viejo." },
+    { en: "Long sentences keep putting off the full stop, so reading them feels like thought wandering loose, your breath stretched to match the mind adrift.", es: "Las frases largas no paran de aplazar el punto, as\xED leerlas se siente como el pensamiento vagando suelto, tu aliento estirado al comp\xE1s de la mente a la deriva." }
+  ],
+  "Worldbuilding & Setting": [
+    { en: "Tolkien gestures at far more history than he ever lays out, so songs and ruins hint at a depth that leaves the whole world feeling ancient.", es: "Tolkien apunta a mucha m\xE1s historia de la que llega a contar, as\xED canciones y ruinas insin\xFAan una profundidad que deja todo el mundo con aire de antiguo." },
+    { en: "Morrison welds the setting to the wound. The house at 124 is no backdrop; it remembers, and it carries the trauma in its walls.", es: "Morrison suelda el lugar a la herida. La casa del 124 no es tel\xF3n; recuerda, y lleva el trauma en las paredes." },
+    { en: "Eco shows the world through daily routine, the library, the kitchen, so the exposition tucks itself inside the monks' ordinary chores.", es: "Eco ense\xF1a el mundo a trav\xE9s de la rutina diaria, la biblioteca, la cocina, as\xED la exposici\xF3n se mete dentro de las tareas corrientes de los monjes." },
+    { en: "That bare train platform is empty by design. Describe nothing and the decision nobody will name spreads out to fill the whole place.", es: "Ese and\xE9n pelado est\xE1 vac\xEDo adrede. No describas nada y la decisi\xF3n que nadie va a nombrar se expande hasta llenar el lugar entero." },
+    { en: "Water, faith, and power lock into one connected system on Arrakis, so pull a single thread and everything else reshapes. The world genuinely runs.", es: "Agua, fe y poder se traban en un solo sistema conectado en Arrakis, as\xED que tira de un hilo y lo dem\xE1s se reconfigura. El mundo funciona de verdad." },
+    { en: "McCarthy builds by subtraction. Empty the page down to ash-gray and the faintest scrap of color or warmth swells to feel enormous.", es: "McCarthy construye restando. Vac\xEDa la p\xE1gina hasta el gris ceniza y el m\xE1s leve resto de color o calor se hincha hasta sentirse inmenso." },
+    { en: "Macondo runs on magical-realist logic where ghosts and government decrees share the same street, so its logic, not any map, is the worldbuilding.", es: "Macondo se rige por una l\xF3gica de realismo m\xE1gico donde fantasmas y decretos del gobierno comparten la misma calle, as\xED su l\xF3gica, no un mapa, es la construcci\xF3n del mundo." }
+  ],
+  "Showing & Telling Balance": [
+    { en: "Tell us nothing and you make the reader work out the abortion talk for themselves. The silence forces us to supply the dread, and Hemingway counts on it.", es: "No nos cuentes nada y obligas al lector a deducir solo la charla sobre el aborto. El silencio nos obliga a aportar el espanto, y Hemingway cuenta con ello." },
+    { en: "Stevens hands us the facts and hides what they mean, so the telling itself turns into the character's own act of self-deception.", es: "Stevens nos entrega los hechos y esconde lo que significan, de modo que el contar mismo se convierte en el acto de autoenga\xF1o del personaje." },
+    { en: "Dickens's wide-open narrator is the strength here, no flaw at all. Talking straight to us builds an intimacy pure showing could never reach.", es: "El narrador de par en par de Dickens es aqu\xED la virtud, nada de defecto. Hablarnos de frente crea una intimidad que el puro mostrar jam\xE1s alcanzar\xEDa." },
+    { en: "Carver never steps in to interpret, so a blind man guiding a hand across paper shows a connection the story can't be bothered to name.", es: "Carver nunca se mete a interpretar, as\xED un ciego guiando una mano sobre el papel muestra una conexi\xF3n que el relato no se molesta en nombrar." },
+    { en: "Eliot halts the action to interpret it, treating telling as analysis, and the commentary turns out to be the novel's moral intelligence at work.", es: "Eliot frena la acci\xF3n para interpretarla, tratando el contar como an\xE1lisis, y el comentario resulta ser la inteligencia moral de la novela en marcha." },
+    { en: "Johnson's lyric showing snaps without warning into blunt telling, and that whiplash mirrors how an addict-narrator's perception keeps lurching.", es: "El mostrar l\xEDrico de Johnson se quiebra sin aviso en un contar tajante, y ese latigazo refleja c\xF3mo la percepci\xF3n de un narrador adicto no para de dar bandazos." },
+    { en: "O'Brien dramatizes a war story, then turns around and admits he made it up, working the seam between the two to ask how truth gets built.", es: "O'Brien dramatiza una historia de guerra y acto seguido confiesa que la invent\xF3, trabajando la costura entre ambas para preguntar c\xF3mo se construye la verdad." }
+  ],
+  "The Hero's Journey": [
+    { en: "Lucas pulled Luke's arc straight off Campbell's page. Leave the farm, train, face Vader, ride home a hero.", es: "Lucas sac\xF3 el arco de Luke directamente de la p\xE1gina de Campbell. Dejar la granja, entrenar, enfrentarse a Vader y volver a casa hecho un h\xE9roe." },
+    { en: "Neo really dies and comes back, so the 'symbolic death' the journey talks about turns literal here.", es: "Neo muere de verdad y resucita, y la 'muerte simb\xF3lica' de la que habla el viaje se vuelve literal aqu\xED." },
+    { en: "Frodo gets home and can't slot back into the Shire. The road changed him too much for that.", es: "Frodo llega a casa y ya no encaja en la Comarca. El camino lo cambi\xF3 demasiado para eso." },
+    { en: "A real ocean is Moana's threshold, and what she comes back to save is the whole village.", es: "Un oc\xE9ano de verdad es el umbral de Moana, y lo que vuelve a salvar es todo el pueblo." },
+    { en: "Each book runs the loop again, and the wizarding world reshapes Harry's call to adventure into a rescue from those awful relatives.", es: "Cada libro repite el bucle, y el mundo m\xE1gico convierte el llamado a la aventura de Harry en un rescate de esos parientes horribles." }
+  ],
+  "Dan Harmon Story Circle": [
+    { en: "Weekly TV has to close the loop by the credits. Whatever the character wanted at minute one gets answered by the end.", es: "La tele semanal tiene que cerrar el bucle antes de los cr\xE9ditos. Lo que el personaje quer\xEDa en el minuto uno queda resuelto al final." },
+    { en: "Harmon fits every Community episode onto the circle. Even the bottle episodes and parodies that look like they're breaking the rules.", es: "Harmon ajusta cada episodio de Community al c\xEDrculo. Hasta los cap\xEDtulos de un solo set y las parodias que parecen romper las reglas." },
+    { en: "Since Rick almost never comes back changed, the final beat lands on Morty instead. The change gets split between them.", es: "Como Rick casi nunca vuelve cambiado, el \xFAltimo paso recae en Morty. El cambio se reparte entre los dos." },
+    { en: "One protagonist, no subplots, and all eight steps show up plain as day, barely disguised at all.", es: "Un protagonista, sin tramas secundarias, y los ocho pasos aparecen a la vista, apenas disfrazados." }
+  ],
+  "Three Act Structure": [
+    { en: "So common by now that audiences read the act breaks as natural pacing and never clock the scaffolding holding it up.", es: "Tan com\xFAn a estas alturas que el p\xFAblico lee los cambios de acto como ritmo natural y nunca nota el andamiaje que lo sostiene." },
+    { en: "That clean three-part shape lets readers track the stakes easily. You trade subtlety for steady forward push.", es: "Esa forma limpia de tres partes deja seguir las apuestas con facilidad. Cambias sutileza por un empuje constante hacia adelante." },
+    { en: "Act breaks double as development checkpoints, which is why the structure sticks. Easy to note, easy to budget.", es: "Los cambios de acto sirven a la vez de hitos de desarrollo, y por eso la estructura aguanta. F\xE1cil de anotar, f\xE1cil de presupuestar." }
+  ],
+  "Freytag's Pyramid": [
+    { en: "Freytag drew the model off actual tragedies, so the fall after the climax weighs as much as the climb getting there.", es: "Freytag sac\xF3 el modelo de tragedias reales, as\xED que la ca\xEDda tras el cl\xEDmax pesa tanto como la subida hasta \xE9l." },
+    { en: "Shakespeare drops the climax mid-play and leaves two whole acts of fallout that modern stories tend to chop off.", es: "Shakespeare suelta el cl\xEDmax a mitad de obra y deja dos actos enteros de consecuencias que el relato moderno suele cortar." },
+    { en: "Stage plays sit well in the symmetrical pyramid. A live crowd feels that slow slide toward disaster as it happens.", es: "Las obras de teatro encajan bien en la pir\xE1mide sim\xE9trica. Un p\xFAblico en vivo siente ese lento descenso al desastre mientras ocurre." }
+  ],
+  "Fichtean Curve": [
+    { en: "Thrillers open with you already inside the problem, then tuck any backstory into the gaps between one crisis and the next.", es: "Los thrillers abren contigo ya dentro del problema, y luego meten la informaci\xF3n de fondo en los huecos entre una crisis y la siguiente." },
+    { en: "Those stacked rising actions barely give the reader air. Solve one crisis and you've just set up a nastier one.", es: "Esas acciones ascendentes apiladas apenas le dan aire al lector. Resuelves una crisis y ya armaste una peor." },
+    { en: "Cut each installment off mid-climb and the curve becomes a retention trick more than a tension shape.", es: "Corta cada entrega en plena subida y la curva se vuelve un truco de retenci\xF3n m\xE1s que una forma de tensi\xF3n." }
+  ],
+  "Kish\u014Dtenketsu": [
+    { en: "Nothing drives slice-of-life forward, so it leans on the 'ten' twist for the jolt that plot normally supplies.", es: "Nada empuja la historia cotidiana hacia adelante, as\xED que se apoya en el giro 'ten' para la sacudida que suele dar la trama." },
+    { en: "The twist usually shifts whose viewpoint we trust, recoloring earlier scenes rather than cranking up the stakes.", es: "El giro suele cambiar a qui\xE9n le creemos el punto de vista, recoloreando las escenas previas en vez de subir las apuestas." },
+    { en: "In an essay the 'ten' is that surprise counterexample, the one that forces the argument to grow before the wrap-up.", es: "En un ensayo el 'ten' es ese contraejemplo sorpresa, el que obliga al argumento a crecer antes del cierre." },
+    { en: "Rereading pays off here. Details planted early click into place only once the twist redefines what they meant.", es: "Aqu\xED releer rinde. Los detalles sembrados al principio encajan solo cuando el giro redefine lo que significaban." }
+  ],
+  "Save the Cat": [
+    { en: "Snyder's beats land on such fixed page numbers that a script doctor can diagnose a draft just from the page counts.", es: "Los beats de Snyder caen en n\xFAmeros de p\xE1gina tan fijos que un analista diagnostica un borrador solo por las p\xE1ginas." },
+    { en: "Rom-com beats line up so tight that the 'all is lost' breakup runs on schedule. The characters barely cause it.", es: "Los beats de la comedia rom\xE1ntica encajan tan justo que la ruptura del 'todo est\xE1 perdido' va en agenda. Los personajes apenas la provocan." },
+    { en: "High-concept films lean hardest on the logline test, where Snyder's pitch-first focus screens marketable ideas before anyone writes a word.", es: "Las pel\xEDculas de alto concepto se apoyan m\xE1s en la prueba del logline, donde el foco de Snyder en el pitch filtra ideas vendibles antes de escribir una palabra." },
+    { en: "Family films love the 'state the theme' beat. They tend to say the moral out loud instead of leaving it hanging.", es: "Al cine familiar le encanta el beat de 'enunciar el tema'. Suele decir la moraleja en voz alta en lugar de dejarla suelta." }
+  ],
+  "Seven Point Structure": [
+    { en: "Pinch points drag the villain's pressure onto the page at set moments, which keeps sprawling fantasy plots from wandering off.", es: "Los pinch points arrastran la presi\xF3n del villano a la p\xE1gina en momentos fijos, y eso evita que las tramas de fantas\xEDa extensas se desv\xEDen." },
+    { en: "Build it backward from the ending and every turning point earns its keep by setting up the finale it was made for.", es: "Constr\xFAyelo desde el final hacia atr\xE1s y cada giro se gana el sitio preparando el desenlace para el que fue hecho." },
+    { en: "That midpoint reversal hands each installment its own spine, so a serial holds tension without needing a whole novel's worth of room.", es: "Esa inversi\xF3n del punto medio le da columna propia a cada entrega, as\xED que un serial mantiene la tensi\xF3n sin necesitar el espacio de una novela entera." }
+  ],
+  "Pulp Formula": [
+    { en: "Serials live or die on selling the next chapter, so the cliffhanger isn't decoration. It's how the money comes in.", es: "Los seriales viven o mueren de vender el pr\xF3ximo cap\xEDtulo, as\xED que el cliffhanger no es adorno. Es de d\xF3nde sale el dinero." },
+    { en: "Noir keeps pulp's quick pace but bends it inward, so all that relentless speed mirrors a doomed hero running out of moves.", es: "El noir conserva el ritmo veloz del pulp pero lo dobla hacia adentro, as\xED que toda esa velocidad implacable refleja a un h\xE9roe condenado qued\xE1ndose sin jugadas." },
+    { en: "Lead with the hook and you swap slow character work for instant buy-in. Pulp figures the reader could bail on any page.", es: "Arranca con el gancho y cambias el desarrollo lento por enganche instant\xE1neo. El pulp da por hecho que el lector puede largarse en cualquier p\xE1gina." },
+    { en: "End every issue on a cliffhanger and comics have to peak and reset over and over, baking pulp's rhythm into the page turn.", es: "Termina cada n\xFAmero en cliffhanger y el c\xF3mic tiene que culminar y reiniciar una y otra vez, grabando el ritmo pulp en el pase de p\xE1gina." }
+  ],
+  "McKee Story paradigm": [
+    { en: "Prestige drama runs on McKee's 'turn'. A scene only earns its place by flipping some value from positive to negative.", es: "El drama de prestigio funciona con el 'giro' de McKee. Una escena solo se gana el lugar invirtiendo alg\xFAn valor de positivo a negativo." },
+    { en: "Character surfaces in the gap between what someone expects and what they actually get, and that mistake is where McKee plants the story.", es: "El car\xE1cter sale a la luz en la brecha entre lo que alguien espera y lo que de verdad obtiene, y en ese error es donde McKee planta la historia." },
+    { en: "Forget good versus evil. The toughest dilemmas pit two goods against each other under pressure, and that's McKee's real test.", es: "Olvida el bien contra el mal. Los dilemas m\xE1s duros enfrentan dos bienes bajo presi\xF3n, y esa es la prueba real de McKee." }
+  ],
+  "Into the Woods structure": [
+    { en: "Ensemble British drama makes Yorke's nesting visible. Each character's little order-to-chaos arc sits tucked inside the larger one.", es: "El drama coral brit\xE1nico hace visible el anidamiento de Yorke. El peque\xF1o arco de orden a caos de cada personaje queda metido dentro del mayor." },
+    { en: "Braid several leads and the 'woods' repeat at different scales, the same pattern echoing down through each one's descent.", es: "Entrelaza a varios protagonistas y el 'bosque' se repite a distintas escalas, con el mismo patr\xF3n resonando en el descenso de cada uno." },
+    { en: "One shared moral question is the order the chaos breaks, so Yorke binds the plotlines by theme rather than by events.", es: "Una sola pregunta moral compartida es el orden que el caos quiebra, as\xED que Yorke une las tramas por tema y no por sucesos." }
+  ],
+  "Frame Narrative": [
+    { en: "Stack the narrators and the doubt piles up too. Walton quotes Victor quoting the creature, so the monster reaches us third-hand.", es: "Apila a los narradores y la duda se acumula tambi\xE9n. Walton cita a Victor que cita a la criatura, as\xED que el monstruo nos llega de tercera mano." },
+    { en: "Grandfather keeps cutting in while the boy keeps begging him to skip the dull bits, so the outer story quietly edits the inner one.", es: "El abuelo interrumpe sin parar mientras el ni\xF1o le ruega que salte las partes aburridas, as\xED que la historia externa va editando la interna." },
+    { en: "Marlow's silent listeners on the deck stand in for us, and the frame drags polite society right into the horror he's describing.", es: "Los oyentes callados de Marlow en cubierta nos representan, y el marco arrastra a la sociedad educada justo al horror que describe." },
+    { en: "Here the frame is life or death. Scheherazade spins stories to stay alive, and every cliffhanger buys her one more day.", es: "Aqu\xED el marco es de vida o muerte. Scheherezade hila historias para seguir viva, y cada cliffhanger le compra un d\xEDa m\xE1s." }
+  ],
+  "Nonlinear Structure": [
+    { en: "Running it in reverse drops us into Leonard's head. We see the effect before the cause, same as him, and lose the thread.", es: "Correrlo al rev\xE9s nos mete en la cabeza de Leonard. Vemos el efecto antes que la causa, igual que \xE9l, y perdemos el hilo." },
+    { en: "Vincent dies, then turns up alive in a later scene. What felt final was the shuffled order, never the death.", es: "Vincent muere y luego aparece vivo en una escena posterior. Lo que se sent\xEDa definitivo era el orden barajado, nunca la muerte." },
+    { en: "That hidden gap between the two timelines is the whole mystery. Crack the order and you learn who's secretly a host.", es: "Ese salto oculto entre las dos l\xEDneas de tiempo es todo el misterio. Descifra el orden y descubres qui\xE9n es en secreto un anfitri\xF3n." },
+    { en: "Billy comes 'unstuck in time,' so the jumbled structure is the trauma itself. A mind that can't file the war into bearable order.", es: "Billy queda 'desclavado en el tiempo', as\xED que la estructura revuelta es el trauma en s\xED. Una mente que no logra archivar la guerra en un orden soportable." }
+  ],
+  "Rashomon Structure": [
+    { en: "Four witnesses, one killing, four versions that flatter the teller. You walk away without the truth.", es: "Cuatro testigos, un crimen, cuatro versiones que favorecen a quien las cuenta. Te quedas sin saber qu\xE9 pas\xF3." },
+    { en: "Same assassination, told three times and color-coded, and every pass shuffles who betrayed whom and why.", es: "El mismo asesinato, contado tres veces y codificado por color; cada pasada baraja qui\xE9n traicion\xF3 a qui\xE9n y por qu\xE9." },
+    { en: "His version, then hers, episode after episode. Nobody's lying. They just remember it in their own favor.", es: "La versi\xF3n de \xE9l, luego la de ella, episodio tras episodio. Nadie miente. Cada uno lo recuerda a su favor." },
+    { en: "Her diary reads like an honest confession until the floor drops out: she faked the whole thing to frame her husband.", es: "El diario suena a confesi\xF3n sincera, y de repente todo se cae: lo falsific\xF3 entero para incriminar a su marido." }
+  ],
+  "In Medias Res": [
+    { en: "Odysseus shows up already shipwrecked, years gone. The war and the wandering he fills in for us himself, after the fact.", es: "Odiseo aparece ya n\xE1ufrago, a\xF1os fuera de casa. La guerra y el viaje nos los rellena \xE9l mismo, m\xE1s tarde." },
+    { en: "Cold opens dump you straight into the wreckage, a runaway RV and gas masks, and the episode is you catching up to how it got there.", es: "Los arranques te sueltan de lleno en el desastre, una autocaravana sin control y m\xE1scaras de gas, y el episodio es ponerte al d\xEDa de c\xF3mo se lleg\xF3 ah\xED." },
+    { en: "Opens mid-chase, explains nothing. You learn the rules of the world by watching what people actually do.", es: "Abre en plena persecuci\xF3n y no explica nada. Las reglas del mundo las pillas mirando lo que hace la gente." },
+    { en: "A gun in his mouth on frame one, and the rest of the movie is just working back to how the narrator got there.", es: "Una pistola en la boca desde el primer plano, y el resto de la pel\xEDcula es desandar c\xF3mo lleg\xF3 ah\xED el narrador." }
+  ],
+  "Eight-Sequence Structure": [
+    { en: "Every reel-sized chunk settles its own tension before passing the baton, all of it bending toward Rick giving up Ilsa.", es: "Cada tramo del tama\xF1o de un rollo salda su propia tensi\xF3n antes de pasar el testigo, y todo se inclina hacia que Rick renuncie a Ilsa." },
+    { en: "Eight tidy mini-movies trace Woody's fall and the rivalry, and each closes on a twist that lights the next.", es: "Ocho mini-pel\xEDculas pulcras trazan la ca\xEDda de Woody y la rivalidad, y cada una cierra en un giro que enciende la siguiente." },
+    { en: "Ten or fifteen minutes at a time, McClane gets a fresh small goal, and the tower's floors do the section-marking for you.", es: "De diez en diez minutos, o quince, McClane recibe un nuevo objetivo peque\xF1o, y los pisos de la torre te marcan las secciones." },
+    { en: "Every interview, every clue plays like its own short film, chaining Clarice one step at a time down to Buffalo Bill's basement.", es: "Cada entrevista, cada pista funciona como su propio cortometraje, encadenando a Clarice un paso tras otro hasta el s\xF3tano de Buffalo Bill." },
+    { en: "Eight self-contained set pieces shove Thornhill across the country, each spot a sealed chase that hands him an exit.", es: "Ocho secuencias aut\xF3nomas empujan a Thornhill por todo el pa\xEDs; cada sitio es una persecuci\xF3n cerrada que le da una salida." }
+  ],
+  "Syd Field Paradigm": [
+    { en: "Field's two plot points arrive as the job offer and the buried secret, and each one drags Gittes deeper and leaves him more helpless.", es: "Los dos puntos de giro de Field llegan como el encargo y el secreto enterrado, y cada uno arrastra a Gittes m\xE1s al fondo y lo deja m\xE1s indefenso." },
+    { en: "The accidental shooting drops as Plot Point I, flipping a girls' road trip into a run with no way back.", es: "El disparo accidental cae como primer punto de giro y vuelca un viaje de chicas en una fuga sin retorno." },
+    { en: "Massacre and tractor beam land right on Field's marks, so Luke's journey reads like a clean diagram of the model.", es: "La masacre y el rayo tractor aterrizan justo en las marcas de Field, y el viaje de Luke se lee como un diagrama limpio del modelo." },
+    { en: "The red pill is Plot Point I. Setup, confrontation, resolution slot together so neatly the film could pass for a demo of the model.", es: "La p\xEDldora roja es el primer punto de giro. Planteamiento, confrontaci\xF3n y desenlace encajan tan limpios que la peli podr\xEDa pasar por demo del modelo." },
+    { en: "Act One ends the moment Book's witness sees the murder, and those tidy three acts turn hiding him into a ticking clock.", es: "El primer acto termina en cuanto el testigo de Book ve el asesinato, y esos tres actos ordenados convierten esconderlo en una cuenta atr\xE1s." }
+  ],
+  "Truby 22 Steps": [
+    { en: "Flaw, real need, moment of truth: Michael grows into damnation step by step, the moral arc driving the plot rather than trailing it.", es: "Defecto, verdadera necesidad, momento de verdad: Michael crece hacia la condena paso a paso, y el arco moral mueve la trama en vez de ir detr\xE1s." },
+    { en: "Dressing as a woman becomes the defeat that forces him to look at himself, and the plot sprouts from how he's always treated women.", es: "Disfrazarse de mujer se vuelve la derrota que lo obliga a mirarse, y la trama brota de c\xF3mo ha tratado siempre a las mujeres." },
+    { en: "Wartime heartbreak and buried longing shove Rick toward a hard truth he only earns by sacrifice. The cynicism is the flaw he finally mends.", es: "El desamor de guerra y el anhelo enterrado empujan a Rick hacia una verdad dura que solo se gana por sacrificio. El cinismo es el defecto que al fin repara." },
+    { en: "Scottie's drive rots into obsession, each Truby beat screwing tighter toward a realization that arrives too late to save her.", es: "El impulso de Scottie se pudre en obsesi\xF3n, y cada paso de Truby aprieta m\xE1s hacia una revelaci\xF3n que llega tarde para salvarla." },
+    { en: "George's thwarted ambition resolves when he stops trying to escape and sees that an ordinary life actually counts for something.", es: "La ambici\xF3n frustrada de George se resuelve cuando deja de querer escapar y ve que una vida com\xFAn s\xED vale algo." }
+  ],
+  "TV Series Structure": [
+    { en: "Standalone crises stack up into one season-long transformation, Walt's morality buckling faster than any single episode admits.", es: "Crisis sueltas se apilan en una transformaci\xF3n de toda la temporada, con la moral de Walt cediendo m\xE1s r\xE1pido de lo que admite cada episodio." },
+    { en: "Every season swaps out the institution under the microscope, docks one year, schools or the press the next, while the same faces carry through underneath.", es: "Cada temporada cambia la instituci\xF3n bajo la lupa, los muelles un a\xF1o, las escuelas o la prensa al siguiente, mientras las mismas caras siguen por debajo." },
+    { en: "Tidy weekly A/B/C plots tie off inside the half hour, and the cast resets so everyone's right back to normal.", es: "Las pulcras tramas A/B/C semanales se cierran dentro de la media hora, y el elenco se reinicia, as\xED que todos vuelven a la normalidad." },
+    { en: "Therapy gives each episode its frame, and through Tony's sessions the long family and mob arcs leak out as confession.", es: "La terapia le da a cada episodio su marco, y por las sesiones de Tony los largos arcos de familia y mafia se filtran como confesi\xF3n." },
+    { en: "Flashbacks and flashforwards braid past into present, and the season's central mystery hands out its answers a sliver at a time.", es: "Flashbacks y flashforwards trenzan pasado y presente, y el misterio central de cada temporada reparte sus respuestas a cuentagotas." }
+  ]
+};
 
 // src/writer-tools/referenceDetails.js
 function createResourceSubheading(parent, iconName, text) {
@@ -9439,29 +12334,70 @@ function createResourceSubheading(parent, iconName, text) {
   (0, import_obsidian19.setIcon)(icon, iconName);
   heading.createSpan({ cls: "resource-detail-subheading", text });
 }
+function renderExamplesZone(content, data, lang = "en", notes = null) {
+  var _a, _b;
+  if (!((_a = data.examples) == null ? void 0 : _a.length))
+    return;
+  const zone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
+  const header = zone.createDiv({ cls: "resource-detail-examples-header" });
+  (0, import_obsidian19.setIcon)(header.createSpan({ cls: "resource-detail-examples-icon" }), "bookmark");
+  header.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading || data.examplesTitle });
+  const grid = zone.createDiv({ cls: "resource-detail-examples-grid" });
+  const noteBox = zone.createDiv({ cls: "resource-detail-example-note" });
+  noteBox.style.display = "none";
+  let openIdx = -1;
+  const revealLabel = ((_b = UI_I18N[lang]) == null ? void 0 : _b.revealSpoiler) || "Click to reveal (spoiler)";
+  data.examples.forEach((example, i) => {
+    var _a2;
+    const note = notes && notes[i] ? (_a2 = notes[i][lang]) != null ? _a2 : notes[i].en : null;
+    const card = grid.createDiv({ cls: "resource-detail-example-card" + (note ? " has-note" : "") });
+    card.createSpan({ text: example });
+    if (!note)
+      return;
+    (0, import_obsidian19.setIcon)(card.createSpan({ cls: "resource-detail-example-eye" }), "eye");
+    card.addEventListener("click", () => {
+      if (openIdx === i) {
+        noteBox.style.display = "none";
+        card.classList.remove("is-open");
+        openIdx = -1;
+        return;
+      }
+      openIdx = i;
+      grid.querySelectorAll(".resource-detail-example-card.is-open").forEach((c) => c.classList.remove("is-open"));
+      card.classList.add("is-open");
+      noteBox.empty();
+      noteBox.style.display = "";
+      noteBox.classList.add("is-spoiler");
+      noteBox.createSpan({ cls: "resource-detail-example-note-title", text: example });
+      noteBox.createDiv({ cls: "resource-detail-example-note-body", text: note });
+      noteBox.createDiv({ cls: "resource-detail-example-note-reveal", text: revealLabel });
+      noteBox.onclick = () => noteBox.classList.remove("is-spoiler");
+    });
+  });
+}
 function renderArchetypeDetail(container, archetypeKey, lang = "en") {
-  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l;
   const data = getArchetypeData(archetypeKey, lang);
   if (!data) {
-    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+    container.createDiv({ cls: "resource-detail-placeholder", text: ((_a = UI_I18N[lang]) == null ? void 0 : _a.comingSoon) || "Content coming soon." });
     return;
   }
   const content = container.createDiv({ cls: "resource-detail-content" });
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
   createResourceSubheading(introZone, "circle-question-mark", data.introQuestion);
   data.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
-  if ((_a = data.traits) == null ? void 0 : _a.length) {
+  if ((_b = data.traits) == null ? void 0 : _b.length) {
     const traitsZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(traitsZone, "heart", data.traitsHeading || ((_b = UI_I18N[lang]) == null ? void 0 : _b.coreTraits) || "Core traits");
+    createResourceSubheading(traitsZone, "heart", data.traitsHeading || ((_c = UI_I18N[lang]) == null ? void 0 : _c.coreTraits) || "Core traits");
     const list = traitsZone.createEl("ul", { cls: "resource-detail-list" });
     data.traits.forEach((item) => list.createEl("li", { text: item }));
     if (data.traitsNote) {
       traitsZone.createDiv({ cls: "resource-detail-paragraph", text: data.traitsNote });
     }
   }
-  if ((_c = data.functions) == null ? void 0 : _c.length) {
+  if ((_d = data.functions) == null ? void 0 : _d.length) {
     const funcZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(funcZone, "chart-spline", data.functionHeading || ((_d = UI_I18N[lang]) == null ? void 0 : _d.narrativeFunction) || "Narrative function");
+    createResourceSubheading(funcZone, "chart-spline", data.functionHeading || ((_e = UI_I18N[lang]) == null ? void 0 : _e.narrativeFunction) || "Narrative function");
     if (data.functionIntro) {
       funcZone.createDiv({ cls: "resource-detail-paragraph", text: data.functionIntro });
     }
@@ -9471,123 +12407,93 @@ function renderArchetypeDetail(container, archetypeKey, lang = "en") {
       funcZone.createDiv({ cls: "resource-detail-paragraph", text: data.functionNote });
     }
   }
-  if ((_e = data.relationships) == null ? void 0 : _e.length) {
-    const relZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(relZone, "flask-conical", data.relationshipsHeading || ((_f = UI_I18N[lang]) == null ? void 0 : _f.keyRelationships) || "Key relationships");
+  if ((_f = data.relationships) == null ? void 0 : _f.length) {
+    const relZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(relZone, "flask-conical", data.relationshipsHeading || ((_g = UI_I18N[lang]) == null ? void 0 : _g.keyRelationships) || "Key relationships");
     const list = relZone.createEl("ul", { cls: "resource-detail-list" });
     data.relationships.forEach((item) => list.createEl("li", { text: item }));
   }
-  if ((_g = data.writing) == null ? void 0 : _g.length) {
-    const writeZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(writeZone, "square-pen", data.writingHeading || "Writing tips");
+  if ((_h = data.writing) == null ? void 0 : _h.length) {
+    const writeZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(writeZone, "square-pen", data.writingHeading || ((_i = UI_I18N[lang]) == null ? void 0 : _i.writingTipsHeading) || "Writing tips");
     const list = writeZone.createEl("ul", { cls: "resource-detail-list" });
     data.writing.forEach((item) => list.createEl("li", { text: item }));
   }
   if (data.why) {
-    const whyZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(whyZone, "chart-spline", data.whyHeading || "Why this archetype works");
+    const whyZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(whyZone, "chart-spline", data.whyHeading || ((_j = UI_I18N[lang]) == null ? void 0 : _j.whyArchetype) || "Why this archetype works");
     whyZone.createDiv({ cls: "resource-detail-paragraph", text: data.why });
   }
-  if ((_h = data.innerConflicts) == null ? void 0 : _h.length) {
-    const conflictZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(conflictZone, "alert-triangle", data.innerConflictHeading || ((_i = UI_I18N[lang]) == null ? void 0 : _i.innerConflict) || "Inner conflict");
+  if ((_k = data.innerConflicts) == null ? void 0 : _k.length) {
+    const conflictZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(conflictZone, "alert-triangle", data.innerConflictHeading || ((_l = UI_I18N[lang]) == null ? void 0 : _l.innerConflict) || "Inner conflict");
     const list = conflictZone.createEl("ul", { cls: "resource-detail-list" });
     data.innerConflicts.forEach((item) => list.createEl("li", { text: item }));
   }
-  if ((_j = data.examples) == null ? void 0 : _j.length) {
-    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-    const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-    const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-    (0, import_obsidian19.setIcon)(examplesIcon, "bookmark");
-    examplesHeader.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
-    const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-    data.examples.forEach((example) => {
-      const card = grid.createDiv({ cls: "resource-detail-example-card" });
-      card.createSpan({ text: example });
-    });
-  }
+  renderExamplesZone(content, data, lang, EXAMPLE_NOTES[archetypeKey]);
 }
 function renderCharacterArcDetail(container, arcKey, lang = "en") {
-  var _a, _b, _c, _d, _e, _f;
+  var _a, _b, _c, _d, _e, _f, _g;
   const data = getArchetypeData(arcKey, lang);
   if (!data) {
-    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+    container.createDiv({ cls: "resource-detail-placeholder", text: ((_a = UI_I18N[lang]) == null ? void 0 : _a.comingSoon) || "Content coming soon." });
     return;
   }
   const content = container.createDiv({ cls: "resource-detail-content" });
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
   createResourceSubheading(introZone, "circle-question-mark", data.introQuestion);
   data.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
-  if ((_a = data.characteristics) == null ? void 0 : _a.length) {
+  if ((_b = data.characteristics) == null ? void 0 : _b.length) {
     const charZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(charZone, "heart", data.characteristicsHeading || ((_b = UI_I18N[lang]) == null ? void 0 : _b.coreCharacteristics) || "Core characteristics");
+    createResourceSubheading(charZone, "heart", data.characteristicsHeading || ((_c = UI_I18N[lang]) == null ? void 0 : _c.coreCharacteristics) || "Core characteristics");
     const list = charZone.createEl("ul", { cls: "resource-detail-list" });
     data.characteristics.forEach((item) => list.createEl("li", { text: item }));
     if (data.characteristicsNote) {
       charZone.createDiv({ cls: "resource-detail-paragraph", text: data.characteristicsNote });
     }
   }
-  if ((_c = data.functions) == null ? void 0 : _c.length) {
+  if ((_d = data.functions) == null ? void 0 : _d.length) {
     const funcZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(funcZone, "chart-spline", data.functionHeading || ((_d = UI_I18N[lang]) == null ? void 0 : _d.narrativeFunction) || "Narrative function");
+    createResourceSubheading(funcZone, "chart-spline", data.functionHeading || ((_e = UI_I18N[lang]) == null ? void 0 : _e.narrativeFunction) || "Narrative function");
     const list = funcZone.createEl("ul", { cls: "resource-detail-list" });
     data.functions.forEach((item) => list.createEl("li", { text: item }));
     if (data.functionNote) {
       funcZone.createDiv({ cls: "resource-detail-paragraph", text: data.functionNote });
     }
   }
-  if ((_e = data.conflicts) == null ? void 0 : _e.length) {
-    const confZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(confZone, "alert-triangle", data.conflictsHeading || "Common internal conflicts");
+  if ((_f = data.conflicts) == null ? void 0 : _f.length) {
+    const confZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(confZone, "alert-triangle", data.conflictsHeading || ((_g = UI_I18N[lang]) == null ? void 0 : _g.commonInternalConflicts) || "Common internal conflicts");
     const list = confZone.createEl("ul", { cls: "resource-detail-list" });
     data.conflicts.forEach((item) => list.createEl("li", { text: item }));
   }
-  if ((_f = data.examples) == null ? void 0 : _f.length) {
-    const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-    const header = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-    const icon = header.createSpan({ cls: "resource-detail-examples-icon" });
-    (0, import_obsidian19.setIcon)(icon, "bookmark");
-    header.createSpan({ cls: "resource-detail-subheading", text: data.examplesHeading });
-    const grid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-    data.examples.forEach((example) => {
-      const card = grid.createDiv({ cls: "resource-detail-example-card" });
-      card.createSpan({ text: example });
-    });
-  }
+  renderExamplesZone(content, data, lang, EXAMPLE_NOTES[arcKey]);
 }
-function renderTechniqueDetail(container, config) {
+function renderTechniqueDetail(container, config, lang = "en", title = null) {
+  var _a, _b, _c;
   const content = container.createDiv({ cls: "resource-detail-content" });
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
   createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
   config.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
   const coreZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(coreZone, "heart", config.coreHeading || "Core characteristics");
+  createResourceSubheading(coreZone, "heart", config.coreHeading || ((_a = UI_I18N[lang]) == null ? void 0 : _a.coreCharacteristics) || "Core characteristics");
   const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
   config.core.forEach((item) => coreList.createEl("li", { text: item }));
   if (config.coreNote) {
     coreZone.createDiv({ cls: "resource-detail-paragraph", text: config.coreNote });
   }
   const functionZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(functionZone, "chart-spline", config.functionHeading || "Narrative function");
+  createResourceSubheading(functionZone, "chart-spline", config.functionHeading || ((_b = UI_I18N[lang]) == null ? void 0 : _b.narrativeFunction) || "Narrative function");
   const functionList = functionZone.createEl("ul", { cls: "resource-detail-list" });
   config.narrativeFunction.forEach((item) => functionList.createEl("li", { text: item }));
   if (config.narrativeNote) {
     functionZone.createDiv({ cls: "resource-detail-paragraph", text: config.narrativeNote });
   }
-  const risksZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(risksZone, "alert-triangle", config.risksTitle || "Common risks");
+  const risksZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+  createResourceSubheading(risksZone, "alert-triangle", config.risksTitle || ((_c = UI_I18N[lang]) == null ? void 0 : _c.commonRisks) || "Common risks");
   const risksList = risksZone.createEl("ul", { cls: "resource-detail-list" });
   config.risks.forEach((item) => risksList.createEl("li", { text: item }));
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian19.setIcon)(examplesIcon, "bookmark");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  config.examples.forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
+  renderExamplesZone(content, config, lang, title ? EXAMPLE_NOTES[title] : null);
 }
 function renderCalloutItem(container, item) {
   var _a, _b, _c;
@@ -9686,15 +12592,15 @@ function renderCalloutItem(container, item) {
     callout.createDiv({ cls: "resource-detail-callout-body", text: body });
   }
 }
-function renderStructureDetail(container, config) {
-  var _a, _b;
+function renderStructureDetail(container, config, lang = "en", title = null) {
+  var _a, _b, _c, _d, _e;
   const content = container.createDiv({ cls: "resource-detail-content" });
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
   createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
   config.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
   if ((_a = config.core) == null ? void 0 : _a.length) {
     const coreZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(coreZone, "heart", config.coreHeading || "Core characteristics");
+    createResourceSubheading(coreZone, "heart", config.coreHeading || ((_b = UI_I18N[lang]) == null ? void 0 : _b.coreCharacteristics) || "Core characteristics");
     const coreList = coreZone.createEl("ul", { cls: "resource-detail-list" });
     config.core.forEach((item) => coreList.createEl("li", { text: item }));
     if (config.coreNote) {
@@ -9702,8 +12608,8 @@ function renderStructureDetail(container, config) {
     }
   }
   const stepsZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(stepsZone, "list-ordered", config.stepsTitle || "Steps");
-  if ((_b = config.stepGroups) == null ? void 0 : _b.length) {
+  createResourceSubheading(stepsZone, "list-ordered", config.stepsTitle || ((_c = UI_I18N[lang]) == null ? void 0 : _c.steps) || "Steps");
+  if ((_d = config.stepGroups) == null ? void 0 : _d.length) {
     const stepsList = stepsZone.createDiv({ cls: "resource-detail-numbered-steps" });
     config.stepGroups.forEach((group) => {
       const headingClass = /^ACT\s+/i.test(group.title) ? "resource-detail-step-heading-plain" : "resource-detail-step-heading";
@@ -9729,28 +12635,20 @@ function renderStructureDetail(container, config) {
     config.steps.forEach((item) => renderCalloutItem(stepsList, item));
   }
   if (config.why) {
-    const whyZone = content.createDiv({ cls: "resource-detail-zone" });
-    createResourceSubheading(whyZone, "chart-spline", config.whyTitle || "Why this works");
+    const whyZone = content.createDiv({ cls: "resource-detail-zone is-secondary" });
+    createResourceSubheading(whyZone, "chart-spline", config.whyTitle || ((_e = UI_I18N[lang]) == null ? void 0 : _e.whyThisWorks) || "Why this works");
     whyZone.createDiv({ cls: "resource-detail-paragraph", text: config.why });
   }
-  const examplesZone = content.createDiv({ cls: "resource-detail-zone resource-detail-examples-zone" });
-  const examplesHeader = examplesZone.createDiv({ cls: "resource-detail-examples-header" });
-  const examplesIcon = examplesHeader.createSpan({ cls: "resource-detail-examples-icon" });
-  (0, import_obsidian19.setIcon)(examplesIcon, "bookmark");
-  examplesHeader.createSpan({ cls: "resource-detail-subheading", text: config.examplesTitle });
-  const examplesGrid = examplesZone.createDiv({ cls: "resource-detail-examples-grid" });
-  config.examples.forEach((example) => {
-    const card = examplesGrid.createDiv({ cls: "resource-detail-example-card" });
-    card.createSpan({ text: example });
-  });
+  renderExamplesZone(content, config, lang, title ? EXAMPLE_NOTES[title] : null);
 }
-function renderTipsDetail(container, config) {
+function renderTipsDetail(container, config, lang = "en") {
+  var _a;
   const content = container.createDiv({ cls: "resource-detail-content" });
   const introZone = content.createDiv({ cls: "resource-detail-zone" });
   createResourceSubheading(introZone, "circle-question-mark", config.introTitle);
   config.intro.forEach((p) => introZone.createDiv({ cls: "resource-detail-paragraph", text: p }));
   const techniquesZone = content.createDiv({ cls: "resource-detail-zone" });
-  createResourceSubheading(techniquesZone, "heart", config.techniquesHeading || "Core techniques");
+  createResourceSubheading(techniquesZone, "heart", config.techniquesHeading || ((_a = UI_I18N[lang]) == null ? void 0 : _a.coreTechniques) || "Core techniques");
   const techniquesList = techniquesZone.createDiv({ cls: "resource-detail-callout-list" });
   config.techniques.forEach((item) => renderCalloutItem(techniquesList, item));
 }
@@ -9764,7 +12662,7 @@ function renderPitfallsDetail(container, title, items) {
 
 // src/views/writerToolsView.js
 var WRITER_TOOLS_VIEW_TYPE2 = "folio-writer-tools";
-var WriterToolsView = class extends import_obsidian20.ItemView {
+var _WriterToolsView = class extends import_obsidian20.ItemView {
   constructor(leaf, plugin) {
     super(leaf);
     this.plugin = plugin;
@@ -9893,6 +12791,40 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
     (0, import_obsidian20.setIcon)(exportIcon, "file-stack");
     exportItem.createSpan({ cls: "writer-tools-item-text", text: "Export assistant" });
     exportItem.addEventListener("click", () => this.showExportSettingsView());
+    const addToolShortcut = (icon, text, ariaLabel, action) => {
+      const item = section.createDiv({ cls: "writer-tools-item" });
+      item.setAttr("role", "button");
+      item.setAttr("tabindex", "0");
+      item.setAttr("aria-label", ariaLabel);
+      (0, import_obsidian20.setIcon)(item.createSpan({ cls: "writer-tools-item-icon" }), icon);
+      item.createSpan({ cls: "writer-tools-item-text", text });
+      const run = () => {
+        try {
+          action();
+        } catch (e) {
+          console.error(text + " failed", e);
+        }
+      };
+      item.addEventListener("click", run);
+      item.addEventListener("keydown", (evt) => {
+        if (evt.key === "Enter" || evt.key === " ") {
+          evt.preventDefault();
+          run();
+        }
+      });
+    };
+    addToolShortcut("layout-dashboard", "Beat board", "Open the Beat Board corkboard", () => {
+      var _a, _b;
+      return (_b = (_a = this.plugin).openBeatBoard) == null ? void 0 : _b.call(_a);
+    });
+    addToolShortcut("book-open", "Paged view", "Open the continuous Paged View", () => {
+      var _a, _b;
+      return (_b = (_a = this.plugin).openPagedView) == null ? void 0 : _b.call(_a);
+    });
+    addToolShortcut("bar-chart-3", "Writing stats", "Open the Writing Stats panel", () => {
+      var _a, _b;
+      return (_b = (_a = this.plugin).openWritingStats) == null ? void 0 : _b.call(_a);
+    });
   }
   getProjectTypeIcon(projectType) {
     var _a;
@@ -11848,12 +14780,56 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
     const lang = this.resourceLanguage;
     const section = this.toolsContainer.createDiv({ cls: "writer-tools-section" });
     section.createDiv({ cls: "writer-tools-section-title", text: "RESOURCES" });
+    const diag = section.createDiv({ cls: "writer-tools-item resource-diagnose-item" });
+    diag.setAttr("role", "button");
+    diag.setAttr("tabindex", "0");
+    (0, import_obsidian20.setIcon)(diag.createSpan({ cls: "writer-tools-item-icon" }), "stethoscope");
+    diag.createSpan({ cls: "writer-tools-item-text", text: ui(lang, "diagnoseTitle") });
+    const openDiagnose = () => this.showDiagnoseResources();
+    diag.addEventListener("click", openDiagnose);
+    diag.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        openDiagnose();
+      }
+    });
+    const searchWrap = section.createDiv({ cls: "resource-search" });
+    (0, import_obsidian20.setIcon)(searchWrap.createSpan({ cls: "resource-search-icon" }), "search");
+    const searchInput = searchWrap.createEl("input", {
+      cls: "resource-search-input",
+      attr: { type: "text", placeholder: ui(lang, "searchPlaceholder"), "aria-label": ui(lang, "searchPlaceholder") }
+    });
+    const resultsEl = section.createDiv({ cls: "resource-search-results" });
+    resultsEl.style.display = "none";
     const resourcesGrid = section.createDiv({ cls: "writer-tools-resources-grid" });
+    searchInput.addEventListener("input", () => {
+      const q = searchInput.value.trim().toLowerCase();
+      resultsEl.empty();
+      if (!q) {
+        resourcesGrid.style.display = "";
+        resultsEl.style.display = "none";
+        return;
+      }
+      resourcesGrid.style.display = "none";
+      resultsEl.style.display = "";
+      const matches = this.getAllResourceTitles().filter((t) => label(lang, t).toLowerCase().includes(q) || t.toLowerCase().includes(q) || this.getResourceSearchText(t, lang).includes(q)).sort((a, b) => label(lang, a).localeCompare(label(lang, b)));
+      if (!matches.length) {
+        resultsEl.createDiv({ cls: "resource-search-empty", text: ui(lang, "searchNoResults") });
+        return;
+      }
+      matches.slice(0, 50).forEach((t) => {
+        const item = resultsEl.createDiv({ cls: "writer-tools-item" });
+        (0, import_obsidian20.setIcon)(item.createSpan({ cls: "writer-tools-item-icon" }), this.getResourceIcon(t));
+        item.createSpan({ cls: "writer-tools-item-text", text: label(lang, t) });
+        this.appendMediumBadge(item, t);
+        this.makeInteractive(item, () => this.showResourceDetail(t, () => this.onOpen()));
+      });
+    });
     const resources = [
       { icon: "user", key: "character", label: ui(lang, "characterResources"), action: () => this.showCharacterResources() },
-      { icon: "bookmark", key: "narrative", label: ui(lang, "narrativeResources"), action: () => this.showNarrativeResources() },
       { icon: "layout-grid", key: "structure", label: ui(lang, "structureResources"), action: () => this.showStructureResources() },
-      { icon: "lightbulb", key: "tips", label: ui(lang, "tipsResources"), action: () => this.showTipsResources() }
+      { icon: "compass", key: "story", label: ui(lang, "storyResources"), action: () => this.showStoryResources() },
+      { icon: "pen-line", key: "craft", label: ui(lang, "craftResources"), action: () => this.showCraftResources() }
     ];
     resources.forEach((resource) => {
       const resourceItem = resourcesGrid.createDiv({ cls: "writer-tools-item" });
@@ -11965,6 +14941,7 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
       const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, arc.icon);
       item.createDiv({ cls: "resource-view-item-label", text: label(lang, arc.key) });
+      this.appendMediumBadge(item, arc.key);
       this.makeInteractive(item, () => this.showResourceDetail(arc.key, () => this.showCharacterResources()));
     });
     const archetypesSection = container.createDiv({ cls: "resource-view-section is-separated" });
@@ -11987,6 +14964,7 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
       const icon = item.createSpan({ cls: "resource-view-card-icon" });
       applyIcon(icon, itemData.icon);
       item.createDiv({ cls: "resource-view-card-label", text: label(lang, itemData.key) });
+      this.appendMediumBadge(item, itemData.key);
       this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
     });
     const jungSection = archetypesSection.createDiv({ cls: "resource-view-subsection" });
@@ -12011,26 +14989,36 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
       const icon = item.createSpan({ cls: "resource-view-card-icon" });
       applyIcon(icon, itemData.icon);
       item.createDiv({ cls: "resource-view-card-label", text: label(lang, itemData.key) });
+      this.appendMediumBadge(item, itemData.key);
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
+    });
+    const enginesSection = container.createDiv({ cls: "resource-view-section is-separated" });
+    enginesSection.createDiv({ cls: "resource-view-section-title", text: ui(lang, "characterEngines") });
+    const enginesGrid = enginesSection.createDiv({ cls: "resource-view-group-grid" });
+    const engines = [
+      { key: "Want vs Need", icon: "target" },
+      { key: "Wound & Ghost", icon: "ghost" },
+      { key: "The Lie & The Truth", icon: "scale" },
+      { key: "Fatal Flaw", icon: "crack" },
+      { key: "Antagonist Design", icon: "swords" },
+      { key: "Character Web", icon: "spline" }
+    ];
+    engines.forEach((itemData) => {
+      const item = enginesGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
+      applyIcon(icon, itemData.icon);
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+      this.appendMediumBadge(item, itemData.key);
       this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showCharacterResources()));
     });
   }
-  showNarrativeResources() {
+  renderNarrativeSection(container, onBack) {
     const lang = this.resourceLanguage;
-    const container = this.containerEl.children[1];
-    container.empty();
-    container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
       (0, import_obsidian20.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
         (0, import_obsidian20.setIcon)(el, "circle-dot");
     };
-    this.buildResourceViewHeader(
-      container,
-      "bookmark",
-      ui(lang, "narrativeResources"),
-      () => this.onOpen(),
-      () => this.showNarrativeResources()
-    );
     container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "narrativeTechniques") });
     const groups = ui(lang, "narrativeGroups");
     const groupItems = [
@@ -12066,7 +15054,8 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
         const icon = item.createSpan({ cls: "resource-view-item-icon" });
         applyIcon(icon, itemData.icon);
         item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
-        this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showNarrativeResources()));
+        this.appendMediumBadge(item, itemData.key);
+        this.makeInteractive(item, () => this.showResourceDetail(itemData.key, onBack));
       });
       if (group.note) {
         card.createDiv({ cls: "resource-view-group-note", text: group.note });
@@ -12129,27 +15118,35 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
         const icon = item.createSpan({ cls: "resource-view-item-icon" });
         applyIcon(icon, itemData.icon);
         item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+        this.appendMediumBadge(item, itemData.key);
         this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showStructureResources()));
       });
     });
+    const screenCard = container.createDiv({ cls: "resource-view-group-card" });
+    screenCard.createDiv({ cls: "resource-view-group-title", text: ui(lang, "screenSequence") });
+    const screenGrid = screenCard.createDiv({ cls: "resource-view-group-grid" });
+    const screenItems = [
+      { key: "Eight-Sequence Structure", icon: "layers" },
+      { key: "Syd Field Paradigm", icon: "columns-3" },
+      { key: "Truby 22 Steps", icon: "list-ordered" },
+      { key: "TV Series Structure", icon: "tv" }
+    ];
+    screenItems.forEach((itemData) => {
+      const item = screenGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
+      applyIcon(icon, itemData.icon);
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, () => this.showStructureResources()));
+    });
   }
-  showTipsResources() {
+  renderTipsSection(container, onBack) {
     const lang = this.resourceLanguage;
-    const container = this.containerEl.children[1];
-    container.empty();
-    container.addClass("folio-resource-view");
     const applyIcon = (el, iconName) => {
       (0, import_obsidian20.setIcon)(el, iconName);
       if (!el.querySelector("svg"))
         (0, import_obsidian20.setIcon)(el, "circle-dot");
     };
-    this.buildResourceViewHeader(
-      container,
-      "lightbulb",
-      ui(lang, "tipsResources"),
-      () => this.onOpen(),
-      () => this.showTipsResources()
-    );
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "writingTips") });
     container.createDiv({ cls: "resource-view-description", text: ui(lang, "tipsIntro") });
     const tipsCard = container.createDiv({ cls: "resource-view-group-card" });
     const tipsGrid = tipsCard.createDiv({ cls: "resource-view-group-grid" });
@@ -12166,7 +15163,26 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
       const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, tip.icon);
       item.createSpan({ cls: "resource-view-item-label", text: label(lang, tip.key) });
-      this.makeInteractive(item, () => this.showResourceDetail(tip.key, () => this.showTipsResources()));
+      this.appendMediumBadge(item, tip.key);
+      this.makeInteractive(item, () => this.showResourceDetail(tip.key, onBack));
+    });
+    container.createDiv({ cls: "resource-view-divider" });
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "revisionEditing") });
+    const revisionCard = container.createDiv({ cls: "resource-view-group-card" });
+    const revisionGrid = revisionCard.createDiv({ cls: "resource-view-group-grid" });
+    const revisionTips = [
+      { key: "The Rewrite Pass (tips)", icon: "repeat" },
+      { key: "Self-Editing Checklist (tips)", icon: "list-checks" },
+      { key: "Cutting & Tightening (tips)", icon: "scissors" },
+      { key: "Notes & Feedback (tips)", icon: "message-circle-more" }
+    ];
+    revisionTips.forEach((tip) => {
+      const item = revisionGrid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
+      applyIcon(icon, tip.icon);
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, tip.key) });
+      this.appendMediumBadge(item, tip.key);
+      this.makeInteractive(item, () => this.showResourceDetail(tip.key, onBack));
     });
     container.createDiv({ cls: "resource-view-divider" });
     container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "commonPitfalls") });
@@ -12177,18 +15193,199 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
       { key: "Character Arc Pitfalls", icon: "route" },
       { key: "Narrative Technique Pitfalls", icon: "book-open" },
       { key: "Structure Pitfalls", icon: "layout-grid" },
-      { key: "Writing-Level Pitfalls", icon: "pen-line" }
+      { key: "Writing-Level Pitfalls", icon: "pen-line" },
+      { key: "Revision Pitfalls", icon: "alert-triangle" }
     ];
     pitfalls.forEach((pitfall) => {
       const item = pitfallsGrid.createDiv({ cls: "resource-view-item" });
       const icon = item.createSpan({ cls: "resource-view-item-icon" });
       applyIcon(icon, pitfall.icon);
       item.createSpan({ cls: "resource-view-item-label", text: label(lang, pitfall.key) });
-      this.makeInteractive(item, () => this.showResourceDetail(pitfall.key, () => this.showTipsResources()));
+      this.appendMediumBadge(item, pitfall.key);
+      this.makeInteractive(item, () => this.showResourceDetail(pitfall.key, onBack));
     });
   }
+  /** Shared renderer for a flat grid of resource cards under one category. */
+  renderResourceItemGrid(parent, items, onBack) {
+    const lang = this.resourceLanguage;
+    const applyIcon = (el, iconName) => {
+      (0, import_obsidian20.setIcon)(el, iconName);
+      if (!el.querySelector("svg"))
+        (0, import_obsidian20.setIcon)(el, "circle-dot");
+    };
+    const grid = parent.createDiv({ cls: "resource-view-group-grid" });
+    items.forEach((itemData) => {
+      const item = grid.createDiv({ cls: "resource-view-item" });
+      const icon = item.createSpan({ cls: "resource-view-item-icon" });
+      applyIcon(icon, itemData.icon);
+      item.createSpan({ cls: "resource-view-item-label", text: label(lang, itemData.key) });
+      this.appendMediumBadge(item, itemData.key);
+      this.makeInteractive(item, () => this.showResourceDetail(itemData.key, onBack));
+    });
+  }
+  getResourceMedium(title) {
+    if (_WriterToolsView.SCREEN_TITLES.has(title))
+      return "screen";
+    if (_WriterToolsView.PROSE_TITLES.has(title))
+      return "prose";
+    return "both";
+  }
+  appendMediumBadge(parent, title) {
+    const lang = this.resourceLanguage;
+    const medium = this.getResourceMedium(title);
+    if (medium === "both")
+      return;
+    const text = medium === "prose" ? ui(lang, "mediumProse") : ui(lang, "mediumScreen");
+    parent.createSpan({ cls: `resource-medium-badge is-${medium}`, text });
+  }
+  // ── Diagnostic: "I'm stuck on…" → recommended cards ───────────────────────
+  showDiagnoseResources() {
+    const lang = this.resourceLanguage;
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-resource-view");
+    const back = () => this.showDiagnoseResources();
+    this.buildResourceViewHeader(container, "stethoscope", ui(lang, "diagnoseTitle"), () => this.onOpen(), back);
+    container.createDiv({ cls: "resource-view-description", text: ui(lang, "diagnoseHint") });
+    DIAGNOSE_PROBLEMS.forEach((p) => {
+      const card = container.createDiv({ cls: "diagnose-card" });
+      const head = card.createDiv({ cls: "diagnose-card-head" });
+      (0, import_obsidian20.setIcon)(head.createSpan({ cls: "diagnose-card-icon" }), p.icon);
+      head.createSpan({ cls: "diagnose-card-label", text: p.label && p.label[lang] || p.label.en });
+      const chips = card.createDiv({ cls: "diagnose-card-chips" });
+      p.cards.forEach((t) => {
+        const chip = chips.createDiv({ cls: "resource-detail-related-chip" });
+        (0, import_obsidian20.setIcon)(chip.createSpan({ cls: "resource-detail-related-chip-icon" }), this.getResourceIcon(t));
+        chip.createSpan({ text: label(lang, t) });
+        this.appendMediumBadge(chip, t);
+        this.makeInteractive(chip, () => this.showResourceDetail(t, back));
+      });
+    });
+  }
+  // ── Hub: Story & theme ─────────────────────────────────────────────────────
+  showStoryResources() {
+    const lang = this.resourceLanguage;
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-resource-view");
+    const back = () => this.showStoryResources();
+    this.buildResourceViewHeader(container, "compass", ui(lang, "storyResources"), () => this.onOpen(), back);
+    container.createDiv({ cls: "resource-view-description", text: ui(lang, "storyIntro") });
+    this.renderThemeSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderGenreSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderNarrativeSection(container, back);
+  }
+  // ── Hub: Craft ─────────────────────────────────────────────────────────────
+  showCraftResources() {
+    const lang = this.resourceLanguage;
+    const container = this.containerEl.children[1];
+    container.empty();
+    container.addClass("folio-resource-view");
+    const back = () => this.showCraftResources();
+    this.buildResourceViewHeader(container, "pen-line", ui(lang, "craftResources"), () => this.onOpen(), back);
+    container.createDiv({ cls: "resource-view-description", text: ui(lang, "craftIntro") });
+    this.renderDialogueSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderProseSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderScreenwritingSection(container, back);
+    container.createDiv({ cls: "resource-view-divider" });
+    this.renderTipsSection(container, back);
+  }
+  renderThemeSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "themeArchitecture") });
+    const card = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(card, [
+      { key: "Theme vs Premise", icon: "scale" },
+      { key: "Controlling Idea", icon: "key-round" },
+      { key: "Thematic Argument", icon: "gavel" },
+      { key: "Theme Through Character", icon: "users" },
+      { key: "Motif & Symbol", icon: "gem" }
+    ], onBack);
+  }
+  renderGenreSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    const overviewCard = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(overviewCard, [
+      { key: "Genre & Conventions", icon: "library-big" }
+    ], onBack);
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "genreConventional") });
+    const conv = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(conv, [
+      { key: "Drama", icon: "drama" },
+      { key: "Comedy", icon: "laugh" },
+      { key: "Action", icon: "swords" },
+      { key: "Adventure", icon: "compass" },
+      { key: "Thriller", icon: "alarm-clock" },
+      { key: "Horror", icon: "skull" },
+      { key: "Science Fiction", icon: "rocket" },
+      { key: "Fantasy", icon: "wand-2" },
+      { key: "Romance", icon: "heart" },
+      { key: "Mystery & Crime", icon: "search" },
+      { key: "Historical Fiction", icon: "landmark" },
+      { key: "Western", icon: "tractor" }
+    ], onBack);
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "genreSystem") });
+    const types = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(types, [
+      { key: "Monster in the House", icon: "ghost" },
+      { key: "Golden Fleece", icon: "map" },
+      { key: "Dude with a Problem", icon: "alert-triangle" },
+      { key: "Rites of Passage", icon: "hourglass" },
+      { key: "Buddy Love", icon: "heart-handshake" },
+      { key: "Whydunit", icon: "search" },
+      { key: "Superhero", icon: "shield-half" }
+    ], onBack);
+  }
+  renderDialogueSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "dialogueCraft") });
+    const card = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(card, [
+      { key: "Subtext", icon: "layers" },
+      { key: "On-the-Nose Dialogue", icon: "megaphone" },
+      { key: "Voice Differentiation", icon: "mic" },
+      { key: "The Scene Turn", icon: "refresh-ccw-dot" },
+      { key: "Exposition in Dialogue", icon: "info" },
+      { key: "Action Beats & Silence", icon: "pause" }
+    ], onBack);
+  }
+  renderProseSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "proseCraft") });
+    const card = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(card, [
+      { key: "Point of View & Narrator", icon: "eye" },
+      { key: "Scene vs Summary", icon: "clapperboard" },
+      { key: "Psychic Distance & Interiority", icon: "brain" },
+      { key: "Prose Rhythm & Sentence Variety", icon: "music" },
+      { key: "Worldbuilding & Setting", icon: "globe" },
+      { key: "Showing & Telling Balance", icon: "eye" }
+    ], onBack);
+  }
+  renderScreenwritingSection(container, onBack) {
+    const lang = this.resourceLanguage;
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "screenwritingFormat") });
+    const formatCard = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(formatCard, [
+      { key: "Scene Headings (tips)", icon: "heading" },
+      { key: "Action Lines (tips)", icon: "align-left" },
+      { key: "Character & Dialogue (tips)", icon: "message-square" },
+      { key: "Parentheticals (tips)", icon: "parentheses" },
+      { key: "Transitions (tips)", icon: "arrow-right-left" },
+      { key: "Montage & Intercut (tips)", icon: "film" }
+    ], onBack);
+    container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "screenwritingDocs") });
+    const docsCard = container.createDiv({ cls: "resource-view-group-card" });
+    this.renderResourceItemGrid(docsCard, [
+      { key: "Loglines (tips)", icon: "type" },
+      { key: "Treatment & Outline (tips)", icon: "file-text" }
+    ], onBack);
+  }
   showResourceDetail(title, onBack) {
-    var _a, _b, _c;
     const lang = this.resourceLanguage;
     const container = this.containerEl.children[1];
     container.empty();
@@ -12203,377 +15400,392 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
       },
       () => this.showResourceDetail(title, onBack)
     );
-    const archetypeKeyMap = {
-      "The Ally": "ally",
-      "The Herald": "herald",
-      "The Hero (Jung)": "heroJung",
-      "The Mentor": "mentor",
-      "The Shadow": "shadow",
-      "The Shapeshifter": "shapeshifter",
-      "The Threshold Guardian": "thresholdGuardian",
-      "The Trickster": "trickster",
-      "The Caregiver": "caregiver",
-      "The Creator": "creator",
-      "The Everyman": "everyman",
-      "The Explorer": "explorer",
-      "The Hero": "hero",
-      "The Innocent": "innocent",
-      "The Jester": "jester",
-      "The Lover": "lover",
-      "The Magician": "magician",
-      "The Outlaw": "outlaw",
-      "The Ruler": "ruler",
-      "The Sage": "sage"
+    this.renderBreadcrumb(container, title);
+    const route = () => {
+      var _a, _b, _c, _d;
+      const archetypeKeyMap = {
+        "The Ally": "ally",
+        "The Herald": "herald",
+        "The Hero (Jung)": "heroJung",
+        "The Mentor": "mentor",
+        "The Shadow": "shadow",
+        "The Shapeshifter": "shapeshifter",
+        "The Threshold Guardian": "thresholdGuardian",
+        "The Trickster": "trickster",
+        "The Caregiver": "caregiver",
+        "The Creator": "creator",
+        "The Everyman": "everyman",
+        "The Explorer": "explorer",
+        "The Hero": "hero",
+        "The Innocent": "innocent",
+        "The Jester": "jester",
+        "The Lover": "lover",
+        "The Magician": "magician",
+        "The Outlaw": "outlaw",
+        "The Ruler": "ruler",
+        "The Sage": "sage"
+      };
+      if (archetypeKeyMap[title]) {
+        renderArchetypeDetail(container, archetypeKeyMap[title], lang);
+        return;
+      }
+      const arcKeyMap = {
+        "Moral Ascent": "moralAscent",
+        "Moral Descent": "moralDescent",
+        "Flat Moral": "flatMoral",
+        "Moral Transformation": "moralTransformation"
+      };
+      if (arcKeyMap[title]) {
+        renderCharacterArcDetail(container, arcKeyMap[title], lang);
+        return;
+      }
+      if (TECHNIQUE_DATA[title]) {
+        renderTechniqueDetail(container, (_a = TECHNIQUE_DATA[title][lang]) != null ? _a : TECHNIQUE_DATA[title].en, lang, title);
+        return;
+      }
+      if (TIPS_DATA[title]) {
+        renderTipsDetail(container, (_b = TIPS_DATA[title][lang]) != null ? _b : TIPS_DATA[title].en, lang);
+        return;
+      }
+      if (PITFALLS_DATA[title]) {
+        const data = (_c = PITFALLS_DATA[title][lang]) != null ? _c : PITFALLS_DATA[title].en;
+        renderPitfallsDetail(container, data.title, data.items);
+        return;
+      }
+      if (STRUCTURE_DATA[title]) {
+        renderStructureDetail(container, (_d = STRUCTURE_DATA[title][lang]) != null ? _d : STRUCTURE_DATA[title].en, lang, title);
+        return;
+      }
+      container.createDiv({ cls: "resource-detail-placeholder", text: ui(lang, "comingSoon") });
     };
-    if (archetypeKeyMap[title]) {
-      renderArchetypeDetail(container, archetypeKeyMap[title], lang);
-      return;
-    }
-    const arcKeyMap = {
-      "Moral Ascent": "moralAscent",
-      "Moral Descent": "moralDescent",
-      "Flat Moral": "flatMoral",
-      "Moral Transformation": "moralTransformation"
-    };
-    if (arcKeyMap[title]) {
-      renderCharacterArcDetail(container, arcKeyMap[title], lang);
-      return;
-    }
-    if (TECHNIQUE_DATA[title]) {
-      renderTechniqueDetail(container, (_a = TECHNIQUE_DATA[title][lang]) != null ? _a : TECHNIQUE_DATA[title].en);
-      return;
-    }
-    if (TIPS_DATA[title]) {
-      renderTipsDetail(container, (_b = TIPS_DATA[title][lang]) != null ? _b : TIPS_DATA[title].en);
-      return;
-    }
-    if (PITFALLS_DATA[title]) {
-      const data = (_c = PITFALLS_DATA[title][lang]) != null ? _c : PITFALLS_DATA[title].en;
-      renderPitfallsDetail(container, data.title, data.items);
-      return;
-    }
-    if (title === "The Hero's Journey") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Hero\u2019s Journey?",
-        intro: [
-          "The Hero\u2019s Journey is a mythic structure that frames story as transformation: a character leaves the familiar, faces trials, dies symbolically, and returns changed. It\u2019s less a rigid formula than a map for meaning and growth."
-        ],
-        core: [
-          "A movement from comfort to challenge to return",
-          "External trials that force internal change",
-          "Symbolic death and rebirth",
-          "A concluding \u201Cgift\u201D brought back to the world"
-        ],
-        stepsTitle: "Steps (classic model)",
-        stepGroups: [
-          {
-            title: "ACT I",
-            items: [
-              { title: "Ordinary World", body: "Establish the Hero\u2019s baseline life, limitations, and unmet need.", icon: "earth" },
-              { title: "Call to Adventure", body: "A disruption offers a mission, opportunity, or threat that demands response.", icon: "phone-incoming" },
-              { title: "Refusal of the Call", body: "Fear, duty, or doubt causes hesitation; the Hero resists change.", icon: "phone-off" },
-              { title: "Meeting the Mentor", body: "Guidance appears: training, tools, wisdom, or encouragement.", icon: "graduation-cap" },
-              { title: "Crossing the First Threshold", body: "The Hero commits and enters the \u201Cspecial world,\u201D leaving the old life behind.", icon: "brick-wall" }
-            ]
-          },
-          {
-            title: "ACT II",
-            items: [
-              { title: "Tests, Allies, Enemies", body: "The rules of the new world are learned; relationships and rivalries form.", icon: "line-squiggle" },
-              { title: "Approach to the Inmost Cave", body: "Preparation for the central crisis; tensions tighten and stakes clarify.", icon: "mountain" },
-              { title: "Ordeal", body: "A major confrontation with death, failure, or the deepest fear.", icon: "swords" },
-              { title: "Reward (Seizing the Sword)", body: "The Hero gains something: knowledge, power, object, love, or self-belief.", icon: "trophy" }
-            ]
-          },
-          {
-            title: "ACT III",
-            items: [
-              { title: "The Road Back", body: "Consequences arrive; the Hero must return with the reward under pressure.", icon: "arrow-big-left" },
-              { title: "Resurrection", body: "A final test proves transformation. The Hero confronts the core flaw one last time.", icon: "user-round-plus" },
-              { title: "Return with the Elixir", body: "The Hero returns changed, bringing value to others: healing, truth, freedom, hope.", icon: "gem" }
-            ]
-          }
-        ],
-        whyTitle: "Why this works",
-        why: "These steps externalize inner change: the world forces the Hero to become someone new.",
-        examplesTitle: "Hero\u2019s Journey Examples",
-        examples: ["Star Wars", "The Matrix", "The Lord of the Rings", "Moana", "Harry Potter"]
+    route();
+    this.renderResourceActions(container, title, onBack);
+    this.renderResourceMeta(container, title, onBack);
+    this.linkExampleCards(container, onBack);
+    this.makeDetailCollapsible(container);
+  }
+  /** Progressive disclosure: collapse secondary sections so the card leads with its essence. */
+  makeDetailCollapsible(container) {
+    container.querySelectorAll(".resource-detail-zone.is-secondary").forEach((zone) => {
+      const head = zone.querySelector(".resource-detail-subheading-row");
+      if (!head || head.dataset.collapsibleWired)
+        return;
+      head.dataset.collapsibleWired = "true";
+      zone.classList.add("is-collapsed");
+      (0, import_obsidian20.setIcon)(head.createSpan({ cls: "resource-detail-collapse-chevron" }), "chevron-down");
+      head.setAttribute("role", "button");
+      head.setAttribute("tabindex", "0");
+      const toggle = () => zone.classList.toggle("is-collapsed");
+      head.addEventListener("click", toggle);
+      head.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          toggle();
+        }
       });
-      return;
+    });
+  }
+  /** Hub (top-level category) a card belongs to, for breadcrumbs. */
+  getResourceHub(title) {
+    if (_WriterToolsView.CHARACTER_TITLES.has(title))
+      return { key: "characterResources", fn: () => this.showCharacterResources() };
+    if (_WriterToolsView.STRUCTURE_TITLES.has(title))
+      return { key: "structureResources", fn: () => this.showStructureResources() };
+    if (_WriterToolsView.STORY_TITLES.has(title))
+      return { key: "storyResources", fn: () => this.showStoryResources() };
+    return { key: "craftResources", fn: () => this.showCraftResources() };
+  }
+  /** Breadcrumb trail: Resources › Hub › Card. */
+  renderBreadcrumb(container, title) {
+    const lang = this.resourceLanguage;
+    const hub = this.getResourceHub(title);
+    const bc = container.createDiv({ cls: "resource-breadcrumb" });
+    const home = bc.createSpan({ cls: "resource-breadcrumb-link", text: ui(lang, "resources") });
+    this.makeInteractive(home, () => this.onOpen());
+    bc.createSpan({ cls: "resource-breadcrumb-sep", text: "\u203A" });
+    const h = bc.createSpan({ cls: "resource-breadcrumb-link", text: ui(lang, hub.key) });
+    this.makeInteractive(h, hub.fn);
+    bc.createSpan({ cls: "resource-breadcrumb-sep", text: "\u203A" });
+    bc.createSpan({ cls: "resource-breadcrumb-current", text: label(lang, title) });
+  }
+  /** Make example chips that match an existing card clickable (cross-references). */
+  linkExampleCards(container, onBack) {
+    const index = this.getExampleLinkIndex();
+    container.querySelectorAll(".resource-detail-example-card").forEach((card) => {
+      const target = index[(card.textContent || "").trim().toLowerCase()];
+      if (target && target !== container.dataset.cardTitle) {
+        card.classList.add("is-linked");
+        this.makeInteractive(card, () => this.showResourceDetail(target, onBack));
+      }
+    });
+  }
+  getExampleLinkIndex() {
+    if (this._exampleIndex)
+      return this._exampleIndex;
+    const idx = {};
+    this.getAllResourceTitles().forEach((t) => {
+      idx[t.toLowerCase()] = t;
+      idx[label("en", t).toLowerCase()] = t;
+      idx[label("es", t).toLowerCase()] = t;
+    });
+    this._exampleIndex = idx;
+    return idx;
+  }
+  /** Append "Sources & further reading" and "Related" cross-links to a detail view. */
+  renderResourceMeta(container, title, onBack) {
+    const lang = this.resourceLanguage;
+    const content = container.querySelector(".resource-detail-content") || container;
+    const sources = RESOURCE_SOURCES[title];
+    const related = this.getRelatedTitles(title);
+    if (Array.isArray(sources) && sources.length) {
+      const zone = content.createDiv({ cls: "resource-detail-zone resource-detail-sources" });
+      const head = zone.createDiv({ cls: "resource-detail-subheading-row" });
+      (0, import_obsidian20.setIcon)(head.createSpan({ cls: "resource-detail-subheading-icon" }), "book-marked");
+      head.createSpan({ cls: "resource-detail-subheading", text: ui(lang, "sourcesHeading") });
+      const list = zone.createEl("ul", { cls: "resource-detail-list" });
+      sources.forEach((s) => list.createEl("li", { text: s }));
     }
-    if (title === "Dan Harmon Story Circle") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Story Circle?",
-        intro: [
-          "The Story Circle compresses transformation into a repeatable loop: a character wants something, leaves comfort, pays a price, and returns changed. It\u2019s designed to be practical for episodes as well as features."
-        ],
-        core: [
-          "Motivation-driven steps",
-          "Clear cause-and-effect",
-          "Repeatable structure (especially for TV)",
-          "Emphasis on change and cost"
-        ],
-        stepsTitle: "Steps (8-step circle)",
-        steps: [
-          { title: "YOU (COMFORT)", body: "Establish the character\u2019s normal world and identity.", icon: "fish" },
-          { title: "NEED (DESIRE)", body: "The character wants or needs something that disrupts balance.", icon: "candy" },
-          { title: "GO (ENTER UNFAMILIAR)", body: "The character leaves comfort and enters a new situation.", icon: "log-in" },
-          { title: "SEARCH (ADAPT)", body: "The character explores the new world and tries strategies that may fail.", icon: "map" },
-          { title: "FIND (GET WHAT THEY WANTED)", body: "The character achieves the goal\u2014or seems to.", icon: "search-check" },
-          { title: "TAKE (PAY A PRICE)", body: "There is a cost: sacrifice, loss, compromise, or consequence.", icon: "hand-coins" },
-          { title: "RETURN (BACK TO FAMILIAR)", body: "The character returns to a version of their old world.", icon: "arrow-big-left" },
-          { title: "CHANGE (TRANSFORMED)", body: "The character is different: wiser, broken, empowered, humbled, etc.", icon: "user-pen" }
-        ],
-        examplesTitle: "Story Circle Examples",
-        examples: ["Episodic TV arcs", "Community", "Rick and Morty", "Character-centered short stories"]
+    if (related.length) {
+      const zone = content.createDiv({ cls: "resource-detail-zone resource-detail-related" });
+      const head = zone.createDiv({ cls: "resource-detail-subheading-row" });
+      (0, import_obsidian20.setIcon)(head.createSpan({ cls: "resource-detail-subheading-icon" }), "link");
+      head.createSpan({ cls: "resource-detail-subheading", text: ui(lang, "relatedHeading") });
+      const chips = zone.createDiv({ cls: "resource-detail-related-chips" });
+      related.forEach((rel) => {
+        const chip = chips.createDiv({ cls: "resource-detail-related-chip" });
+        (0, import_obsidian20.setIcon)(chip.createSpan({ cls: "resource-detail-related-chip-icon" }), this.getResourceIcon(rel));
+        chip.createSpan({ text: label(lang, rel) });
+        this.makeInteractive(chip, () => this.showResourceDetail(rel, onBack));
       });
+    }
+    const disc = content.createDiv({ cls: "resource-detail-zone resource-detail-disclaimer" });
+    (0, import_obsidian20.setIcon)(disc.createSpan({ cls: "resource-detail-disclaimer-icon" }), "info");
+    disc.createSpan({ cls: "resource-detail-disclaimer-text", text: ui(lang, "affiliationDisclaimer") });
+  }
+  /** Append a context-aware actions bar (insert beats / create character sheet). */
+  renderResourceActions(container, title, onBack) {
+    const lang = this.resourceLanguage;
+    const isStructure = _WriterToolsView.STRUCTURE_TITLES.has(title);
+    const isCharacter = _WriterToolsView.CHARACTER_TITLES.has(title);
+    const isTechnique = !isStructure && !isCharacter && !!(TECHNIQUE_DATA[title] || TIPS_DATA[title]);
+    if (!isStructure && !isCharacter && !isTechnique)
+      return;
+    const content = container.querySelector(".resource-detail-content") || container;
+    const bar = content.createDiv({ cls: "resource-detail-actions" });
+    if (isStructure) {
+      const btn = bar.createEl("button", { cls: "resource-detail-action-btn" });
+      (0, import_obsidian20.setIcon)(btn.createSpan({ cls: "resource-detail-action-icon" }), "list-plus");
+      btn.createSpan({ text: ui(lang, "insertBeatSheet") });
+      btn.addEventListener("click", () => this.insertStructureAsBeats(container, title));
+    }
+    if (isCharacter) {
+      const btn = bar.createEl("button", { cls: "resource-detail-action-btn" });
+      (0, import_obsidian20.setIcon)(btn.createSpan({ cls: "resource-detail-action-icon" }), "user-plus");
+      btn.createSpan({ text: ui(lang, "createCharacterSheet") });
+      btn.addEventListener("click", () => this.createCharacterSheet(title));
+    }
+    if (isTechnique) {
+      const btn = bar.createEl("button", { cls: "resource-detail-action-btn" });
+      (0, import_obsidian20.setIcon)(btn.createSpan({ cls: "resource-detail-action-icon" }), "file-plus-2");
+      btn.createSpan({ text: ui(lang, "insertTemplate") });
+      btn.addEventListener("click", () => this.insertTechniqueTemplate(title));
+    }
+  }
+  /** Create a seeded note from a technique/tip card: definition + key points as a checklist. */
+  async insertTechniqueTemplate(title) {
+    var _a, _b, _c, _d, _e, _f;
+    const lang = this.resourceLanguage;
+    const project = this.plugin.activeBook || this.plugin.activeProject;
+    if (!project || !project.path) {
+      new import_obsidian20.Notice(ui(lang, "noProjectForTemplate"));
       return;
     }
-    if (title === "Three Act Structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Three Act Structure?",
-        intro: ["A story divided into Setup, Confrontation, and Resolution. It\u2019s the most common modern narrative skeleton because it aligns with audience attention and escalating stakes."],
-        stepsTitle: "Steps (typical beats)",
-        numberedSteps: true,
-        steps: [
-          "ACT I \u2014 Setup",
-          "1. Opening / Status Quo \u2014 Introduce the protagonist, their world, and the core problem-space.",
-          "2. Inciting Incident \u2014 A disruption creates a new problem or opportunity.",
-          "3. Debate / Refusal \u2014 The protagonist hesitates, resists, or explores alternatives.",
-          "4. Act I Break (Commitment) \u2014 The protagonist commits and can\u2019t go back.",
-          "ACT II \u2014 Confrontation",
-          "5. Rising Complications \u2014 Obstacles escalate; stakes increase; plans fail.",
-          "6. Midpoint Shift \u2014 A major reveal or reversal changes the story\u2019s direction and intensity.",
-          "7. Bad Guys Close In / Pressure Peaks \u2014 Consequences compound; resources thin; relationships strain.",
-          "8. All Is Lost \u2014 The lowest point; apparent defeat or devastating cost.",
-          "9. Dark Night of the Soul \u2014 Reflection and decision: who will the protagonist become?",
-          "ACT III \u2014 Resolution",
-          "10. Act III Break (New plan) \u2014 The protagonist acts with new clarity, courage, or strategy.",
-          "11. Climax \u2014 The decisive confrontation that resolves the central conflict.",
-          "12. Denouement \u2014 Aftermath: new equilibrium; consequences; thematic closure."
-        ],
-        examplesTitle: "Three Act Examples",
-        examples: ["Most Hollywood films", "Contemporary commercial novels", "Studio-driven storytelling"]
-      });
+    const name = label(lang, title);
+    const data = ((_c = (_a = TECHNIQUE_DATA[title]) == null ? void 0 : _a[lang]) != null ? _c : (_b = TECHNIQUE_DATA[title]) == null ? void 0 : _b.en) || ((_f = (_d = TIPS_DATA[title]) == null ? void 0 : _d[lang]) != null ? _f : (_e = TIPS_DATA[title]) == null ? void 0 : _e.en) || {};
+    const tpl = (en, es) => lang === "es" ? es : en;
+    const lines = ["---", "type: craft-note", `topic: "${name}"`, "---", "", `# ${name}`, ""];
+    (data.intro || []).forEach((p) => {
+      lines.push(p, "");
+    });
+    const points = data.core || data.techniques || [];
+    if (points.length) {
+      lines.push(`## ${tpl("Apply it", "Apl\xEDcalo")}`);
+      points.forEach((p) => lines.push(`- [ ] ${p}`));
+      lines.push("");
+    }
+    if ((data.narrativeFunction || []).length) {
+      lines.push(`## ${tpl("Function", "Funci\xF3n")}`);
+      data.narrativeFunction.forEach((p) => lines.push(`- ${p}`));
+      lines.push("");
+    }
+    lines.push(`> ${tpl("Seeded from Writer Tools \u2192", "Generado desde Writer Tools \u2192")} ${name}`, "");
+    const noteText = lines.join("\n");
+    try {
+      const base = `${project.path}/${name.replace(/[\\/:*?"<>|]/g, " ").trim()}`;
+      let path = `${base}.md`;
+      let n = 2;
+      while (this.app.vault.getAbstractFileByPath(path)) {
+        path = `${base} ${n++}.md`;
+      }
+      const file = await this.app.vault.create(path, noteText);
+      new import_obsidian20.Notice(`${ui(lang, "templateCreated")}: ${name}`);
+      const leaf = this.app.workspace.getLeaf(true);
+      if (leaf && file)
+        await leaf.openFile(file);
+    } catch (e) {
+      console.error("insertTechniqueTemplate failed", e);
+      new import_obsidian20.Notice(ui(lang, "templateFailed"));
+    }
+  }
+  /** Read the rendered structure steps and push them as beats to the active project. */
+  async insertStructureAsBeats(container, title) {
+    const lang = this.resourceLanguage;
+    const project = this.plugin.activeBook || this.plugin.activeProject;
+    if (!project) {
+      new import_obsidian20.Notice(ui(lang, "noProjectForBeats"));
       return;
     }
-    if (title === "Freytag's Pyramid") {
-      renderStructureDetail(container, {
-        introTitle: "What is Freytag\u2019s Pyramid?",
-        intro: ["A classical five-part model of dramatic tension, often associated with tragedy. It formalizes a rise to climax followed by a decline into resolution."],
-        stepsTitle: "Steps (5-part model)",
-        steps: [
-          "1. Exposition \u2014 Introduce setting, characters, and the initial balance.",
-          "2. Rising Action \u2014 Complications build; conflict intensifies; choices narrow.",
-          "3. Climax \u2014 The turning point\u2014the peak tension where fate changes direction.",
-          "4. Falling Action \u2014 Consequences unfold; momentum turns toward inevitable outcome.",
-          "5. Denouement / Catastrophe \u2014 Final resolution, often with moral or tragic closure."
-        ],
-        examplesTitle: "Freytag Examples",
-        examples: ["Classical tragedies", "Shakespearean drama", "Traditional stage plays"]
-      });
+    if (!this.plugin.outlineEditorService) {
+      new import_obsidian20.Notice(ui(lang, "beatsUnavailable"));
       return;
     }
-    if (title === "Fichtean Curve") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Fichtean Curve?",
-        intro: ["A structure built from a chain of escalating crises with minimal exposition. The story begins close to conflict and continues increasing pressure until climax."],
-        stepsTitle: "Steps (crisis chain)",
-        steps: [
-          "1. Immediate Hook / First Crisis \u2014 Start near a problem, not far before it.",
-          "2. Crisis Escalation 1 \u2014 The protagonist responds; the response creates new complications.",
-          "3. Crisis Escalation 2 \u2014 Stakes rise; setbacks compound; options shrink.",
-          "4. Crisis Escalation 3 \u2014 Pressure intensifies; emotional and practical costs deepen.",
-          "5. Major Crisis / Low Point \u2014 A near-defeat moment that forces a decisive shift.",
-          "6. Climax \u2014 The protagonist commits fully and confronts the core conflict.",
-          "7. Short Resolution \u2014 Quick wrap-up; consequences and new stability."
-        ],
-        examplesTitle: "Fichtean Curve Examples",
-        examples: ["Thrillers", "Page-turner genre fiction", "Serialized storytelling"]
-      });
+    const callouts = Array.from(container.querySelectorAll(".resource-detail-callout"));
+    const beats = callouts.map((c) => {
+      var _a, _b;
+      return {
+        title: (((_a = c.querySelector(".resource-detail-callout-title")) == null ? void 0 : _a.textContent) || "").trim(),
+        notes: (((_b = c.querySelector(".resource-detail-callout-body")) == null ? void 0 : _b.textContent) || "").trim()
+      };
+    }).filter((b) => b.title);
+    if (!beats.length) {
+      new import_obsidian20.Notice(ui(lang, "beatsUnavailable"));
       return;
     }
-    if (title === "Kish\u014Dtenketsu") {
-      renderStructureDetail(container, {
-        introTitle: "What is Kish\u014Dtenketsu?",
-        intro: ["Kish\u014Dtenketsu is a four-part structure that emphasizes development and contrast rather than conflict. It\u2019s common in East Asian storytelling and works well for narratives driven by discovery, theme, or perspective."],
-        stepsTitle: "Steps (4-part model)",
-        steps: [
-          "1. Ki (Introduction) \u2014 Establish the situation, characters, and core idea.",
-          "2. Sh\u014D (Development) \u2014 Expand the situation; deepen detail and context without major disruption.",
-          "3. Ten (Turn / Twist) \u2014 Introduce a surprising contrast or shift: a new angle, reveal, or reframing event.",
-          "4. Ketsu (Conclusion) \u2014 Synthesize: show how the contrast changes meaning; resolve by integration rather than victory."
-        ],
-        examplesTitle: "Kish\u014Dtenketsu Examples",
-        examples: ["Many slice-of-life stories", "Certain anime and manga arcs", "Essays or thematic short fiction", "Some puzzle-like narratives"]
-      });
+    try {
+      const structureName = label(lang, title);
+      for (const beat of beats) {
+        await this.plugin.outlineEditorService.addBeat(project, {
+          title: beat.title,
+          notes: beat.notes,
+          goal: structureName,
+          lane: 0
+        });
+      }
+      new import_obsidian20.Notice(`${beats.length} ${ui(lang, "beatsAdded")} (${structureName})`);
+    } catch (e) {
+      console.error("insertStructureAsBeats failed", e);
+      new import_obsidian20.Notice(ui(lang, "beatsFailed"));
+    }
+  }
+  /** Create a seeded character-sheet note in the active project from a reference card. */
+  async createCharacterSheet(title) {
+    const lang = this.resourceLanguage;
+    const project = this.plugin.activeBook || this.plugin.activeProject;
+    if (!project || !project.path) {
+      new import_obsidian20.Notice(ui(lang, "noProjectForSheet"));
       return;
     }
-    if (title === "Save the Cat") {
-      renderStructureDetail(container, {
-        introTitle: "What is Save the Cat?",
-        intro: ["Save the Cat is a commercial beat sheet designed to maximize audience engagement. It focuses on emotional timing, clarity, and likeability, especially for film and genre fiction."],
-        core: ["Strong emotional beats", "Clear pacing", "Audience empathy", "Market-tested structure"],
-        stepsTitle: "Steps (15-beat model)",
-        steps: [
-          "1. Opening Image \u2014 A snapshot of the protagonist\u2019s world before change.",
-          "2. Theme Stated \u2014 A line or moment hints at the story\u2019s central lesson.",
-          "3. Setup \u2014 Introduce characters, flaws, relationships, and stakes.",
-          "4. Catalyst \u2014 The inciting incident that disrupts normal life.",
-          "5. Debate \u2014 The protagonist hesitates and weighs options.",
-          "6. Break into Act II \u2014 Commitment to the journey.",
-          "7. B Story \u2014 A secondary plot, often emotional or relational.",
-          "8. Fun and Games \u2014 The \u201Cpromise of the premise\u201D; the story delivers on genre.",
-          "9. Midpoint \u2014 A major reversal: false victory or false defeat.",
-          "10. Bad Guys Close In \u2014 Pressure increases; plans unravel.",
-          "11. All Is Lost \u2014 Apparent defeat; emotional or literal low point.",
-          "12. Dark Night of the Soul \u2014 Reflection and internal reckoning.",
-          "13. Break into Act III \u2014 New insight leads to decisive action.",
-          "14. Finale \u2014 The protagonist applies what they\u2019ve learned to win or lose meaningfully.",
-          "15. Final Image \u2014 A mirror of the opening image, showing change."
-        ],
-        examplesTitle: "Save the Cat Examples",
-        examples: ["Most studio films", "Romantic comedies", "High-concept genre movies", "Animated features"]
-      });
-      return;
+    const name = label(lang, title);
+    const tpl = (en, es) => lang === "es" ? es : en;
+    const lines = [
+      "---",
+      "type: character",
+      `archetype: "${name}"`,
+      "---",
+      "",
+      `# ${tpl("Character", "Personaje")} \u2014 ${name}`,
+      "",
+      `## ${tpl("Identity", "Identidad")}`,
+      `- ${tpl("Name", "Nombre")}: `,
+      `- ${tpl("Role / archetype", "Rol / arquetipo")}: ${name}`,
+      `- ${tpl("Age / occupation", "Edad / ocupaci\xF3n")}: `,
+      "",
+      `## ${tpl("Engine", "Motor")}`,
+      `- ${tpl("Want (external goal)", "Deseo (meta externa)")}: `,
+      `- ${tpl("Need (internal truth)", "Necesidad (verdad interna)")}: `,
+      `- ${tpl("Wound / ghost", "Herida / fantasma")}: `,
+      `- ${tpl("Lie they believe", "Mentira que cree")}: `,
+      `- ${tpl("Fatal flaw", "Defecto fatal")}: `,
+      "",
+      `## ${tpl("Arc", "Arco")}`,
+      `- ${tpl("Starting state", "Estado inicial")}: `,
+      `- ${tpl("Turning point", "Punto de giro")}: `,
+      `- ${tpl("Ending state", "Estado final")}: `,
+      "",
+      `## ${tpl("Relationships", "Relaciones")}`,
+      "- ",
+      "",
+      `## ${tpl("Notes", "Notas")}`,
+      "",
+      `> ${tpl("Seeded from Writer Tools \u2192", "Generado desde Writer Tools \u2192")} ${name}`,
+      ""
+    ];
+    const content = lines.join("\n");
+    try {
+      const base = `${project.path}/${name.replace(/[\\/:*?"<>|]/g, " ").trim()}`;
+      let path = `${base}.md`;
+      let n = 2;
+      while (this.app.vault.getAbstractFileByPath(path)) {
+        path = `${base} ${n++}.md`;
+      }
+      const file = await this.app.vault.create(path, content);
+      new import_obsidian20.Notice(`${ui(lang, "sheetCreated")}: ${name}`);
+      const leaf = this.app.workspace.getLeaf(true);
+      if (leaf && file)
+        await leaf.openFile(file);
+    } catch (e) {
+      console.error("createCharacterSheet failed", e);
+      new import_obsidian20.Notice(ui(lang, "sheetFailed"));
     }
-    if (title === "Seven Point Structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Seven Point Structure?",
-        intro: ["A clean, flexible structure focused on cause-and-effect turning points. It emphasizes clarity and momentum."],
-        core: ["Fewer beats, higher impact", "Clear reversals", "Strong midpoint logic"],
-        stepsTitle: "Steps (7-point model)",
-        numberedSteps: true,
-        steps: [
-          "1. Hook \u2014 Introduce the protagonist and the central problem.",
-          "2. Plot Turn 1 \u2014 An event pushes the protagonist into action.",
-          "3. Pinch Point 1 \u2014 Pressure reveals the antagonist\u2019s power.",
-          "4. Midpoint \u2014 The protagonist shifts from reactive to proactive.",
-          "5. Pinch Point 2 \u2014 Stakes intensify; consequences loom.",
-          "6. Plot Turn 2 \u2014 Final commitment toward resolution.",
-          "7. Resolution \u2014 Conflict concludes; new status quo established."
-        ],
-        examplesTitle: "Seven Point Examples",
-        examples: ["Fantasy and sci-fi novels", "Plot-driven fiction", "Serialized narratives"]
-      });
-      return;
+  }
+  /** Concatenated body text of a card (definition, key points, sources, examples) for content search. */
+  getResourceSearchText(title, lang) {
+    var _a, _b, _c, _d, _e, _f, _g, _h;
+    this._searchTextCache = this._searchTextCache || {};
+    this._searchTextCache[lang] = this._searchTextCache[lang] || {};
+    if (this._searchTextCache[lang][title] !== void 0)
+      return this._searchTextCache[lang][title];
+    const parts = [];
+    const tech = ((_a = TECHNIQUE_DATA[title]) == null ? void 0 : _a[lang]) || ((_b = TECHNIQUE_DATA[title]) == null ? void 0 : _b.en);
+    if (tech)
+      parts.push(...tech.intro || [], ...tech.core || [], ...tech.narrativeFunction || [], ...tech.examples || []);
+    const tip = ((_c = TIPS_DATA[title]) == null ? void 0 : _c[lang]) || ((_d = TIPS_DATA[title]) == null ? void 0 : _d.en);
+    if (tip)
+      parts.push(...tip.intro || [], ...tip.techniques || []);
+    const struct = ((_e = STRUCTURE_DATA[title]) == null ? void 0 : _e[lang]) || ((_f = STRUCTURE_DATA[title]) == null ? void 0 : _f.en);
+    if (struct)
+      parts.push(...struct.intro || [], ...struct.examples || []);
+    const pit = ((_g = PITFALLS_DATA[title]) == null ? void 0 : _g[lang]) || ((_h = PITFALLS_DATA[title]) == null ? void 0 : _h.en);
+    if (pit)
+      parts.push(...pit.items || []);
+    if (Array.isArray(RESOURCE_SOURCES[title]))
+      parts.push(...RESOURCE_SOURCES[title]);
+    if (_WriterToolsView.SEARCH_ALIASES[title])
+      parts.push(_WriterToolsView.SEARCH_ALIASES[title]);
+    const text = parts.join(" ").toLowerCase();
+    this._searchTextCache[lang][title] = text;
+    return text;
+  }
+  /** Related cards for a title, made bidirectional (if A links B, B also shows A). */
+  getRelatedTitles(title) {
+    const set = new Set(RESOURCE_RELATED[title] || []);
+    for (const key of Object.keys(RESOURCE_RELATED)) {
+      if (key !== title && Array.isArray(RESOURCE_RELATED[key]) && RESOURCE_RELATED[key].includes(title)) {
+        set.add(key);
+      }
     }
-    if (title === "Pulp Formula") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Pulp Formula?",
-        intro: ["A fast-paced structure designed for entertainment, clarity, and momentum. It prioritizes action, stakes, and accessibility over thematic subtlety."],
-        core: ["Immediate engagement", "Clear heroes and villains", "Escalating danger", "High momentum"],
-        stepsTitle: "Steps (common pulp rhythm)",
-        steps: [
-          "1. Immediate Hook \u2014 Start with action or danger.",
-          "2. Clear Goal \u2014 The protagonist knows what must be done.",
-          "3. Obstacle Chain \u2014 Continuous challenges and reversals.",
-          "4. Escalation \u2014 Stakes increase rapidly.",
-          "5. Cliffhanger or Crisis \u2014 A major setback or revelation.",
-          "6. Final Confrontation \u2014 Direct clash with the antagonist.",
-          "7. Swift Resolution \u2014 Loose ends tied quickly."
-        ],
-        examplesTitle: "Pulp Examples",
-        examples: ["Adventure serials", "Noir fiction", "Action thrillers", "Comic storytelling"]
-      });
-      return;
-    }
-    if (title === "McKee Story paradigm") {
-      renderStructureDetail(container, {
-        introTitle: "What is the McKee Paradigm?",
-        intro: ["Robert McKee\u2019s model emphasizes story as a sequence of value changes driven by conflict and choice. It focuses on scene design and narrative causality."],
-        core: ["Value shifts", "Progressive complications", "Scene-level causality", "Strong climax logic"],
-        stepsTitle: "Structural principles",
-        steps: [
-          "1. Inciting Incident \u2014 A radical change disrupts balance.",
-          "2. Progressive Complications \u2014 Each action leads to greater difficulty.",
-          "3. Crisis \u2014 A decision between irreconcilable values.",
-          "4. Climax \u2014 Action that resolves the crisis.",
-          "5. Resolution \u2014 The world stabilizes in a new form."
-        ],
-        examplesTitle: "McKee Examples",
-        examples: ["Prestige drama", "Character-driven films", "Serious literary narratives"]
-      });
-      return;
-    }
-    if (title === "Into the Woods structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is the Into the Woods structure?",
-        intro: ["John Yorke\u2019s model views story as a five-act, fractal pattern: order, disorder, repair, collapse, and transformation. It emphasizes repetition at multiple scales."],
-        core: ["Five-part rhythm", "Fractal repetition", "Moral consequence", "Thematic depth"],
-        stepsTitle: "Steps (5-act pattern)",
-        steps: [
-          "1. Order \u2014 Establish a flawed equilibrium.",
-          "2. Disruption \u2014 A desire or problem breaks order.",
-          "3. Attempted Repair \u2014 Characters try to fix things.",
-          "4. Collapse \u2014 Efforts fail; chaos peaks.",
-          "5. New Order \u2014 A transformed equilibrium emerges."
-        ],
-        examplesTitle: "Into the Woods Examples",
-        examples: ["British television drama", "Prestige serialized storytelling", "Thematic narratives"]
-      });
-      return;
-    }
-    if (title === "Frame Narrative") {
-      renderStructureDetail(container, {
-        introTitle: "What is a Frame Narrative?",
-        intro: ["A story within a story. An outer narrative contextualizes or reframes an inner narrative."],
-        core: ["Nested storytelling", "Perspective mediation", "Interpretive distance"],
-        stepsTitle: "Structural layers",
-        steps: [
-          "1. Outer Frame \u2014 Establish the narrator or context.",
-          "2. Inner Story \u2014 The primary narrative is told.",
-          "3. Interruption or Commentary \u2014 The frame reacts or reframes meaning.",
-          "4. Return to Frame \u2014 The story closes with new understanding."
-        ],
-        examplesTitle: "Frame Narrative Examples",
-        examples: ["Frankenstein", "The Princess Bride", "Heart of Darkness", "Arabian Nights"]
-      });
-      return;
-    }
-    if (title === "Nonlinear Structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is a Nonlinear Structure?",
-        intro: ["A narrative told out of chronological order. Meaning emerges from juxtaposition rather than sequence."],
-        core: ["Fragmented timeline", "Pattern recognition", "Active audience participation"],
-        stepsTitle: "Common nonlinear patterns",
-        steps: ["Reverse chronology", "Interwoven timelines", "Fragmented memory", "Circular narratives"],
-        examplesTitle: "Nonlinear Examples",
-        examples: ["Memento", "Pulp Fiction", "Westworld", "Slaughterhouse-Five"]
-      });
-      return;
-    }
-    if (title === "Rashomon Structure") {
-      renderStructureDetail(container, {
-        introTitle: "What is a Rashomon Structure?",
-        intro: ["A narrative that presents multiple, conflicting perspectives of the same event, emphasizing subjectivity and truth ambiguity."],
-        core: ["Multiple narrators", "Contradictory accounts", "Truth as unstable"],
-        stepsTitle: "Structural pattern",
-        steps: ["1. Single event", "2. Multiple retellings", "3. Contradictions revealed", "4. Ambiguity preserved"],
-        examplesTitle: "Rashomon Examples",
-        examples: ["Rashomon", "Hero", "The Affair", "Gone Girl (partial)"]
-      });
-      return;
-    }
-    if (title === "In Medias Res") {
-      renderStructureDetail(container, {
-        introTitle: "What is In Medias Res?",
-        intro: ["A narrative that begins in the middle of action, then later provides context for how events reached that point."],
-        core: ["Immediate engagement", "Delayed exposition", "Momentum-first storytelling"],
-        stepsTitle: "Structural pattern",
-        steps: [
-          "1. Mid-action opening",
-          "2. Audience confusion",
-          "3. Gradual backfill",
-          "4. Recontextualization",
-          "5. Continuation to resolution"
-        ],
-        examplesTitle: "In Medias Res Examples",
-        examples: ["The Odyssey", "Breaking Bad (cold opens)", "Mad Max: Fury Road", "Fight Club"]
-      });
-      return;
-    }
-    container.createDiv({ cls: "resource-detail-placeholder", text: "Content coming soon." });
+    set.delete(title);
+    return Array.from(set);
+  }
+  /** Every searchable reference title across all categories (deduplicated). */
+  getAllResourceTitles() {
+    const set = /* @__PURE__ */ new Set();
+    Object.keys(TECHNIQUE_DATA).forEach((k) => set.add(k));
+    Object.keys(TIPS_DATA).forEach((k) => set.add(k));
+    Object.keys(PITFALLS_DATA).forEach((k) => set.add(k));
+    _WriterToolsView.STRUCTURE_TITLES.forEach((k) => set.add(k));
+    _WriterToolsView.CHARACTER_TITLES.forEach((k) => set.add(k));
+    return Array.from(set);
   }
   getResourceIcon(title) {
     const iconMap = {
@@ -12637,7 +15849,76 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
       "Dialogue (tips)": "message-circle",
       "Exposition (tips)": "file-text",
       "Narration (tips)": "book-open",
-      "Persuasion (tips)": "megaphone"
+      "Persuasion (tips)": "megaphone",
+      // Theme & premise
+      "Theme vs Premise": "scale",
+      "Controlling Idea": "key-round",
+      "Thematic Argument": "gavel",
+      "Motif & Symbol": "gem",
+      "Theme Through Character": "users",
+      // Character engines
+      "Want vs Need": "target",
+      "Wound & Ghost": "ghost",
+      "The Lie & The Truth": "scale",
+      "Fatal Flaw": "crack",
+      "Antagonist Design": "swords",
+      "Character Web": "spline",
+      // Dialogue craft
+      "Subtext": "layers",
+      "On-the-Nose Dialogue": "megaphone",
+      "Voice Differentiation": "mic",
+      "The Scene Turn": "refresh-ccw-dot",
+      "Exposition in Dialogue": "info",
+      "Action Beats & Silence": "pause",
+      // Genre
+      "Genre & Conventions": "library-big",
+      "Monster in the House": "ghost",
+      "Golden Fleece": "map",
+      "Dude with a Problem": "alert-triangle",
+      "Rites of Passage": "hourglass",
+      "Buddy Love": "heart-handshake",
+      "Whydunit": "search",
+      "Superhero": "shield-half",
+      // Screenwriting format & documents
+      "Scene Headings (tips)": "heading",
+      "Action Lines (tips)": "align-left",
+      "Character & Dialogue (tips)": "message-square",
+      "Parentheticals (tips)": "parentheses",
+      "Transitions (tips)": "arrow-right-left",
+      "Montage & Intercut (tips)": "film",
+      "Loglines (tips)": "type",
+      "Treatment & Outline (tips)": "file-text",
+      // Revision
+      "The Rewrite Pass (tips)": "repeat",
+      "Self-Editing Checklist (tips)": "list-checks",
+      "Cutting & Tightening (tips)": "scissors",
+      "Notes & Feedback (tips)": "message-circle-more",
+      "Revision Pitfalls": "alert-triangle",
+      // Structure frameworks
+      "Eight-Sequence Structure": "layers",
+      "Syd Field Paradigm": "columns-3",
+      "Truby 22 Steps": "list-ordered",
+      "TV Series Structure": "tv",
+      // Conventional genres
+      "Drama": "drama",
+      "Comedy": "laugh",
+      "Action": "swords",
+      "Adventure": "compass",
+      "Thriller": "alarm-clock",
+      "Horror": "skull",
+      "Science Fiction": "rocket",
+      "Fantasy": "wand-2",
+      "Romance": "heart",
+      "Mystery & Crime": "search",
+      "Historical Fiction": "landmark",
+      "Western": "tractor",
+      // Prose craft
+      "Point of View & Narrator": "eye",
+      "Scene vs Summary": "clapperboard",
+      "Psychic Distance & Interiority": "brain",
+      "Prose Rhythm & Sentence Variety": "music",
+      "Worldbuilding & Setting": "globe",
+      "Showing & Telling Balance": "eye-off"
     };
     return iconMap[title] || "book";
   }
@@ -12762,6 +16043,135 @@ var WriterToolsView = class extends import_obsidian20.ItemView {
     this.onOpen();
   }
 };
+var WriterToolsView = _WriterToolsView;
+// ── Prose / Screen / Both medium classification ────────────────────────────
+__publicField(WriterToolsView, "SCREEN_TITLES", /* @__PURE__ */ new Set([
+  "Scene Headings (tips)",
+  "Action Lines (tips)",
+  "Character & Dialogue (tips)",
+  "Parentheticals (tips)",
+  "Transitions (tips)",
+  "Montage & Intercut (tips)",
+  "Loglines (tips)",
+  "Treatment & Outline (tips)",
+  "Eight-Sequence Structure",
+  "Syd Field Paradigm",
+  "TV Series Structure"
+]));
+__publicField(WriterToolsView, "PROSE_TITLES", /* @__PURE__ */ new Set([
+  "Point of View & Narrator",
+  "Scene vs Summary",
+  "Psychic Distance & Interiority",
+  "Prose Rhythm & Sentence Variety",
+  "Worldbuilding & Setting",
+  "Showing & Telling Balance"
+]));
+// Titles that can be turned into beats / character sheets.
+__publicField(WriterToolsView, "STRUCTURE_TITLES", /* @__PURE__ */ new Set([
+  "The Hero's Journey",
+  "Dan Harmon Story Circle",
+  "Freytag's Pyramid",
+  "Fichtean Curve",
+  "Three Act Structure",
+  "Kish\u014Dtenketsu",
+  "Save the Cat",
+  "Seven Point Structure",
+  "Pulp Formula",
+  "McKee Story paradigm",
+  "Into the Woods structure",
+  "Frame Narrative",
+  "Nonlinear Structure",
+  "Rashomon Structure",
+  "In Medias Res",
+  "Eight-Sequence Structure",
+  "Syd Field Paradigm",
+  "Truby 22 Steps",
+  "TV Series Structure"
+]));
+__publicField(WriterToolsView, "CHARACTER_TITLES", /* @__PURE__ */ new Set([
+  "The Ally",
+  "The Herald",
+  "The Hero (Jung)",
+  "The Mentor",
+  "The Shadow",
+  "The Shapeshifter",
+  "The Threshold Guardian",
+  "The Trickster",
+  "The Caregiver",
+  "The Creator",
+  "The Everyman",
+  "The Explorer",
+  "The Hero",
+  "The Innocent",
+  "The Jester",
+  "The Lover",
+  "The Magician",
+  "The Outlaw",
+  "The Ruler",
+  "The Sage",
+  "Moral Ascent",
+  "Moral Descent",
+  "Flat Moral",
+  "Moral Transformation",
+  "Want vs Need",
+  "Wound & Ghost",
+  "The Lie & The Truth",
+  "Fatal Flaw",
+  "Antagonist Design",
+  "Character Web"
+]));
+// Cards under the "Story & theme" hub (theme + genre + narrative techniques).
+__publicField(WriterToolsView, "STORY_TITLES", /* @__PURE__ */ new Set([
+  "Theme vs Premise",
+  "Controlling Idea",
+  "Thematic Argument",
+  "Motif & Symbol",
+  "Theme Through Character",
+  "Genre & Conventions",
+  "Monster in the House",
+  "Golden Fleece",
+  "Dude with a Problem",
+  "Rites of Passage",
+  "Buddy Love",
+  "Whydunit",
+  "Superhero",
+  "Drama",
+  "Comedy",
+  "Action",
+  "Adventure",
+  "Thriller",
+  "Horror",
+  "Science Fiction",
+  "Fantasy",
+  "Romance",
+  "Mystery & Crime",
+  "Historical Fiction",
+  "Western",
+  "Flashback",
+  "Flashforward",
+  "Foreshadowing",
+  "Chekhov's Gun",
+  "Red Herring",
+  "Plot Twist",
+  "Deus Ex Machina",
+  "Eucatastrophe",
+  "Poetic Justice",
+  "\u201CShow, Don\u2019t Tell\u201D",
+  "Quibble (Wordplay)"
+]));
+// Extra search terms (theorist / family) for cards whose name doesn't carry them.
+__publicField(WriterToolsView, "SEARCH_ALIASES", (() => {
+  const a = {};
+  const campbell = ["The Ally", "The Herald", "The Hero (Jung)", "The Mentor", "The Shadow", "The Shapeshifter", "The Threshold Guardian", "The Trickster"];
+  const jung = ["The Caregiver", "The Creator", "The Everyman", "The Explorer", "The Hero", "The Innocent", "The Jester", "The Lover", "The Magician", "The Outlaw", "The Ruler", "The Sage"];
+  campbell.forEach((k) => {
+    a[k] = "campbell vogler archetype arquetipo";
+  });
+  jung.forEach((k) => {
+    a[k] = "jung jungian junguiano archetype arquetipo";
+  });
+  return a;
+})());
 var PdfPreviewModal = class extends import_obsidian20.Modal {
   constructor(app, view) {
     super(app);
@@ -13495,11 +16905,12 @@ var TimelineBand = class {
       bar.dataset.pstart = String(beat.start || 0);
       bar.dataset.pspan = String(beat.span || 1);
       bar.style.left = (beat.start || 0) * view.pxPerPage + "px";
-      bar.style.width = Math.max(view.pxPerPage * 0.4, (beat.span || 1) * view.pxPerPage) + "px";
+      const beatW = Math.max(view.pxPerPage * 0.4, (beat.span || 1) * view.pxPerPage);
+      bar.style.width = beatW + "px";
       if (beat.color)
         bar.style.background = beat.color;
       bar.createSpan({ cls: "folio-tl-beat-title", text: beat.title || "Beat" });
-      if (beat.goal)
+      if (beat.goal && beatW >= 130)
         bar.createSpan({ cls: "folio-tl-beat-goal", text: String(beat.goal) });
       bar.setAttribute("title", beat.notes || beat.title || "");
       const lh = bar.createDiv({ cls: "folio-tl-handle is-left" });
@@ -15695,13 +19106,15 @@ var FolioPlugin = class extends import_obsidian24.Plugin {
         })
       );
       menu.addItem(
-        (it) => it.setTitle(isRoot ? "New root file" : "New file").setIcon("file-plus").onClick(() => {
+        (it) => it.setTitle(isRoot ? "New root file" : "New file").setIcon("file-plus").onClick(async () => {
+          const screenplayDefault = await this.getScreenplayDefaultForFolder(folder.path);
           const modal = new TextInputModal(this.app, {
             title: "New file",
             placeholder: "File name",
             cta: "Create",
             toggleLabel: "Screenplay formatting",
             toggleKey: "screenplay",
+            toggleDefault: screenplayDefault,
             onSubmit: async (value, opts = {}) => {
               const name = (value || "").trim();
               if (!name)
@@ -16880,21 +20293,35 @@ ${(beat.notes || "").trim()}
   async loadBookMeta(book) {
     return this.configService.loadProjectMeta(book);
   }
-  async getNewFileFrontmatter(destPath, fileName, explicitScreenplay = false) {
-    var _a, _b;
+  async getNewFileFrontmatter(destPath, fileName, screenplay = false) {
+    var _a;
     const book = this.booksIndex.find((b) => destPath.startsWith(b.path));
     if (!book)
       return "";
     const cfg = await this.loadBookConfig(book) || {};
     const projectType = ((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
-    let inDraft = false;
+    return this.bookService.buildFrontmatter({ projectType, screenplay: !!screenplay });
+  }
+  /** Default state for the "New file" Screenplay toggle, based on the target folder
+   *  (checked when the folder sits inside a script/TV draft). Mirrors the path
+   *  logic getNewFileFrontmatter used to apply automatically. */
+  async getScreenplayDefaultForFolder(folderPath) {
+    var _a, _b;
     try {
-      inDraft = !!draftNodeForFile(((_b = cfg.structure) == null ? void 0 : _b.tree) || [], destPath.slice(book.path.length + 1));
+      const book = this.booksIndex.find((b) => folderPath === b.path || folderPath.startsWith(b.path + "/"));
+      if (!book)
+        return false;
+      const cfg = await this.loadBookConfig(book) || {};
+      const projectType = ((_a = cfg.basic) == null ? void 0 : _a.projectType) || PROJECT_TYPES.BOOK;
+      const isScript = projectType === PROJECT_TYPES.SCRIPT || projectType === PROJECT_TYPES.FILM;
+      if (!isScript)
+        return false;
+      const relFolder = folderPath === book.path ? "" : folderPath.slice(book.path.length + 1);
+      const probe = relFolder ? `${relFolder}/__probe__.md` : "__probe__.md";
+      return !!draftNodeForFile(((_b = cfg.structure) == null ? void 0 : _b.tree) || [], probe);
     } catch (e) {
-      inDraft = false;
+      return false;
     }
-    const useScreenplay = this.bookService.shouldUseScreenplayClass(projectType, fileName, inDraft, explicitScreenplay);
-    return this.bookService.buildFrontmatter({ projectType, screenplay: useScreenplay });
   }
   async waitForFolderSync(filePath, retries = 20) {
     const delay = (ms) => new Promise((r) => setTimeout(r, ms));

@@ -2,7 +2,24 @@
  * Folio Resources — Bilingual content module (EN / ES)
  * All resource data lives here: UI strings, card labels, archetype data,
  * technique data, structure data, tips data, pitfalls data.
+ *
+ * Extended content (Theme, Genre, Screenwriting, Dialogue, Character engines,
+ * Revision, and extra Structure frameworks) lives in resourcesExtra.js and is
+ * merged into the exported maps at the bottom of this file.
  */
+
+import {
+  EXTRA_TECHNIQUE_DATA,
+  EXTRA_TIPS_DATA,
+  EXTRA_PITFALLS_DATA,
+  EXTRA_LABELS,
+  EXTRA_UI,
+  RESOURCE_SOURCES,
+  RESOURCE_RELATED,
+  DIAGNOSE_PROBLEMS
+} from './resourcesExtra.js';
+import { EXTRA2_TECHNIQUE_DATA, EXTRA2_LABELS } from './resourcesExtra2.js';
+import { STRUCTURE_DATA } from './resourcesStructures.js';
 
 // ─── Archetype data helper ──────────────────────────────────────────────────
 
@@ -1513,3 +1530,22 @@ export const PITFALLS_DATA = {
     es: { title: "Errores de Escritura", items: ["Sobreexposición", "Diálogo demasiado explícito", "Contar en lugar de mostrar", "Prosa recargada", "Tono inconsistente"] }
   }
 };
+
+// ─── Merge extended content from resourcesExtra.js ───────────────────────────
+// These const objects are mutated (not reassigned), so the new keys are
+// available through the same exports the rest of the app already imports.
+
+Object.assign(TECHNIQUE_DATA, EXTRA_TECHNIQUE_DATA);
+Object.assign(TECHNIQUE_DATA, EXTRA2_TECHNIQUE_DATA);
+Object.assign(TIPS_DATA, EXTRA_TIPS_DATA);
+Object.assign(PITFALLS_DATA, EXTRA_PITFALLS_DATA);
+Object.assign(LABEL_I18N.en, EXTRA_LABELS.en);
+Object.assign(LABEL_I18N.es, EXTRA_LABELS.es);
+Object.assign(LABEL_I18N.en, EXTRA2_LABELS.en);
+Object.assign(LABEL_I18N.es, EXTRA2_LABELS.es);
+Object.assign(UI_I18N.en, EXTRA_UI.en);
+Object.assign(UI_I18N.es, EXTRA_UI.es);
+
+// Re-exported so WriterToolsView can route structure detail views by title
+// and render sources / related cross-links.
+export { STRUCTURE_DATA, RESOURCE_SOURCES, RESOURCE_RELATED, DIAGNOSE_PROBLEMS };
