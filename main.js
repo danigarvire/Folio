@@ -9671,6 +9671,150 @@ var EXTRA2_TECHNIQUE_DATA = {
       examples: ["Cien a\xF1os de soledad (Garc\xEDa M\xE1rquez)", "Beloved (Morrison)", "Como agua para chocolate (Esquivel)", "La casa de los esp\xEDritus (Allende)", "Hijos de la medianoche (Rushdie)", "El laberinto del fauno", "Big Fish"]
     }
   },
+  "Spy & Espionage": {
+    en: {
+      introTitle: "What is the Spy genre?",
+      intro: ["The Spy genre runs on secrets, deception, and divided loyalty. Its promise is a world of tradecraft and paranoia where nobody is quite who they claim, and the cost of the mission is measured in trust."],
+      core: ["A protagonist who lives behind a cover identity", "Tradecraft: surveillance, dead drops, disguises, double-crosses", "Divided or shifting loyalties \u2014 the mole, the double agent", "Information as the real prize, more than any object", "Moral ambiguity, where ends and means blur"],
+      coreNote: "The genre's engine is trust: who has it, who abuses it, who dies for it.",
+      narrativeFunction: ["Establish the cover, the handler, and the mission's stakes", "Seed doubt about who can really be trusted", "Escalate through betrayal, exposure, and shifting allegiances", "Resolve on the cost the secret world exacts from the spy"],
+      risksTitle: "Common risks",
+      risks: ["Gadgetry and set-pieces that crowd out tension and character", "A plot so convoluted the audience loses the thread", "A mole twist with no fair clues planted earlier", "Glamorizing espionage until its moral cost disappears"],
+      examplesTitle: "Spy & Espionage Examples",
+      examples: ["Tinker Tailor Soldier Spy (le Carr\xE9)", "The Spy Who Came in from the Cold (le Carr\xE9)", "North by Northwest", "The Bourne Identity", "Casino Royale", "Munich", "The Americans"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el g\xE9nero de esp\xEDas?",
+      intro: ["El g\xE9nero de esp\xEDas se mueve por secretos, enga\xF1o y lealtades divididas. Su promesa es un mundo de oficio clandestino y paranoia donde nadie es del todo quien dice ser, y el precio de la misi\xF3n se mide en confianza."],
+      core: ["Un protagonista que vive tras una identidad falsa", "Oficio clandestino: vigilancia, buzones muertos, disfraces, traiciones", "Lealtades divididas o cambiantes: el topo, el agente doble", "La informaci\xF3n como verdadero bot\xEDn, m\xE1s que cualquier objeto", "Ambig\xFCedad moral, donde el fin y los medios se emborronan"],
+      coreNote: "El motor del g\xE9nero es la confianza: qui\xE9n la tiene, qui\xE9n la traiciona, qui\xE9n muere por ella.",
+      narrativeFunction: ["Establecer la tapadera, el enlace y lo que se juega en la misi\xF3n", "Sembrar la duda sobre en qui\xE9n se puede confiar de verdad", "Escalar mediante traiciones, delaciones y lealtades que cambian de bando", "Resolver sobre el precio que el mundo del secreto le cobra al esp\xEDa"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Artilugios y grandes set pieces que ahogan la tensi\xF3n y a los personajes", "Una trama tan enrevesada que el p\xFAblico pierde el hilo", "Un giro del topo sin pistas limpias sembradas antes", "Glamurizar el espionaje hasta que su coste moral desaparece"],
+      examplesTitle: "Ejemplos de espionaje",
+      examples: ["El topo (le Carr\xE9)", "El esp\xEDa que surgi\xF3 del fr\xEDo (le Carr\xE9)", "Con la muerte en los talones", "El caso Bourne", "Casino Royale", "M\xFAnich", "The Americans"]
+    }
+  },
+  "Heist": {
+    en: {
+      introTitle: "What is the Heist genre?",
+      intro: ["The Heist assembles a team to pull off an intricate theft, and lets the audience savor the plan, the execution, and the inevitable thing that goes wrong. Its promise is competence under pressure and the thrill of the perfect scheme."],
+      core: ["A crew assembled for complementary skills", "A seemingly impossible target and a detailed plan", "The caper executed, often with a withheld twist", "A complication or double-cross that threatens everything", "Tension between the score and loyalty among thieves"],
+      coreNote: "Half the pleasure is watching the plan; the other half is watching it survive contact with reality.",
+      narrativeFunction: ["Assemble the crew and define each specialist's role", "Lay out the target and the plan the audience thinks it understands", "Execute, springing the reversal that recontextualizes the plan", "Settle who walks away, who's caught, and who betrayed whom"],
+      risksTitle: "Common risks",
+      risks: ["A plan explained so fully there's no room left for surprise", "Cheating the audience with a twist no earlier clue supports", "Interchangeable crew members with no distinct role", "Stakes so low that failure wouldn't cost anything"],
+      examplesTitle: "Heist Examples",
+      examples: ["Ocean's Eleven", "Rififi", "The Sting", "Heat", "Inside Man", "The Italian Job", "Money Heist (La Casa de Papel)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el cine de atracos?",
+      intro: ["El cine de atracos re\xFAne a un equipo para dar un golpe milim\xE9trico, y deja que el p\xFAblico saboree el plan, la ejecuci\xF3n y lo que sale mal sin remedio. Su promesa es la pericia bajo presi\xF3n y la emoci\xF3n del plan perfecto."],
+      core: ["Un equipo reunido por sus habilidades complementarias", "Un objetivo en apariencia imposible y un plan detallado", "El golpe ejecutado, a menudo con un as guardado en la manga", "Una complicaci\xF3n o una traici\xF3n que lo pone todo en peligro", "La tensi\xF3n entre el bot\xEDn y la lealtad entre ladrones"],
+      coreNote: "La mitad del placer est\xE1 en ver el plan; la otra mitad, en verlo sobrevivir al choque con la realidad.",
+      narrativeFunction: ["Reunir al equipo y definir el papel de cada especialista", "Exponer el objetivo y el plan que el p\xFAblico cree entender", "Ejecutar el golpe soltando el vuelco que resignifica el plan", "Zanjar qui\xE9n escapa, a qui\xE9n atrapan y qui\xE9n traicion\xF3 a qui\xE9n"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un plan tan explicado que no deja margen para la sorpresa", "Estafar al p\xFAblico con un giro que ninguna pista anterior sostiene", "Miembros del equipo intercambiables, sin un papel propio", "Tan poco en juego que fracasar no costar\xEDa nada"],
+      examplesTitle: "Ejemplos de cine de atracos",
+      examples: ["Ocean's Eleven", "Rififi", "El golpe", "Heat", "Plan oculto", "Un trabajo en Italia", "La casa de papel"]
+    }
+  },
+  "Disaster & Survival": {
+    en: {
+      introTitle: "What is Disaster & Survival?",
+      intro: ["The Disaster and Survival genre pits ordinary people against an overwhelming, often indifferent force \u2014 a storm, a wreck, a wilderness \u2014 and asks what it takes to stay alive. Its promise is endurance: body and will tested to the very edge."],
+      core: ["An overwhelming threat: nature, catastrophe, or a hostile environment", "Survival as the immediate, concrete goal", "Ordinary people forced past their limits", "Resourcefulness, endurance, and hard sacrifice", "Comfort stripped away down to essentials"],
+      coreNote: "The antagonist is usually a situation, not a person \u2014 which throws the whole weight onto character under pressure.",
+      narrativeFunction: ["Establish normal life and the fragile order about to break", "Unleash the disaster and close off the easy escapes", "Force escalating choices between survival and humanity", "Resolve on who endures, at what cost, and who they've become"],
+      risksTitle: "Common risks",
+      risks: ["Spectacle that swamps the human story beneath it", "Survival made too easy, so the stakes feel fake", "A cast of victims with no interior life to lose", "A rescue that arrives by luck rather than earned effort"],
+      examplesTitle: "Disaster & Survival Examples",
+      examples: ["The Poseidon Adventure", "Titanic", "Gravity", "127 Hours", "Cast Away", "The Road (McCarthy)", "The Impossible"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la cat\xE1strofe y supervivencia?",
+      intro: ["El g\xE9nero de cat\xE1strofe y supervivencia enfrenta a gente corriente a una fuerza abrumadora y casi siempre indiferente \u2014una tormenta, un naufragio, la naturaleza salvaje\u2014 y pregunta qu\xE9 hace falta para seguir con vida. Su promesa es la resistencia: el cuerpo y la voluntad llevados al l\xEDmite."],
+      core: ["Una amenaza abrumadora: la naturaleza, una cat\xE1strofe o un entorno hostil", "La supervivencia como objetivo inmediato y concreto", "Gente corriente empujada m\xE1s all\xE1 de sus l\xEDmites", "Ingenio, aguante y sacrificios duros", "Toda comodidad arrancada hasta dejar lo esencial"],
+      coreNote: "El antagonista suele ser una situaci\xF3n, no una persona, y eso descarga todo el peso sobre el personaje bajo presi\xF3n.",
+      narrativeFunction: ["Establecer la vida normal y el fr\xE1gil orden a punto de romperse", "Desatar la cat\xE1strofe y cerrar las salidas f\xE1ciles", "Forzar elecciones cada vez m\xE1s duras entre sobrevivir y no perder la humanidad", "Resolver sobre qui\xE9n aguanta, a qu\xE9 precio y en qui\xE9n se ha convertido"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un espect\xE1culo que sepulta la historia humana que deber\xEDa sostenerlo", "Una supervivencia demasiado f\xE1cil, que vuelve falso lo que est\xE1 en juego", "Un reparto de v\xEDctimas sin vida interior que perder", "Un rescate que llega por suerte y no por un esfuerzo merecido"],
+      examplesTitle: "Ejemplos de cat\xE1strofe y supervivencia",
+      examples: ["La aventura del Poseid\xF3n", "Titanic", "Gravity", "127 horas", "N\xE1ufrago", "La carretera (McCarthy)", "Lo imposible"]
+    }
+  },
+  "Noir": {
+    en: {
+      introTitle: "What is Noir?",
+      intro: ["Noir is a mood as much as a genre: a shadowed, fatalistic world of corruption, desire, and doom, where a flawed protagonist is pulled under by forces they can't master. Its promise is moral darkness and the seductive certainty of a bad end."],
+      core: ["A cynical, compromised protagonist \u2014 often a detective or a sap", "A femme fatale or tempter who lures the hero off course", "Crime, corruption, and a web of double-dealing", "A fatalistic tone: the trap is closing from the first frame", "Shadow, rain, and the city as a moral landscape"],
+      coreNote: "Noir is less about who did it than about how the darkness was there in the hero all along.",
+      narrativeFunction: ["Drop the flawed protagonist into a corrupt, shadowed world", "Introduce the temptation that pulls them past the point of return", "Tighten the web of betrayal until escape is impossible", "Deliver the fatalistic reckoning the tone has promised"],
+      risksTitle: "Common risks",
+      risks: ["Style \u2014 shadows, voiceover \u2014 with no rot underneath it", "A femme fatale reduced to a prop rather than a force", "A hero too clean for the genre's moral murk", "Fatalism worn as a pose rather than earned as inevitability"],
+      examplesTitle: "Noir Examples",
+      examples: ["Double Indemnity", "Chinatown", "The Maltese Falcon", "Blade Runner", "L.A. Confidential", "Sunset Boulevard", "Se7en"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el noir?",
+      intro: ["El noir es tanto una atm\xF3sfera como un g\xE9nero: un mundo sombr\xEDo y fatalista de corrupci\xF3n, deseo y perdici\xF3n, donde un protagonista con grietas se hunde por fuerzas que no puede dominar. Su promesa es la oscuridad moral y la seductora certeza de un mal final."],
+      core: ["Un protagonista c\xEDnico y comprometido, a menudo un detective o un incauto", "Una femme fatale o un tentador que desv\xEDa al h\xE9roe de su rumbo", "Crimen, corrupci\xF3n y una telara\xF1a de dobles juegos", "Un tono fatalista: la trampa se cierra desde el primer plano", "Sombra, lluvia y la ciudad como paisaje moral"],
+      coreNote: "El noir va menos de qui\xE9n lo hizo que de c\xF3mo la oscuridad estuvo desde el principio dentro del h\xE9roe.",
+      narrativeFunction: ["Soltar al protagonista imperfecto en un mundo corrupto y sombr\xEDo", "Introducir la tentaci\xF3n que lo arrastra m\xE1s all\xE1 del punto sin retorno", "Apretar la telara\xF1a de traiciones hasta que escapar sea imposible", "Entregar el ajuste de cuentas fatalista que el tono ha prometido"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Estilo \u2014sombras, voz en off\u2014 sin ninguna podredumbre debajo", "Una femme fatale reducida a decorado en vez de a fuerza", "Un h\xE9roe demasiado limpio para la ci\xE9naga moral del g\xE9nero", "Un fatalismo llevado como pose y no ganado como algo inevitable"],
+      examplesTitle: "Ejemplos de noir",
+      examples: ["Perdici\xF3n", "Chinatown", "El halc\xF3n malt\xE9s", "Blade Runner", "L.A. Confidential", "El crep\xFAsculo de los dioses", "Seven"]
+    }
+  },
+  "Dystopia & Speculative": {
+    en: {
+      introTitle: "What is Dystopian & Speculative Fiction?",
+      intro: ["Dystopian and speculative fiction extrapolates a present anxiety into a transformed world, using the 'what if' to hold a mirror to our own. Its promise is the estranged society: a place different enough to reveal the truth about ours."],
+      core: ["A 'what if' premise pushed to its social conclusion", "A world whose rules differ sharply from our own", "An individual awakening against a controlling system", "Social critique encoded in the imagined order", "Extrapolation grounded in a recognizable present anxiety"],
+      coreNote: "Speculative fiction asks a question about now; dystopia answers it with a warning.",
+      narrativeFunction: ["Establish the altered world and its governing rules quickly", "Anchor the reader through a character who questions the order", "Escalate the clash between the individual and the system", "Resolve on what the imagined world reveals about the real one"],
+      risksTitle: "Common risks",
+      risks: ["Worldbuilding that smothers character and story", "A message so loud it flattens into a lecture", "Rules that contradict themselves under scrutiny", "Novelty for its own sake with no critique beneath it"],
+      examplesTitle: "Dystopia & Speculative Examples",
+      examples: ["Nineteen Eighty-Four (Orwell)", "Brave New World (Huxley)", "The Handmaid's Tale (Atwood)", "Fahrenheit 451 (Bradbury)", "Children of Men", "Black Mirror", "Never Let Me Go (Ishiguro)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la ficci\xF3n dist\xF3pica y especulativa?",
+      intro: ["La ficci\xF3n dist\xF3pica y especulativa extrapola una inquietud del presente hasta un mundo transformado, y usa el \xAB\xBFy si\u2026?\xBB para ponernos un espejo delante. Su promesa es la sociedad extra\xF1ada: un lugar lo bastante distinto para revelar la verdad sobre el nuestro."],
+      core: ["Una premisa de \xAB\xBFy si\u2026?\xBB llevada hasta su conclusi\xF3n social", "Un mundo cuyas reglas difieren tajantemente de las nuestras", "Un individuo que despierta frente a un sistema que lo controla", "Una cr\xEDtica social cifrada en el orden imaginado", "Una extrapolaci\xF3n anclada en una inquietud reconocible del presente"],
+      coreNote: "La ficci\xF3n especulativa plantea una pregunta sobre el ahora; la distop\xEDa la responde con una advertencia.",
+      narrativeFunction: ["Establecer pronto el mundo alterado y las reglas que lo gobiernan", "Anclar al lector a trav\xE9s de un personaje que cuestiona ese orden", "Escalar el choque entre el individuo y el sistema", "Resolver sobre lo que el mundo imaginado revela del real"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un worldbuilding que asfixia al personaje y a la historia", "Un mensaje tan alto que se aplana en serm\xF3n", "Reglas que se contradicen en cuanto se examinan", "Novedad porque s\xED, sin ninguna cr\xEDtica debajo"],
+      examplesTitle: "Ejemplos de distop\xEDa y especulativa",
+      examples: ["1984 (Orwell)", "Un mundo feliz (Huxley)", "El cuento de la criada (Atwood)", "Fahrenheit 451 (Bradbury)", "Hijos de los hombres", "Black Mirror", "Nunca me abandones (Ishiguro)"]
+    }
+  },
+  "Epic": {
+    en: {
+      introTitle: "What is the Epic genre?",
+      intro: ["The Epic tells a story of vast scale \u2014 sweeping time, geography, and stakes \u2014 usually anchored to a hero whose journey shapes the fate of a people or a world. Its promise is grandeur: a life or a nation measured against history itself."],
+      core: ["A vast scope of time, place, and consequence", "A larger-than-life hero whose fate carries a people's", "A journey or war that reshapes the world of the story", "High, often civilizational, stakes", "A grand, elevated tone with mythic resonance"],
+      coreNote: "Scale alone isn't epic; the personal story has to bear the weight of the historical one.",
+      narrativeFunction: ["Establish the world's scale and the hero's place within it", "Launch a journey or conflict of sweeping consequence", "Bind the hero's personal arc to the fate of the larger world", "Resolve on a change felt at both the human and historical scale"],
+      risksTitle: "Common risks",
+      risks: ["Spectacle and scale that hollow out the human center", "A hero dwarfed by events until they stop mattering", "Length and sprawl with no disciplined through-line", "Grandiosity that tips over into pomp"],
+      examplesTitle: "Epic Examples",
+      examples: ["Lawrence of Arabia", "The Lord of the Rings", "War and Peace (Tolstoy)", "Ben-Hur", "Gone with the Wind", "Dune (Herbert)", "The Iliad (Homer)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el g\xE9nero \xE9pico?",
+      intro: ["La \xE9pica cuenta una historia de escala inmensa \u2014de tiempo, geograf\xEDa y consecuencias ampl\xEDsimos\u2014 anclada por lo general a un h\xE9roe cuyo viaje decide el destino de un pueblo o de un mundo. Su promesa es la grandeza: una vida o una naci\xF3n medidas contra la propia historia."],
+      core: ["Un alcance vast\xEDsimo de tiempo, lugar y consecuencia", "Un h\xE9roe m\xE1s grande que la vida cuyo destino arrastra al de un pueblo", "Un viaje o una guerra que rehacen el mundo del relato", "Lo que se juega es alto, a menudo de escala civilizatoria", "Un tono elevado y solemne, con resonancia m\xEDtica"],
+      coreNote: "La escala por s\xED sola no es \xE9pica; la historia personal tiene que aguantar el peso de la hist\xF3rica.",
+      narrativeFunction: ["Establecer la escala del mundo y el lugar del h\xE9roe en \xE9l", "Poner en marcha un viaje o un conflicto de consecuencias inmensas", "Atar el arco personal del h\xE9roe al destino del mundo mayor", "Resolver con un cambio que se siente a la vez a escala humana e hist\xF3rica"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un espect\xE1culo y una escala que vac\xEDan el centro humano", "Un h\xE9roe empeque\xF1ecido por los hechos hasta que deja de importar", "Metraje y dispersi\xF3n sin una l\xEDnea maestra disciplinada", "Una grandiosidad que se desliza hacia la pompa"],
+      examplesTitle: "Ejemplos de \xE9pica",
+      examples: ["Lawrence de Arabia", "El Se\xF1or de los Anillos", "Guerra y paz (Tolst\xF3i)", "Ben-Hur", "Lo que el viento se llev\xF3", "Dune (Herbert)", "La Il\xEDada (Homero)"]
+    }
+  },
   // ── Prose craft ─────────────────────────────────────────────────────────────
   "Point of View & Narrator": {
     en: {
@@ -9836,6 +9980,12 @@ var EXTRA2_LABELS = {
     "Musical": "Musical",
     "Satire & Black Comedy": "Satire & Black Comedy",
     "Magical Realism": "Magical Realism",
+    "Spy & Espionage": "Spy & Espionage",
+    "Heist": "Heist",
+    "Disaster & Survival": "Disaster & Survival",
+    "Noir": "Noir",
+    "Dystopia & Speculative": "Dystopia & Speculative",
+    "Epic": "Epic",
     "Point of View & Narrator": "Point of View & Narrator",
     "Scene vs Summary": "Scene vs Summary",
     "Psychic Distance & Interiority": "Psychic Distance & Interiority",
@@ -9861,6 +10011,12 @@ var EXTRA2_LABELS = {
     "Musical": "Musical",
     "Satire & Black Comedy": "S\xE1tira y comedia negra",
     "Magical Realism": "Realismo m\xE1gico",
+    "Spy & Espionage": "Espionaje",
+    "Heist": "Cine de atracos",
+    "Disaster & Survival": "Cat\xE1strofe y supervivencia",
+    "Noir": "Noir",
+    "Dystopia & Speculative": "Distop\xEDa y especulativa",
+    "Epic": "\xC9pica",
     "Point of View & Narrator": "Punto de vista y narrador",
     "Scene vs Summary": "Escena vs resumen",
     "Psychic Distance & Interiority": "Distancia ps\xEDquica e interioridad",
@@ -12443,6 +12599,60 @@ var EXAMPLE_NOTES = {
     { en: "Children born at the stroke of independence share telepathic gifts knotted to the fate of the country itself.", es: "Los ni\xF1os nacidos al filo de la independencia comparten dones telep\xE1ticos anudados al destino del propio pa\xEDs." },
     { en: "The faun's world and fascist Spain bleed into each other, so the magic reads at once as a child's escape and as truth.", es: "El mundo del fauno y la Espa\xF1a fascista se contaminan entre s\xED, de modo que la magia se lee a la vez como huida de una ni\xF1a y como verdad." },
     { en: "A father's tall tales are told as literally true, until by the end the marvelous version has become the truth of his life.", es: "Las f\xE1bulas exageradas de un padre se cuentan como literalmente ciertas, hasta que al final la versi\xF3n maravillosa se ha vuelto la verdad de su vida." }
+  ],
+  "Spy & Espionage": [
+    { en: "The whole plot is a slow hunt for a mole at the top, and le Carr\xE9 makes tradecraft feel like grey, patient office work.", es: "Toda la trama es una caza lenta del topo en la c\xFApula, y le Carr\xE9 hace del oficio de esp\xEDa un trabajo de oficina gris y paciente." },
+    { en: "The mission uses its own spy as bait without telling him; loyalty turns out to be exactly what's being spent.", es: "La misi\xF3n usa a su propio esp\xEDa como cebo sin dec\xEDrselo; la lealtad resulta ser justo lo que se est\xE1 gastando." },
+    { en: "An ad man is mistaken for a spy who never existed, and that empty cover identity becomes the whole danger.", es: "A un publicista lo confunden con un esp\xEDa que nunca existi\xF3, y esa tapadera vac\xEDa se convierte en todo el peligro." },
+    { en: "An amnesiac agent hunts his own erased past; the spy's cover was buried inside his own head all along.", es: "Un agente amn\xE9sico persigue su propio pasado borrado; la tapadera del esp\xEDa estaba enterrada en su propia cabeza desde el principio." },
+    { en: "Bond's tradecraft matters less than the one time he lets himself trust, and betrayal is what forges the cold agent.", es: "El oficio de Bond importa menos que la \xFAnica vez que se permite confiar, y la traici\xF3n es lo que forja al agente fr\xEDo." },
+    { en: "Retaliation curdles into moral rot as the operative can no longer tell the mission apart from murder.", es: "La represalia se pudre en descomposici\xF3n moral cuando el agente ya no distingue la misi\xF3n del asesinato." },
+    { en: "Two deep-cover spies act out a marriage that is also real, so every ordinary domestic scene is tradecraft.", es: "Dos esp\xEDas infiltrados representan un matrimonio que adem\xE1s es real, as\xED que cada escena dom\xE9stica corriente es oficio de esp\xEDa." }
+  ],
+  "Heist": [
+    { en: "The film hides half the plan from us so the reveal lands as its own payoff; the real tool is charm, not force.", es: "La pel\xEDcula nos oculta la mitad del plan para que la revelaci\xF3n funcione como su propia recompensa; el verdadero instrumento es el encanto, no la fuerza." },
+    { en: "A near-wordless half-hour robbery set the template, and the crew's undoing comes from loyalty, not the safe.", es: "Un atraco de casi media hora y casi sin palabras fij\xF3 el molde, y al equipo lo hunde la lealtad, no la caja fuerte." },
+    { en: "The mark and the audience only learn together that the real con was the con we'd been watching all along.", es: "El primo y el p\xFAblico descubren a la vez que la verdadera estafa era la estafa que est\xE1bamos viendo todo el rato." },
+    { en: "The score is almost beside the point; the film is really about the code two professionals live and die by.", es: "El bot\xEDn casi da igual; la pel\xEDcula trata en realidad del c\xF3digo por el que dos profesionales viven y mueren." },
+    { en: "The 'perfect robbery' turns out to be cover for something else entirely, which rewrites the whole plan.", es: "El \xABatraco perfecto\xBB resulta ser la tapadera de otra cosa muy distinta, y eso reescribe el plan entero." },
+    { en: "The plan is the star \u2014 gears, timing, traffic \u2014 and the crew's easy chemistry is what sells the caper.", es: "El plan es la estrella \u2014engranajes, sincron\xEDa, tr\xE1fico\u2014 y la qu\xEDmica f\xE1cil del equipo es lo que vende el golpe." },
+    { en: "Stretching one robbery into a full siege turns the plan into a war of nerves against the whole state.", es: "Estirar un atraco hasta convertirlo en asedio vuelve el plan una guerra de nervios contra todo el Estado." }
+  ],
+  "Disaster & Survival": [
+    { en: "A capsized liner becomes a vertical maze, and the group's arguments over which way to climb are the real drama.", es: "Un trasatl\xE1ntico volcado se vuelve un laberinto vertical, y las discusiones del grupo sobre por d\xF3nde trepar son el verdadero drama." },
+    { en: "Under the romance it's pure survival: freezing water, too few lifeboats, and who gets a place in them.", es: "Bajo el romance es supervivencia pura: agua helada, botes que no bastan y qui\xE9n consigue un sitio en ellos." },
+    { en: "Stripped to one astronaut and dwindling oxygen, survival comes down to refusing to stop moving.", es: "Reducida a una astronauta y al ox\xEDgeno que se agota, la supervivencia se reduce a negarse a dejar de moverse." },
+    { en: "Here the extraordinary force is a rock, and the film is a physical duel against your own body and the clock.", es: "Aqu\xED la fuerza extraordinaria es una piedra, y la pel\xEDcula es un pulso f\xEDsico contra el propio cuerpo y el reloj." },
+    { en: "Years alone strip a busy man down to fire, tides, and a painted volleyball for company.", es: "A\xF1os a solas despojan a un hombre atareado hasta dejarle el fuego, las mareas y un bal\xF3n pintado por compa\xF1\xEDa." },
+    { en: "Survival matters less than staying human, as a father guards his son through a world that offers no rescue.", es: "Importa menos sobrevivir que seguir siendo humano, mientras un padre protege a su hijo en un mundo que no ofrece rescate." },
+    { en: "A tsunami scatters one family, and survival becomes the search to find each other still alive.", es: "Un tsunami dispersa a una familia, y la supervivencia se vuelve la b\xFAsqueda de reencontrarse con vida." }
+  ],
+  "Noir": [
+    { en: "A salesman narrates his own doom; the femme fatale only has to point him at the crime he already wants.", es: "Un vendedor narra su propia perdici\xF3n; a la femme fatale le basta con se\xF1alarle el crimen que \xE9l ya desea." },
+    { en: "The rot has no bottom, the water and the city are in on it, and doing the right thing only gets people killed.", es: "La podredumbre no tiene fondo, el agua y la ciudad est\xE1n en el ajo, y hacer lo correcto solo consigue que maten a gente." },
+    { en: "Everyone lies for the prize, and Spade's only code is refusing to play the sap for a beautiful liar.", es: "Todos mienten por el bot\xEDn, y el \xFAnico c\xF3digo de Spade es negarse a hacer de primo por una bella mentirosa." },
+    { en: "Noir's shadows and rain moved to the future, where a weary hunter questions what \u2014 and who \u2014 counts as human.", es: "Las sombras y la lluvia del noir mudadas al futuro, donde un cazador cansado se pregunta qu\xE9 \u2014y qui\xE9n\u2014 cuenta como humano." },
+    { en: "Behind the sunny postcard, the department itself is the crime, and the corruption reaches all the way up.", es: "Tras la postal soleada, el propio departamento es el crimen, y la corrupci\xF3n llega hasta arriba del todo." },
+    { en: "A dead man narrates from the pool; the trap closed on the writer the moment he took the easy money.", es: "Un muerto narra desde la piscina; la trampa se cerr\xF3 sobre el guionista en cuanto acept\xF3 el dinero f\xE1cil." },
+    { en: "The endless rain and moral exhaustion are the point; the city grinds even the good cop toward the killer's ending.", es: "La lluvia interminable y el agotamiento moral son lo que importa; la ciudad desgasta hasta al polic\xEDa bueno y lo empuja al final que el asesino escribi\xF3." }
+  ],
+  "Dystopia & Speculative": [
+    { en: "The 'what if' is total surveillance, and Winston's small rebellion exists only to show how completely the system wins.", es: "El \xAB\xBFy si\u2026?\xBB es la vigilancia total, y la peque\xF1a rebeli\xF3n de Winston solo existe para mostrar hasta qu\xE9 punto gana el sistema." },
+    { en: "Here the boot is pleasure, not pain; control by comfort turns out harder to resist than any jackboot.", es: "Aqu\xED la bota es el placer, no el dolor; el control por la comodidad resulta m\xE1s dif\xEDcil de resistir que cualquier tiran\xEDa." },
+    { en: "Atwood extrapolates a present misogyny into law, insisting every horror in it already has a real precedent.", es: "Atwood extrapola una misoginia del presente hasta convertirla en ley, insistiendo en que cada horror ya tiene un precedente real." },
+    { en: "A fireman who burns books is the awakening individual, and the critique aims straight at a numbed, screen-fed society.", es: "Un bombero que quema libros es el individuo que despierta, y la cr\xEDtica apunta de lleno a una sociedad anestesiada y cebada de pantallas." },
+    { en: "Global infertility is the premise, but the real subject is how a dying society treats the desperate at its gates.", es: "La infertilidad global es la premisa, pero el verdadero tema es c\xF3mo trata una sociedad agonizante a los desesperados que llaman a su puerta." },
+    { en: "Each episode pushes one piece of present tech to its social conclusion; the anthology form is built for the 'what if'.", es: "Cada episodio empuja una pieza de la tecnolog\xEDa actual hasta su conclusi\xF3n social; el formato de antolog\xEDa est\xE1 hecho para el \xAB\xBFy si\u2026?\xBB." },
+    { en: "The speculative premise is quiet and cruel, and its restraint makes the social critique land like grief.", es: "La premisa especulativa es callada y cruel, y su contenci\xF3n hace que la cr\xEDtica social caiga como un duelo." }
+  ],
+  "Epic": [
+    { en: "The vast desert and years-long campaign stay tethered to one contradictory man, so the scale never loses its human center.", es: "El desierto inmenso y la campa\xF1a de a\xF1os se mantienen atados a un solo hombre contradictorio, y as\xED la escala nunca pierde su centro humano." },
+    { en: "A war for a whole world turns on the smallest, least heroic hands; scale and intimacy hold each other up.", es: "Una guerra por un mundo entero se decide en las manos m\xE1s peque\xF1as y menos heroicas; la escala y la intimidad se sostienen la una a la otra." },
+    { en: "Tolstoy folds private lives into the sweep of an invasion, arguing history is made of countless ordinary moments.", es: "Tolst\xF3i pliega vidas privadas en el arrastre de una invasi\xF3n, defendiendo que la historia se hace de incontables momentos corrientes." },
+    { en: "A personal revenge plays out against the birth of an era, the intimate grudge measured against history itself.", es: "Una venganza personal se despliega contra el nacimiento de una era, el rencor \xEDntimo medido contra la propia historia." },
+    { en: "A woman's survival mirrors a South collapsing around her; the private and the historical burn together.", es: "La supervivencia de una mujer refleja un Sur que se derrumba a su alrededor; lo privado y lo hist\xF3rico arden a la vez." },
+    { en: "Herbert builds a whole ecology, religion, and economy so one boy's rise can carry the fate of a civilization.", es: "Herbert construye toda una ecolog\xEDa, una religi\xF3n y una econom\xEDa para que el ascenso de un muchacho cargue con el destino de una civilizaci\xF3n." },
+    { en: "The wrath of one man is enough to tilt a legendary war; the epic measures a private rage against the fall of a city.", es: "La c\xF3lera de un solo hombre basta para inclinar una guerra legendaria; la \xE9pica mide una ira privada contra la ca\xEDda de una ciudad." }
   ],
   "Point of View & Narrator": [
     { en: "Nick stands half inside the story and half out, and that's the trick. From there he can romanticize Gatsby while quietly damning the world that grinds him down.", es: "Nick se planta medio dentro de la historia y medio fuera, y ah\xED est\xE1 el truco. Desde ah\xED puede idealizar a Gatsby mientras condena en voz baja al mundo que lo tritura." },
@@ -15617,7 +15827,13 @@ var _WriterToolsView = class extends import_obsidian20.ItemView {
       { key: "Coming-of-Age", icon: "sprout" },
       { key: "Musical", icon: "mic-vocal" },
       { key: "Satire & Black Comedy", icon: "pen-tool" },
-      { key: "Magical Realism", icon: "stars" }
+      { key: "Magical Realism", icon: "stars" },
+      { key: "Spy & Espionage", icon: "fingerprint" },
+      { key: "Heist", icon: "vault" },
+      { key: "Disaster & Survival", icon: "tornado" },
+      { key: "Noir", icon: "cloud-fog" },
+      { key: "Dystopia & Speculative", icon: "cctv" },
+      { key: "Epic", icon: "mountain" }
     ], onBack);
     container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "genreSystem") });
     const types = container.createDiv({ cls: "resource-view-group-card" });
@@ -16214,6 +16430,12 @@ var _WriterToolsView = class extends import_obsidian20.ItemView {
       "Musical": "mic-vocal",
       "Satire & Black Comedy": "pen-tool",
       "Magical Realism": "stars",
+      "Spy & Espionage": "fingerprint",
+      "Heist": "vault",
+      "Disaster & Survival": "tornado",
+      "Noir": "cloud-fog",
+      "Dystopia & Speculative": "cctv",
+      "Epic": "mountain",
       // Prose craft
       "Point of View & Narrator": "eye",
       "Scene vs Summary": "clapperboard",
@@ -16457,6 +16679,12 @@ __publicField(WriterToolsView, "STORY_TITLES", /* @__PURE__ */ new Set([
   "Musical",
   "Satire & Black Comedy",
   "Magical Realism",
+  "Spy & Espionage",
+  "Heist",
+  "Disaster & Survival",
+  "Noir",
+  "Dystopia & Speculative",
+  "Epic",
   "Flashback",
   "Flashforward",
   "Foreshadowing",

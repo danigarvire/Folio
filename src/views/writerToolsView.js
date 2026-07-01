@@ -2854,7 +2854,13 @@ export class WriterToolsView extends ItemView {
       { key: "Coming-of-Age", icon: "sprout" },
       { key: "Musical", icon: "mic-vocal" },
       { key: "Satire & Black Comedy", icon: "pen-tool" },
-      { key: "Magical Realism", icon: "stars" }
+      { key: "Magical Realism", icon: "stars" },
+      { key: "Spy & Espionage", icon: "fingerprint" },
+      { key: "Heist", icon: "vault" },
+      { key: "Disaster & Survival", icon: "tornado" },
+      { key: "Noir", icon: "cloud-fog" },
+      { key: "Dystopia & Speculative", icon: "cctv" },
+      { key: "Epic", icon: "mountain" }
     ], onBack);
     container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "genreSystem") });
     const types = container.createDiv({ cls: "resource-view-group-card" });
@@ -3145,6 +3151,7 @@ export class WriterToolsView extends ItemView {
     "Drama", "Comedy", "Action", "Adventure", "Thriller", "Horror",
     "Science Fiction", "Fantasy", "Romance", "Mystery & Crime", "Historical Fiction", "Western",
     "War", "Coming-of-Age", "Musical", "Satire & Black Comedy", "Magical Realism",
+    "Spy & Espionage", "Heist", "Disaster & Survival", "Noir", "Dystopia & Speculative", "Epic",
     "Flashback", "Flashforward", "Foreshadowing", "Chekhov's Gun", "Red Herring", "Plot Twist",
     "Deus Ex Machina", "Eucatastrophe", "Poetic Justice", "“Show, Don’t Tell”", "Quibble (Wordplay)"
   ]);
@@ -3502,6 +3509,12 @@ export class WriterToolsView extends ItemView {
       "Musical": "mic-vocal",
       "Satire & Black Comedy": "pen-tool",
       "Magical Realism": "stars",
+      "Spy & Espionage": "fingerprint",
+      "Heist": "vault",
+      "Disaster & Survival": "tornado",
+      "Noir": "cloud-fog",
+      "Dystopia & Speculative": "cctv",
+      "Epic": "mountain",
       // Prose craft
       "Point of View & Narrator": "eye",
       "Scene vs Summary": "clapperboard",

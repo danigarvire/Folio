@@ -654,6 +654,60 @@ export const EXAMPLE_NOTES = {
     { en: "The faun's world and fascist Spain bleed into each other, so the magic reads at once as a child's escape and as truth.", es: "El mundo del fauno y la España fascista se contaminan entre sí, de modo que la magia se lee a la vez como huida de una niña y como verdad." },
     { en: "A father's tall tales are told as literally true, until by the end the marvelous version has become the truth of his life.", es: "Las fábulas exageradas de un padre se cuentan como literalmente ciertas, hasta que al final la versión maravillosa se ha vuelto la verdad de su vida." }
   ],
+  "Spy & Espionage": [
+    { en: "The whole plot is a slow hunt for a mole at the top, and le Carré makes tradecraft feel like grey, patient office work.", es: "Toda la trama es una caza lenta del topo en la cúpula, y le Carré hace del oficio de espía un trabajo de oficina gris y paciente." },
+    { en: "The mission uses its own spy as bait without telling him; loyalty turns out to be exactly what's being spent.", es: "La misión usa a su propio espía como cebo sin decírselo; la lealtad resulta ser justo lo que se está gastando." },
+    { en: "An ad man is mistaken for a spy who never existed, and that empty cover identity becomes the whole danger.", es: "A un publicista lo confunden con un espía que nunca existió, y esa tapadera vacía se convierte en todo el peligro." },
+    { en: "An amnesiac agent hunts his own erased past; the spy's cover was buried inside his own head all along.", es: "Un agente amnésico persigue su propio pasado borrado; la tapadera del espía estaba enterrada en su propia cabeza desde el principio." },
+    { en: "Bond's tradecraft matters less than the one time he lets himself trust, and betrayal is what forges the cold agent.", es: "El oficio de Bond importa menos que la única vez que se permite confiar, y la traición es lo que forja al agente frío." },
+    { en: "Retaliation curdles into moral rot as the operative can no longer tell the mission apart from murder.", es: "La represalia se pudre en descomposición moral cuando el agente ya no distingue la misión del asesinato." },
+    { en: "Two deep-cover spies act out a marriage that is also real, so every ordinary domestic scene is tradecraft.", es: "Dos espías infiltrados representan un matrimonio que además es real, así que cada escena doméstica corriente es oficio de espía." }
+  ],
+  "Heist": [
+    { en: "The film hides half the plan from us so the reveal lands as its own payoff; the real tool is charm, not force.", es: "La película nos oculta la mitad del plan para que la revelación funcione como su propia recompensa; el verdadero instrumento es el encanto, no la fuerza." },
+    { en: "A near-wordless half-hour robbery set the template, and the crew's undoing comes from loyalty, not the safe.", es: "Un atraco de casi media hora y casi sin palabras fijó el molde, y al equipo lo hunde la lealtad, no la caja fuerte." },
+    { en: "The mark and the audience only learn together that the real con was the con we'd been watching all along.", es: "El primo y el público descubren a la vez que la verdadera estafa era la estafa que estábamos viendo todo el rato." },
+    { en: "The score is almost beside the point; the film is really about the code two professionals live and die by.", es: "El botín casi da igual; la película trata en realidad del código por el que dos profesionales viven y mueren." },
+    { en: "The 'perfect robbery' turns out to be cover for something else entirely, which rewrites the whole plan.", es: "El «atraco perfecto» resulta ser la tapadera de otra cosa muy distinta, y eso reescribe el plan entero." },
+    { en: "The plan is the star — gears, timing, traffic — and the crew's easy chemistry is what sells the caper.", es: "El plan es la estrella —engranajes, sincronía, tráfico— y la química fácil del equipo es lo que vende el golpe." },
+    { en: "Stretching one robbery into a full siege turns the plan into a war of nerves against the whole state.", es: "Estirar un atraco hasta convertirlo en asedio vuelve el plan una guerra de nervios contra todo el Estado." }
+  ],
+  "Disaster & Survival": [
+    { en: "A capsized liner becomes a vertical maze, and the group's arguments over which way to climb are the real drama.", es: "Un trasatlántico volcado se vuelve un laberinto vertical, y las discusiones del grupo sobre por dónde trepar son el verdadero drama." },
+    { en: "Under the romance it's pure survival: freezing water, too few lifeboats, and who gets a place in them.", es: "Bajo el romance es supervivencia pura: agua helada, botes que no bastan y quién consigue un sitio en ellos." },
+    { en: "Stripped to one astronaut and dwindling oxygen, survival comes down to refusing to stop moving.", es: "Reducida a una astronauta y al oxígeno que se agota, la supervivencia se reduce a negarse a dejar de moverse." },
+    { en: "Here the extraordinary force is a rock, and the film is a physical duel against your own body and the clock.", es: "Aquí la fuerza extraordinaria es una piedra, y la película es un pulso físico contra el propio cuerpo y el reloj." },
+    { en: "Years alone strip a busy man down to fire, tides, and a painted volleyball for company.", es: "Años a solas despojan a un hombre atareado hasta dejarle el fuego, las mareas y un balón pintado por compañía." },
+    { en: "Survival matters less than staying human, as a father guards his son through a world that offers no rescue.", es: "Importa menos sobrevivir que seguir siendo humano, mientras un padre protege a su hijo en un mundo que no ofrece rescate." },
+    { en: "A tsunami scatters one family, and survival becomes the search to find each other still alive.", es: "Un tsunami dispersa a una familia, y la supervivencia se vuelve la búsqueda de reencontrarse con vida." }
+  ],
+  "Noir": [
+    { en: "A salesman narrates his own doom; the femme fatale only has to point him at the crime he already wants.", es: "Un vendedor narra su propia perdición; a la femme fatale le basta con señalarle el crimen que él ya desea." },
+    { en: "The rot has no bottom, the water and the city are in on it, and doing the right thing only gets people killed.", es: "La podredumbre no tiene fondo, el agua y la ciudad están en el ajo, y hacer lo correcto solo consigue que maten a gente." },
+    { en: "Everyone lies for the prize, and Spade's only code is refusing to play the sap for a beautiful liar.", es: "Todos mienten por el botín, y el único código de Spade es negarse a hacer de primo por una bella mentirosa." },
+    { en: "Noir's shadows and rain moved to the future, where a weary hunter questions what — and who — counts as human.", es: "Las sombras y la lluvia del noir mudadas al futuro, donde un cazador cansado se pregunta qué —y quién— cuenta como humano." },
+    { en: "Behind the sunny postcard, the department itself is the crime, and the corruption reaches all the way up.", es: "Tras la postal soleada, el propio departamento es el crimen, y la corrupción llega hasta arriba del todo." },
+    { en: "A dead man narrates from the pool; the trap closed on the writer the moment he took the easy money.", es: "Un muerto narra desde la piscina; la trampa se cerró sobre el guionista en cuanto aceptó el dinero fácil." },
+    { en: "The endless rain and moral exhaustion are the point; the city grinds even the good cop toward the killer's ending.", es: "La lluvia interminable y el agotamiento moral son lo que importa; la ciudad desgasta hasta al policía bueno y lo empuja al final que el asesino escribió." }
+  ],
+  "Dystopia & Speculative": [
+    { en: "The 'what if' is total surveillance, and Winston's small rebellion exists only to show how completely the system wins.", es: "El «¿y si…?» es la vigilancia total, y la pequeña rebelión de Winston solo existe para mostrar hasta qué punto gana el sistema." },
+    { en: "Here the boot is pleasure, not pain; control by comfort turns out harder to resist than any jackboot.", es: "Aquí la bota es el placer, no el dolor; el control por la comodidad resulta más difícil de resistir que cualquier tiranía." },
+    { en: "Atwood extrapolates a present misogyny into law, insisting every horror in it already has a real precedent.", es: "Atwood extrapola una misoginia del presente hasta convertirla en ley, insistiendo en que cada horror ya tiene un precedente real." },
+    { en: "A fireman who burns books is the awakening individual, and the critique aims straight at a numbed, screen-fed society.", es: "Un bombero que quema libros es el individuo que despierta, y la crítica apunta de lleno a una sociedad anestesiada y cebada de pantallas." },
+    { en: "Global infertility is the premise, but the real subject is how a dying society treats the desperate at its gates.", es: "La infertilidad global es la premisa, pero el verdadero tema es cómo trata una sociedad agonizante a los desesperados que llaman a su puerta." },
+    { en: "Each episode pushes one piece of present tech to its social conclusion; the anthology form is built for the 'what if'.", es: "Cada episodio empuja una pieza de la tecnología actual hasta su conclusión social; el formato de antología está hecho para el «¿y si…?»." },
+    { en: "The speculative premise is quiet and cruel, and its restraint makes the social critique land like grief.", es: "La premisa especulativa es callada y cruel, y su contención hace que la crítica social caiga como un duelo." }
+  ],
+  "Epic": [
+    { en: "The vast desert and years-long campaign stay tethered to one contradictory man, so the scale never loses its human center.", es: "El desierto inmenso y la campaña de años se mantienen atados a un solo hombre contradictorio, y así la escala nunca pierde su centro humano." },
+    { en: "A war for a whole world turns on the smallest, least heroic hands; scale and intimacy hold each other up.", es: "Una guerra por un mundo entero se decide en las manos más pequeñas y menos heroicas; la escala y la intimidad se sostienen la una a la otra." },
+    { en: "Tolstoy folds private lives into the sweep of an invasion, arguing history is made of countless ordinary moments.", es: "Tolstói pliega vidas privadas en el arrastre de una invasión, defendiendo que la historia se hace de incontables momentos corrientes." },
+    { en: "A personal revenge plays out against the birth of an era, the intimate grudge measured against history itself.", es: "Una venganza personal se despliega contra el nacimiento de una era, el rencor íntimo medido contra la propia historia." },
+    { en: "A woman's survival mirrors a South collapsing around her; the private and the historical burn together.", es: "La supervivencia de una mujer refleja un Sur que se derrumba a su alrededor; lo privado y lo histórico arden a la vez." },
+    { en: "Herbert builds a whole ecology, religion, and economy so one boy's rise can carry the fate of a civilization.", es: "Herbert construye toda una ecología, una religión y una economía para que el ascenso de un muchacho cargue con el destino de una civilización." },
+    { en: "The wrath of one man is enough to tilt a legendary war; the epic measures a private rage against the fall of a city.", es: "La cólera de un solo hombre basta para inclinar una guerra legendaria; la épica mide una ira privada contra la caída de una ciudad." }
+  ],
   "Point of View & Narrator": [
     { en: "Nick stands half inside the story and half out, and that's the trick. From there he can romanticize Gatsby while quietly damning the world that grinds him down.", es: "Nick se planta medio dentro de la historia y medio fuera, y ahí está el truco. Desde ahí puede idealizar a Gatsby mientras condena en voz baja al mundo que lo tritura." },
     { en: "The narration slips between strangers in the middle of a thought, until the perceiving mind turns out to be the city itself, not any single person.", es: "La narración resbala de un extraño a otro a media idea, hasta que la mente que percibe resulta ser la ciudad misma y no una sola persona." },

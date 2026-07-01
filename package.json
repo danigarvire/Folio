@@ -1,6 +1,6 @@
 {
   "name": "folio",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Project-based long-form writing environment for books and scripts.",
   "type": "module",
   "main": "main.js",
