@@ -293,6 +293,126 @@ export const EXTRA2_TECHNIQUE_DATA = {
       examples: ["Centauros del desierto", "Lonesome Dove (Larry McMurtry)", "Sin perdón", "Meridiano de sangre (Cormac McCarthy)", "Valor de ley (Charles Portis)", "Hasta que llegó su hora", "No es país para viejos (Cormac McCarthy)"]
     }
   },
+  "War": {
+    en: {
+      introTitle: "What is the War genre?",
+      intro: ["The War genre dramatizes organized armed conflict and what it does to the people caught inside it — soldiers, civilians, leaders. Its promise is the extremity of combat: brotherhood, sacrifice, terror, and the moral injury that survives the fighting."],
+      core: ["Combat or its aftermath as the central pressure", "A unit or individual whose bonds are forged and broken under fire", "Stakes of survival set against duty, conscience, and orders", "The dehumanizing machinery of war versus individual humanity", "A reckoning with cost: trauma, loss, and what victory is worth"],
+      coreNote: "The best war stories are about people under fire, not the fire itself.",
+      narrativeFunction: ["Establish the unit, the mission, and the human ties at risk", "Subject the characters to escalating combat and impossible choices", "Test conscience against duty when the two collide", "Reckon with the survivors' wounds, moral and physical"],
+      risksTitle: "Common risks",
+      risks: ["Spectacle that glorifies violence and erases its cost", "Interchangeable soldiers with no individual interior", "Reducing the enemy to a faceless target", "Jingoism that flattens the war's moral complexity"],
+      examplesTitle: "War Examples",
+      examples: ["All Quiet on the Western Front (Remarque)", "Apocalypse Now", "Saving Private Ryan", "Full Metal Jacket", "Catch-22 (Heller)", "The Things They Carried (O'Brien)", "Come and See"]
+    },
+    es: {
+      introTitle: "¿Qué es el género bélico?",
+      intro: ["El género bélico dramatiza el conflicto armado organizado y lo que les hace a las personas atrapadas en él: soldados, civiles, mandos. Su promesa es la situación extrema del combate: camaradería, sacrificio, terror y la herida moral que sobrevive a la lucha."],
+      core: ["El combate o sus secuelas como presión central", "Una unidad o un individuo cuyos vínculos se forjan y se rompen bajo el fuego", "Lo que está en juego —la supervivencia— frente al deber, la conciencia y las órdenes", "La maquinaria deshumanizadora de la guerra frente a la humanidad individual", "Un ajuste de cuentas con el coste: trauma, pérdida y cuánto vale la victoria"],
+      coreNote: "Las mejores historias bélicas tratan de personas bajo el fuego, no del fuego en sí.",
+      narrativeFunction: ["Establecer la unidad, la misión y los lazos humanos en peligro", "Someter a los personajes a un combate creciente y a elecciones imposibles", "Poner a prueba la conciencia frente al deber cuando ambos chocan", "Ajustar cuentas con las heridas de los supervivientes, morales y físicas"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Espectáculo que glorifica la violencia y borra su coste", "Soldados intercambiables sin interior individual", "Reducir al enemigo a un blanco sin rostro", "Patrioterismo que aplana la complejidad moral de la guerra"],
+      examplesTitle: "Ejemplos bélicos",
+      examples: ["Sin novedad en el frente (Remarque)", "Apocalypse Now", "Salvar al soldado Ryan", "La chaqueta metálica", "Trampa-22 (Heller)", "Las cosas que llevaban los hombres que lucharon (O'Brien)", "Masacre: ven y mira"]
+    }
+  },
+  "Coming-of-Age": {
+    en: {
+      introTitle: "What is Coming-of-Age?",
+      intro: ["Coming-of-Age (the Bildungsroman) follows a young protagonist from innocence toward experience, tracing the formation of an adult identity. Its promise is the threshold: first love, first loss, and the moment the world stops being simple."],
+      core: ["A young protagonist on the cusp of a new stage of life", "A loss of innocence that cannot be undone", "The search for identity, belonging, and a personal code", "A mentor, rival, or first love who catalyzes the change", "A threshold crossed into a more complicated adult world"],
+      coreNote: "Internally it overlaps the Rites of Passage beat sheet; here it is framed as a literary genre of identity.",
+      narrativeFunction: ["Establish the protagonist's sheltered or unformed starting world", "Introduce the experience that cracks their innocence", "Force a search for who they are when the old certainties fail", "Cross the threshold into a hard-won, more honest maturity"],
+      risksTitle: "Common risks",
+      risks: ["Nostalgia that sands off the real pain of growing up", "A passive protagonist things merely happen to", "A tidy 'lesson learned' that denies the messiness of change", "Confusing event-driven plot with genuine internal growth"],
+      examplesTitle: "Coming-of-Age Examples",
+      examples: ["The Catcher in the Rye (Salinger)", "To Kill a Mockingbird (Lee)", "Stand By Me", "Lady Bird", "Boyhood", "Call Me by Your Name (Aciman)", "A Portrait of the Artist as a Young Man (Joyce)"]
+    },
+    es: {
+      introTitle: "¿Qué es el relato de iniciación (Coming-of-Age)?",
+      intro: ["El relato de iniciación (la Bildungsroman) sigue a un protagonista joven desde la inocencia hacia la experiencia, trazando la formación de una identidad adulta. Su promesa es el umbral: el primer amor, la primera pérdida y el momento en que el mundo deja de ser sencillo."],
+      core: ["Un protagonista joven en el umbral de una nueva etapa de la vida", "Una pérdida de la inocencia que no se puede deshacer", "La búsqueda de la identidad, la pertenencia y un código propio", "Un mentor, un rival o un primer amor que cataliza el cambio", "Un umbral cruzado hacia un mundo adulto más complicado"],
+      coreNote: "Por dentro se solapa con la hoja de beats de Ritos de Paso; aquí se plantea como género literario de la identidad.",
+      narrativeFunction: ["Establecer el mundo de partida protegido o aún sin formar del protagonista", "Introducir la experiencia que resquebraja su inocencia", "Forzar una búsqueda de quién es cuando fallan las viejas certezas", "Cruzar el umbral hacia una madurez más honesta, ganada a pulso"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Una nostalgia que lima el dolor real de crecer", "Un protagonista pasivo al que solo le suceden cosas", "Una pulcra 'lección aprendida' que niega lo caótico del cambio", "Confundir una trama de sucesos con un crecimiento interno genuino"],
+      examplesTitle: "Ejemplos de relato de iniciación",
+      examples: ["El guardián entre el centeno (Salinger)", "Matar a un ruiseñor (Lee)", "Cuenta conmigo", "Lady Bird", "Boyhood", "Llámame por tu nombre (Aciman)", "Retrato del artista adolescente (Joyce)"]
+    }
+  },
+  "Musical": {
+    en: {
+      introTitle: "What is the Musical genre?",
+      intro: ["The Musical tells its story through song and dance, raising emotion to a pitch that ordinary speech cannot reach. Its promise is heightened feeling: the moment a character can no longer just talk, and has to sing."],
+      core: ["Musical numbers that advance plot or reveal interior life", "An 'I want' song that names the protagonist's desire early", "Emotion heightened past the limits of naturalistic dialogue", "A diegetic or non-diegetic logic the show establishes and keeps", "Choreography and staging as storytelling, not decoration"],
+      coreNote: "A number must do dramatic work; a song that stops the story to entertain is a number too many.",
+      narrativeFunction: ["Open on a world and a longing the 'I want' song can voice", "Use numbers to turn scenes, not pause them", "Externalize interior states music can reach and prose cannot", "Build to a climactic number that resolves the emotional arc"],
+      risksTitle: "Common risks",
+      risks: ["Songs that halt the plot instead of advancing it", "Numbers bolted on for spectacle with no dramatic function", "Inconsistent rules about when and why characters sing", "Spectacle that drowns the characters it should serve"],
+      examplesTitle: "Musical Examples",
+      examples: ["Singin' in the Rain", "West Side Story", "La La Land", "The Sound of Music", "Hamilton (Miranda)", "Cabaret", "Les Misérables"]
+    },
+    es: {
+      introTitle: "¿Qué es el género musical?",
+      intro: ["El musical cuenta su historia a través de la canción y la danza, elevando la emoción a una intensidad que el habla corriente no alcanza. Su promesa es el sentimiento exaltado: el momento en que un personaje ya no puede solo hablar y tiene que cantar."],
+      core: ["Números musicales que hacen avanzar la trama o revelan la vida interior", "Una canción de 'lo que quiero' que nombra pronto el deseo del protagonista", "Una emoción elevada más allá de los límites del diálogo naturalista", "Una lógica diegética o no diegética que la obra establece y mantiene", "Coreografía y puesta en escena como narración, no como decorado"],
+      coreNote: "Un número debe hacer trabajo dramático; una canción que detiene la historia para entretener es un número de más.",
+      narrativeFunction: ["Abrir sobre un mundo y un anhelo que la canción de 'lo que quiero' pueda expresar", "Usar los números para girar las escenas, no para pausarlas", "Externalizar estados interiores que la música alcanza y la prosa no", "Construir hacia un número clímax que resuelva el arco emocional"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Canciones que detienen la trama en vez de avanzarla", "Números añadidos por espectáculo, sin función dramática", "Reglas inconsistentes sobre cuándo y por qué cantan los personajes", "Un espectáculo que ahoga a los personajes a los que debería servir"],
+      examplesTitle: "Ejemplos de musical",
+      examples: ["Cantando bajo la lluvia", "West Side Story", "La La Land", "Sonrisas y lágrimas", "Hamilton (Miranda)", "Cabaret", "Los miserables"]
+    }
+  },
+  "Satire & Black Comedy": {
+    en: {
+      introTitle: "What is Satire & Black Comedy?",
+      intro: ["Satire uses humor, irony, and exaggeration to expose and critique folly — political, social, or human. Black comedy aims that same comic lens at the grim and taboo, finding laughter in death, violence, and despair. Both make an argument by making you laugh."],
+      core: ["A target: an institution, ideology, or human vice held up for ridicule", "Irony and exaggeration that reveal truth by distortion", "A comic surface over a serious, often bleak, argument", "Black comedy: humor wrung from the grim, the fatal, the taboo", "Laughter as the delivery system for critique"],
+      coreNote: "Satire needs a point of view; comedy without a target is just jokes.",
+      narrativeFunction: ["Choose a target worth the attack and a stance toward it", "Exaggerate the target's logic until its absurdity shows", "Keep the comic surface taut over the serious argument beneath", "Let the laughter land the critique the audience resists hearing plainly"],
+      risksTitle: "Common risks",
+      risks: ["Mockery with no underlying point of view or target", "Cruelty that punches down instead of up", "Tone that wobbles between comedy and earnestness", "A message so buried the satire reads as endorsement"],
+      examplesTitle: "Satire & Black Comedy Examples",
+      examples: ["Dr. Strangelove", "Catch-22 (Heller)", "Network", "A Modest Proposal (Swift)", "Animal Farm (Orwell)", "The Death of Stalin", "Dr. Strangelove's heir: Veep"]
+    },
+    es: {
+      introTitle: "¿Qué es la sátira y la comedia negra?",
+      intro: ["La sátira usa el humor, la ironía y la exageración para exponer y criticar la insensatez: política, social o humana. La comedia negra dirige esa misma lente cómica hacia lo sombrío y lo tabú, hallando la risa en la muerte, la violencia y la desesperación. Ambas argumentan haciéndote reír."],
+      core: ["Un objetivo: una institución, ideología o vicio humano puesto en ridículo", "Ironía y exageración que revelan la verdad mediante la distorsión", "Una superficie cómica sobre un argumento serio, a menudo sombrío", "Comedia negra: humor exprimido de lo lúgubre, lo fatal, lo tabú", "La risa como vehículo de la crítica"],
+      coreNote: "La sátira necesita un punto de vista; la comedia sin objetivo son solo chistes.",
+      narrativeFunction: ["Elegir un blanco que merezca el ataque y una postura ante él", "Exagerar la lógica del blanco hasta que asome su absurdo", "Mantener tensa la superficie cómica sobre el argumento serio que hay debajo", "Dejar que la risa haga calar la crítica que el público se resiste a oír sin más"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Burla sin un punto de vista u objetivo de fondo", "Una crueldad que golpea hacia abajo en lugar de hacia arriba", "Un tono que oscila entre la comedia y la solemnidad", "Un mensaje tan enterrado que la sátira se lee como aprobación"],
+      examplesTitle: "Ejemplos de sátira y comedia negra",
+      examples: ["¿Teléfono rojo? Volamos hacia Moscú", "Trampa-22 (Heller)", "Network, un mundo implacable", "Una modesta proposición (Swift)", "Rebelión en la granja (Orwell)", "La muerte de Stalin", "Veep"]
+    }
+  },
+  "Magical Realism": {
+    en: {
+      introTitle: "What is Magical Realism?",
+      intro: ["Magical Realism sets impossible, marvelous events inside an otherwise realistic world, and treats them as unremarkable. No one gasps at the miracle; it simply belongs. The magic carries metaphor — history, memory, grief — rather than spectacle."],
+      core: ["A realistic world with the marvelous woven in as ordinary", "Characters who accept the magic without astonishment", "Magic that means something: it carries theme, not plot mechanics", "Roots in oral, folk, and often Latin American tradition", "A matter-of-fact tone that refuses to explain or justify the impossible"],
+      coreNote: "If the characters are amazed by the magic, it's fantasy; in magical realism, the marvelous is simply true.",
+      narrativeFunction: ["Ground the world in dense, sensory realism first", "Introduce the marvelous without fanfare or explanation", "Let the magic embody an emotional or historical truth", "Hold the deadpan tone so the impossible stays unquestioned"],
+      risksTitle: "Common risks",
+      risks: ["Treating the magic as spectacle, which tips it into fantasy", "Magic with no metaphoric weight, included merely to charm", "Over-explaining the rules, which breaks the matter-of-fact spell", "Whimsy untethered from the real grief or history beneath it"],
+      examplesTitle: "Magical Realism Examples",
+      examples: ["One Hundred Years of Solitude (García Márquez)", "Beloved (Morrison)", "Like Water for Chocolate (Esquivel)", "The House of the Spirits (Allende)", "Midnight's Children (Rushdie)", "Pan's Labyrinth", "Big Fish"]
+    },
+    es: {
+      introTitle: "¿Qué es el realismo mágico?",
+      intro: ["El realismo mágico sitúa sucesos imposibles y maravillosos dentro de un mundo por lo demás realista, y los trata como algo corriente. Nadie se asombra ante el milagro; sencillamente pertenece. La magia porta una metáfora —historia, memoria, duelo— más que un espectáculo."],
+      core: ["Un mundo realista con lo maravilloso entretejido como algo cotidiano", "Personajes que aceptan la magia sin asombro", "Una magia que significa algo: porta el tema, no la mecánica de la trama", "Raíces en la tradición oral, popular y a menudo latinoamericana", "Un tono natural que se niega a explicar o justificar lo imposible"],
+      coreNote: "Si los personajes se asombran ante la magia, es fantasía; en el realismo mágico, lo maravilloso simplemente es verdad.",
+      narrativeFunction: ["Anclar primero el mundo en un realismo denso y sensorial", "Introducir lo maravilloso sin fanfarria ni explicación", "Dejar que la magia encarne una verdad emocional o histórica", "Sostener el tono impasible para que lo imposible no se cuestione"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Tratar la magia como espectáculo, lo que la vuelca hacia la fantasía", "Magia sin peso metafórico, incluida solo para encantar", "Sobreexplicar las reglas, lo que rompe el hechizo de naturalidad", "Una fantasía desligada del duelo o la historia reales que hay debajo"],
+      examplesTitle: "Ejemplos de realismo mágico",
+      examples: ["Cien años de soledad (García Márquez)", "Beloved (Morrison)", "Como agua para chocolate (Esquivel)", "La casa de los espíritus (Allende)", "Hijos de la medianoche (Rushdie)", "El laberinto del fauno", "Big Fish"]
+    }
+  },
 
   // ── Prose craft ─────────────────────────────────────────────────────────────
   "Point of View & Narrator": {
@@ -455,6 +575,11 @@ export const EXTRA2_LABELS = {
     "Mystery & Crime": "Mystery & Crime",
     "Historical Fiction": "Historical Fiction",
     "Western": "Western",
+    "War": "War",
+    "Coming-of-Age": "Coming-of-Age",
+    "Musical": "Musical",
+    "Satire & Black Comedy": "Satire & Black Comedy",
+    "Magical Realism": "Magical Realism",
     "Point of View & Narrator": "Point of View & Narrator",
     "Scene vs Summary": "Scene vs Summary",
     "Psychic Distance & Interiority": "Psychic Distance & Interiority",
@@ -475,6 +600,11 @@ export const EXTRA2_LABELS = {
     "Mystery & Crime": "Misterio y crimen",
     "Historical Fiction": "Ficción histórica",
     "Western": "Western",
+    "War": "Bélico",
+    "Coming-of-Age": "Relato de iniciación",
+    "Musical": "Musical",
+    "Satire & Black Comedy": "Sátira y comedia negra",
+    "Magical Realism": "Realismo mágico",
     "Point of View & Narrator": "Punto de vista y narrador",
     "Scene vs Summary": "Escena vs resumen",
     "Psychic Distance & Interiority": "Distancia psíquica e interioridad",

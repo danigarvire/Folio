@@ -8595,6 +8595,78 @@ var EXTRA_TECHNIQUE_DATA = {
       examplesTitle: "Ejemplos de Superh\xE9roe",
       examples: ["Spider-Man", "Gladiator", "Una Mente Maravillosa", "Matrix", "Frankenstein", "Lawrence de Arabia", "Black Panther"]
     }
+  },
+  "Out of the Bottle": {
+    en: {
+      introTitle: "What is Out of the Bottle?",
+      intro: ["Magic enters an ordinary life \u2014 a wish granted or a curse imposed \u2014 and the story turns on what the magic teaches. The lesson is always that the magic was never the point: the power was earned, or was inside the hero all along, and must finally be given up."],
+      core: ["A 'wish' or a 'spell': magic granted to someone who longs for it, or laid on someone who needs a lesson.", "An ordinary protagonist, so the audience projects their own longing onto the magic.", "A 'comeuppance' version (the deserving learn humility) or a 'deserving' version (the downtrodden get a break).", "Magic that solves the surface problem but exposes the real one.", "A return to the ordinary: the spell is relinquished and the hero is changed."],
+      coreNote: "The rule: the magic must end, because the lesson is that the hero never needed it.",
+      narrativeFunction: ["Grant the wish or impose the curse early, with clear rules.", "Let the magic deliver what the hero thought they wanted.", "Reveal the deeper need the magic cannot satisfy.", "Strip the magic away so the change has to come from the hero."],
+      risksTitle: "Common risks",
+      risks: ["Magic with no rules or cost, so nothing is at stake.", "A lesson preached instead of dramatized through the wish.", "Letting the hero keep the magic, which voids the moral.", "Wish-fulfilment with no comeuppance, so the hero never grows."],
+      examplesTitle: "Out of the Bottle Examples",
+      examples: ["Liar Liar", "Bruce Almighty", "Big", "Freaky Friday", "Groundhog Day", "The Mask", "Cinderella"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es Out of the Bottle (La magia embotellada)?",
+      intro: ["La magia entra en una vida corriente \u2014un deseo concedido o una maldici\xF3n impuesta\u2014 y la historia gira en torno a lo que esa magia ense\xF1a. La lecci\xF3n siempre es que la magia nunca fue lo importante: el poder se gan\xF3, o estuvo dentro del h\xE9roe todo el tiempo, y al final hay que renunciar a \xE9l."],
+      core: ["Un 'deseo' o un 'hechizo': magia concedida a quien la anhela, o impuesta a quien necesita una lecci\xF3n.", "Un protagonista corriente, para que el p\xFAblico proyecte su propio anhelo en la magia.", "Una versi\xF3n de 'escarmiento' (el merecedor aprende humildad) o de 'merecimiento' (el oprimido recibe un respiro).", "Una magia que resuelve el problema de superficie pero destapa el de fondo.", "Un regreso a lo corriente: se renuncia al hechizo y el h\xE9roe sale cambiado."],
+      coreNote: "La regla: la magia debe terminar, porque la lecci\xF3n es que el h\xE9roe nunca la necesit\xF3.",
+      narrativeFunction: ["Conceder el deseo o imponer la maldici\xF3n pronto, con reglas claras.", "Dejar que la magia entregue lo que el h\xE9roe cre\xEDa querer.", "Revelar la necesidad profunda que la magia no puede satisfacer.", "Retirar la magia para que el cambio tenga que salir del h\xE9roe."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Magia sin reglas ni coste, de modo que no hay nada en juego.", "Una lecci\xF3n predicada en vez de dramatizada a trav\xE9s del deseo.", "Dejar que el h\xE9roe conserve la magia, lo que anula la moraleja.", "Cumplimiento de deseos sin escarmiento, de modo que el h\xE9roe nunca crece."],
+      examplesTitle: "Ejemplos de Out of the Bottle",
+      examples: ["Mentiroso compulsivo", "Como Dios", "Big", "Ponte en mi lugar", "Atrapado en el tiempo", "La m\xE1scara", "Cenicienta"]
+    }
+  },
+  "The Fool Triumphant": {
+    en: {
+      introTitle: "What is The Fool Triumphant?",
+      intro: ["An underestimated 'fool' takes on a powerful establishment and wins \u2014 precisely because everyone underrates them. The fool's apparent simplicity is their strength, and the story exposes the vanity and corruption of the institution that scorned them."],
+      core: ["A 'fool': an innocent or outsider the world dismisses.", "An 'establishment': the powerful group, system, or rival the fool disrupts.", "An 'insider' who recognizes the fool's worth \u2014 or burns with envy at it.", "A transformation, sometimes marked by a new name or role.", "Victory won not by changing, but by staying true to the fool's nature."],
+      coreNote: "The fool wins by being underestimated; the establishment loses by underestimating them.",
+      narrativeFunction: ["Establish the fool as harmless and overlooked.", "Set them against an establishment that cannot take them seriously.", "Use an envious insider to voice the threat the fool poses.", "Let the fool triumph by being exactly who they always were."],
+      risksTitle: "Common risks",
+      risks: ["A fool so passive the plot happens entirely to them.", "An establishment too weak to make the victory meaningful.", "Mistaking stupidity for the fool's wise innocence.", "A win that requires the fool to abandon their nature."],
+      examplesTitle: "The Fool Triumphant Examples",
+      examples: ["Forrest Gump", "Being There", "Amadeus", "Legally Blonde", "The Jerk", "Dave", "Chaplin's The Great Dictator"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es The Fool Triumphant (El triunfo del tonto)?",
+      intro: ["Un 'tonto' subestimado se enfrenta a un poder establecido y vence, justamente porque todos lo menosprecian. La aparente simpleza del tonto es su fuerza, y la historia desnuda la vanidad y la corrupci\xF3n de la instituci\xF3n que lo despreci\xF3."],
+      core: ["Un 'tonto': un inocente o forastero al que el mundo descarta.", "Un 'poder establecido': el grupo, sistema o rival al que el tonto altera.", "Alguien de dentro del propio sistema que reconoce el valor del tonto, o que arde de envidia ante \xE9l.", "Una transformaci\xF3n, a veces marcada por un nombre o un rol nuevos.", "Una victoria lograda no por cambiar, sino por permanecer fiel a la naturaleza del tonto."],
+      coreNote: "El tonto gana por ser subestimado; el poder pierde por subestimarlo.",
+      narrativeFunction: ["Establecer al tonto como inofensivo y pasado por alto.", "Enfrentarlo a un poder que no puede tomarlo en serio.", "Recurrir a alguien del propio sistema, envidioso, para poner en palabras la amenaza que el tonto representa.", "Dejar que el tonto triunfe siendo exactamente quien siempre fue."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un tonto tan pasivo que la trama le sucede por completo.", "Un poder demasiado d\xE9bil para que la victoria signifique algo.", "Confundir la estupidez con la sabia inocencia del tonto.", "Una victoria que exige que el tonto abandone su naturaleza."],
+      examplesTitle: "Ejemplos de The Fool Triumphant",
+      examples: ["Forrest Gump", "Bienvenido, Mr. Chance", "Amadeus", "Una rubia muy legal", "El loco de los l\xEDos", "Dave, presidente por un d\xEDa", "El gran dictador (Chaplin)"]
+    }
+  },
+  "Institutionalized": {
+    en: {
+      introTitle: "What is Institutionalized?",
+      intro: ["A story about a group \u2014 a family, an army, a company, a mob \u2014 and the tension between the individual and the collective that absorbs them. The drama is the choice every member faces: join the group, blow it up, or be destroyed by it."],
+      core: ["An 'institution': a family, unit, or organization with its own rules and loyalties.", "A 'choice': the recurring tension of the one against the many.", "A 'brain': often a newcomer or observer who sees the system clearly.", "A 'sacrifice': someone pays the price for belonging or for breaking away.", "The triad of endings \u2014 join it, burn it down, or go mad."],
+      coreNote: "Snyder's rule: the question is always the individual versus the group, and the group usually wins.",
+      narrativeFunction: ["Establish the institution's rules, hierarchy, and loyalties.", "Drop in the observer who questions whether belonging is worth the cost.", "Escalate the pressure to conform until a choice becomes unavoidable.", "Resolve through one of the three fates: assimilation, rebellion, or breakdown."],
+      risksTitle: "Common risks",
+      risks: ["An institution so vaguely drawn the stakes never land.", "No clear individual perspective to anchor the group dynamics.", "Forgetting the cost, so belonging carries no real weight.", "A tidy ending that dodges the genre's hard choice."],
+      examplesTitle: "Institutionalized Examples",
+      examples: ["One Flew Over the Cuckoo's Nest", "The Godfather", "American Beauty", "M*A*S*H", "Office Space", "Goodfellas", "Animal House"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es Institutionalized (Institucionalizado)?",
+      intro: ["Una historia sobre un grupo \u2014una familia, un ej\xE9rcito, una empresa, una mafia\u2014 y la tensi\xF3n entre el individuo y el colectivo que lo absorbe. El drama es la elecci\xF3n que afronta cada miembro: integrarse en el grupo, hacerlo saltar por los aires, o ser destruido por \xE9l."],
+      core: ["Una 'instituci\xF3n': una familia, unidad u organizaci\xF3n con sus propias reglas y lealtades.", "Una 'elecci\xF3n': la tensi\xF3n recurrente del uno contra los muchos.", "Un 'cerebro': a menudo un reci\xE9n llegado u observador que ve el sistema con claridad.", "Un 'sacrificio': alguien paga el precio de pertenecer o de escapar.", "La tr\xEDada de finales: integrarse, incendiarlo, o enloquecer."],
+      coreNote: "La regla de Snyder: la pregunta siempre es el individuo frente al grupo, y el grupo suele ganar.",
+      narrativeFunction: ["Establecer las reglas, la jerarqu\xEDa y las lealtades de la instituci\xF3n.", "Introducir al observador que cuestiona si pertenecer merece su precio.", "Aumentar la presi\xF3n por conformarse hasta que la elecci\xF3n sea inevitable.", "Resolver con uno de los tres destinos: asimilaci\xF3n, rebeli\xF3n o derrumbe."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Una instituci\xF3n tan vagamente dibujada que lo que est\xE1 en juego nunca cala.", "Ninguna perspectiva individual clara que ancle la din\xE1mica de grupo.", "Olvidar el coste, de modo que pertenecer no pesa de verdad.", "Un final pulcro que esquiva la elecci\xF3n dif\xEDcil del g\xE9nero."],
+      examplesTitle: "Ejemplos de Institutionalized",
+      examples: ["Alguien vol\xF3 sobre el nido del cuco", "El padrino", "American Beauty", "M*A*S*H", "Trabajo basura", "Uno de los nuestros", "Desmadre a la americana"]
+    }
   }
 };
 var EXTRA_TIPS_DATA = {
@@ -8780,7 +8852,10 @@ var EXTRA_LABELS = {
     "Dude with a Problem": "Dude with a Problem",
     "Rites of Passage": "Rites of Passage",
     "Buddy Love": "Buddy Love",
-    "Whydunit": "Whydunit",
+    "Whydunit": "Whydunit (the detective changes)",
+    "Out of the Bottle": "Out of the Bottle",
+    "The Fool Triumphant": "The Fool Triumphant",
+    "Institutionalized": "Institutionalized",
     "Superhero": "Superhero",
     // Screenwriting format & documents
     "Scene Headings (tips)": "Scene Headings",
@@ -8831,7 +8906,10 @@ var EXTRA_LABELS = {
     "Dude with a Problem": "Un Tipo con un Problema",
     "Rites of Passage": "Ritos de Paso",
     "Buddy Love": "Amor de Compa\xF1eros",
-    "Whydunit": "El Porqu\xE9 del Crimen",
+    "Whydunit": "El Porqu\xE9 del Crimen (whydunit)",
+    "Out of the Bottle": "La magia embotellada",
+    "The Fool Triumphant": "El triunfo del tonto",
+    "Institutionalized": "Institucionalizado",
     "Superhero": "Superh\xE9roe",
     // Screenwriting format & documents
     "Scene Headings (tips)": "Encabezados de escena",
@@ -8884,6 +8962,9 @@ var RESOURCE_SOURCES = {
   "Rites of Passage": ["Blake Snyder \u2014 Save the Cat!"],
   "Buddy Love": ["Blake Snyder \u2014 Save the Cat!"],
   "Whydunit": ["Blake Snyder \u2014 Save the Cat!"],
+  "Out of the Bottle": ["Blake Snyder \u2014 Save the Cat!"],
+  "The Fool Triumphant": ["Blake Snyder \u2014 Save the Cat!"],
+  "Institutionalized": ["Blake Snyder \u2014 Save the Cat!"],
   "Superhero": ["Blake Snyder \u2014 Save the Cat!"],
   // Screenwriting format & documents
   "Scene Headings (tips)": ["Christopher Riley \u2014 The Hollywood Standard"],
@@ -8953,6 +9034,9 @@ var RESOURCE_RELATED = {
   "Rites of Passage": ["Moral Transformation", "Genre & Conventions"],
   "Buddy Love": ["Want vs Need", "Genre & Conventions"],
   "Whydunit": ["Monster in the House", "Genre & Conventions"],
+  "Out of the Bottle": ["The Fool Triumphant", "Genre & Conventions"],
+  "The Fool Triumphant": ["Out of the Bottle", "Genre & Conventions"],
+  "Institutionalized": ["Buddy Love", "Genre & Conventions"],
   "Superhero": ["Dude with a Problem", "Genre & Conventions"],
   // Screenwriting
   "Character & Dialogue (tips)": ["Subtext", "Parentheticals (tips)"],
@@ -9467,6 +9551,126 @@ var EXTRA2_TECHNIQUE_DATA = {
       examples: ["Centauros del desierto", "Lonesome Dove (Larry McMurtry)", "Sin perd\xF3n", "Meridiano de sangre (Cormac McCarthy)", "Valor de ley (Charles Portis)", "Hasta que lleg\xF3 su hora", "No es pa\xEDs para viejos (Cormac McCarthy)"]
     }
   },
+  "War": {
+    en: {
+      introTitle: "What is the War genre?",
+      intro: ["The War genre dramatizes organized armed conflict and what it does to the people caught inside it \u2014 soldiers, civilians, leaders. Its promise is the extremity of combat: brotherhood, sacrifice, terror, and the moral injury that survives the fighting."],
+      core: ["Combat or its aftermath as the central pressure", "A unit or individual whose bonds are forged and broken under fire", "Stakes of survival set against duty, conscience, and orders", "The dehumanizing machinery of war versus individual humanity", "A reckoning with cost: trauma, loss, and what victory is worth"],
+      coreNote: "The best war stories are about people under fire, not the fire itself.",
+      narrativeFunction: ["Establish the unit, the mission, and the human ties at risk", "Subject the characters to escalating combat and impossible choices", "Test conscience against duty when the two collide", "Reckon with the survivors' wounds, moral and physical"],
+      risksTitle: "Common risks",
+      risks: ["Spectacle that glorifies violence and erases its cost", "Interchangeable soldiers with no individual interior", "Reducing the enemy to a faceless target", "Jingoism that flattens the war's moral complexity"],
+      examplesTitle: "War Examples",
+      examples: ["All Quiet on the Western Front (Remarque)", "Apocalypse Now", "Saving Private Ryan", "Full Metal Jacket", "Catch-22 (Heller)", "The Things They Carried (O'Brien)", "Come and See"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el g\xE9nero b\xE9lico?",
+      intro: ["El g\xE9nero b\xE9lico dramatiza el conflicto armado organizado y lo que les hace a las personas atrapadas en \xE9l: soldados, civiles, mandos. Su promesa es la situaci\xF3n extrema del combate: camarader\xEDa, sacrificio, terror y la herida moral que sobrevive a la lucha."],
+      core: ["El combate o sus secuelas como presi\xF3n central", "Una unidad o un individuo cuyos v\xEDnculos se forjan y se rompen bajo el fuego", "Lo que est\xE1 en juego \u2014la supervivencia\u2014 frente al deber, la conciencia y las \xF3rdenes", "La maquinaria deshumanizadora de la guerra frente a la humanidad individual", "Un ajuste de cuentas con el coste: trauma, p\xE9rdida y cu\xE1nto vale la victoria"],
+      coreNote: "Las mejores historias b\xE9licas tratan de personas bajo el fuego, no del fuego en s\xED.",
+      narrativeFunction: ["Establecer la unidad, la misi\xF3n y los lazos humanos en peligro", "Someter a los personajes a un combate creciente y a elecciones imposibles", "Poner a prueba la conciencia frente al deber cuando ambos chocan", "Ajustar cuentas con las heridas de los supervivientes, morales y f\xEDsicas"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Espect\xE1culo que glorifica la violencia y borra su coste", "Soldados intercambiables sin interior individual", "Reducir al enemigo a un blanco sin rostro", "Patrioterismo que aplana la complejidad moral de la guerra"],
+      examplesTitle: "Ejemplos b\xE9licos",
+      examples: ["Sin novedad en el frente (Remarque)", "Apocalypse Now", "Salvar al soldado Ryan", "La chaqueta met\xE1lica", "Trampa-22 (Heller)", "Las cosas que llevaban los hombres que lucharon (O'Brien)", "Masacre: ven y mira"]
+    }
+  },
+  "Coming-of-Age": {
+    en: {
+      introTitle: "What is Coming-of-Age?",
+      intro: ["Coming-of-Age (the Bildungsroman) follows a young protagonist from innocence toward experience, tracing the formation of an adult identity. Its promise is the threshold: first love, first loss, and the moment the world stops being simple."],
+      core: ["A young protagonist on the cusp of a new stage of life", "A loss of innocence that cannot be undone", "The search for identity, belonging, and a personal code", "A mentor, rival, or first love who catalyzes the change", "A threshold crossed into a more complicated adult world"],
+      coreNote: "Internally it overlaps the Rites of Passage beat sheet; here it is framed as a literary genre of identity.",
+      narrativeFunction: ["Establish the protagonist's sheltered or unformed starting world", "Introduce the experience that cracks their innocence", "Force a search for who they are when the old certainties fail", "Cross the threshold into a hard-won, more honest maturity"],
+      risksTitle: "Common risks",
+      risks: ["Nostalgia that sands off the real pain of growing up", "A passive protagonist things merely happen to", "A tidy 'lesson learned' that denies the messiness of change", "Confusing event-driven plot with genuine internal growth"],
+      examplesTitle: "Coming-of-Age Examples",
+      examples: ["The Catcher in the Rye (Salinger)", "To Kill a Mockingbird (Lee)", "Stand By Me", "Lady Bird", "Boyhood", "Call Me by Your Name (Aciman)", "A Portrait of the Artist as a Young Man (Joyce)"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el relato de iniciaci\xF3n (Coming-of-Age)?",
+      intro: ["El relato de iniciaci\xF3n (la Bildungsroman) sigue a un protagonista joven desde la inocencia hacia la experiencia, trazando la formaci\xF3n de una identidad adulta. Su promesa es el umbral: el primer amor, la primera p\xE9rdida y el momento en que el mundo deja de ser sencillo."],
+      core: ["Un protagonista joven en el umbral de una nueva etapa de la vida", "Una p\xE9rdida de la inocencia que no se puede deshacer", "La b\xFAsqueda de la identidad, la pertenencia y un c\xF3digo propio", "Un mentor, un rival o un primer amor que cataliza el cambio", "Un umbral cruzado hacia un mundo adulto m\xE1s complicado"],
+      coreNote: "Por dentro se solapa con la hoja de beats de Ritos de Paso; aqu\xED se plantea como g\xE9nero literario de la identidad.",
+      narrativeFunction: ["Establecer el mundo de partida protegido o a\xFAn sin formar del protagonista", "Introducir la experiencia que resquebraja su inocencia", "Forzar una b\xFAsqueda de qui\xE9n es cuando fallan las viejas certezas", "Cruzar el umbral hacia una madurez m\xE1s honesta, ganada a pulso"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Una nostalgia que lima el dolor real de crecer", "Un protagonista pasivo al que solo le suceden cosas", "Una pulcra 'lecci\xF3n aprendida' que niega lo ca\xF3tico del cambio", "Confundir una trama de sucesos con un crecimiento interno genuino"],
+      examplesTitle: "Ejemplos de relato de iniciaci\xF3n",
+      examples: ["El guardi\xE1n entre el centeno (Salinger)", "Matar a un ruise\xF1or (Lee)", "Cuenta conmigo", "Lady Bird", "Boyhood", "Ll\xE1mame por tu nombre (Aciman)", "Retrato del artista adolescente (Joyce)"]
+    }
+  },
+  "Musical": {
+    en: {
+      introTitle: "What is the Musical genre?",
+      intro: ["The Musical tells its story through song and dance, raising emotion to a pitch that ordinary speech cannot reach. Its promise is heightened feeling: the moment a character can no longer just talk, and has to sing."],
+      core: ["Musical numbers that advance plot or reveal interior life", "An 'I want' song that names the protagonist's desire early", "Emotion heightened past the limits of naturalistic dialogue", "A diegetic or non-diegetic logic the show establishes and keeps", "Choreography and staging as storytelling, not decoration"],
+      coreNote: "A number must do dramatic work; a song that stops the story to entertain is a number too many.",
+      narrativeFunction: ["Open on a world and a longing the 'I want' song can voice", "Use numbers to turn scenes, not pause them", "Externalize interior states music can reach and prose cannot", "Build to a climactic number that resolves the emotional arc"],
+      risksTitle: "Common risks",
+      risks: ["Songs that halt the plot instead of advancing it", "Numbers bolted on for spectacle with no dramatic function", "Inconsistent rules about when and why characters sing", "Spectacle that drowns the characters it should serve"],
+      examplesTitle: "Musical Examples",
+      examples: ["Singin' in the Rain", "West Side Story", "La La Land", "The Sound of Music", "Hamilton (Miranda)", "Cabaret", "Les Mis\xE9rables"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el g\xE9nero musical?",
+      intro: ["El musical cuenta su historia a trav\xE9s de la canci\xF3n y la danza, elevando la emoci\xF3n a una intensidad que el habla corriente no alcanza. Su promesa es el sentimiento exaltado: el momento en que un personaje ya no puede solo hablar y tiene que cantar."],
+      core: ["N\xFAmeros musicales que hacen avanzar la trama o revelan la vida interior", "Una canci\xF3n de 'lo que quiero' que nombra pronto el deseo del protagonista", "Una emoci\xF3n elevada m\xE1s all\xE1 de los l\xEDmites del di\xE1logo naturalista", "Una l\xF3gica dieg\xE9tica o no dieg\xE9tica que la obra establece y mantiene", "Coreograf\xEDa y puesta en escena como narraci\xF3n, no como decorado"],
+      coreNote: "Un n\xFAmero debe hacer trabajo dram\xE1tico; una canci\xF3n que detiene la historia para entretener es un n\xFAmero de m\xE1s.",
+      narrativeFunction: ["Abrir sobre un mundo y un anhelo que la canci\xF3n de 'lo que quiero' pueda expresar", "Usar los n\xFAmeros para girar las escenas, no para pausarlas", "Externalizar estados interiores que la m\xFAsica alcanza y la prosa no", "Construir hacia un n\xFAmero cl\xEDmax que resuelva el arco emocional"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Canciones que detienen la trama en vez de avanzarla", "N\xFAmeros a\xF1adidos por espect\xE1culo, sin funci\xF3n dram\xE1tica", "Reglas inconsistentes sobre cu\xE1ndo y por qu\xE9 cantan los personajes", "Un espect\xE1culo que ahoga a los personajes a los que deber\xEDa servir"],
+      examplesTitle: "Ejemplos de musical",
+      examples: ["Cantando bajo la lluvia", "West Side Story", "La La Land", "Sonrisas y l\xE1grimas", "Hamilton (Miranda)", "Cabaret", "Los miserables"]
+    }
+  },
+  "Satire & Black Comedy": {
+    en: {
+      introTitle: "What is Satire & Black Comedy?",
+      intro: ["Satire uses humor, irony, and exaggeration to expose and critique folly \u2014 political, social, or human. Black comedy aims that same comic lens at the grim and taboo, finding laughter in death, violence, and despair. Both make an argument by making you laugh."],
+      core: ["A target: an institution, ideology, or human vice held up for ridicule", "Irony and exaggeration that reveal truth by distortion", "A comic surface over a serious, often bleak, argument", "Black comedy: humor wrung from the grim, the fatal, the taboo", "Laughter as the delivery system for critique"],
+      coreNote: "Satire needs a point of view; comedy without a target is just jokes.",
+      narrativeFunction: ["Choose a target worth the attack and a stance toward it", "Exaggerate the target's logic until its absurdity shows", "Keep the comic surface taut over the serious argument beneath", "Let the laughter land the critique the audience resists hearing plainly"],
+      risksTitle: "Common risks",
+      risks: ["Mockery with no underlying point of view or target", "Cruelty that punches down instead of up", "Tone that wobbles between comedy and earnestness", "A message so buried the satire reads as endorsement"],
+      examplesTitle: "Satire & Black Comedy Examples",
+      examples: ["Dr. Strangelove", "Catch-22 (Heller)", "Network", "A Modest Proposal (Swift)", "Animal Farm (Orwell)", "The Death of Stalin", "Dr. Strangelove's heir: Veep"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es la s\xE1tira y la comedia negra?",
+      intro: ["La s\xE1tira usa el humor, la iron\xEDa y la exageraci\xF3n para exponer y criticar la insensatez: pol\xEDtica, social o humana. La comedia negra dirige esa misma lente c\xF3mica hacia lo sombr\xEDo y lo tab\xFA, hallando la risa en la muerte, la violencia y la desesperaci\xF3n. Ambas argumentan haci\xE9ndote re\xEDr."],
+      core: ["Un objetivo: una instituci\xF3n, ideolog\xEDa o vicio humano puesto en rid\xEDculo", "Iron\xEDa y exageraci\xF3n que revelan la verdad mediante la distorsi\xF3n", "Una superficie c\xF3mica sobre un argumento serio, a menudo sombr\xEDo", "Comedia negra: humor exprimido de lo l\xFAgubre, lo fatal, lo tab\xFA", "La risa como veh\xEDculo de la cr\xEDtica"],
+      coreNote: "La s\xE1tira necesita un punto de vista; la comedia sin objetivo son solo chistes.",
+      narrativeFunction: ["Elegir un blanco que merezca el ataque y una postura ante \xE9l", "Exagerar la l\xF3gica del blanco hasta que asome su absurdo", "Mantener tensa la superficie c\xF3mica sobre el argumento serio que hay debajo", "Dejar que la risa haga calar la cr\xEDtica que el p\xFAblico se resiste a o\xEDr sin m\xE1s"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Burla sin un punto de vista u objetivo de fondo", "Una crueldad que golpea hacia abajo en lugar de hacia arriba", "Un tono que oscila entre la comedia y la solemnidad", "Un mensaje tan enterrado que la s\xE1tira se lee como aprobaci\xF3n"],
+      examplesTitle: "Ejemplos de s\xE1tira y comedia negra",
+      examples: ["\xBFTel\xE9fono rojo? Volamos hacia Mosc\xFA", "Trampa-22 (Heller)", "Network, un mundo implacable", "Una modesta proposici\xF3n (Swift)", "Rebeli\xF3n en la granja (Orwell)", "La muerte de Stalin", "Veep"]
+    }
+  },
+  "Magical Realism": {
+    en: {
+      introTitle: "What is Magical Realism?",
+      intro: ["Magical Realism sets impossible, marvelous events inside an otherwise realistic world, and treats them as unremarkable. No one gasps at the miracle; it simply belongs. The magic carries metaphor \u2014 history, memory, grief \u2014 rather than spectacle."],
+      core: ["A realistic world with the marvelous woven in as ordinary", "Characters who accept the magic without astonishment", "Magic that means something: it carries theme, not plot mechanics", "Roots in oral, folk, and often Latin American tradition", "A matter-of-fact tone that refuses to explain or justify the impossible"],
+      coreNote: "If the characters are amazed by the magic, it's fantasy; in magical realism, the marvelous is simply true.",
+      narrativeFunction: ["Ground the world in dense, sensory realism first", "Introduce the marvelous without fanfare or explanation", "Let the magic embody an emotional or historical truth", "Hold the deadpan tone so the impossible stays unquestioned"],
+      risksTitle: "Common risks",
+      risks: ["Treating the magic as spectacle, which tips it into fantasy", "Magic with no metaphoric weight, included merely to charm", "Over-explaining the rules, which breaks the matter-of-fact spell", "Whimsy untethered from the real grief or history beneath it"],
+      examplesTitle: "Magical Realism Examples",
+      examples: ["One Hundred Years of Solitude (Garc\xEDa M\xE1rquez)", "Beloved (Morrison)", "Like Water for Chocolate (Esquivel)", "The House of the Spirits (Allende)", "Midnight's Children (Rushdie)", "Pan's Labyrinth", "Big Fish"]
+    },
+    es: {
+      introTitle: "\xBFQu\xE9 es el realismo m\xE1gico?",
+      intro: ["El realismo m\xE1gico sit\xFAa sucesos imposibles y maravillosos dentro de un mundo por lo dem\xE1s realista, y los trata como algo corriente. Nadie se asombra ante el milagro; sencillamente pertenece. La magia porta una met\xE1fora \u2014historia, memoria, duelo\u2014 m\xE1s que un espect\xE1culo."],
+      core: ["Un mundo realista con lo maravilloso entretejido como algo cotidiano", "Personajes que aceptan la magia sin asombro", "Una magia que significa algo: porta el tema, no la mec\xE1nica de la trama", "Ra\xEDces en la tradici\xF3n oral, popular y a menudo latinoamericana", "Un tono natural que se niega a explicar o justificar lo imposible"],
+      coreNote: "Si los personajes se asombran ante la magia, es fantas\xEDa; en el realismo m\xE1gico, lo maravilloso simplemente es verdad.",
+      narrativeFunction: ["Anclar primero el mundo en un realismo denso y sensorial", "Introducir lo maravilloso sin fanfarria ni explicaci\xF3n", "Dejar que la magia encarne una verdad emocional o hist\xF3rica", "Sostener el tono impasible para que lo imposible no se cuestione"],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Tratar la magia como espect\xE1culo, lo que la vuelca hacia la fantas\xEDa", "Magia sin peso metaf\xF3rico, incluida solo para encantar", "Sobreexplicar las reglas, lo que rompe el hechizo de naturalidad", "Una fantas\xEDa desligada del duelo o la historia reales que hay debajo"],
+      examplesTitle: "Ejemplos de realismo m\xE1gico",
+      examples: ["Cien a\xF1os de soledad (Garc\xEDa M\xE1rquez)", "Beloved (Morrison)", "Como agua para chocolate (Esquivel)", "La casa de los esp\xEDritus (Allende)", "Hijos de la medianoche (Rushdie)", "El laberinto del fauno", "Big Fish"]
+    }
+  },
   // ── Prose craft ─────────────────────────────────────────────────────────────
   "Point of View & Narrator": {
     en: {
@@ -9627,6 +9831,11 @@ var EXTRA2_LABELS = {
     "Mystery & Crime": "Mystery & Crime",
     "Historical Fiction": "Historical Fiction",
     "Western": "Western",
+    "War": "War",
+    "Coming-of-Age": "Coming-of-Age",
+    "Musical": "Musical",
+    "Satire & Black Comedy": "Satire & Black Comedy",
+    "Magical Realism": "Magical Realism",
     "Point of View & Narrator": "Point of View & Narrator",
     "Scene vs Summary": "Scene vs Summary",
     "Psychic Distance & Interiority": "Psychic Distance & Interiority",
@@ -9647,6 +9856,11 @@ var EXTRA2_LABELS = {
     "Mystery & Crime": "Misterio y crimen",
     "Historical Fiction": "Ficci\xF3n hist\xF3rica",
     "Western": "Western",
+    "War": "B\xE9lico",
+    "Coming-of-Age": "Relato de iniciaci\xF3n",
+    "Musical": "Musical",
+    "Satire & Black Comedy": "S\xE1tira y comedia negra",
+    "Magical Realism": "Realismo m\xE1gico",
     "Point of View & Narrator": "Punto de vista y narrador",
     "Scene vs Summary": "Escena vs resumen",
     "Psychic Distance & Interiority": "Distancia ps\xEDquica e interioridad",
@@ -12050,6 +12264,33 @@ var EXAMPLE_NOTES = {
     { en: "His gift welds the desert tribes together yet roots him nowhere, a stranger in the Arab world and the British one alike.", es: "Su don suelda a las tribus del desierto y a la vez lo deja sin ra\xEDz en ninguna parte, un extra\xF1o tanto en el mundo \xE1rabe como en el brit\xE1nico." },
     { en: "A throne is his burden. T'Challa rules a hidden, advanced nation, and Killmonger pushes him to share its power with everyone.", es: "Su carga es un trono. T'Challa gobierna una naci\xF3n oculta y avanzada, y Killmonger lo empuja a compartir su poder con el mundo entero." }
   ],
+  "Out of the Bottle": [
+    { en: "A curse forces the liar to tell the truth, and what it exposes isn't the lying but the absent father underneath it.", es: "Una maldici\xF3n obliga al mentiroso a decir la verdad, y lo que destapa no es la mentira sino el padre ausente que hay debajo." },
+    { en: "Handed God's powers, Bruce learns the omnipotence was never the point; the lesson is the humility he lacked.", es: "Con los poderes de Dios en las manos, Bruce aprende que la omnipotencia nunca fue lo importante; la lecci\xF3n es la humildad que le faltaba." },
+    { en: "The wish makes a boy a man, and the magic's whole job is to prove that adulthood isn't what he longed for. He gives it back.", es: "El deseo convierte a un ni\xF1o en adulto, y la magia solo existe para demostrar que ser mayor no era lo que \xE9l quer\xEDa. Acaba devolvi\xE9ndola." },
+    { en: "The body swap is the spell; mother and daughter only get their lives back once each has learned to live the other's.", es: "El intercambio de cuerpos es el hechizo; madre e hija solo recuperan su vida cuando cada una ha aprendido a vivir la de la otra." },
+    { en: "The time loop is a curse Phil escapes only by becoming a better man. The magic literally is the lesson.", es: "El bucle temporal es una maldici\xF3n de la que Phil solo escapa volvi\xE9ndose mejor persona. La magia es, literalmente, la lecci\xF3n." },
+    { en: "The mask grants the timid clerk wish-power, but the point lands when he learns the courage was his all along.", es: "La m\xE1scara le da al t\xEDmido empleado el poder de cumplir cualquier capricho, pero la idea cala cuando aprende que el valor era suyo desde el principio." },
+    { en: "The deserving version: magic lifts the downtrodden, yet at midnight it vanishes and her own worth has to carry her.", es: "La variante de quien se lo merece: la magia eleva a la oprimida, pero a medianoche se desvanece y es su propia val\xEDa la que tiene que sostenerla." }
+  ],
+  "The Fool Triumphant": [
+    { en: "The 'simpleton' stumbles through history and comes out ahead; the establishment that keeps underrating him is the joke.", es: "El 'simpl\xF3n' va dando tumbos por la historia y sale ganando; el chiste es el poder que no para de subestimarlo." },
+    { en: "Chance's empty platitudes get mistaken for genius by an establishment desperate to read wisdom into the blank.", es: "Las perogrulladas vac\xEDas de Chance se confunden con genialidad porque el poder est\xE1 desesperado por ver sabidur\xEDa donde no hay nada." },
+    { en: "The vulgar fool Mozart out-creates the respectable Salieri, whose envy is the insider's voice naming the threat.", es: "El vulgar y pueril Mozart crea muy por encima del respetable Salieri, y la envidia de este pone voz a la amenaza que el genio representa." },
+    { en: "Dismissed as a dumb blonde, Elle beats Harvard's establishment by refusing to be anyone but herself.", es: "Descartada como una rubia tonta, Elle vence al poder de Harvard sin dejar de ser ella misma en ning\xFAn momento." },
+    { en: "Navin's idiot innocence carries him up to a fortune and back down, and the joke lands on everyone who used him.", es: "La inocencia idiota de Navin lo lleva hasta una fortuna y de vuelta, y el chiste recae en todos los que lo usaron." },
+    { en: "An ordinary impersonator runs the country better than the real president, exposing how hollow the office had become.", es: "Un imitador corriente gobierna el pa\xEDs mejor que el presidente real, dejando al desnudo lo hueco que se hab\xEDa vuelto el cargo." },
+    { en: "Chaplin's little barber, mistaken for the tyrant, gets handed the microphone and the last word against the whole machine.", es: "Al barberito de Chaplin, confundido con el tirano, le ponen el micr\xF3fono y la \xFAltima palabra contra toda la maquinaria." }
+  ],
+  "Institutionalized": [
+    { en: "McMurphy against the ward, and the institution wins by lobotomy: the purest 'destroyed by the group' ending there is.", es: "McMurphy contra el pabell\xF3n, y la instituci\xF3n gana con una lobotom\xEDa: el final de 'destruido por el grupo' m\xE1s puro que existe." },
+    { en: "The family is the institution, and Michael's choice to join it slowly consumes the very man he started as.", es: "La familia es la instituci\xF3n, y la decisi\xF3n de Michael de integrarse consume poco a poco al hombre que era al empezar." },
+    { en: "The suburban family as a quiet prison; Lester blows the whole arrangement up just to feel alive again.", es: "La familia suburbana como una c\xE1rcel silenciosa; Lester hace saltar por los aires todo el montaje solo para volver a sentirse vivo." },
+    { en: "The army unit runs on gallows humor because mockery is the only sane response left to the institution's madness.", es: "La unidad militar funciona a base de humor negro porque la burla es la \xFAnica respuesta cuerda que queda ante la locura de la instituci\xF3n." },
+    { en: "The corporation flattens everyone, and Peter's only options are the genre's three: conform, rebel, or break.", es: "La empresa aplana a todos, y a Peter solo le quedan las tres opciones del g\xE9nero: conformarse, rebelarse o quebrarse." },
+    { en: "The mob is the institution; Henry joins, rises, and the group's own logic is exactly what destroys him.", es: "La mafia es la instituci\xF3n; Henry se integra, asciende, y la propia l\xF3gica del grupo es justo lo que lo destruye." },
+    { en: "The frat versus the dean's establishment, with 'burn it all down' played as pure farce.", es: "La fraternidad contra el poder del decano, con el 'incendiarlo todo' interpretado como pura farsa." }
+  ],
   "Drama": [
     { en: "Grief that won't lift. The broken man simply cannot move home to raise his nephew, and the film refuses to fake a recovery.", es: "Un duelo que no levanta. El hombre roto sencillamente no puede volver a casa a criar a su sobrino, y la pel\xEDcula se niega a fingir una recuperaci\xF3n." },
     { en: "Huge stakes hiding in a father learning to make French toast. The whole custody battle lives in tiny domestic details.", es: "Hay un drama enorme escondido en un padre que aprende a hacer tostadas francesas. Toda la pelea por la custodia vive en minucias dom\xE9sticas." },
@@ -12157,6 +12398,51 @@ var EXAMPLE_NOTES = {
     { en: "Hand the code to a fourteen-year-old and frontier justice gets measured against a child's flat, unbending idea of what a debt is.", es: "Pon el c\xF3digo en boca de una ni\xF1a de catorce a\xF1os y la justicia fronteriza queda medida contra la idea plana e inflexible que una cr\xEDa tiene de una deuda." },
     { en: "As the railroad arrives, Leone slows the showdowns until they become ritual, staging the frontier's death as one long operatic elegy.", es: "Mientras llega el ferrocarril, Leone ralentiza los duelos hasta volverlos rito, escenificando la muerte de la frontera como una larga eleg\xEDa oper\xEDstica." },
     { en: "Chigurh is what the frontier became, random and unstoppable, and Sheriff Bell's old code simply has nothing to say back to him.", es: "Chigurh es en lo que se convirti\xF3 la frontera, aleatorio e imparable, y el viejo c\xF3digo del sheriff Bell sencillamente no tiene nada que responderle." }
+  ],
+  "War": [
+    { en: "The disillusionment classic: the brotherhood in the trench is the only meaning left, and the war exists to grind it away.", es: "El cl\xE1sico de la desilusi\xF3n: la camarader\xEDa en la trinchera es el \xFAnico sentido que queda, y la guerra existe para triturarla." },
+    { en: "The journey upriver is really a descent into the madness war makes of men, with the mission curdling at every bend.", es: "El viaje r\xEDo arriba es en realidad un descenso a la locura que la guerra hace de los hombres, y la misi\xF3n se va pudriendo en cada recodo." },
+    { en: "Eight lives spent to save one, and the film never lets you forget it's asking what a single man is worth.", es: "Ocho vidas gastadas para salvar una, y la pel\xEDcula no te deja olvidar que est\xE1 preguntando cu\xE1nto vale un solo hombre." },
+    { en: "Boot camp dehumanizes the recruits before combat ever does, so the war is half over by the time they reach it.", es: "El campamento deshumaniza a los reclutas antes que el combate, as\xED que la guerra est\xE1 medio perdida cuando llegan a ella." },
+    { en: "The catch is the trap: you're insane to fly the missions, but asking to stop proves you're sane enough to keep flying.", es: "La trampa es la trampa: est\xE1s loco por volar las misiones, pero pedir parar demuestra que est\xE1s bastante cuerdo para seguir volando." },
+    { en: "The literal gear is the least of it. What the soldiers really carry home is moral weight nothing will ever set down.", es: "El equipo literal es lo de menos. Lo que los soldados se llevan de verdad a casa es un peso moral que nunca podr\xE1n soltar." },
+    { en: "War seen through a boy's face as it ages decades in days; the most unflinching look the genre has at sheer horror.", es: "La guerra vista en el rostro de un ni\xF1o que envejece d\xE9cadas en d\xEDas; la mirada m\xE1s implacable que el g\xE9nero ha echado jam\xE1s al horror puro." }
+  ],
+  "Coming-of-Age": [
+    { en: "Holden clings to innocence with both hands, and the whole novel is the ache of a boy who can't stop it slipping.", es: "Holden se aferra a la inocencia con ambas manos, y toda la novela es el dolor de un chico que no puede impedir que se le escape." },
+    { en: "Scout learns the adult world's injustice by watching her father stand inside it and lose with dignity.", es: "Scout aprende la injusticia del mundo adulto viendo a su padre plantarle cara y perder con dignidad." },
+    { en: "One summer's walk along the tracks is really the crossing where boys first understand what death actually means.", es: "Una caminata de verano por las v\xEDas es en realidad el cruce donde unos ni\xF1os entienden por primera vez qu\xE9 significa de verdad la muerte." },
+    { en: "Only once she's left does Lady Bird see she loved the town all along; identity forms in the rear-view mirror.", es: "Solo cuando ya se ha ido, Lady Bird ve que quer\xEDa su ciudad desde siempre; la identidad se forma en el espejo retrovisor." },
+    { en: "Filmed across twelve real years, it makes growing up out of accumulated ordinary moments rather than one big lesson.", es: "Rodada a lo largo de doce a\xF1os reales, hace que crecer sea la suma de momentos corrientes en vez de una gran lecci\xF3n." },
+    { en: "First love and first loss compressed into a single summer, and the season's end is the end of childhood itself.", es: "Primer amor y primera p\xE9rdida comprimidos en un solo verano, y el final de la estaci\xF3n es el final de la infancia misma." },
+    { en: "Stephen forges an artist's identity slowly and against everything, prying himself loose from church, family, and country.", es: "Stephen forja despacio, y contra todo, su identidad de artista, desprendi\xE9ndose de la iglesia, la familia y la patria." }
+  ],
+  "Musical": [
+    { en: "The title number is pure feeling overflowing into movement: joy so big that walking and talking simply won't hold it.", es: "El n\xFAmero que da t\xEDtulo es puro sentimiento desbord\xE1ndose en movimiento: una alegr\xEDa tan grande que caminar y hablar sencillamente no la contienen." },
+    { en: "Tragedy pitched higher than speech can reach; the numbers carry the love and the hatred dialogue couldn't bear alone.", es: "Una tragedia elevada m\xE1s all\xE1 de lo que alcanza el habla; los n\xFAmeros portan el amor y el odio que el di\xE1logo no podr\xEDa soportar solo." },
+    { en: "Two dreamers and one shared 'I want'; the songs chart the widening gap between the love and the ambition.", es: "Dos so\xF1adores y un mismo 'lo que quiero'; las canciones trazan la brecha que se abre entre el amor y la ambici\xF3n." },
+    { en: "Here the songs are survival and teaching at once, and music is the thread that binds the family against the dark.", es: "Aqu\xED las canciones son a la vez supervivencia y ense\xF1anza, y la m\xFAsica es el hilo que une a la familia contra la oscuridad." },
+    { en: "Sung almost entirely through, it lets the number do every scrap of the dramatic work history usually needs prose for.", es: "Cantada casi por completo, deja que el n\xFAmero haga hasta la \xFAltima pizca del trabajo dram\xE1tico que la historia suele necesitar en prosa." },
+    { en: "The cabaret stage is diegetic on purpose, its numbers grinning while the real world collapses just outside the club.", es: "El escenario del cabaret es dieg\xE9tico a prop\xF3sito, sus n\xFAmeros sonriendo mientras el mundo real se derrumba justo fuera del local." },
+    { en: "Sung-through and relentless, every private anguish gets turned outward into an anthem the whole stage can carry.", es: "Cantada de principio a fin y sin tregua, cada angustia \xEDntima se vuelca hacia fuera convertida en un himno que sostiene todo el escenario." }
+  ],
+  "Satire & Black Comedy": [
+    { en: "Nuclear apocalypse played as farce, and the laughter is the argument: mutually assured destruction is a joke with no punchline.", es: "El apocalipsis nuclear interpretado como farsa, y la risa es el argumento: la destrucci\xF3n mutua asegurada es un chiste sin remate." },
+    { en: "The bureaucratic absurdity of war turned comic until the comedy curdles into a flat indictment of the whole machine.", es: "El absurdo burocr\xE1tico de la guerra vuelto c\xF3mico hasta que la risa se agria en una condena rotunda de toda la maquinaria." },
+    { en: "Television's appetite mocked so sharply that the network's mad-prophet ratings stunt keeps coming true in real life.", es: "El apetito de la televisi\xF3n ridiculizado con tal filo que el numerito de audiencias del profeta loco de la cadena no para de cumplirse en la vida real." },
+    { en: "Swift's deadpan monstrous proposal: the calmer the voice stays, the louder it exposes the cruelty it pretends to endorse.", es: "La impasible y monstruosa proposici\xF3n de Swift: cuanto m\xE1s tranquila se mantiene la voz, m\xE1s alto delata la crueldad que finge aprobar." },
+    { en: "The barnyard fable skewers a revolution betrayed, each animal a target held up until the slogan flips into its opposite.", es: "La f\xE1bula del corral ensarta una revoluci\xF3n traicionada, cada animal una diana en alto hasta que el lema acaba significando lo contrario." },
+    { en: "The terror of a regime played as panicked farce, where the comedy is exactly what sharpens the horror underneath.", es: "El terror de un r\xE9gimen interpretado como farsa de p\xE1nico, donde la comedia es justo lo que afila el horror que hay debajo." },
+    { en: "The vanity and emptiness of power mocked without mercy, every staffer a small target in a system that rewards none of them.", es: "La vanidad y el vac\xEDo del poder ridiculizados sin piedad, cada asesor una peque\xF1a diana en un sistema que no premia a ninguno." }
+  ],
+  "Magical Realism": [
+    { en: "Ghosts, ascensions and plagues are reported as plainly as the weather, and a family's history quietly hardens into myth.", es: "Fantasmas, ascensiones y plagas se cuentan con la misma naturalidad con que se habla del clima, y la historia de una familia se endurece callada en mito." },
+    { en: "The dead daughter walks back in as flesh; slavery's trauma made literal so it can't be looked away from.", es: "La hija muerta regresa hecha carne; el trauma de la esclavitud vuelto literal para que no se pueda apartar la mirada." },
+    { en: "Emotion is cooked straight into the food, and whoever eats it is overwhelmed by a feeling that was never theirs.", es: "La emoci\xF3n se cocina directamente en la comida, y quien la come queda arrasado por un sentimiento que nunca fue suyo." },
+    { en: "Clairvoyance runs quietly through the generations, threading one family's gifts into a whole nation's upheavals.", es: "La clarividencia recorre callada las generaciones, entretejiendo los dones de una familia con las convulsiones de toda una naci\xF3n." },
+    { en: "Children born at the stroke of independence share telepathic gifts knotted to the fate of the country itself.", es: "Los ni\xF1os nacidos al filo de la independencia comparten dones telep\xE1ticos anudados al destino del propio pa\xEDs." },
+    { en: "The faun's world and fascist Spain bleed into each other, so the magic reads at once as a child's escape and as truth.", es: "El mundo del fauno y la Espa\xF1a fascista se contaminan entre s\xED, de modo que la magia se lee a la vez como huida de una ni\xF1a y como verdad." },
+    { en: "A father's tall tales are told as literally true, until by the end the marvelous version has become the truth of his life.", es: "Las f\xE1bulas exageradas de un padre se cuentan como literalmente ciertas, hasta que al final la versi\xF3n maravillosa se ha vuelto la verdad de su vida." }
   ],
   "Point of View & Narrator": [
     { en: "Nick stands half inside the story and half out, and that's the trick. From there he can romanticize Gatsby while quietly damning the world that grinds him down.", es: "Nick se planta medio dentro de la historia y medio fuera, y ah\xED est\xE1 el truco. Desde ah\xED puede idealizar a Gatsby mientras condena en voz baja al mundo que lo tritura." },
@@ -15326,7 +15612,12 @@ var _WriterToolsView = class extends import_obsidian20.ItemView {
       { key: "Romance", icon: "heart" },
       { key: "Mystery & Crime", icon: "search" },
       { key: "Historical Fiction", icon: "landmark" },
-      { key: "Western", icon: "tractor" }
+      { key: "Western", icon: "tractor" },
+      { key: "War", icon: "bomb" },
+      { key: "Coming-of-Age", icon: "sprout" },
+      { key: "Musical", icon: "mic-vocal" },
+      { key: "Satire & Black Comedy", icon: "pen-tool" },
+      { key: "Magical Realism", icon: "stars" }
     ], onBack);
     container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "genreSystem") });
     const types = container.createDiv({ cls: "resource-view-group-card" });
@@ -15337,6 +15628,9 @@ var _WriterToolsView = class extends import_obsidian20.ItemView {
       { key: "Rites of Passage", icon: "hourglass" },
       { key: "Buddy Love", icon: "heart-handshake" },
       { key: "Whydunit", icon: "search" },
+      { key: "Out of the Bottle", icon: "wand-sparkles" },
+      { key: "The Fool Triumphant", icon: "party-popper" },
+      { key: "Institutionalized", icon: "building-2" },
       { key: "Superhero", icon: "shield-half" }
     ], onBack);
   }
@@ -15878,6 +16172,9 @@ var _WriterToolsView = class extends import_obsidian20.ItemView {
       "Rites of Passage": "hourglass",
       "Buddy Love": "heart-handshake",
       "Whydunit": "search",
+      "Out of the Bottle": "wand-sparkles",
+      "The Fool Triumphant": "party-popper",
+      "Institutionalized": "building-2",
       "Superhero": "shield-half",
       // Screenwriting format & documents
       "Scene Headings (tips)": "heading",
@@ -15912,6 +16209,11 @@ var _WriterToolsView = class extends import_obsidian20.ItemView {
       "Mystery & Crime": "search",
       "Historical Fiction": "landmark",
       "Western": "tractor",
+      "War": "bomb",
+      "Coming-of-Age": "sprout",
+      "Musical": "mic-vocal",
+      "Satire & Black Comedy": "pen-tool",
+      "Magical Realism": "stars",
       // Prose craft
       "Point of View & Narrator": "eye",
       "Scene vs Summary": "clapperboard",
@@ -16134,6 +16436,9 @@ __publicField(WriterToolsView, "STORY_TITLES", /* @__PURE__ */ new Set([
   "Rites of Passage",
   "Buddy Love",
   "Whydunit",
+  "Out of the Bottle",
+  "The Fool Triumphant",
+  "Institutionalized",
   "Superhero",
   "Drama",
   "Comedy",
@@ -16147,6 +16452,11 @@ __publicField(WriterToolsView, "STORY_TITLES", /* @__PURE__ */ new Set([
   "Mystery & Crime",
   "Historical Fiction",
   "Western",
+  "War",
+  "Coming-of-Age",
+  "Musical",
+  "Satire & Black Comedy",
+  "Magical Realism",
   "Flashback",
   "Flashforward",
   "Foreshadowing",

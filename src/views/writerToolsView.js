@@ -2849,7 +2849,12 @@ export class WriterToolsView extends ItemView {
       { key: "Romance", icon: "heart" },
       { key: "Mystery & Crime", icon: "search" },
       { key: "Historical Fiction", icon: "landmark" },
-      { key: "Western", icon: "tractor" }
+      { key: "Western", icon: "tractor" },
+      { key: "War", icon: "bomb" },
+      { key: "Coming-of-Age", icon: "sprout" },
+      { key: "Musical", icon: "mic-vocal" },
+      { key: "Satire & Black Comedy", icon: "pen-tool" },
+      { key: "Magical Realism", icon: "stars" }
     ], onBack);
     container.createDiv({ cls: "resource-view-section-label", text: ui(lang, "genreSystem") });
     const types = container.createDiv({ cls: "resource-view-group-card" });
@@ -2860,6 +2865,9 @@ export class WriterToolsView extends ItemView {
       { key: "Rites of Passage", icon: "hourglass" },
       { key: "Buddy Love", icon: "heart-handshake" },
       { key: "Whydunit", icon: "search" },
+      { key: "Out of the Bottle", icon: "wand-sparkles" },
+      { key: "The Fool Triumphant", icon: "party-popper" },
+      { key: "Institutionalized", icon: "building-2" },
       { key: "Superhero", icon: "shield-half" }
     ], onBack);
   }
@@ -3133,8 +3141,10 @@ export class WriterToolsView extends ItemView {
   static STORY_TITLES = new Set([
     "Theme vs Premise", "Controlling Idea", "Thematic Argument", "Motif & Symbol", "Theme Through Character",
     "Genre & Conventions", "Monster in the House", "Golden Fleece", "Dude with a Problem", "Rites of Passage",
-    "Buddy Love", "Whydunit", "Superhero", "Drama", "Comedy", "Action", "Adventure", "Thriller", "Horror",
+    "Buddy Love", "Whydunit", "Out of the Bottle", "The Fool Triumphant", "Institutionalized", "Superhero",
+    "Drama", "Comedy", "Action", "Adventure", "Thriller", "Horror",
     "Science Fiction", "Fantasy", "Romance", "Mystery & Crime", "Historical Fiction", "Western",
+    "War", "Coming-of-Age", "Musical", "Satire & Black Comedy", "Magical Realism",
     "Flashback", "Flashforward", "Foreshadowing", "Chekhov's Gun", "Red Herring", "Plot Twist",
     "Deus Ex Machina", "Eucatastrophe", "Poetic Justice", "“Show, Don’t Tell”", "Quibble (Wordplay)"
   ]);
@@ -3450,6 +3460,9 @@ export class WriterToolsView extends ItemView {
       "Rites of Passage": "hourglass",
       "Buddy Love": "heart-handshake",
       "Whydunit": "search",
+      "Out of the Bottle": "wand-sparkles",
+      "The Fool Triumphant": "party-popper",
+      "Institutionalized": "building-2",
       "Superhero": "shield-half",
       // Screenwriting format & documents
       "Scene Headings (tips)": "heading",
@@ -3484,6 +3497,11 @@ export class WriterToolsView extends ItemView {
       "Mystery & Crime": "search",
       "Historical Fiction": "landmark",
       "Western": "tractor",
+      "War": "bomb",
+      "Coming-of-Age": "sprout",
+      "Musical": "mic-vocal",
+      "Satire & Black Comedy": "pen-tool",
+      "Magical Realism": "stars",
       // Prose craft
       "Point of View & Narrator": "eye",
       "Scene vs Summary": "clapperboard",

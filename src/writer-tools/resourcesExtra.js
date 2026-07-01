@@ -616,6 +616,78 @@ export const EXTRA_TECHNIQUE_DATA = {
       examplesTitle: "Ejemplos de Superhéroe",
       examples: ["Spider-Man", "Gladiator", "Una Mente Maravillosa", "Matrix", "Frankenstein", "Lawrence de Arabia", "Black Panther"]
     }
+  },
+  "Out of the Bottle": {
+    en: {
+      introTitle: "What is Out of the Bottle?",
+      intro: ["Magic enters an ordinary life — a wish granted or a curse imposed — and the story turns on what the magic teaches. The lesson is always that the magic was never the point: the power was earned, or was inside the hero all along, and must finally be given up."],
+      core: ["A 'wish' or a 'spell': magic granted to someone who longs for it, or laid on someone who needs a lesson.", "An ordinary protagonist, so the audience projects their own longing onto the magic.", "A 'comeuppance' version (the deserving learn humility) or a 'deserving' version (the downtrodden get a break).", "Magic that solves the surface problem but exposes the real one.", "A return to the ordinary: the spell is relinquished and the hero is changed."],
+      coreNote: "The rule: the magic must end, because the lesson is that the hero never needed it.",
+      narrativeFunction: ["Grant the wish or impose the curse early, with clear rules.", "Let the magic deliver what the hero thought they wanted.", "Reveal the deeper need the magic cannot satisfy.", "Strip the magic away so the change has to come from the hero."],
+      risksTitle: "Common risks",
+      risks: ["Magic with no rules or cost, so nothing is at stake.", "A lesson preached instead of dramatized through the wish.", "Letting the hero keep the magic, which voids the moral.", "Wish-fulfilment with no comeuppance, so the hero never grows."],
+      examplesTitle: "Out of the Bottle Examples",
+      examples: ["Liar Liar", "Bruce Almighty", "Big", "Freaky Friday", "Groundhog Day", "The Mask", "Cinderella"]
+    },
+    es: {
+      introTitle: "¿Qué es Out of the Bottle (La magia embotellada)?",
+      intro: ["La magia entra en una vida corriente —un deseo concedido o una maldición impuesta— y la historia gira en torno a lo que esa magia enseña. La lección siempre es que la magia nunca fue lo importante: el poder se ganó, o estuvo dentro del héroe todo el tiempo, y al final hay que renunciar a él."],
+      core: ["Un 'deseo' o un 'hechizo': magia concedida a quien la anhela, o impuesta a quien necesita una lección.", "Un protagonista corriente, para que el público proyecte su propio anhelo en la magia.", "Una versión de 'escarmiento' (el merecedor aprende humildad) o de 'merecimiento' (el oprimido recibe un respiro).", "Una magia que resuelve el problema de superficie pero destapa el de fondo.", "Un regreso a lo corriente: se renuncia al hechizo y el héroe sale cambiado."],
+      coreNote: "La regla: la magia debe terminar, porque la lección es que el héroe nunca la necesitó.",
+      narrativeFunction: ["Conceder el deseo o imponer la maldición pronto, con reglas claras.", "Dejar que la magia entregue lo que el héroe creía querer.", "Revelar la necesidad profunda que la magia no puede satisfacer.", "Retirar la magia para que el cambio tenga que salir del héroe."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Magia sin reglas ni coste, de modo que no hay nada en juego.", "Una lección predicada en vez de dramatizada a través del deseo.", "Dejar que el héroe conserve la magia, lo que anula la moraleja.", "Cumplimiento de deseos sin escarmiento, de modo que el héroe nunca crece."],
+      examplesTitle: "Ejemplos de Out of the Bottle",
+      examples: ["Mentiroso compulsivo", "Como Dios", "Big", "Ponte en mi lugar", "Atrapado en el tiempo", "La máscara", "Cenicienta"]
+    }
+  },
+  "The Fool Triumphant": {
+    en: {
+      introTitle: "What is The Fool Triumphant?",
+      intro: ["An underestimated 'fool' takes on a powerful establishment and wins — precisely because everyone underrates them. The fool's apparent simplicity is their strength, and the story exposes the vanity and corruption of the institution that scorned them."],
+      core: ["A 'fool': an innocent or outsider the world dismisses.", "An 'establishment': the powerful group, system, or rival the fool disrupts.", "An 'insider' who recognizes the fool's worth — or burns with envy at it.", "A transformation, sometimes marked by a new name or role.", "Victory won not by changing, but by staying true to the fool's nature."],
+      coreNote: "The fool wins by being underestimated; the establishment loses by underestimating them.",
+      narrativeFunction: ["Establish the fool as harmless and overlooked.", "Set them against an establishment that cannot take them seriously.", "Use an envious insider to voice the threat the fool poses.", "Let the fool triumph by being exactly who they always were."],
+      risksTitle: "Common risks",
+      risks: ["A fool so passive the plot happens entirely to them.", "An establishment too weak to make the victory meaningful.", "Mistaking stupidity for the fool's wise innocence.", "A win that requires the fool to abandon their nature."],
+      examplesTitle: "The Fool Triumphant Examples",
+      examples: ["Forrest Gump", "Being There", "Amadeus", "Legally Blonde", "The Jerk", "Dave", "Chaplin's The Great Dictator"]
+    },
+    es: {
+      introTitle: "¿Qué es The Fool Triumphant (El triunfo del tonto)?",
+      intro: ["Un 'tonto' subestimado se enfrenta a un poder establecido y vence, justamente porque todos lo menosprecian. La aparente simpleza del tonto es su fuerza, y la historia desnuda la vanidad y la corrupción de la institución que lo despreció."],
+      core: ["Un 'tonto': un inocente o forastero al que el mundo descarta.", "Un 'poder establecido': el grupo, sistema o rival al que el tonto altera.", "Alguien de dentro del propio sistema que reconoce el valor del tonto, o que arde de envidia ante él.", "Una transformación, a veces marcada por un nombre o un rol nuevos.", "Una victoria lograda no por cambiar, sino por permanecer fiel a la naturaleza del tonto."],
+      coreNote: "El tonto gana por ser subestimado; el poder pierde por subestimarlo.",
+      narrativeFunction: ["Establecer al tonto como inofensivo y pasado por alto.", "Enfrentarlo a un poder que no puede tomarlo en serio.", "Recurrir a alguien del propio sistema, envidioso, para poner en palabras la amenaza que el tonto representa.", "Dejar que el tonto triunfe siendo exactamente quien siempre fue."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Un tonto tan pasivo que la trama le sucede por completo.", "Un poder demasiado débil para que la victoria signifique algo.", "Confundir la estupidez con la sabia inocencia del tonto.", "Una victoria que exige que el tonto abandone su naturaleza."],
+      examplesTitle: "Ejemplos de The Fool Triumphant",
+      examples: ["Forrest Gump", "Bienvenido, Mr. Chance", "Amadeus", "Una rubia muy legal", "El loco de los líos", "Dave, presidente por un día", "El gran dictador (Chaplin)"]
+    }
+  },
+  "Institutionalized": {
+    en: {
+      introTitle: "What is Institutionalized?",
+      intro: ["A story about a group — a family, an army, a company, a mob — and the tension between the individual and the collective that absorbs them. The drama is the choice every member faces: join the group, blow it up, or be destroyed by it."],
+      core: ["An 'institution': a family, unit, or organization with its own rules and loyalties.", "A 'choice': the recurring tension of the one against the many.", "A 'brain': often a newcomer or observer who sees the system clearly.", "A 'sacrifice': someone pays the price for belonging or for breaking away.", "The triad of endings — join it, burn it down, or go mad."],
+      coreNote: "Snyder's rule: the question is always the individual versus the group, and the group usually wins.",
+      narrativeFunction: ["Establish the institution's rules, hierarchy, and loyalties.", "Drop in the observer who questions whether belonging is worth the cost.", "Escalate the pressure to conform until a choice becomes unavoidable.", "Resolve through one of the three fates: assimilation, rebellion, or breakdown."],
+      risksTitle: "Common risks",
+      risks: ["An institution so vaguely drawn the stakes never land.", "No clear individual perspective to anchor the group dynamics.", "Forgetting the cost, so belonging carries no real weight.", "A tidy ending that dodges the genre's hard choice."],
+      examplesTitle: "Institutionalized Examples",
+      examples: ["One Flew Over the Cuckoo's Nest", "The Godfather", "American Beauty", "M*A*S*H", "Office Space", "Goodfellas", "Animal House"]
+    },
+    es: {
+      introTitle: "¿Qué es Institutionalized (Institucionalizado)?",
+      intro: ["Una historia sobre un grupo —una familia, un ejército, una empresa, una mafia— y la tensión entre el individuo y el colectivo que lo absorbe. El drama es la elección que afronta cada miembro: integrarse en el grupo, hacerlo saltar por los aires, o ser destruido por él."],
+      core: ["Una 'institución': una familia, unidad u organización con sus propias reglas y lealtades.", "Una 'elección': la tensión recurrente del uno contra los muchos.", "Un 'cerebro': a menudo un recién llegado u observador que ve el sistema con claridad.", "Un 'sacrificio': alguien paga el precio de pertenecer o de escapar.", "La tríada de finales: integrarse, incendiarlo, o enloquecer."],
+      coreNote: "La regla de Snyder: la pregunta siempre es el individuo frente al grupo, y el grupo suele ganar.",
+      narrativeFunction: ["Establecer las reglas, la jerarquía y las lealtades de la institución.", "Introducir al observador que cuestiona si pertenecer merece su precio.", "Aumentar la presión por conformarse hasta que la elección sea inevitable.", "Resolver con uno de los tres destinos: asimilación, rebelión o derrumbe."],
+      risksTitle: "Riesgos frecuentes",
+      risks: ["Una institución tan vagamente dibujada que lo que está en juego nunca cala.", "Ninguna perspectiva individual clara que ancle la dinámica de grupo.", "Olvidar el coste, de modo que pertenecer no pesa de verdad.", "Un final pulcro que esquiva la elección difícil del género."],
+      examplesTitle: "Ejemplos de Institutionalized",
+      examples: ["Alguien voló sobre el nido del cuco", "El padrino", "American Beauty", "M*A*S*H", "Trabajo basura", "Uno de los nuestros", "Desmadre a la americana"]
+    }
   }
 };
 
@@ -813,7 +885,10 @@ export const EXTRA_LABELS = {
     "Dude with a Problem": "Dude with a Problem",
     "Rites of Passage": "Rites of Passage",
     "Buddy Love": "Buddy Love",
-    "Whydunit": "Whydunit",
+    "Whydunit": "Whydunit (the detective changes)",
+    "Out of the Bottle": "Out of the Bottle",
+    "The Fool Triumphant": "The Fool Triumphant",
+    "Institutionalized": "Institutionalized",
     "Superhero": "Superhero",
     // Screenwriting format & documents
     "Scene Headings (tips)": "Scene Headings",
@@ -864,7 +939,10 @@ export const EXTRA_LABELS = {
     "Dude with a Problem": "Un Tipo con un Problema",
     "Rites of Passage": "Ritos de Paso",
     "Buddy Love": "Amor de Compañeros",
-    "Whydunit": "El Porqué del Crimen",
+    "Whydunit": "El Porqué del Crimen (whydunit)",
+    "Out of the Bottle": "La magia embotellada",
+    "The Fool Triumphant": "El triunfo del tonto",
+    "Institutionalized": "Institucionalizado",
     "Superhero": "Superhéroe",
     // Screenwriting format & documents
     "Scene Headings (tips)": "Encabezados de escena",
@@ -920,6 +998,9 @@ export const RESOURCE_SOURCES = {
   "Rites of Passage": ["Blake Snyder — Save the Cat!"],
   "Buddy Love": ["Blake Snyder — Save the Cat!"],
   "Whydunit": ["Blake Snyder — Save the Cat!"],
+  "Out of the Bottle": ["Blake Snyder — Save the Cat!"],
+  "The Fool Triumphant": ["Blake Snyder — Save the Cat!"],
+  "Institutionalized": ["Blake Snyder — Save the Cat!"],
   "Superhero": ["Blake Snyder — Save the Cat!"],
   // Screenwriting format & documents
   "Scene Headings (tips)": ["Christopher Riley — The Hollywood Standard"],
@@ -992,6 +1073,9 @@ export const RESOURCE_RELATED = {
   "Rites of Passage": ["Moral Transformation", "Genre & Conventions"],
   "Buddy Love": ["Want vs Need", "Genre & Conventions"],
   "Whydunit": ["Monster in the House", "Genre & Conventions"],
+  "Out of the Bottle": ["The Fool Triumphant", "Genre & Conventions"],
+  "The Fool Triumphant": ["Out of the Bottle", "Genre & Conventions"],
+  "Institutionalized": ["Buddy Love", "Genre & Conventions"],
   "Superhero": ["Dude with a Problem", "Genre & Conventions"],
   // Screenwriting
   "Character & Dialogue (tips)": ["Subtext", "Parentheticals (tips)"],
